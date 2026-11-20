@@ -41,7 +41,7 @@ One ecosystem, two brands, four products (KX-00, ADR-001/002):
 | _brand/ | — | — | Kiorex logo concept, mark SVG, tokens.css |
 
 ## Binding rules (KX-01, KX-22 §11)
-- Stack: NestJS 10 + Prisma 6 + PostgreSQL 16, React 18 + Vite + TanStack Query + shadcn/ui + Tailwind + i18next (AR/EN, RTL), Expo for mobile. Same as Kiorly.
+- Stack (upgraded 20 Nov 2026, see `_docs/UPGRADE_2026-11_REPORT.md`): Node.js 26 LTS (Lambda stays `nodejs24.x` until Node 26 is GA there), NestJS 12 (Express 5) + Prisma 7 (`@prisma/adapter-pg`, pool size explicit, see report) + PostgreSQL 16, React 19 + Vite 8 + TanStack Query + shadcn/ui + Tailwind 4 + i18next 27 (AR/EN, RTL), TypeScript 6, Expo for mobile. Same as Kiorly.
 - Products never share a DB or import each other's source; they talk over HMAC REST + outbox webhooks (KX-09), via versioned contracts.
 - Kiorly Clinic is the ONLY system of record for appointments (ADR-005). Kiorex books via holds + Idempotency-Key.
 - Money paths: idempotency key, outbox event, ledger entry, reconciliation test. Three ledgers never commingled.

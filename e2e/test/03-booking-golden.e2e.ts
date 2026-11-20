@@ -89,7 +89,8 @@ describe('d. Conflict: two patients race for the same slot', () => {
     // the winner can still confirm; exactly one appointment exists for that slot
     const win = a.status === 201 ? a : b; const winTok = a.status === 201 ? t.p1 : t.p2;
     expect((await confirm(winTok, win.body.id)).status).toBe(200);
-    const n = await q('kiorly', `select count(*)::int c from "Appointment" where "clinicianId" = (select "clinicianId" from "Appointment" where "externalReference" = $1) and "startsAt" = $2 and status <> 'CANCELLED'`, [win.body.id, slot.startsAt]);
+    // exactly one ACTIVE appointment holds the slot (the set that blocks bookings in Kiorly); COMPLETED / NO_SHOW rows that earlier files left in the same future slot do not count
+    const n = await q('kiorly', `select count(*)::int c from "Appointment" where "clinicianId" = (select "clinicianId" from "Appointment" where "externalReference" = $1) and "startsAt" = $2 and status in ('SCHEDULED','CONFIRMED','CHECKED_IN')`, [win.body.id, slot.startsAt]);
     expect(n[0].c).toBe(1);
   });
 

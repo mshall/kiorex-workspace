@@ -32,15 +32,21 @@ export async function providerBySpecialty(token: string, specialty: string): Pro
 }
 
 /** A free future slot for a provider; `skip` spreads parallel/rerun scenarios over different slots. */
-export async function freeSlots(token: string, p: Provider, days = 12): Promise<{ startsAt: string; endsAt: string }[]> {
-  const from = new Date(Date.now() + 3 * 86400_000), to = new Date(Date.now() + days * 86400_000);
+let bustN = 0;
+/**
+ * `fresh: true` bypasses Kiorex's 60 s slot cache (its key is the query window truncated to the hour) by shifting the window start by a unique
+ * whole number of hours, so the listing reflects what Kiorly has NOW (bookings made directly on Kiorly or by earlier files in this run).
+ */
+export async function freeSlots(token: string, p: Provider, days = 12, opts: { fresh?: boolean } = {}): Promise<{ startsAt: string; endsAt: string }[]> {
+  const bust = opts.fresh ? ((++bustN % 48) + 1) * 3600_000 : 0;
+  const from = new Date(Date.now() + 3 * 86400_000 + bust), to = new Date(Date.now() + days * 86400_000);
   const r = await kiorex(token, 'GET', `/providers/${p.id}/slots?typeId=${p.defaultTypeId}&from=${from.toISOString()}&to=${to.toISOString()}`);
   if (r.status !== 200) throw new Error(`slots ${r.status} ${JSON.stringify(r.body)}`);
   return r.body.slots;
 }
 /** Pick a random slot beyond the 36 h cancellation window so reruns do not collide. */
 export async function pickSlot(token: string, p: Provider) {
-  const s = await freeSlots(token, p);
+  const s = await freeSlots(token, p, 12, { fresh: true }); // never from Kiorex's 60 s cache: slots booked a moment ago by this or an earlier file would still be listed (flaky BK-04 race test)
   if (!s.length) throw new Error('no free slots');
   return s[Math.floor(Math.random() * s.length)];
 }

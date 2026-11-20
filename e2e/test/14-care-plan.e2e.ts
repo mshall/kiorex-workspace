@@ -32,7 +32,8 @@ describe('p. Care-plan request Kiorex -> Kiorly Nurse -> confirmed visits (KXMHV
   });
 
   async function request() {
-    const start = new Date(Date.now() + 3 * 86400_000).toISOString().slice(0, 10);
+    // day +10: beyond the +2..+9 days that 13-home-visit books on the same nurse's calendar (its CHECKED_IN visits stay) and the seeded demo visits (<= +3 days)
+    const start = new Date(Date.now() + 10 * 86400_000).toISOString().slice(0, 10);
     const r = await kiorex(t.p1, 'POST', '/care-plans', { providerId: PROVIDER, typeId: TYPE, addressId: addr, preferredStartDate: start, notes: 'E2E wound-care plan' });
     expect(r.status, JSON.stringify(r.body)).toBeLessThan(300);
     plans.push(r.body.id);

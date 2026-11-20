@@ -25,14 +25,15 @@ describe('n. Waitlist autofill against the real Kiorly (KXM-BK-12)', () => {
   }
 
   it('refuses to join while the doctor has open slots in the window (409 SLOTS_AVAILABLE)', async () => {
-    const [s] = await freeSlots(t.p1, p);
+    const [s] = await freeSlots(t.p1, p, 12, { fresh: true }); // not the 60 s cache: earlier files (10-resilience) book slots directly on Kiorly
     const r = await joinForSlot(s);
+    if (r.status === 201) entries.push(r.body.id); // never leave a stray entry behind: join is idempotent per patient+doctor+type and would poison the next tests
     expect(r.status).toBe(409);
     expect(r.body.code).toBe('SLOTS_AVAILABLE');
   });
 
   it('full slot -> join -> the other patient cancels -> offer -> accept -> confirm -> Kiorly appointment (offer accepted, entry BOOKED)', async () => {
-    const slots = await freeSlots(t.p2, p);
+    const slots = await freeSlots(t.p2, p, 12, { fresh: true });
     const slot = slots[Math.floor(slots.length / 2)];
     const taken = await book(t.p2, p, slot);
     await waitStatus(t.p2, taken.id, 'CONFIRMED');
@@ -75,7 +76,7 @@ describe('n. Waitlist autofill against the real Kiorly (KXM-BK-12)', () => {
   });
 
   it('declining an offer returns the entry to WAITING and never re-offers the same slot', async () => {
-    const slots = await freeSlots(t.p2, p);
+    const slots = await freeSlots(t.p2, p, 12, { fresh: true });
     const slot = slots[Math.max(0, Math.floor(slots.length / 3))];
     const taken = await book(t.p2, p, slot);
     await waitStatus(t.p2, taken.id, 'CONFIRMED');
