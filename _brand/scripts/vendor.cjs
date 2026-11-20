@@ -18,13 +18,15 @@ function patchTokens(file) {
   fs.writeFileSync(file, s);
 }
 const cp = (a, b) => { fs.mkdirSync(path.dirname(b), { recursive: true }); fs.copyFileSync(a, b); };
-const copyDir = (a, b) => { for (const e of fs.readdirSync(a, { withFileTypes: true })) e.isDirectory() ? copyDir(path.join(a, e.name), path.join(b, e.name)) : cp(path.join(a, e.name), path.join(b, e.name)); };
+const copyDir = (a, b, skip = []) => { for (const e of fs.readdirSync(a, { withFileTypes: true })) { if (skip.includes(e.name)) continue; e.isDirectory() ? copyDir(path.join(a, e.name), path.join(b, e.name), skip) : cp(path.join(a, e.name), path.join(b, e.name)); } };
 for (const prod of (process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(TARGETS))) {
   const t = TARGETS[prod];
   for (const dir of [t.app, ...t.extra]) {
     const brand = path.join(ws, dir, "src/brand");
     if (!fs.existsSync(brand)) continue;
-    for (const sub of ["shared", "web"]) copyDir(path.join(root, "components", sub), path.join(brand, "components", sub));
+    // KxControls.tsx (language + theme toggles) needs lucide-react: only the three product web apps have it, not the docs site.
+    const skip = dir === t.app ? [] : ["KxControls.tsx", "kx-controls.node.test.ts"];
+    for (const sub of ["shared", "web"]) copyDir(path.join(root, "components", sub), path.join(brand, "components", sub), skip);
     cp(path.join(root, "components/index.ts"), path.join(brand, "components/index.ts"));
     cp(path.join(root, "tailwind-preset.cjs"), path.join(brand, "tailwind-preset.cjs"));
     patchTokens(path.join(brand, "tokens.css"));
