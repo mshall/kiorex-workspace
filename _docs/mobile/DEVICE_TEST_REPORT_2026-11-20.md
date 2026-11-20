@@ -1,7 +1,7 @@
 # Device test report: the two Expo apps on an Android emulator (20 Nov 2026)
 
 > **Scope.** Kiorex patient app (`kiorex-platform/apps/mobile`) and the Kiorly staff app (`kiorly-work`, still titled "Kiorly Work"; it is reworked into the single **Kiorly** app only after the founder approves [the mobile design pack](README.md)).
-> **Result.** Both run on Android in light/dark and Arabic/English against live local APIs. Three real bugs found and fixed. **iOS was not run**: this Mac has no Xcode.
+> **Result.** Both run on Android in light/dark and Arabic/English against live local APIs. Three real bugs found and fixed. **iOS (iPhone 18 Pro simulator, iOS 27.2, Expo Go) was run for the patient app on 21 Nov 2026**: light/dark x ar/en all render with live data and no app errors in the device log (only Expo Go's own StoreKit/Firebase noise); the first-run Arabic LTR mismatch (finding 1) reproduces on iOS too. The staff app on iOS is still to do.
 
 ## How it was run
 
@@ -40,9 +40,13 @@ Unit tests after the fixes: patient app 119 passed, staff app 76 passed, `tsc` c
 6. Only guest screens were exercised in the patient app (sign-in goes through Passport in a browser); signed-in patient flows are covered by the headless Playwright run in `UPGRADE_2026-11_REPORT.md`.
 7. Patient forms (checkout, review, address) have no `KeyboardAvoidingView`; likely affected by the same Android 15 behaviour as #3. Verify on device.
 
+## Specialty list (21 Nov 2026, founder request)
+
+Home showed only 11 specialties. `GET /specialties` now returns 36 (adds allergy, anaesthesia, audiology, cardiothoracic, endocrinology, emergency, family medicine, gastroenterology, general surgery, geriatrics, haematology, infectious diseases, nephrology, neurology, neurosurgery, nutrition, oncology, pain, physiotherapy, plastic surgery, pulmonology, radiology, rheumatology, sports medicine, vascular surgery), sorted A-Z by English name; mobile and web re-sort by the active language. The first six codes keep their order (WhatsApp quick list). Verified on the iOS simulator.
+
 ## Not done
 
-* **iOS Simulator**: Xcode is not installed on this Mac (about 12 GB, needs an Apple ID). Install Xcode, then repeat this run with `expo start --ios`.
+* **iOS Simulator, staff app** (`kiorly-work`): patient app done, staff app pending.
 * A physical device.
 * Push notifications (unavailable in Expo Go on Android since SDK 53; needs a development build).
 * Pharmacy and Lab modules of the staff app (need `3100`/`3200` APIs signed in with the right role).
