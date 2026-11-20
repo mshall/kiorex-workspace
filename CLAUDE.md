@@ -35,6 +35,7 @@ One ecosystem, two brands, four products (KX-00, ADR-001/002):
 | kiorex-account | mshall/kiorex-account | main | IdP config-as-code (managed IdP in AWS), dev OIDC provider for local, OTP sender, back-channel logout |
 | kiorly-pharmacy | mshall/kiorly-pharmacy | main | Scaffold only until M9 (KX-06) |
 | kiorly-lab | mshall/kiorly-lab | main | Scaffold only until M15 (KX-07) |
+| kiorly-work | mshall/kiorly-work (private) | main | **Kiorly Work**: one Expo staff app (Clinic, Pharmacy, Lab modules) for Pro/Enterprise plans; safety alerts reach every plan (ADR-025). Expo web :8082. Backends: `/mobile/*` in the three product APIs |
 | _legacy/* | 2025 kiorex-* repos | — | READ-ONLY references (ADR-026). Harvest UI from kiorex-web-app only; never copy kiorex-backend code |
 | _docs/ | — | — | Extracted KX docs (some numeric cells lost in extraction — check the PDF in Drive when exact numbers matter) |
 | _brand/ | — | — | Kiorex logo concept, mark SVG, tokens.css |

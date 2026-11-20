@@ -126,3 +126,15 @@ Limits: steps 5-6 need the egress path HB07; Passport families/orgs/invitations 
 - Pharmacy standalone tenant: `solo.*@demo.kiorly.local` logins (see `kiorly-pharmacy/Docs/TEST_DATA.md`); suite seed: `npm run seed:suite` in kiorly-pharmacy.
 - Lab: new onboarding creates STANDALONE tenants; existing demo tenants stay INTEGRATED (see `kiorly-lab/Docs/TEST_DATA.md`).
 - Feature coverage: `kiorly-pharmacy/Docs/FEATURE_MATRIX.md`, `kiorly-lab/Docs/FEATURE_MATRIX.md`.
+
+## Kiorly Work (mobile staff app, added 20 Nov 2026)
+App `kiorly-work` (Expo web :8082). Entitlement `mobile_staff_app` is ON for PRO/ENTERPRISE; Basic orgs see the upgrade screen but keep the safety-alert inbox. Staff password `Demo@12345`; seeds: clinic `npm run db:seed:mobile -w api`, pharmacy `npm run seed:mobile -w api`, lab `npm run db:seed:mobile -w api` (all idempotent, guarded; also run by `seed:all` in pharmacy). Details: `kiorly-work/Docs/TEST_DATA.md`.
+| Product | Plan | Logins |
+|---|---|---|
+| Clinic Nile Care | PRO | `nadia.na@` (doctor), `nurse.na@`, `owner.na@`, `accountant.na@` (`@demo.kiorex.test`); solo nurse `mona@nurse-demo.kiorly.test` |
+| Clinic agency / group | ENTERPRISE | `owner@nurse-demo.kiorly.test`, `admin@kiorly.com` |
+| Clinic Corner Family Clinic | BASIC | `owner.basic@`, `doctor.basic@`, `nurse.basic@demo.kiorex.test` |
+| Pharmacy Demo (CHAIN) | ENTERPRISE | `owner@`, `pharmacist@`, `manager@`, `cashier@demo.kiorly.local` |
+| Pharmacy Solo | PRO | `solo.owner@`, `solo.pharmacist@demo.kiorly.local` |
+| Pharmacy Corner (Lite) | BASIC | `owner.basic@`, `pharmacist.basic@demo.kiorly.local` |
+| Lab `demo-lab` / `chain-lab` / `basic-lab` | PRO / ENTERPRISE / BASIC | org slug + `signatory|phleb|tech|director|owner@<slug>.test` (dev login, no password) |
