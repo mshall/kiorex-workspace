@@ -15,11 +15,11 @@ Authoritative shapes live in `kiorex-contracts`; this file pins the local wiring
 | Kiorly Pharmacy web | kiorly-pharmacy/apps/web | http://localhost:5190 (proxy `/api` → 3100) | — |
 | Kiorly Lab API | kiorly-lab/apps/api | http://localhost:3200 (prefix `/api/v1`; Kiorex machine API at `/api/v1/integration/v1`) | kiorly_lab |
 | Kiorly Lab web | kiorly-lab/apps/web | http://localhost:5191 (proxy `/api` → 3200) | — |
-| Kiorex Account (dev OIDC) | kiorex-account/apps/dev-idp | http://localhost:4400 (issuer) | kiorex_account |
+| Kiorex Passport (dev OIDC) | kiorex-account/apps/dev-idp | http://localhost:4400 (issuer) | kiorex_account |
 
 DATABASE_URL pattern: `postgresql://postgres:postgres@127.0.0.1:5433/<db>?schema=public`
 
-## Identity (Kiorex Account, ADR-012/013, KX-04)
+## Identity (Kiorex Passport, ADR-012/013, KX-04)
 - OIDC issuer `http://localhost:4400`; discovery at `/.well-known/openid-configuration`; JWKS at `/jwks`.
 - Clients (dev): `kiorex-web` (public, PKCE, redirect `http://localhost:5180/auth/callback`),
   `kiorex-ops` (public, PKCE, redirect `http://localhost:5181/auth/callback`),
@@ -61,6 +61,15 @@ DATABASE_URL pattern: `postgresql://postgres:postgres@127.0.0.1:5433/<db>?schema
 - Extra token claims: `sid`, `acr`/`amr`/`auth_time` (step-up = `urn:kiorex:acr:mfa`, fresh ≤300 s via `POST /api/step-up`), `kx_orgs` (only with scope `kx_org`; `org_id` + `role_hint` only), `act.sub` on guardian act-as tokens (`sub` = dependant, ≤10 min, no phone). Still no clinical data (ADR-013).
 - Dev helpers: `GET /dev/inbox` (mock OTP/notification messages; OTP in `data.code`), `GET /dev/events`, second fake upstream IdP on :4401 (flag `account.provider_sso`).
 - New contract events (kiorex-contracts 1.2.0): `guardian.link.changed`, `membership.changed`, `account.merged` — dev outbox only for now.
+
+## Passport SCIM 2.0 (KA-11, 20 Nov 2026)
+Directory sync for organisations: base `http://localhost:4400/scim/v2` (`/Users`, `/Groups`, `/ServiceProviderConfig`, `/ResourceTypes`, `/Schemas`), bearer token per organisation (`kxscim_...`, created by an org owner/admin with `POST /api/orgs/:id/scim-tokens` on the Passport API, shown once, revocable with `DELETE .../scim-tokens/:tokenId`). Users map to Passport person identities by E.164 phone + an org membership (role hint = SCIM group `role-<hint>` or the `urn:kiorex:params:scim:schemas:extension:passport:2.0:User` `roleHint`); `active=false` revokes the membership; the Passport identity is never deleted; `owner` is never granted by SCIM. Details: `kiorex-account/Docs/SCIM.md`.
+
+## Maps (KXMDS05)
+Kiorex patient web renders results and the clinic page with MapLibre GL. Env (all optional, nothing secret): `VITE_MAP_PROVIDER=mock|osm|style|amazon` (default `mock`, offline style, no network), `VITE_MAP_TILES_URL`, `VITE_MAP_STYLE_URL`, `VITE_AMAZON_LOCATION_STYLE_URL`, `VITE_MAP_RTL_TEXT_PLUGIN_URL`, `VITE_MAP_DEFAULT_CENTER` (see `kiorex-platform/apps/web/.env.example`). `GET /search/providers` items now carry the clinic `latitude`/`longitude` (omitted for home-only providers); `lat`/`lng` query params already sort by distance ("near me").
+
+## @kiorex/contracts distribution
+GitHub Packages publishing is not available (token lacks `write:packages`). `kiorex-platform` installs the vendored tarball `vendor/kiorex-contracts-<v>.tgz` (refresh with `kiorex-platform/scripts/vendor-contracts.sh`); see `kiorex-platform/Docs/CONTRACTS_DISTRIBUTION.md`. Local dev/e2e can still use `npm run pack:local`.
 
 ## Kiorex Passport web UI (self-service account pages)
 - **URL**: dev `http://localhost:4400/account` (served by the dev IdP, React SPA bundled in memory); production `https://account.kiorex.com/account`. Pages: `/account` (profile, phone, language), `/account/security` (passkeys, authenticator app, sessions, sign-in activity), `/account/family` (dependants, guardians, co-guardian invitations, act-as), `/account/linked` (link requests), `/account/orgs`, `/account/privacy` (export, delete), `/account/apps` (connected apps), `/account/step-up?return=<path under /account>`, `/account/ops/links` (ops reviewer queue, MFA step-up).

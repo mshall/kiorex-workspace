@@ -203,3 +203,11 @@ Playwright triage of the 15 specs that failed identically before this work on `k
 | fs04, signup-ar | fixed external reference collided on rerun (unique tenant/source/ref; the API answers 500 instead of 409, flagged for the API owner); signup now requires the legal checkboxes | test |
 | qa01 (AR) and others in a full run | login rate limit (20/min per email) | helpers honour `Retry-After` |
 Blocked on hardware/humans: `ux04-thermal-print` only asserts the settings card; actual ESC/POS output on a receipt printer, the Z-report thermal print and real WhatsApp/OTP delivery cannot be verified in CI.
+
+## Q11g: prescription composer + payroll surfaces (20 Nov 2026)
+| Area | Change | Status |
+|---|---|---|
+| Prescription composer (encounter + draft panel) | Rainbow tab colours replaced by one segmented mode switch in brand tokens; medication lines as cards (icon, drug, dosage/frequency chips, unverified chip, 44 px remove with accessible name); brand dashed upload target; file rows; generate bar + preview card (download/print); add-medication form on a quiet band; `kx-callout` hints; signed-Rx share actions as a success callout. Shared kit: `clinics-management/apps/web/src/features/prescriptions/composer-kit.tsx` | DONE |
+| Payroll / compensation | HR summary KPIs as `StatCard`s with skeletons (headcount, monthly payroll per currency in LTR numerals, pending leave tone); employee detail: one grouped "HR & payroll" fieldset (contract, salary, currency) + prominent `CompensationSummary`; admin user edit + create-employee use the same fieldset; profile salary fact emphasised. Kit: `features/hr/compensation-kit.tsx` | DONE |
+| Verification | tsc, eslint (0 errors), web unit 43/43; `scripts/axe-check.mjs` gained the employee detail route | see FINAL report |
+| Not done | Screenshots for these two surfaces (not regenerated this round); the 40-odd other admin panels still only inherit tokens | OPEN |

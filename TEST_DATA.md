@@ -117,3 +117,7 @@ A seed runs only when `DEMO_SEED_ALLOWED=true` and `KIORLY_ENV` / `KIOREX_ENV` /
 3. `scripts/seed-staging.sh --yes` runs it (`--reset` = remove and re-create demo records only; `--only lab,kiorex`; refuses any AWS account but the staging one). A copy of the script lives in `kiorex-platform/scripts/`.
 4. Staging logins are the same phones with OTP `000000` (the staging `test_phone_numbers` list every demo persona), staff `Demo@12345`. Providers stay mock (`MODE=mock`).
 Limits: steps 5-6 need the egress path HB07; Passport families/orgs/invitations exist only in the local dev IdP; ops users enrol TOTP in the UI.
+
+## SCIM and map test data (20 Nov 2026)
+- SCIM: no seed. `kiorex-account/apps/dev-idp/test/ka11-scim.test.ts` creates its own org, token and users (random `+20100...` phones). To try it by hand: sign in as a seeded org owner, `POST /api/orgs/<orgId>/scim-tokens`, then `curl -H "Authorization: Bearer kxscim_..." http://localhost:4400/scim/v2/Users`.
+- Map: the demo providers seeded by `kiorex-platform/prisma/demo/seed-demo.ts` carry clinic coordinates from the Kiorly demo clinics, so the results map shows pins and clusters in Cairo/Giza/Alexandria with the default offline (`mock`) style; set `VITE_MAP_PROVIDER=osm` for real tiles in dev.

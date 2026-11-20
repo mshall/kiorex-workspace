@@ -22,7 +22,7 @@ One ecosystem, two brands, four products (KX-00, ADR-001/002):
 - **Kiorex** (patients, company) — patient marketplace: discovery, booking against Kiorly's live slots,
   Kiorex Pay deposits, verified reviews, family accounts, consent, record vault; ops console + super admin
   with the **feature-flag control plane**. Domain kiorex.com.
-- **Kiorex Account** — shared OIDC identity, branded **Kiorex Passport** (founder naming, 19 Nov 2026; supersedes "Kiorex Account" as the user-facing name), patients first, phone OTP, passkeys. account.kiorex.com.
+- **Kiorex Passport** — shared OIDC identity (founder naming, 19 Nov 2026: the product is called Kiorex Passport everywhere; the repo/product key keep the technical name `kiorex-account`), patients first, phone OTP, passkeys. account.kiorex.com.
 - **Kiorly by Kiorex** (provider SaaS, each works without Kiorex): Kiorly Clinic (built), Kiorly Pharmacy (M9),
   Kiorly Lab (M15). kiorly.com / app.kiorly.com / kiorly.link.
 
@@ -62,7 +62,7 @@ Colours: Ink/Indigo `#3730A3`, Ink 2/Ocean `#0369A1`, Pulse/Coral `#E8735E`, Gro
   DBs: kiorly, kiorly_test, kiorex_platform, kiorex_platform_test, kiorex_account.
   Start: `PATH=/Users/postgres/bin:$PATH pg_ctl -D .pgdata -l .pgdata/server.log -o "-p 5433" start`
 - OpenTofu 1.13.9 at `~/.local/bin/tofu`. npm workspaces (no pnpm).
-- Ports: Kiorly API 3010 · Kiorly web 5174 (3000/5173 = founder's other checkout, never touch) · Kiorex API 4000 · Kiorex web 5180 · Kiorex Account (dev OIDC) 4400 · Expo 8081.
+- Ports: Kiorly API 3010 · Kiorly web 5174 (3000/5173 = founder's other checkout, never touch) · Kiorex API 4000 · Kiorex web 5180 · Kiorex Passport (dev OIDC) 4400 · Expo 8081.
 - AWS profile `aws-kiorex-profile` (account 599243104052, eu-central-1, user cursor-admin). Org SCPs deny many reads
   (CloudFormation, App Runner, RDS, S3 list) — plans against the live account will need the SCPs relaxed by the org admin.
 

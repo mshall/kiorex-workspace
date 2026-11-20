@@ -9,14 +9,14 @@ Status values: DONE+TESTED, DONE-UNTESTED, PARTIAL, MISSING, BLOCKED-HUMAN.
 
 | Status | IDs |
 |---|---|
-| DONE+TESTED | 231 |
+| DONE+TESTED | 232 |
 | DONE-UNTESTED | 1 |
-| PARTIAL | 1 |
+| PARTIAL | 0 |
 | MISSING | 0 |
 | BLOCKED-HUMAN | 2 |
 | total | 235 |
 
-MISSING = 0. PARTIAL = 1 (KA-11 SCIM, P3, phase 4, FD-12). BLOCKED-HUMAN = 2 IDs (see `FOUNDER_DECISIONS.md`). DONE-UNTESTED = 1 (KXMPR05 share link/deep link: DTO + UI built, no automated deep-link test).
+MISSING = 0. PARTIAL = 0 (KA-11 SCIM was built on 20 Nov 2026, see below; FD-12 now only covers the enterprise SAML/OIDC product choice). BLOCKED-HUMAN = 2 IDs (see `FOUNDER_DECISIONS.md`). DONE-UNTESTED = 1 (KXMPR05 share link/deep link: DTO + UI built, no automated deep-link test).
 
 ## 2. Known-gap checklist (from the Q9 brief)
 
@@ -30,7 +30,11 @@ MISSING = 0. PARTIAL = 1 (KA-11 SCIM, P3, phase 4, FD-12). BLOCKED-HUMAN = 2 IDs
 | Template server-side filtering (encounter.template.*) | DONE+TESTED (new) | `ScopeOfPracticeService.filterTemplatesForUser` on `GET /clinical/form-templates` + `scope-of-practice.node.test.ts` (clinics-management b883843) |
 | Referral intake route (ReferralIssued receive) | PARTIAL -> BLOCKED-HUMAN | `receiveReferral()` built + tested; the cross-tenant relay needs the ratified consumer contract (event is `v2-draft`): FD-08 |
 | User.profession NOT NULL for clinicians | DEFERRED (by design) | one release after backfill: FD-15 |
-| SCIM (KA-11 second half) | PARTIAL | not built, P3: FD-12 |
+| SCIM (KA-11 second half) | DONE+TESTED (new) | `kiorex-account/apps/dev-idp/src/scim.ts`: SCIM 2.0 `/scim/v2/Users` + `/Groups` (+ discovery), per-organisation bearer tokens (`POST /api/orgs/:id/scim-tokens`), mapped to Passport person identities and org memberships (role hint = group), `membership.changed` events; `ka11-scim.test.ts` (11 tests); `kiorex-account/Docs/SCIM.md`. Open: Passport UI for tokens, which customers use it (FD-12) |
+| Interactive map (KXMDS05, web) | DONE+TESTED (new) | MapLibre GL in `kiorex-platform/apps/web` (`src/components/map/*`, `src/lib/map/*`): provider-neutral style via env (`mock` offline default / `osm` / `style` / optional `amazon`), clinic markers, native clustering (accessible cluster buttons), selected-provider card, geolocation "near me" (re-sorts by distance), RTL-safe controls, WebGL fallback; API search items carry clinic `latitude`/`longitude` (never home addresses); `map.test.tsx` (20 tests). Mobile still shows address + directions (needs a native map module / dev client) |
+| Prescription composer + payroll surfaces (UI redesign) | DONE (new) | clinics-management `features/prescriptions/composer-kit.tsx`, `features/hr/compensation-kit.tsx`; used by the encounter composer, the draft panel, signed-Rx actions, HR KPIs/employee/admin forms. No new tests beyond typecheck/eslint/unit (visual; axe run documented in UI_REVIEW) |
+| HOME_VISIT_ADDRESS_ENCRYPTION_KEY infra wiring + HB07 egress | DONE (new, nothing applied) | `infra/tofu`: `enable_home_visit_address_key` (generated 32-byte hex secret injected as the runtime secret), `egress_mode` none/nat_single/nat_per_az (cost-safe default none) + `extra_interface_endpoints`; `tofu test` 11/11; `Docs/HB07_EGRESS.md` |
+| `@kiorex/contracts` distribution | DONE (workaround) | GitHub Packages publish impossible (`gh` token lacks `write:packages`); kiorex-platform CI installs a vendored tarball (`vendor/`, `scripts/vendor-contracts.sh`, `Docs/CONTRACTS_DISTRIBUTION.md`); pharmacy/lab still need the same change (other agents own them) |
 | Dependant claims Passport at majority | BLOCKED-HUMAN | link expiry + guardian notice tested (ka06); account claim needs identity-evidence policy: FD-11 |
 | Sent-invitation list endpoint | DONE+TESTED (new) | `GET /api/orgs/:id/invitations` + test in `ka09-orgs.test.ts` (kiorex-account); UI list is a follow-up |
 | Kiorex push device-token registry | DONE+TESTED (new) | `POST/GET/DELETE /me/devices`, PUSH to every active device, `engagement.int.spec.ts` (kiorex-platform 05c7f4d) |
@@ -240,7 +244,7 @@ Flags with zero test refs are only enforced through the generic flag machinery (
 | KA08 | Account linking with dual verification; reversible merge workflow with operator review. | DONE+TESTED | KA:dev-idp/src/accounts.ts; KA:dev-idp/src/db.ts \| tests: KA:dev-idp/test/ka08-linking.test.ts |
 | KA09 | Organization and membership API for products; invitations single-use, expiring 7 days. Role hints: owner, admi | DONE+TESTED | KA:dev-idp/src/db.ts; KA:dev-idp/src/orgs.ts \| tests: KA:dev-idp/test/ka09-orgs.test.ts; KA:dev-idp/test/ka14-editions.test.ts |
 | KA10 | Step-up authentication signal (acr, amr) consumed by products for money and clinical actions. | DONE+TESTED | e2e/src/passport.ts; KA:dev-idp/src/db.ts \| tests: KA:dev-idp/test/helpers.ts; KA:dev-idp/test/ka10-stepup.test.ts |
-| KA11 | Enterprise federation (SAML/OIDC) and SCIM provisioning. | PARTIAL | OIDC federation done + tested (ka11-federation.test.ts); SCIM not built -> FD-12 |
+| KA11 | Enterprise federation (SAML/OIDC) and SCIM provisioning. | DONE+TESTED | OIDC federation done + tested (ka11-federation.test.ts); SCIM 2.0 provisioning built + tested (ka11-scim.test.ts, Docs/SCIM.md); enterprise SAML in the managed IdP stays FD-12 |
 | KA12 | Tamper-evident audit stream for auth events with 2-year retention. | DONE+TESTED | KA:dev-idp/src/audit.ts \| tests importing it: clinics-management/apps/api/src/common/audit-log-query-bounds.node.test.ts |
 | KA13 | Patient address book (KXMHV01) lives in the Kiorex patient profile, encrypted at rest; never in tokens or clai | DONE+TESTED | kiorex-account/config/idp.json \| tests: KA:dev-idp/test/ka14-editions.test.ts |
 | KA14 | One subject may hold memberships in organizations of different editions; token carries org list only, edition  | DONE+TESTED | KA:dev-idp/src/orgs.ts; kiorex-account/config/idp.json \| tests: KA:dev-idp/test/ka14-editions.test.ts; KA:passport-ui/e2e/04-orgs.spec.ts |
@@ -350,7 +354,7 @@ Flags with zero test refs are only enforced through the generic flag machinery (
 | KXMDS02 | Filters: area/governorate, distance, fee range, next available, gender, language, rating, accepts deposit; P2  | DONE+TESTED | KP:api/src/catalog/provider-mapper.ts \| tests: KP:api/src/catalog/provider-mapper.unit.spec.ts |
 | KXMDS03 | Sort: earliest slot (default), distance, rating, fee. Sponsored results labelled (P3). | DONE+TESTED | KP:api catalog sort earliest\|distance\|rating\|fee; test/catalog.int.spec.ts |
 | KXMDS04 | Results show next 3 available slots inline; tap to hold. | DONE+TESTED | tests: KP:web/e2e/golden-journey.spec.ts |
-| KXMDS05 | Map view of clinics with availability pins; home providers shown by coverage area, never by home address. | DONE+TESTED | KP:api/openapi/kiorex-api.v1.openapi.json; KP:api/prisma/schema.prisma \| module tests: KP:api/src/catalog/provider-mapper.unit.spec.ts |
+| KXMDS05 | Map view of clinics with availability pins; home providers shown by coverage area, never by home address. | DONE+TESTED | KP:web/src/components/map/ResultsMap.tsx; KP:web/src/__tests__/map.test.tsx; KP:api/openapi/kiorex-api.v1.openapi.json; KP:api/prisma/schema.prisma \| module tests: KP:api/src/catalog/provider-mapper.unit.spec.ts |
 | KXMDS06 | Emergency keyword detection routes to emergency guidance (123 ambulance) — no booking, including home-nursing  | DONE+TESTED | KP:api/src/channels/whatsapp-booking.service.ts; KP:api/src/safety/emergency.ts \| tests: E2E:02-provider-sync.e2e.ts; KP:api/src/safety/safety.unit.spec.ts |
 | KXMDS07 | Search index refresh from Kiorly GET /marketplace/v1/providers?updatedSince every 5 min + PROVIDER_PROFILE_UPD | DONE+TESTED | KP:api/src/catalog/catalog.service.ts \| tests: KP:api/test/catalog.int.spec.ts |
 | KXMDS08 | Report profile analytics daily to Kiorly (POST /marketplace/v1/analytics/profile-views). | DONE+TESTED | KP:api/openapi/kiorex-api.v1.openapi.json; KP:api/src/catalog/catalog.controller.ts \| tests: KP:api/test/catalog.int.spec.ts |
