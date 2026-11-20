@@ -33,6 +33,8 @@ for (const prod of (process.argv.slice(2).length ? process.argv.slice(2) : Objec
   const dist = path.join(root, "dist"), pd = path.join(dist, "products", prod);
   cp(path.join(dist, "svg", `${prod}-lockup.svg`), path.join(pub, "kiorly-lockup.svg"));
   cp(path.join(dist, "svg", `${prod}-lockup-inverse.svg`), path.join(pub, "kiorly-lockup-inverse.svg"));
+  // Arabic lockups (words shaped RTL, mark on the right): kiorly-lockup-ar[-mono|-inverse].svg
+  for (const tone of ["", "-mono", "-inverse"]) cp(path.join(dist, "svg", `${prod}-lockup-ar${tone}.svg`), path.join(pub, `kiorly-lockup-ar${tone}.svg`));
   if (prod === "clinic") { cp(path.join(dist, "svg", "nurse-lockup.svg"), path.join(pub, "nurse-lockup.svg")); cp(path.join(dist, "svg", "nurse-lockup-inverse.svg"), path.join(pub, "nurse-lockup-inverse.svg")); }
   for (const f of ["favicon.svg", "favicon.ico", "apple-touch-icon.png", "og-image.png"]) cp(path.join(pd, f), path.join(pub, f));
   copyDir(path.join(pd, "pwa"), path.join(pub, "pwa"));

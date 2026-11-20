@@ -29,12 +29,26 @@ The Kiorly product lockup always reads **"Kiorly <Product> by Kiorex"**: line 1 
 
 | Product | `product=` | Accent (light) | Text-safe (light, AA) | Dark / inverse | Lockup text (EN / AR) |
 |---|---|---|---|---|---|
-| Kiorly Clinic | `clinic` | Teal `#0D9488` | `#0F766E` | `#2DD4BF` | Kiorly Clinic by Kiorex / كيورلي للعيادات من كيوركس |
-| Kiorly Lab | `lab` | Violet `#7C3AED` | `#6D28D9` | `#A78BFA` | Kiorly Lab by Kiorex / كيورلي لاب من كيوركس |
-| Kiorly Pharmacy | `pharmacy` | Green `#16A34A` | `#15803D` | `#4ADE80` | Kiorly Pharmacy by Kiorex / كيورلي للصيدليات من كيوركس |
+| Kiorly Clinic | `clinic` | Teal `#0D9488` | `#0F766E` | `#2DD4BF` | Kiorly Clinic by Kiorex / كيورلي للعيادات من كيوريكس |
+| Kiorly Lab | `lab` | Violet `#7C3AED` | `#6D28D9` | `#A78BFA` | Kiorly Lab by Kiorex / كيورلي لاب من كيوريكس |
+| Kiorly Pharmacy | `pharmacy` | Green `#16A34A` | `#15803D` | `#4ADE80` | Kiorly Pharmacy by Kiorex / كيورلي للصيدليات من كيوريكس |
 | Kiorly Nurse (edition of Clinic) | `nurse` | Nurse Rose `#E11D48` (unchanged look, `NURSE` sub-line) | | `#FB7185` | Kiorly Nurse by Kiorex |
 | Kiorex Passport | `passport` | Ocean (unchanged) | | | Kiorex Passport |
 
 Tokens: `--kx-product-{clinic,lab,pharmacy}` (graphic use: logo, chevrons, large marks; >= 3:1 on Ground `#F4F6FC`: teal 3.47, violet 5.27, green 3.05) and `--kx-product-*-text` (AA for body text on light; equals the dark value in dark mode); Tailwind `kx-product-*`; `theme.products` in `theme.ts`. Use accents sparingly (logo, product badge, active-tab underline), never as the primary action colour: Indigo stays primary.
 
-In an app, the one product-specific line is `KIORLY_PRODUCT` in `src/brand/ui-kit.tsx` (`KiorlyBrand` / `KiorlyMark` read it); the web logo is `<KiorexLogo product="clinic|lab|pharmacy" />`. In text lockups (login footers) `KiorlyFootText` colours the whole product word incl. the Arabic one (`heroFootWord` / `ux.login.footWord`). Arabic product text lives in the locales (`heroFoot` / `ux.login.foot`), the SVG artwork is Latin only.
+In an app, the one product-specific line is `KIORLY_PRODUCT` in `src/brand/ui-kit.tsx` (`KiorlyBrand` / `KiorlyMark` read it); the web logo is `<KiorexLogo product="clinic|lab|pharmacy" lang={i18n.language} />`.
+
+## Arabic lockups (founder, 20 Nov 2026)
+The ARTWORK (chevrons + coral pulse + rule) is identical; every WORD is Arabic in the Arabic UI. Spelling of Kiorex is **كيوريكس** everywhere (the founder's form; it matches the Passport name «كيوريكس باسبورت» and the Latin letters; older strings used كيوركس and were normalised in the three Kiorly web apps' `ar.json`; the Kiorex platform apps still use كيوركس: align them separately).
+| Product | Arabic lockup |
+|---|---|
+| Kiorly Clinic | كيورلي للعيادات / من كيوريكس |
+| Kiorly Lab | كيورلي لاب / من كيوريكس |
+| Kiorly Pharmacy | كيورلي للصيدليات / من كيوريكس |
+Layout (RTL): words | coral rule | mark, so the mark sits on the right (start side); the artwork is not mirrored. Line 1 `كيورلي`, line 2 product word (accent) then `من كيوريكس` (muted), right-aligned. Colour rule mirrors Latin: the final `ي` of كيورلي + the ENTIRE product word in the product accent, `كيورل` Indigo. Kiorly Nurse, Kiorex and Passport have no Arabic wordmark yet (Nurse's Arabic name is open question Q12): they stay Latin.
+- Select it with `lang`: `buildScene(variant, product, "ar")` or `<KiorexLogo lang="ar" />` (any `ar*`); `KiorlyBrand` follows `i18n.language`. Aria-label becomes the Arabic name.
+- Static files: `dist/svg/<product>-{lockup,wordmark}-ar[-mono|-inverse].svg`; vendored as `public/kiorly-lockup-ar[-mono|-inverse].svg`.
+- Shaping: `scripts/gen-wordmarks-ar.cjs` shapes with HarfBuzz (`harfbuzzjs`, full Arabic GSUB/GPOS + joining; opentype.js cannot) and emits outlined paths to `components/shared/wordmarks-ar.generated.ts` (rebuild: `node scripts/gen-wordmarks-ar.cjs && node -e 'require("./scripts/gen-svgs.cjs")("dist/svg")'`; needs `npm i harfbuzzjs` in `_brand`). Colour is per shaped glyph, so the accented `ي` never breaks joining. The font's required `ل+ي` ligature is switched off for the word كيورلي (otherwise one glyph could not take two colours).
+- Font: **IBM Plex Sans Arabic** (Medium for كيورلي, SemiBold for line 2), the Arabic face the apps already load next to Jost/Inter; licence **SIL OFL 1.1** (copyright IBM Corp.; `@expo-google-fonts/ibm-plex-sans-arabic`, `LICENSE_FONT`). Only outlines are embedded, no font file ships.
+- Text lockups (login footers): `KiorlyFootText` + `components/shared/foot-text.ts` colour the last letter of the brand word (`Y` / `ي`) and the whole product word (`heroFootWord` / `ux.login.footWord`); the Arabic brand span disables `rlig` (and changes colour only) so the join stays intact. Arabic footer strings: `heroFoot` / `ux.login.foot`; page titles come from `app.docTitle` (set on language change by each app's `lib/i18n.ts`).
