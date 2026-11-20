@@ -7,7 +7,7 @@
 # Compatible with macOS bash 3.2.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-REPOS="clinics-management:kiorex kiorex-contracts:main kiorex-platform:main kiorex-account:main kiorly-pharmacy:main kiorly-lab:main"
+REPOS=".:main clinics-management:kiorex kiorex-contracts:main kiorex-platform:main kiorex-account:main kiorly-pharmacy:main kiorly-lab:main"
 
 for pair in $REPOS; do
   r="${pair%%:*}"; b="${pair##*:}"; d="$ROOT/$r"
