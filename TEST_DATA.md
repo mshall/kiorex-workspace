@@ -98,6 +98,16 @@ Everything below exists after `scripts/seed-all.sh` (same people/phones/ids in e
 | Passport: guardian / org / linking / security states | Hoda, Karim, Tarek, Omar, Dalia; Ahmed Fawzy; ops | Passport :4400/account | phone + OTP | `/account/family` (active, ended, expired, pending guardian links), `/account/orgs` (invitations pending / consumed / expired / revoked, ended membership), `/account/security` (passkeys, sessions), `/account/ops/links` (pending_review) |
 | Pharmacy POS / inventory / purchasing | `cashier@`, `owner@demo.kiorly.local` | :5190 | `Demo@12345` | POS, inventory (near-expiry, expired, quarantined, recalled), receiving, purchasing in every state |
 
+## Ops outbox: DEAD rows and how to clear them (demo/e2e data only)
+A fresh `scripts/seed-all.sh --reset` produces **zero** new DEAD outbox events. Historic `kiorly.record_share_consent` DEAD rows (`Kiorly 404`, `timeout`, `circuit open`) all came from the e2e suite `04-pharmacy`, which links the demo patient to a FAKE Kiorly patient (`pat_e2e_*`); every later record-sharing toggle then pushed a consent to a patient the clinic does not know. Fixed at the root: Kiorex now treats a 404 on that push as a stale link (link `status='STALE'`, event dropped, no further fan-out), and `04-pharmacy` / the e2e global teardown delete their fake links and events (`purgeE2eConsentPushes` in `e2e/src/db.ts`).
+To clear leftovers from older runs (dev DB only, never on real data):
+```sql
+-- psql -h 127.0.0.1 -p 5433 -U postgres -d kiorex_platform
+delete from "OutboxEvent" where type = 'kiorly.record_share_consent' and (status = 'DEAD' or payload->>'kiorlyPatientId' like 'pat\_e2e\_%');
+delete from "KiorlyPatientLink" where "kiorlyPatientId" like 'pat\_e2e\_%';
+```
+(Replaying through the ops outbox API would only re-hit the same 404.) Unrelated `flag.changed` DEAD rows (HTTP 401 / fetch failed from flag-push to partners while they were down or unregistered) are not touched by this.
+
 ## Guard (demo seeds can never run in production)
 A seed runs only when `DEMO_SEED_ALLOWED=true` and `KIORLY_ENV` / `KIOREX_ENV` / `ENV_TAG` (the `Env` tag from OpenTofu) declares a non-production environment; `NODE_ENV` is only a fallback (staging containers run with `NODE_ENV=production`). It fails closed: prod/production/live anywhere, an unknown environment name, an undeclared environment under `NODE_ENV=production`, a production-looking database, or any override all refuse. A banner shows the environment and database name only. The staging Lambdas, the Cognito script (`scripts/seed-cognito-demo.mjs`, also checks the pool name/tags) and the tofu stacks (`enable_demo_seed`, plan fails for prod) repeat the check. Tests: every repo's `demo-seed-guard` test, `tofu test` in each `modules/product-stack`, `node --test scripts/seed-staging.dry-run.test.mjs`.
 

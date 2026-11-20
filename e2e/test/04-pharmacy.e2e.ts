@@ -4,6 +4,7 @@ import { pharmacy, pharmacyStaff, recordDevGate, revokeDevGate, setFlag, waitPar
 import { partnerCall, kiorexWebhook } from '../src/hmac.js';
 import { PH_PARTNER, WEBHOOK_SECRET, PATIENT_1 } from '../src/env.js';
 import { randomUUID } from 'node:crypto';
+import { purgeE2eConsentPushes } from '../src/db.js';
 
 /**
  * REAL Kiorex <-> Kiorly Pharmacy over HTTP (no fake partner): Kiorex :4000 (partner registration pr_pharmacy_dev) -> Pharmacy :3100 /marketplace/v1,
@@ -23,7 +24,7 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     await recordDevGate(ops, 'kiorex.pharmacy_orders');
     await waitPartnerFlags();
   });
-  afterAll(async () => { await revokeDevGate(ops, 'kiorex.pharmacy_orders'); });
+  afterAll(async () => { await revokeDevGate(ops, 'kiorex.pharmacy_orders'); await purgeE2eConsentPushes(); }); // fake pat_e2e_* link must not outlive the suite
 
   async function makeDrug(o: { rx?: boolean; price?: string; qty?: number } = {}) {
     const tag = rnd();
@@ -148,7 +149,8 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     });
     const g = await kiorex(p1, 'PUT', '/me/record-sharing/PRESCRIPTIONS', { granted: true }); // the patient's own consent decides (revoked earlier by other suites)
     expect(g.status, JSON.stringify(g.body)).toBe(200);
-    const share = async (enc: string) => (await kiorexWebhook(WEBHOOK_SECRET, '/webhooks/kiorly', { eventId: `e2e_${rnd()}`, type: 'PRESCRIPTION_SHARED', aggregateType: 'Encounter', aggregateId: enc, target: 'KIOREX', occurredAt: new Date().toISOString(), data: { patientId: kpid, scope: 'PRESCRIPTIONS', encounterId: enc, clinicId, signedAt: new Date().toISOString() } })).body;
+    // The fake clinic patient is unknown to Kiorly, so the consent push to it answers 404 and Kiorex (correctly) marks the link STALE; the suite needs it LINKED to receive shares.
+    const share = async (enc: string) => (await q('kiorex_platform', `update "KiorlyPatientLink" set status = 'LINKED' where "kiorlyPatientId" = $1`, [kpid]), await kiorexWebhook(WEBHOOK_SECRET, '/webhooks/kiorly', { eventId: `e2e_${rnd()}`, type: 'PRESCRIPTION_SHARED', aggregateType: 'Encounter', aggregateId: enc, target: 'KIOREX', occurredAt: new Date().toISOString(), data: { patientId: kpid, scope: 'PRESCRIPTIONS', encounterId: enc, clinicId, signedAt: new Date().toISOString() } })).body;
     expect((await share(`enc_${rnd()}`)).status).toBe('APPLIED');
     const rxs = (await kiorex(p1, 'GET', '/me/prescriptions')).body as any[];
     const rx = rxs.find((r) => r.clinicId === clinicId) ?? rxs[0];

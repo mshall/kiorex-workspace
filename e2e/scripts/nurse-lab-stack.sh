@@ -36,10 +36,11 @@ for d in "${DBS[@]}"; do [ "$(psqlx "select 1 from pg_database where datname='$d
 (cd "$ROOT/kiorex-platform/apps/api" && npx prisma generate >/dev/null && npx tsc -p tsconfig.build.json --outDir .e2e-dist) > "$LOGS/e2e11-build-kiorex.log" 2>&1
 (cd "$ROOT/kiorly-lab/apps/api" && npx prisma generate >/dev/null && npx tsc -p tsconfig.build.json --outDir .e2e-dist) > "$LOGS/e2e11-build-lab.log" 2>&1
 
-# --- migrate + seed (idempotent)
-(cd "$ROOT/clinics-management/apps/api" && DATABASE_URL="$(U kiorly_e2e11)" npx prisma migrate deploy && DATABASE_URL="$(U kiorly_e2e11)" PRISMA_SEED_ENSURE_DEMO_PASSWORDS=true npx tsx prisma/seed.ts && DATABASE_URL="$(U kiorly_e2e11)" npx tsx prisma/nurse-demo.seed.ts) > "$LOGS/e2e11-seed-clinic.log" 2>&1
-(cd "$ROOT/kiorex-platform/apps/api" && set -a && . ./.env.example && set +a && DATABASE_URL="$(U kiorex_e2e11)" KIORLY_LAB_BASE_URL=http://localhost:$LAB_PORT npx prisma migrate deploy && DATABASE_URL="$(U kiorex_e2e11)" KIORLY_LAB_BASE_URL=http://localhost:$LAB_PORT npx tsx prisma/seed.ts) > "$LOGS/e2e11-seed-kiorex.log" 2>&1
-(cd "$ROOT/kiorly-lab/apps/api" && DATABASE_URL="$(U kiorly_lab_e2e11)" npx prisma migrate deploy && for i in 1 2; do DEMO_SEED_ALLOWED=true KIORLY_ENV=local KIOREX_BASE_URL=http://localhost:$KIOREX_PORT DATABASE_URL="$(U kiorly_lab_e2e11)" npx tsx src/seed/seed.ts || true; done) > "$LOGS/e2e11-seed-lab.log" 2>&1
+# --- migrate + seed (idempotent). A failing migrate/seed is fatal and loud: print the log tail and exit non-zero (never continue with a half-seeded DB).
+seed_failed() { echo "!! $1 migrate/seed FAILED - last lines of $2:" >&2; tail -40 "$2" >&2; exit 1; }
+(cd "$ROOT/clinics-management/apps/api" && DATABASE_URL="$(U kiorly_e2e11)" npx prisma migrate deploy && DATABASE_URL="$(U kiorly_e2e11)" PRISMA_SEED_ENSURE_DEMO_PASSWORDS=true npx tsx prisma/seed.ts && DATABASE_URL="$(U kiorly_e2e11)" npx tsx prisma/nurse-demo.seed.ts) > "$LOGS/e2e11-seed-clinic.log" 2>&1 || seed_failed clinic "$LOGS/e2e11-seed-clinic.log"
+(cd "$ROOT/kiorex-platform/apps/api" && set -a && . ./.env.example && set +a && DATABASE_URL="$(U kiorex_e2e11)" KIORLY_LAB_BASE_URL=http://localhost:$LAB_PORT npx prisma migrate deploy && DATABASE_URL="$(U kiorex_e2e11)" KIORLY_LAB_BASE_URL=http://localhost:$LAB_PORT npx tsx prisma/seed.ts) > "$LOGS/e2e11-seed-kiorex.log" 2>&1 || seed_failed kiorex "$LOGS/e2e11-seed-kiorex.log"
+(cd "$ROOT/kiorly-lab/apps/api" && DATABASE_URL="$(U kiorly_lab_e2e11)" npx prisma migrate deploy && DEMO_SEED_ALLOWED=true KIORLY_ENV=local KIOREX_BASE_URL=http://localhost:$KIOREX_PORT DATABASE_URL="$(U kiorly_lab_e2e11)" npx tsx src/seed/seed.ts) > "$LOGS/e2e11-seed-lab.log" 2>&1 || seed_failed lab "$LOGS/e2e11-seed-lab.log"
 
 start() { local name=$1 cwd=$2; shift 2; (cd "$cwd" && nohup "$@" > "$LOGS/$name.log" 2>&1 & echo $! > "$PIDS/$name.pid"); }
 start e2e11-kiorly "$ROOT/clinics-management/apps/api" env NODE_ENV=development PORT=$CLINIC_PORT APP_WEB_URL=http://localhost:5174 DATABASE_URL="$(U kiorly_e2e11)" \

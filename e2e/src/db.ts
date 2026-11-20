@@ -17,3 +17,13 @@ export async function q<T = any>(db: string, sql: string, params: unknown[] = []
 export async function closeAll() { await Promise.all([...pools.values()].map((p) => p.end())); pools.clear(); }
 /** Dev IdP allows 5 OTP sends/phone/hour; E2E re-runs would hit that, so clear the OTP counters only (sessions untouched). */
 export async function resetOtpLimits() { await q('kiorex_account', 'TRUNCATE otp_challenges, otp_send_log, otp_lockouts'); }
+
+/**
+ * 04-pharmacy links the demo patient to a FAKE Kiorly patient (pat_e2e_*, clinic cl_e2e_*) so a signed PRESCRIPTION_SHARED webhook can land. Kiorly has no such
+ * patient, so every later record-sharing toggle by that patient (here and in manual demos) used to enqueue a kiorly.record_share_consent push that answered
+ * 404 (or timeout / circuit open while 10-resilience has Kiorly stopped) and ended DEAD in the ops outbox monitor. Remove the fake links and their events.
+ */
+export async function purgeE2eConsentPushes() {
+  await q('kiorex_platform', `delete from "OutboxEvent" where type = 'kiorly.record_share_consent' and payload->>'kiorlyPatientId' like 'pat\\_e2e\\_%'`);
+  await q('kiorex_platform', `delete from "KiorlyPatientLink" where "kiorlyPatientId" like 'pat\\_e2e\\_%'`);
+}
