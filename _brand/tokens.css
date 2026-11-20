@@ -161,6 +161,12 @@
   --kx-input: #7D86A6;
   --kx-focus: #E8735E;
   --kx-overlay: rgba(15,16,36,0.48);
+  --kx-product-clinic: #0D9488;
+  --kx-product-clinic-text: #0F766E;
+  --kx-product-lab: #7C3AED;
+  --kx-product-lab-text: #6D28D9;
+  --kx-product-pharmacy: #16A34A;
+  --kx-product-pharmacy-text: #15803D;
   --kx-success: #15803D;
   --kx-success-soft: #DCFCE7;
   --kx-warning: #B45309;
@@ -202,6 +208,12 @@
   --kx-input: #6A71A3;
   --kx-focus: #F08A75;
   --kx-overlay: rgba(0,0,10,0.62);
+  --kx-product-clinic: #2DD4BF;
+  --kx-product-clinic-text: #2DD4BF;
+  --kx-product-lab: #A78BFA;
+  --kx-product-lab-text: #A78BFA;
+  --kx-product-pharmacy: #4ADE80;
+  --kx-product-pharmacy-text: #4ADE80;
   --kx-success: #4ADE80;
   --kx-success-soft: #0F2E1B;
   --kx-warning: #FBBF24;
@@ -244,6 +256,12 @@
     --kx-input: #6A71A3;
     --kx-focus: #F08A75;
     --kx-overlay: rgba(0,0,10,0.62);
+    --kx-product-clinic: #2DD4BF;
+    --kx-product-clinic-text: #2DD4BF;
+    --kx-product-lab: #A78BFA;
+    --kx-product-lab-text: #A78BFA;
+    --kx-product-pharmacy: #4ADE80;
+    --kx-product-pharmacy-text: #4ADE80;
     --kx-success: #4ADE80;
     --kx-success-soft: #0F2E1B;
     --kx-warning: #FBBF24;

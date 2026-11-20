@@ -75,6 +75,23 @@ export const theme = {
       "950": "#260E23"
     }
   },
+  "products": {
+    "clinic": {
+      "graphic": "#0D9488",
+      "text": "#0F766E",
+      "dark": "#2DD4BF"
+    },
+    "lab": {
+      "graphic": "#7C3AED",
+      "text": "#6D28D9",
+      "dark": "#A78BFA"
+    },
+    "pharmacy": {
+      "graphic": "#16A34A",
+      "text": "#15803D",
+      "dark": "#4ADE80"
+    }
+  },
   "light": {
     "bg": "#F4F6FC",
     "bgSubtle": "#EBEEF8",

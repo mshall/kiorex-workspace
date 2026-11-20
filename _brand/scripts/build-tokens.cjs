@@ -26,6 +26,8 @@ const L = T.themes.light, D = T.themes.dark;
 const kebab = (s) => s;
 const themeVars = (th, el, sem, elev) => {
   let s = Object.entries(th).map(([k, v]) => `  --kx-${k}: ${v};`).join("\n");
+  s += "\n" + Object.entries(T.products).filter(([k]) => k[0] !== "$").map(([k, v]) => el === "dark"
+    ? `  --kx-product-${k}: ${v.dark};\n  --kx-product-${k}-text: ${v.dark};` : `  --kx-product-${k}: ${v.graphic};\n  --kx-product-${k}-text: ${v.text};`).join("\n");
   s += "\n" + Object.entries(T.semantic).map(([k, v]) => el === "dark"
     ? `  --kx-${k}: ${v.textDark};\n  --kx-${k}-soft: ${v.softDark};` : `  --kx-${k}: ${v.base};\n  --kx-${k}-soft: ${v.soft};`).join("\n");
   s += "\n" + Object.entries(elev).map(([k, v]) => `  --kx-shadow-${k}: ${v};`).join("\n");
@@ -97,6 +99,7 @@ const tw = {
     "kx-primary": "var(--kx-primary)", "kx-primary-hover": "var(--kx-primary-hover)", "kx-primary-soft": "var(--kx-primary-soft)", "kx-on-primary": "var(--kx-on-primary)",
     "kx-secondary": "var(--kx-secondary)", "kx-secondary-soft": "var(--kx-secondary-soft)", "kx-accent": "var(--kx-accent)", "kx-accent-soft": "var(--kx-accent-soft)",
     "kx-link": "var(--kx-link)", "kx-focus": "var(--kx-focus)",
+    ...Object.fromEntries(Object.keys(T.products).filter((k) => k[0] !== "$").flatMap((k) => [["kx-product-" + k, `var(--kx-product-${k})`], ["kx-product-" + k + "-text", `var(--kx-product-${k}-text)`]])),
     ...Object.fromEntries(Object.keys(T.semantic).flatMap((k) => [["kx-" + k, `var(--kx-${k})`], ["kx-" + k + "-soft", `var(--kx-${k}-soft)`]])),
   },
   fontFamily: { kx: [ "var(--kx-font)" ], "kx-ar": ["var(--kx-font-ar)"], "kx-mono": ["var(--kx-font-mono)"] },
@@ -124,6 +127,7 @@ const rn = (th, el) => ({
 const camel = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k.replace(/-(\w)/g, (_, c) => c.toUpperCase()), v]));
 const theme = {
   brand: T.brand, ramps,
+  products: Object.fromEntries(Object.entries(T.products).filter(([k]) => k[0] !== "$")),
   light: camel(rn(L, "light")), dark: camel(rn(D, "dark")),
   font: { latin: ty.latin, arabic: ty.arabic, weights: ty.weights },
   type: ty.scale, arabicLineHeight: ty.arabicLineHeight,

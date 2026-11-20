@@ -23,7 +23,7 @@ One ecosystem, two brands, four products (KX-00, ADR-001/002):
   Kiorex Pay deposits, verified reviews, family accounts, consent, record vault; ops console + super admin
   with the **feature-flag control plane**. Domain kiorex.com.
 - **Kiorex Passport** — shared OIDC identity (founder naming, 19 Nov 2026: the product is called Kiorex Passport everywhere; the repo/product key keep the technical name `kiorex-account`), patients first, phone OTP, passkeys. account.kiorex.com.
-- **Kiorly by Kiorex** (provider SaaS, each works without Kiorex): Kiorly Clinic (built), Kiorly Pharmacy (M9),
+- **Kiorly Clinic / Lab / Pharmacy by Kiorex** (provider SaaS; lockup text is always "Kiorly <Product> by Kiorex", each works without Kiorex): Kiorly Clinic (built), Kiorly Pharmacy (M9),
   Kiorly Lab (M15). kiorly.com / app.kiorly.com / kiorly.link.
 
 ## Repositories (KX-22 / KX-08) — this folder is the parent
@@ -54,7 +54,7 @@ One ecosystem, two brands, four products (KX-00, ADR-001/002):
 
 ## Brand (Kiorex) — FINAL founder artwork, 20 Nov 2026 (replaces the earlier rough mark)
 Assets in `_brand/`: `kiorex-mark.svg` (two facing chevrons — indigo ">" and ocean "<" — with a coral ECG pulse line through the centre), `kiorex-wordmark.svg` (KIOREX in Jost Medium, wide tracking, "KIOREX" in Indigo with the final X in Ocean; outlined glyph paths), `kiorex-logo-lockup.svg` (mark | thin coral vertical rule | wordmark), `kiorex-app-icon.svg` (indigo→ocean gradient tile, white chevrons, coral pulse). Founder source images: `_brand/kiorex-logo-concept*.png`.
-Colours: Ink/Indigo `#3730A3`, Ink 2/Ocean `#0369A1`, Pulse/Coral `#E8735E`, Ground `#F4F6FC`. Never redraw the logo by hand — always use the SVG assets. UI bar: high-end, award-winning, professional (see _docs/autopilot/Q11_brand_and_ux_polish.md).
+Colours: Ink/Indigo `#3730A3`, Ink 2/Ocean `#0369A1`, Pulse/Coral `#E8735E`, Ground `#F4F6FC`. **Product accents (founder, 20 Nov 2026):** each Kiorly product recolours the right chevron of the mark and the `Y` of `KIORLY` and the ENTIRE product word (Clinic / Lab / Pharmacy) — Clinic Teal `#0D9488`, Lab Violet `#7C3AED`, Pharmacy Green `#16A34A` (dark/inverse `#2DD4BF` / `#A78BFA` / `#4ADE80`; AA text variants `#0F766E` / `#6D28D9` / `#15803D`); tokens `--kx-product-*`. Nurse (edition of Clinic) keeps Nurse Rose; Passport keeps Ocean. Lockups read `Kiorly Clinic by Kiorex`, `Kiorly Lab by Kiorex`, `Kiorly Pharmacy by Kiorex`; details in `_brand/README.md`. Never redraw the logo by hand — always use the SVG assets. UI bar: high-end, award-winning, professional (see _docs/autopilot/Q11_brand_and_ux_polish.md).
 
 ## Local dev environment (this Mac)
 - Apple Silicon, no Homebrew. Docker Desktop (arm64, 29.x) now installed and running — containers available (e.g. Keycloak, Playwright images, LocalStack) but the shared Postgres stays native on 5433.
