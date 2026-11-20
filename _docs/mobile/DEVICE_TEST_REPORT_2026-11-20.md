@@ -1,7 +1,7 @@
 # Device test report: the two Expo apps on an Android emulator (20 Nov 2026)
 
 > **Scope.** Kiorex patient app (`kiorex-platform/apps/mobile`) and the Kiorly staff app (`kiorly-work`, still titled "Kiorly Work"; it is reworked into the single **Kiorly** app only after the founder approves [the mobile design pack](README.md)).
-> **Result.** Both run on Android in light/dark and Arabic/English against live local APIs. Three real bugs found and fixed. **iOS (iPhone 18 Pro simulator, iOS 27.2, Expo Go) was run for the patient app on 21 Nov 2026**: light/dark x ar/en all render with live data and no app errors in the device log (only Expo Go's own StoreKit/Firebase noise); the first-run Arabic LTR mismatch (finding 1) reproduces on iOS too. The staff app on iOS is still to do.
+> **Result.** Both run on Android in light/dark and Arabic/English against live local APIs. Three real bugs found and fixed. **iOS (iPhone 18 Pro simulator, iOS 27.2, Expo Go) was run for the patient app on 21 Nov 2026**: light/dark x ar/en all render with live data and no app errors in the device log (only Expo Go's own StoreKit/Firebase noise); the first-run Arabic LTR mismatch (finding 1) reproduces on iOS too. The **staff app was also run on iOS**, signed in as the demo clinic owner (home KPIs, schedule, account; light/dark x ar/en): no layout bugs; KPI tiles and the "waiting" status pill render fully, so open finding 5 is **Android-only**. iOS reproduces findings 1 and 3 (first-run Arabic LTR, notification prompt straight after sign-in) and showed a red LogBox for the i18next plural warning (finding 2), fixed in the staff app by choosing `compatibilityJSON` explicitly when `Intl.PluralRules` is missing (patient app uses i18next 27, which has no such fallback and shows no warning).
 
 ## How it was run
 
@@ -46,7 +46,7 @@ Home showed only 11 specialties. `GET /specialties` now returns 36 (adds allergy
 
 ## Not done
 
-* **iOS Simulator, staff app** (`kiorly-work`): patient app done, staff app pending.
+* iOS: Pharmacy/Lab modules of the staff app, physical device.
 * A physical device.
 * Push notifications (unavailable in Expo Go on Android since SDK 53; needs a development build).
 * Pharmacy and Lab modules of the staff app (need `3100`/`3200` APIs signed in with the right role).
