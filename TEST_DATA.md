@@ -121,3 +121,8 @@ Limits: steps 5-6 need the egress path HB07; Passport families/orgs/invitations 
 ## SCIM and map test data (20 Nov 2026)
 - SCIM: no seed. `kiorex-account/apps/dev-idp/test/ka11-scim.test.ts` creates its own org, token and users (random `+20100...` phones). To try it by hand: sign in as a seeded org owner, `POST /api/orgs/<orgId>/scim-tokens`, then `curl -H "Authorization: Bearer kxscim_..." http://localhost:4400/scim/v2/Users`.
 - Map: the demo providers seeded by `kiorex-platform/prisma/demo/seed-demo.ts` carry clinic coordinates from the Kiorly demo clinics, so the results map shows pins and clusters in Cairo/Giza/Alexandria with the default offline (`mock`) style; set `VITE_MAP_PROVIDER=osm` for real tiles in dev.
+
+## Standalone logins (Pharmacy and Lab, added 20 Nov 2026)
+- Pharmacy standalone tenant: `solo.*@demo.kiorly.local` logins (see `kiorly-pharmacy/Docs/TEST_DATA.md`); suite seed: `npm run seed:suite` in kiorly-pharmacy.
+- Lab: new onboarding creates STANDALONE tenants; existing demo tenants stay INTEGRATED (see `kiorly-lab/Docs/TEST_DATA.md`).
+- Feature coverage: `kiorly-pharmacy/Docs/FEATURE_MATRIX.md`, `kiorly-lab/Docs/FEATURE_MATRIX.md`.
