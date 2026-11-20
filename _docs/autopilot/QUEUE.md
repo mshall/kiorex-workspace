@@ -1,0 +1,32 @@
+# Autopilot queue (maintained by the lead; the cron watcher reads this)
+Status values: DONE | RUNNING(agentId) | PENDING | BLOCKED(reason)
+- Rev2.3 docs delta .................. DONE
+- Contracts 1.5.0 .................... DONE
+- Passport editions (KA-14) .......... DONE
+- OpenTofu nurse/safety/location ..... DONE
+- Data seeding ...................... DONE
+- Kiorly part 1 ...................... DONE
+- Kiorex API home visits ............. DONE
+- Q1 Kiorly home visits + Nurse ...... DONE
+- Q2 Kiorex web+ops UI ............... DONE
+- Q3 Kiorex mobile ................... DONE
+- Q4 Seed Rev 2.3 data ............... DONE
+- Q5 Lab field-visit ................. DONE
+- Final: full e2e + suites run, push, report to founder ... PENDING (after all above)
+- Q6 DTO-name collision fix ........... DONE
+- Q7 Nurse web UI + care-plan-requests ... DONE
+- Q8 KNLAB01 clinic side + contracts + Kiorex relay ... DONE
+- Q9 Completeness audit + close-out ... DONE (matrix: 235 IDs, 231 DONE+TESTED, 0 MISSING; see _docs/COMPLETENESS_MATRIX.md)
+- Q10 Final demo data pass + AWS-ready seeding ... DONE (commits across 6 repos)
+- Q11 Brand rollout (final logo + palette) + polish: parts a, b, c DONE; deep redesign continues in Q12/Q13a/Q13b. Q10 now needs Q12 + Q13a + Q13b DONE.
+- Q12 Patient web signature screens redesign ... DONE (e6cef18)
+- Q11b Expo + Passport brand/polish ........ DONE
+- Q11c Kiorly Clinic/Nurse/Pharmacy/Lab brand + shells ... DONE (partial: page bodies not redone)
+- Q13a Kiorly Clinic + Nurse deep UX redesign ... DONE (partial: shell, dashboard, calendar, front desk, P360, charts, nurse today; theme.spec+fs02 fixed)
+- Q13b Pharmacy + Lab deep UX redesign ... DONE (partial: POS, inventory, dashboard, Rx; lab critical/QC/validation/collector)
+- Q13c Pharmacy remaining pages redesign + visual review ... DONE (e8134b4)
+- Q13d Lab remaining pages redesign + visual review + Arabic PDF font ... DONE (7aade26, 2d8552c)
+- Q12b Patient web remaining flows redesign ... DONE (b0d625e; NOTE kiorex-platform/Docs/DESIGN_SYSTEM.md has uncommitted edits — commit it in the final step)
+- Q14 Kiorex API EINVAL crash root cause + jobs-on stack ... DONE (5f94cc1)
+- Q13e Clinic/Nurse remaining surfaces + triage of 15 failing Playwright specs ... DONE (9aed7c1, eda5c28; 85/95 chromium pass, 10 env-gated)
+- FINAL verification run (full e2e + all suites + nurse-lab stack + seed reset + stack health) ... RUNNING(launched)

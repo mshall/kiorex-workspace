@@ -1,0 +1,62 @@
+/* GENERATED from tokens.json by scripts/build-tokens.cjs — do not edit. HSL triplets for shadcn-style Tailwind configs. */
+:root {
+  --background: 225 57% 97%;
+  --foreground: 244 47% 20%;
+  --card: 0 0% 100%;
+  --card-foreground: 244 47% 20%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 244 47% 20%;
+  --primary: 244 55% 41%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 201 96% 32%;
+  --secondary-foreground: 0 0% 100%;
+  --ocean: 201 96% 32%;
+  --muted: 226 48% 95%;
+  --muted-foreground: 230 22% 38%;
+  --accent: 244 64% 96%;
+  --accent-foreground: 244 55% 34%;
+  --pulse: 9 75% 64%;
+  --pulse-foreground: 244 47% 20%;
+  --destructive: 0 74% 42%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 72% 29%;
+  --success-soft: 141 84% 93%;
+  --warning: 26 90% 37%;
+  --warning-soft: 48 96% 89%;
+  --info: 201 96% 32%;
+  --info-soft: 204 94% 94%;
+  --border: 225 38% 92%;
+  --input: 227 19% 57%;
+  --ring: 9 75% 64%;
+  --radius: 14px;
+}
+:root[data-theme="dark"], .dark {
+  --background: 237 44% 8%;
+  --foreground: 234 70% 95%;
+  --card: 236 41% 15%;
+  --card-foreground: 234 70% 95%;
+  --popover: 237 39% 19%;
+  --popover-foreground: 234 70% 95%;
+  --primary: 243 78% 73%;
+  --primary-foreground: 237 41% 10%;
+  --secondary: 198 93% 60%;
+  --secondary-foreground: 237 41% 10%;
+  --ocean: 198 93% 60%;
+  --muted: 238 41% 12%;
+  --muted-foreground: 230 30% 77%;
+  --accent: 239 42% 25%;
+  --accent-foreground: 243 81% 79%;
+  --pulse: 10 80% 70%;
+  --pulse-foreground: 237 41% 10%;
+  --destructive: 0 91% 71%;
+  --destructive-foreground: 237 41% 10%;
+  --success: 142 69% 58%;
+  --success-soft: 143 51% 12%;
+  --warning: 43 96% 56%;
+  --warning-soft: 38 67% 12%;
+  --info: 198 93% 60%;
+  --info-soft: 203 69% 14%;
+  --border: 236 35% 25%;
+  --input: 233 24% 53%;
+  --ring: 10 80% 70%;
+}

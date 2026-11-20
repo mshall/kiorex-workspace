@@ -1,0 +1,23 @@
+{
+  "name": "kiorex-e2e",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "up": "scripts/up.sh",
+    "down": "scripts/down.sh",
+    "test": "vitest run",
+    "test:nurse": "scripts/nurse-lab-stack.sh up && E2E_NURSE_STACK=1 E2E_KIORLY_URL=http://localhost:3012 E2E_KIOREX_URL=http://localhost:4002 E2E_LAB_URL=http://localhost:3202 vitest run test/11-nurse-lab.e2e.ts; rc=$?; scripts/nurse-lab-stack.sh down; exit $rc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.8"
+  }
+}

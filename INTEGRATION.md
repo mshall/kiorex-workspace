@@ -1,0 +1,105 @@
+# Local integration map (all repos must follow this)
+
+Authoritative shapes live in `kiorex-contracts`; this file pins the local wiring so parallel builders agree.
+
+## Services & ports
+| Service | Repo | URL (local) | DB (Postgres :5433) |
+|---|---|---|---|
+| Kiorly Clinic API | clinics-management/apps/api | http://localhost:3010 (prefix `/api/v1`) — 3000 is used by the founder's separate kiorly-clinics-management checkout | kiorly |
+| Kiorly Clinic web | clinics-management/apps/web | http://localhost:5174 | — |
+| Kiorex API | kiorex-platform/apps/api | http://localhost:4000 (prefix `/api/v1`) | kiorex_platform |
+| Kiorex patient web | kiorex-platform/apps/web | http://localhost:5180 (proxy `/api` → 4000) | — |
+| Kiorex ops console / super admin | kiorex-platform/apps/ops | http://localhost:5181 (proxy `/api` → 4000) | — |
+| Kiorex mobile (Expo) | kiorex-platform/apps/mobile | Expo :8081 (web + iOS sim) | — |
+| Kiorly Pharmacy API | kiorly-pharmacy/apps/api | http://localhost:3100 (prefix `/api/v1`; Kiorex machine API at `/marketplace/v1`, NOT under the prefix) | kiorly_pharmacy |
+| Kiorly Pharmacy web | kiorly-pharmacy/apps/web | http://localhost:5190 (proxy `/api` → 3100) | — |
+| Kiorly Lab API | kiorly-lab/apps/api | http://localhost:3200 (prefix `/api/v1`; Kiorex machine API at `/api/v1/integration/v1`) | kiorly_lab |
+| Kiorly Lab web | kiorly-lab/apps/web | http://localhost:5191 (proxy `/api` → 3200) | — |
+| Kiorex Account (dev OIDC) | kiorex-account/apps/dev-idp | http://localhost:4400 (issuer) | kiorex_account |
+
+DATABASE_URL pattern: `postgresql://postgres:postgres@127.0.0.1:5433/<db>?schema=public`
+
+## Identity (Kiorex Account, ADR-012/013, KX-04)
+- OIDC issuer `http://localhost:4400`; discovery at `/.well-known/openid-configuration`; JWKS at `/jwks`.
+- Clients (dev): `kiorex-web` (public, PKCE, redirect `http://localhost:5180/auth/callback`),
+  `kiorex-ops` (public, PKCE, redirect `http://localhost:5181/auth/callback`),
+  `kiorex-mobile` (public, PKCE, redirect `kiorex://auth/callback` and `http://localhost:8081/auth/callback`),
+  `kiorly-clinic` (confidential, secret `dev-kiorly-clinic-secret`, redirect `http://localhost:5174/auth/kiorex/callback`) — KCV-201 seam.
+- Login: phone OTP. Dev OTP sender logs the code to the console AND, only when `NODE_ENV!=production`, accepts `000000` for numbers in the seeded test list.
+- Access token = JWT (RS256), audience `kiorex-api`, claims: `sub`, `phone_number`, `phone_number_verified`, `name`, `locale`, `kx_roles` (e.g. `["patient"]`, `["ops_admin","super_admin"]`). **No clinical data in identity.**
+- Back-channel logout: IdP POSTs `logout_token` to registered `backchannel_logout_uri` (`http://localhost:4000/api/v1/auth/backchannel-logout`, `http://localhost:3010/api/v1/auth/kiorex/backchannel-logout`). Event `session.revoked` / `subject.deleted`.
+- Seed users: patient `+201000000001` (Amira), patient `+201000000002` (Hassan), ops super admin `+201000000099` (roles ops_admin, super_admin).
+
+## Kiorex → Kiorly marketplace API (existing in Kiorly, KX-09 §02–03)
+- Base: `http://localhost:3010/marketplace/v1` (verify against `clinics-management/apps/api/openapi/marketplace.openapi.json`; the OpenAPI wins).
+- HMAC headers per `apps/api/src/marketplace/marketplace-hmac.ts`.
+- Dev client credentials (seeded by Kiorly dev seed, scope MARKETPLACE): key `kx_dev_client`, secret `kx_dev_secret_change_me`.
+
+## Kiorly → Kiorex webhooks (outbox)
+- Target: `POST http://localhost:4000/api/v1/webhooks/kiorly` (secret `kx_dev_webhook_secret`).
+- Headers as Kiorly actually sends them (code wins over KX-09): `X-Kiorly-Event`, `X-Kiorly-Event-Id`, `X-Kiorly-Timestamp` (unix **seconds**), `X-Kiorly-Signature: sha256=<hex HMAC-SHA256 of "${timestamp}.${rawBody}">`. Use `verifyWebhook` from `@kiorex/contracts`.
+- Body `{eventId,type,aggregateType,aggregateId,occurredAt,target:"KIOREX",data}`; Kiorex de-duplicates on eventId. Kiorly emits `RESCHEDULED` (not `APPOINTMENT_RESCHEDULED`); `depositRefundable` may be absent → apply policy fallback. See kiorex-contracts/CHANGELOG.md.
+- `@kiorex/contracts` local package: `file:../../../kiorex-contracts/dist-pack/kiorex-contracts-1.0.0.tgz` from apps inside a monorepo (rebuild: `npm run pack:local` in kiorex-contracts).
+
+## Feature-flag control plane (ADR-023/024/025, KX-08 §08–09, KX-05 FF01–06)
+- Registry + super admin live in Kiorex API. Snapshot: `GET http://localhost:4000/api/v1/control/v1/flags/snapshot?product=<kiorly-clinic|kiorex|kiorex-account|kiorly-pharmacy|kiorly-lab>`
+  - Auth: `X-Kiorex-Product-Key` + HMAC signature (same scheme as marketplace HMAC; dev key `ff_<product>_dev`, secret `ff_dev_secret_change_me`).
+  - Response: `{ product, version, generatedAt, flags: [{ key, class, scopes, dependsOn, launchLocked, gateSatisfied, values: { global?:'OFF', markets: {EG:'OFF'}, orgs: {<orgId>:'OFF'} }, expiresAt? }], signature }` with `ETag`; products poll every 30 s, `If-None-Match` → 304.
+  - Push: `flag.changed` webhook `POST <product>/api/v1/feature-flags/kiorex/changed` → product refreshes immediately. Signed with the Kiorly webhook scheme (`sha256=hex(HMAC(secret, "${ts}.${body}"))`, ts seconds) using the **same per-product flags secret** (`ff_dev_secret_change_me` locally; Kiorly env `KIOREX_FLAGS_WEBHOOK_SECRET`, falling back to `KIOREX_FLAGS_SECRET`). Kiorly dev registration: product key `ff_kiorly-clinic_dev`, push URL `http://localhost:3010/api/v1/feature-flags/kiorex/changed`.
+- Evaluation is local in every product; missing snapshot ⇒ code defaults (ON, launch-locked OFF).
+
+## Payments (Kiorex Pay, KX-09 §06)
+- PSP adapters behind an interface: `paymob`, `fawry`, `instapay`. Locally use `PSP_MODE=sandbox-fake`: a fake hosted checkout page served by Kiorex API at `/api/v1/pay/fake-checkout/:intentId` that posts a signed PSP webhook back. No real PSP keys.
+
+## Messaging
+- WhatsApp/SMS/push/email adapters in dev write to the DB message log + console (`MESSAGING_MODE=log`). No Meta templates are invented — use placeholder template IDs marked `TODO_NEEDS_HUMAN`.
+
+## AI (KX-11)
+- AI gateway module inside each product (no separate AI service). Provider abstraction: `openai-eu` (real, needs key) and `fake` (deterministic, default locally). PHI redaction before any provider call; outputs labelled; launch-locked flags (`kiorex.ai_navigation`) apply.
+
+## Passport v2 additions (KA-03/06/08/09/10/11)
+- Extra token claims: `sid`, `acr`/`amr`/`auth_time` (step-up = `urn:kiorex:acr:mfa`, fresh ≤300 s via `POST /api/step-up`), `kx_orgs` (only with scope `kx_org`; `org_id` + `role_hint` only), `act.sub` on guardian act-as tokens (`sub` = dependant, ≤10 min, no phone). Still no clinical data (ADR-013).
+- Dev helpers: `GET /dev/inbox` (mock OTP/notification messages; OTP in `data.code`), `GET /dev/events`, second fake upstream IdP on :4401 (flag `account.provider_sso`).
+- New contract events (kiorex-contracts 1.2.0): `guardian.link.changed`, `membership.changed`, `account.merged` — dev outbox only for now.
+
+## Kiorex Passport web UI (self-service account pages)
+- **URL**: dev `http://localhost:4400/account` (served by the dev IdP, React SPA bundled in memory); production `https://account.kiorex.com/account`. Pages: `/account` (profile, phone, language), `/account/security` (passkeys, authenticator app, sessions, sign-in activity), `/account/family` (dependants, guardians, co-guardian invitations, act-as), `/account/linked` (link requests), `/account/orgs`, `/account/privacy` (export, delete), `/account/apps` (connected apps), `/account/step-up?return=<path under /account>`, `/account/ops/links` (ops reviewer queue, MFA step-up).
+- **Kiorex patient web, Account page**: add a link/button **"Manage Kiorex Passport" / "إدارة كيوريكس باسبورت"** that opens `${PASSPORT_URL}/account` (same tab or new tab; no token is passed, the user signs in to Passport itself). Use `http://localhost:4400/account` in dev (`VITE_PASSPORT_URL`-style env, no hard-coded host). Deep links worth using: `/account/security`, `/account/family`, `/account/privacy`, `/account/orgs?invite=<token>` (org invitation link from the WhatsApp message prefills the code). Kiorex-side account deletion should send people to `/account/privacy`. Do not embed Passport in an iframe (`frame-ancestors 'none'`).
+- **Client**: `kiorex-passport-web` (public, PKCE S256, redirect `<issuer>/account/callback`, post-logout `<issuer>/account`) is the Passport SPA itself and appears in "Connected apps" as the current app. Products must not reuse it.
+- **Guardian act-as**: the Passport page calls `POST /api/guardian/act-as` and shows the short-lived scoped token state with an "Open Kiorex as <dependant>" link to the patient web origin. Hand-off of the token to the patient web is an open integration decision (NEEDS_HUMAN #21); until then products call `POST /api/guardian/act-as` themselves with the guardian's own access token.
+- **New small API** (all Bearer, KA-13-style gaps closed for the UI): `GET|PATCH /api/account`, `GET /api/meta` (policy for the UI), `GET /api/security/events`, `DELETE /api/passkeys/:id`, `DELETE /api/totp` (step-up, refused for MFA-required roles), `POST /api/guardian-links/:id/decline`, `GET /api/invitations` + `POST /api/invitations/:id/{accept,decline}`, `GET /api/connected-apps`, `DELETE /api/connected-apps/:clientId`.
+- Copy is draft (AR + EN) and flagged NEEDS_HUMAN in the UI where legal/clinical review is required (`kiorex-account/Docs/NEEDS_HUMAN.md` #19-22). Messaging stays mocked (read OTPs in `GET /dev/inbox`).
+
+## Vertical partners: Kiorex <-> Kiorly Pharmacy / Kiorly Lab (kiorex-contracts 1.4.1, first real-HTTP integration)
+
+**Canonical ports** (everything else, e.g. 3020/3030, is obsolete and must not appear in any config): Pharmacy API 3100 / web 5190, Lab API 3200 / web 5191, Kiorly Clinic 3010, Kiorex 4000. Contracts: `kiorex-contracts/openapi/kiorly-pharmacy.v1.openapi.json`, `kiorly-lab.v1.openapi.json`, `kiorex-webhooks.v1.openapi.json` (`/webhooks/pharmacy`, `/webhooks/lab`).
+
+**Conventions (decisions, resolve NH-PH-024 / NH-LB-025 / NEEDS_HUMAN #23 engineering side):**
+- **Auth**: the Kiorly request HMAC (`signKiorlyRequest` / `verifyKiorlyRequest` from `@kiorex/contracts` on BOTH sides): `X-Kiorly-Client-Key`, `-Timestamp` (ms), `-Nonce`, `-Signature` over `ts\nnonce\nMETHOD\npath\nsha256(body)`; path = full request path without query. Events back use the webhook scheme (`signWebhook`/`verifyWebhook`: `X-Kiorly-Timestamp` seconds, `X-Kiorly-Event`, `X-Kiorly-Event-Id`, `X-Kiorly-Signature: sha256=hex`).
+- **Partner addressing = the client key.** There is NO `X-Kiorex-Org-Id`. Each partner issues Kiorex an integration client whose key is bound to exactly one partner tenant (`IntegrationClient` in Pharmacy and Lab); the branch/lab is addressed by id in path/body (`pharmacyId` = branch id, `labId`). Org-scope feature flags for the partner products are keyed by the partner's own `Tenant.id`.
+- **Per-partner secrets.** Kiorex stores one `PartnerRegistration` per partner (`baseUrl` = host only, `clientKey`, encrypted `clientSecret` + `webhookSecret`, `active`), editable by ops at `GET/POST/PUT /api/v1/admin/partners`; env vars `KIORLY_PHARMACY_*` / `KIORLY_LAB_*` are the fallback. Contract paths are appended by the client (`PARTNER_API_PATH`: pharmacy `/marketplace/v1`, lab `/api/v1/integration/v1`). Partner outbox events add `X-Kiorly-Client-Key`; Kiorex picks that partner's webhook secret (no key => env secret, never in production). Each partner stores its Kiorex base URL + sealed webhook secret on its `IntegrationClient` (`/api/v1/webhooks/pharmacy|lab`).
+- **Flow, pharmacy**: Kiorex order intent (cart priced by `POST /catalogue/quote`) -> Kiorex Pay captures -> Kiorex outbox `POST /marketplace/v1/orders` (`orderId` = Kiorex order id = Idempotency-Key; unit prices must equal the pharmacy price book else 409 PRICE_CHANGED) -> Rx: `POST /prescriptions/validate` (Pharmacy verifies the token with Kiorex `GET /api/v1/rx/verify`; VALID only after a pharmacist validated, INVALID rejects the order) -> staff accept -> pharmacist sign-off -> `OrderReady` -> dispense -> `DispenseCompleted` (`partial` => Kiorex `PARTIAL_REVIEW`, no auto-release) / `OrderRejected` (full automatic refund). Partner 4xx (except 401 = our credentials) rejects + refunds; 5xx/timeouts retry with the same key.
+- **Flow, lab**: tests/quote/slots from the Lab (price + capacity authority) -> booking -> Kiorex Pay -> `POST /integration/v1/orders` (`sourceRef` = booking id, `consentChannels: [KIOREX_VAULT]`) -> collection (`LabOrderStatusChanged` COLLECTED) -> QC-passing result -> sign -> release -> `LabResultReleased` -> vault record with the signed secure link only (never values) and funds released. Lab-side cancel before collection refunds in full.
+- **Flags**: Kiorex `kiorex.pharmacy_orders` / `kiorex.lab_bookings` (launch-locked, gate evidence required) and partner `pharmacy.kiorex_orders` / `lab.kiorex_bookings` (products poll the Kiorex snapshot; product key `ff_<product>_dev` with `kiorly-pharmacy` / `kiorly-lab`). OFF at Kiorex => 403 FEATURE_DISABLED for new actions; OFF at a partner => Kiorex surfaces 403 FEATURE_DISABLED (`partner` field) and refunds paid orders.
+
+**Dev registrations (local only; seeded by both repos, never in production):**
+
+| Partner | Kiorex -> partner key / secret | Webhook secret (partner -> Kiorex) | Partner tenant |
+|---|---|---|---|
+| Pharmacy | `kx_dev_pharmacy_client` / `kx_dev_pharmacy_secret_change_me` | `kx_dev_pharmacy_webhook_secret` | demo tenant `org_demo_kiorly`, staff `pharmacist@demo.kiorly.local` (password `Demo@12345`) |
+| Lab | `kl_dev_kiorex` / `dev_kiorex_secret_change_me` | `kx_dev_lab_webhook_secret` | demo tenant slug `demo-lab`, dev-login `POST /api/v1/auth/dev-login {orgSlug:"demo-lab",email:"<role>@demo-lab.test"}` |
+
+Seeds: `npm run db:seed -w apps/api` (Kiorex), `npm run seed -w api` (pharmacy), `npm run db:seed -w api` (lab) — all idempotent. Run the whole stack with `e2e/scripts/up.sh --build --seed --restart` (partners run `KIOREX_MODE=real`, 1.5 s flag polling, 1 s outbox sweeps); see `e2e/STACK.md`.
+
+**E2E** (`e2e/test/04-pharmacy.e2e.ts`, `05-lab.e2e.ts`): real services over HTTP, no fakes. Launch-locked flags get `DEV-ONLY-NOT-A-REAL-GATE` evidence for the E2E database only (same labelling as the Egypt dev gate) and it is revoked afterwards. Ops login needs TOTP now (`e2e/src/passport.ts`, dev-only secret from kiorex-account `config/seed-users.json`).
+
+## Nurse-collected lab samples: Kiorly Nurse -> Kiorex -> Kiorly Lab (kiorex-contracts 1.6.0, KNLAB01 / KLORD05)
+
+Kiorly Nurse is an EDITION of Kiorly Clinic (ADR-031): no new repo, client or endpoint set. Flow (all HMAC, same schemes as everywhere):
+1. **Clinic (NURSE edition, Pro+)** `POST /api/v1/nurse/lab-orders/:orderId/collection` (after `POST /nurse/visits/:appointmentId/lab-orders` transcribes the doctor's request) records tube labels, collection time, temperature, >= 2 identifiers matched against the record, collector, and the patient's LAB_RESULTS consent; emits `LabOrderPlaced` with the optional 1.6.0 fields (`originEdition: NURSE`, `prescriberName`, `identifiersChecked` in the Lab's vocabulary, `patient`, `nurseCollection`) to Kiorex `POST /api/v1/webhooks/kiorly`. Safety checks are never flagged; `clinic.lab_order_handoff` OFF = 403 on the new action.
+2. **Kiorex** (`src/lab/nurse-lab-relay.service.ts`) relays it to the Lab with a SECOND partner registration of kind `lab_nurse` (the lab's `KIORLY_NURSE` integration client; dev `kl_dev_nurse / dev_nurse_secret_change_me`, seeded on both sides; `POST /admin/partners/lab_nurse` for ops): `POST /api/v1/integration/v1/orders`, idempotent on `sourceRef` = the clinic order id. Demographics/identifiers/tube labels are relayed and never stored. Definitive refusals are relayed to the clinic as `REJECTED_BY_LAB`; transient failures answer 5xx so the clinic outbox redelivers.
+3. **Lab** ingests with custody starting at the nurse's collection time (tube label = specimen barcode), receipt by scan, results, release on `KIORLY_NURSE_IMPORT`; its outbox sends `LabOrderStatusChanged` / `LabResultReleased` (the Lab events keep `source: KIORLY_CLINIC` + optional `originEdition: NURSE`) to Kiorex `/webhooks/lab` as for any order.
+4. **Back to the nurse**: Kiorex enqueues `nurse_lab.status_push` and calls the clinic marketplace API `POST /marketplace/v1/lab-orders/:orderId/status` with the status, the sanitized chain of custody (from the lab's `GET /integration/v1/orders/{sourceRef}/custody`) and, on release, the report id + secure link (never values). The nurse reads it at `GET /nurse/lab-orders/:id/custody`; a linked Kiorex patient also gets the vault record (secure link only) when the relay added `KIOREX_VAULT` (patient has not revoked LAB_RESULTS).
+
+Contract changes (all additive, `kiorex-contracts/CHANGELOG.md` 1.6.0): `LabOrderPlaced` optional Nurse fields; `originEdition` on `LabOrderCreated` / `LabOrderStatusChanged`; `kiorly-lab.v1.openapi.json` 0.3.0 (`nurseCollection`, `identifiersChecked`, `collection.districtId`, `KIORLY_NURSE` source, `GET /orders/{sourceRef}/custody`); `kiorly-marketplace.v1.openapi.json` 1.3.0 (`POST /lab-orders/{orderId}/status`); `PARTNER_DEV_DEFAULTS.labNurse`.
+Verification: `e2e/test/11-nurse-lab.e2e.ts` against `e2e/scripts/nurse-lab-stack.sh up` (isolated: clinic :3012, Kiorex :4002, lab :3202, databases `kiorly_e2e11` / `kiorex_e2e11` / `kiorly_lab_e2e11`, built to `.e2e-dist`); the standard stack also works after `scripts/up.sh --build --seed --restart` + `npm run db:seed:nurse -w api`. NEEDS_HUMAN: counsel on the `patient` pass-through, consent-token verification at Kiorex, CMO sign-off of the identifier set (clinic NH-KNLAB01, lab NH-LB-034, Kiorex NEEDS_HUMAN).
