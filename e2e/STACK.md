@@ -1,6 +1,6 @@
 # Local E2E stack (updated 2026-11-20, after the Node 26 / Nest 12 / Prisma 7 upgrade)
 
-Toolchain: **Node 26 LTS must be first on `PATH`** (this Mac has no system Node 26; `~/.local/node-26/node-v26.13.1-darwin-arm64/bin`, SHA-256 checked against nodejs.org). Web dev servers: `npx vite --port <p> --strictPort` in each `apps/web` (5174 Kiorly, 5180 patient, 5181 ops, 5190 pharmacy, 5191 lab); start them yourself, `up.sh` only starts the APIs and Passport.
+Toolchain: **Node 26 LTS must be first on `PATH`** (this Mac has no system Node 26; `~/.local/node-26/node-v26.13.1-darwin-arm64/bin`, SHA-256 checked against nodejs.org). Web dev servers: `npx vite --port <p> --strictPort` in each `apps/web` (5174 Kiorly, 5180 patient, 5181 ops, 5192 pharmacy, 5193 lab); start them yourself, `up.sh` only starts the APIs and Passport.
 
 Running now (health = `/api/v1/health/ready`; Passport = `/.well-known/openid-configuration`):
 

@@ -32,11 +32,11 @@ Unit tests after the fixes: patient app 119 passed, staff app 76 passed, `tsc` c
 
 ## Open findings (not fixed)
 
-1. **First-run direction mismatch (Expo Go).** The app defaults to Arabic, `I18nManager.forceRTL(true)` only takes effect after a JS reload, and `bootstrapI18n()` returns `needsRestart` that nothing acts on in production. On a fresh install Arabic text is briefly shown in an LTR layout until the next launch. Trying `expo-updates` `reloadAsync()` crashed Expo Go on startup (`EventEmitter of undefined`), so it was reverted. **Needs a development build** (EAS or `expo run:android`) to verify a proper fix.
+1. **FIXED in code (21 Nov 2026), automatic reload still to verify on a development build.** **First-run direction mismatch (Expo Go).** The app defaults to Arabic, `I18nManager.forceRTL(true)` only takes effect after a JS reload, and `bootstrapI18n()` returns `needsRestart` that nothing acts on in production. On a fresh install Arabic text is briefly shown in an LTR layout until the next launch. Trying `expo-updates` `reloadAsync()` crashed Expo Go on startup (`EventEmitter of undefined`), so it was reverted. **Needs a development build** (EAS or `expo run:android`) to verify a proper fix.
 2. **i18next plural warning.** `Your environment seems not to be Intl API compatible` is logged at startup on Hermes in Expo Go; adding `intl-pluralrules` did not change it, so it was removed. Plurals fall back to the v3 format and render correctly. Re-check in a development build.
-3. **Notification permission** is requested immediately after sign-in in the staff app, before any context; Android re-prompts on each launch after "Don't allow". Move the prompt behind an explanatory screen.
+3. **FIXED (21 Nov 2026): in-app explainer once, 14-day "Not now", Me > Notifications switch.** **Notification permission** was requested immediately after sign-in in the staff app, before any context; Android re-prompts on each launch after "Don't allow". Move the prompt behind an explanatory screen.
 4. **Staff app is still titled "Kiorly Work"** (login hero, header). Intentional until the design pack is approved.
-5. **Clipped status pill (staff app, Arabic).** On the schedule screen the "waiting" pill shows "في" instead of "في الانتظار" while "في الكشف" renders fully. `flexShrink: 0` on `Badge` did not change it (reverted), so the cause is elsewhere (label text or Android RTL text measurement). Needs a closer look with a development build.
+5. **FIXED (21 Nov 2026, reproduced and verified on the Android emulator).** Cause: Android measures the shrink-wrapped Arabic label on one line but lays it out on two, clipping line two; fix `numberOfLines={1}` in Badge/Chip/Button. **Clipped status pill (staff app, Arabic).** On the schedule screen the "waiting" pill shows "في" instead of "في الانتظار" while "في الكشف" renders fully. `flexShrink: 0` on `Badge` did not change it (reverted), so the cause is elsewhere (label text or Android RTL text measurement). Needs a closer look with a development build.
 6. Only guest screens were exercised in the patient app (sign-in goes through Passport in a browser); signed-in patient flows are covered by the headless Playwright run in `UPGRADE_2026-11_REPORT.md`.
 7. Patient forms (checkout, review, address) have no `KeyboardAvoidingView`; likely affected by the same Android 15 behaviour as #3. Verify on device.
 
@@ -63,3 +63,10 @@ EXPO_PUBLIC_API_URL=http://10.0.2.2:4000/api/v1 EXPO_PUBLIC_OIDC_ISSUER=http://1
   npx expo start --localhost --port 8082 --no-dev --minify --clear
 adb shell am start -a android.intent.action.VIEW -d exp://localhost:8082
 ```
+
+## Update 21 Nov 2026 (staff app fixes)
+
+* Finding 1: `handleRestart` added; reload uses `reloadAppAsync` from `expo` (no `expo-updates`, which crashed Expo Go). Expo Go shows a one-time banner (verified after `pm clear` on the Android emulator and after clearing Expo Go data on the iPhone 18 Pro simulator; no startup crash on either). In Expo Go on Android `forceRTL` does not persist across launches (`needsRestart` is true on every launch, banner only once); the reload path cannot be verified without a **development build**.
+* Finding 3: in Expo Go on Android `getPermissionsAsync` reports "denied" before the first ask, so "denied with canAskAgain" is treated as "not asked yet".
+* Finding 5: before/after screenshots in `/private/tmp/claude-501/pill-shots/pill-before-ar-dark.png` and `pill-after-ar-dark.png`.
+* Android test used a local mock of the clinic API (the real stack was not running on :3010 in this session).

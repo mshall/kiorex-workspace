@@ -140,6 +140,11 @@ describe('b. BASIC org (Corner Family Clinic): upgrade screen, safety alerts sti
       }
       expect((await app(t, 'GET', '/patients?pageSize=1')).status, 'app-flagged request to a web route').toBe(403);
       expect((await web(t, 'GET', '/patients?pageSize=1')).status, 'same call without the app header (web) is untouched').toBe(200);
+      // the plan gate runs before every controller guard (role / scope / entitlement): app-flagged routes behind those guards answer FEATURE_DISABLED too
+      for (const p of ['/revenue/totals', '/exports/offboarding', '/hr/employees', '/operations/summary', '/expenses', '/clinical/form-templates', '/home-visits/route']) {
+        const r = await app(t, 'GET', p);
+        expect([r.status, r.body.code], `${email} ${p}`).toEqual([403, 'FEATURE_DISABLED']);
+      }
     });
   }
   it('the safety-alert inbox works on BASIC: list, acknowledge (idempotent, first wins), and a second role sees it acknowledged', async () => {
@@ -401,16 +406,25 @@ describe('d. Home-visit rounds: solo nurse Mona and an agency nurse (start, en r
     // depart (en route)
     const dep = await app(mona, 'POST', `/home-visits/${hv.id}/depart`, { ...GEO, etaMinutes: 20 }, { 'Idempotency-Key': `e2e16-dep-${hv.id}` });
     expect([dep.status, dep.body.state]).toEqual([200, 'ON_MY_WAY']); expect(dep.body.enRouteAt).toBeTruthy();
-    // replay of the same queued depart (lost response): state machine refuses -> the app shows it as a conflict, nothing changes
+    // replay of the same queued depart (lost response): idempotent for the same actor -> 200 with the current visit, replayed:true, nothing changes
     const dep2 = await app(mona, 'POST', `/home-visits/${hv.id}/depart`, { ...GEO }, { 'Idempotency-Key': `e2e16-dep-${hv.id}` });
-    expect([dep2.status, dep2.body.code]).toEqual([409, 'ILLEGAL_TRANSITION']);
+    expect([dep2.status, dep2.body.state, dep2.body.replayed], JSON.stringify(dep2.body)).toEqual([200, 'ON_MY_WAY', true]);
+    expect(dep2.body.enRouteAt).toBe(dep.body.enRouteAt);
+    expect(dep.body.replayed, 'the first (real) transition is not flagged').toBeUndefined();
     expect((await web(mona, 'GET', `/home-visits/${hv.id}`)).body.enRouteAt).toBe(dep.body.enRouteAt);
+    expect(Number((await q('kiorly', `select count(*)::int as n from "HomeVisitGeostamp" where "visitId" = $1 and kind = 'ON_MY_WAY'`, [hv.id]))[0].n), 'no second event/geostamp').toBe(1);
     // arrive needs a live geostamp (never queued offline): without coordinates it is refused and the state stays ON_MY_WAY
     const noGeo = await app(mona, 'POST', `/home-visits/${hv.id}/arrive`, {});
     expect(noGeo.status, JSON.stringify(noGeo.body)).toBeGreaterThanOrEqual(400);
     expect((await web(mona, 'GET', `/home-visits/${hv.id}`)).body.state).toBe('ON_MY_WAY');
     const arr = await app(mona, 'POST', `/home-visits/${hv.id}/arrive`, GEO);
     expect([arr.status, arr.body.state]).toEqual([200, 'ARRIVED']);
+    // replayed arrive: 200 replayed:true, same arrivedAt, no second geostamp; a genuinely illegal transition (depart after arrival) is still 409
+    const arr2 = await app(mona, 'POST', `/home-visits/${hv.id}/arrive`, GEO);
+    expect([arr2.status, arr2.body.state, arr2.body.replayed, arr2.body.arrivedAt]).toEqual([200, 'ARRIVED', true, arr.body.arrivedAt]);
+    expect(Number((await q('kiorly', `select count(*)::int as n from "HomeVisitGeostamp" where "visitId" = $1 and kind = 'ARRIVED'`, [hv.id]))[0].n)).toBe(1);
+    const illegal = await app(mona, 'POST', `/home-visits/${hv.id}/depart`, GEO);
+    expect([illegal.status, illegal.body.code]).toEqual([409, 'ILLEGAL_TRANSITION']);
     // SOS: raised, delivered within SLA, shows on the app alert inbox and on the web safety-alert list
     const sos = await app(mona, 'POST', `/home-visits/${hv.id}/sos`, GEO);
     expect(sos.status, JSON.stringify(sos.body)).toBe(200);
@@ -438,6 +452,39 @@ describe('d. Home-visit rounds: solo nurse Mona and an agency nurse (start, en r
     expect(fin).toMatchObject({ state: 'FINISHED' }); expect(fin.finishedAt).toBeTruthy();
     expect((await web(mona, 'GET', `/appointments/${hv.appointmentId}`)).body.status).toBe('COMPLETED');
     expect((await web(mona, 'GET', `/home-visits?from=${day}&to=${addDays(day, 1)}`)).body.items.find((i: any) => i.id === hv.id)).toMatchObject({ state: 'FINISHED' });
+  });
+
+  it('arrival off site: the nurse is never blocked; arrivalDistanceM + arrivedOffSite show to the dispatcher/owner (web detail + /mobile/schedule) and not to the nurse; no patient-facing alert; replay is idempotent', async () => {
+    const owner = await tok('owner@nurse-demo.kiorly.test'), nurse = await tok('nurse1@nurse-demo.kiorly.test'), disp = await tok('dispatch@nurse-demo.kiorly.test');
+    const hv = await book('dispatch@nurse-demo.kiorly.test', { clinicId: 'demo_c_nagy', clinicianId: 'demo_u_nagy_nurse1', appointmentTypeId: 'demo_ty_nagy_injection', patientId: 'demo_p_nagy_h1013', visitAddress: { district: 'maadi', line1: '5 E2E Street (invented)', lat: 29.96, lng: 31.25 } });
+    created.push(hv.appointmentId);
+    const day = dayOf(hv.plannedStartsAt);
+    expect((await app(nurse, 'POST', `/home-visits/${hv.id}/depart`, { lat: 29.97, lng: 31.26 })).body.state).toBe('ON_MY_WAY');
+    const outbox = async () => Number((await q('kiorly', `select count(*)::int as n from "OutboxEvent" where "aggregateId" = $1`, [hv.appointmentId]))[0].n);
+    const alertsBefore = Number((await q('kiorly', `select count(*)::int as n from "HomeSafetyAlert" where "visitId" = $1`, [hv.id]))[0].n);
+    // arrival fix ~1.8 km from the address (0.016 deg latitude): accepted (200), flagged
+    const arr = await app(nurse, 'POST', `/home-visits/${hv.id}/arrive`, { lat: 29.976, lng: 31.25 });
+    expect([arr.status, arr.body.state], JSON.stringify(arr.body)).toEqual([200, 'ARRIVED']);
+    expect(arr.body.arrivedOffSite, 'the nurse is not shown the flag').toBeUndefined();
+    const row = (await q('kiorly', `select "arrivalDistanceM" as d, "arrivedOffSite" as off from "HomeVisit" where id = $1`, [hv.id]))[0];
+    expect(row.off).toBe(true); expect(row.d).toBeGreaterThan(1500); expect(row.d).toBeLessThan(2100);
+    for (const [who, label] of [[owner, 'owner'], [disp, 'dispatcher']] as const) {
+      const d = (await web(who, 'GET', `/home-visits/${hv.id}`)).body;
+      expect(d, `${label} web visit detail`).toMatchObject({ state: 'ARRIVED', arrivedOffSite: true, arrivalDistanceM: row.d });
+      const sch = (await app(who, 'GET', `/mobile/schedule?date=${day}`)).body.items.find((i: any) => i.id === hv.appointmentId);
+      expect(sch, `${label} /mobile/schedule`).toMatchObject({ isHomeVisit: true, arrivedOffSite: true, arrivalDistanceM: row.d });
+    }
+    expect((await web(nurse, 'GET', `/home-visits/${hv.id}`)).body.arrivedOffSite, 'clinician view').toBeUndefined();
+    expect((await app(nurse, 'GET', `/mobile/schedule?date=${day}`)).body.items.find((i: any) => i.id === hv.appointmentId).arrivedOffSite).toBeUndefined();
+    // no alert is raised for it (no safety alert row; not in the app inbox for anyone)
+    expect(Number((await q('kiorly', `select count(*)::int as n from "HomeSafetyAlert" where "visitId" = $1`, [hv.id]))[0].n)).toBe(alertsBefore);
+    for (const who of [owner, nurse, disp]) expect(JSON.stringify((await app(who, 'GET', '/mobile/alerts')).body.items.filter((x: any) => x.subject?.id === hv.id))).not.toContain('OFF_SITE');
+    // replay of the queued arrive: idempotent, nothing new, the stored distance is unchanged
+    const before = await outbox();
+    const again = await app(nurse, 'POST', `/home-visits/${hv.id}/arrive`, { lat: 29.96, lng: 31.25 });
+    expect([again.status, again.body.replayed]).toEqual([200, true]);
+    expect(await outbox()).toBe(before);
+    expect((await q('kiorly', `select "arrivalDistanceM" as d from "HomeVisit" where id = $1`, [hv.id]))[0].d).toBe(row.d);
   });
 
   it('agency: dispatcher books for nurse1; nurse1 departs, arrives, presses SOS; owner and nurse see it, owner acknowledges; a second visit is aborted unsafe -> NURSE_SAFETY for the owner; the aide/dispatcher scope holds', async () => {

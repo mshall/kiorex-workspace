@@ -9,7 +9,7 @@
 ## Run / reset
 ```bash
 e2e/scripts/up.sh            # stack running (first time: --build --seed)
-scripts/seed-all.sh          # idempotent, dependency order: Passport -> Kiorly Clinic (incl. the Nurse edition tenants, Rev 2.3 home visits) -> Pharmacy -> Lab -> provider sync -> Kiorex (incl. home bookings)
+scripts/seed-all.sh          # idempotent, dependency order: Passport -> Kiorly Clinic (incl. the Nurse edition tenants, Rev 2.3 home visits) -> Clinic Kiorly Work seed -> Pharmacy (+ its Kiorly Work seed) -> Lab -> Lab Kiorly Work seed -> provider sync -> Kiorex (incl. home bookings)
 scripts/seed-all.sh --reset  # first removes the demo records only (non-demo data and the e2e fixtures are never touched)
 scripts/seed-staging.sh --dry-run   # AWS staging (non-production only, after a human deployed it): prints the plan; see "Seeding staging on AWS" below
 ```
@@ -23,6 +23,7 @@ the demo sales/Rx/POs/orders it can, but lots, released reports and QC runs stay
 |---|---|
 | Passport phone OTP (all demo phones below + `+201000000001/2/99`) | `000000` |
 | Staff password (Kiorly Clinic demo orgs, Pharmacy base logins) | `Demo@12345` |
+| Legacy Clinic accounts `admin@kiorly.com`, `superadmin@kiorly.com`, `admin@drahmedshall.com` | `demo` (**not** `Demo@12345`; checked against the bcrypt hashes on 21 Nov 2026) |
 | Ops super admin TOTP seed (`+201000000099`) | `REMOVED-OLD-DEMO-TOTP-SECRET` |
 | Ops admin (`+201000009001`) TOTP seed | `REMOVED-OLD-DEMO-TOTP-SECRET` |
 | Ops finance (`+201000009002`) TOTP seed | `REMOVED-OLD-DEMO-TOTP-SECRET` |
@@ -30,7 +31,7 @@ Add the secret to any authenticator app (or compute RFC 6238, SHA-1, 30 s, 6 dig
 
 ## URLs
 Kiorly Clinic web http://localhost:5174 (API :3010) · Kiorex patient web http://localhost:5180 · Ops console http://localhost:5181 · Expo web http://localhost:8081 ·
-Passport http://localhost:4400/account (dev inbox `/dev/inbox`) · Pharmacy web http://localhost:5190 (API :3100) · Lab web http://localhost:5191 (API :3200) · Kiorex API :4000 · Postgres :5433.
+Passport http://localhost:4400/account (dev inbox `/dev/inbox`) · Pharmacy web http://localhost:5192 (API :3100) · Lab web http://localhost:5193 (API :3200) · Kiorex API :4000 · Postgres :5433.
 
 ## Persona -> app -> login
 | Persona | App | URL | Login |
@@ -48,26 +49,26 @@ Passport http://localhost:4400/account (dev inbox `/dev/inbox`) · Pharmacy web 
 | Noha Nurse (pending invitation to the agency, token `demo-invite-agency-nurse`), Dr Mai Hassan (physiotherapist, Nile Care) | Passport / Kiorly | | `+201000003011` / `+201000003010` (Kiorly `mai.na@demo.kiorex.test` / `Demo@12345`) |
 | Nabila Hamdy / نبيلة حمدي (68, agency home-care client: care plan, MAR, shifts) | Kiorex patient web / Expo | :5180 / :8081 | `+201000001013`, OTP `000000` |
 | Ops super admin | Ops console | :5181 | `+201000000099` + OTP + TOTP |
-| Ops admin / finance / support | Ops console | :5181 | `+201000009001` (TOTP) / `+201000009002` (TOTP) / `+201000009003` |
+| Ops admin / finance / support | Ops console | :5181 | `+201000009001` (TOTP) / `+201000009002` (TOTP) / `+201000009003` (TOTP: an unconfirmed credential row exists, enrol on first sign-in). Finance and support are role claims only: the API treats every `ops_admin` alike (only `super_admin` differs) |
 | Org owner (group admin) | Kiorly Clinic | :5174 | `owner.na@demo.kiorex.test` / `Demo@12345` (tenants: `na` Nile Care, `df` Delta, `ss` Smile & Skin) |
 | Branch manager / front desk / nurse / accountant / call-centre | Kiorly Clinic | :5174 | `manager.na@…`, `frontdesk1.na@…`, `frontdesk2.na@…`, `nurse.na@…`, `accountant.na@…`, `callcenter.na@…` (same for `.df` `.ss`) |
 | Doctors (Nile Care): paediatrics `nadia`, dermatology `walid`, cardiology `tamer`, ob-gyn `rania`, dentistry `khaled`, ortho `hossam`, ENT `ingy`, internal medicine `sherif` | Kiorly Clinic | :5174 | `<name>.na@demo.kiorex.test` |
 | Doctors (Delta): `ola` paediatrics, `medhat` family medicine, `samah` ophthalmology (listing PAUSED) · (Smile & Skin): `lamia` dermatology, `adham` dentistry (pending verification) | Kiorly Clinic | :5174 | `<name>.df@…` / `<name>.ss@…` |
-| Pre-existing Kiorly demo data (kept) | Kiorly Clinic | :5174 | `admin@kiorly.com` etc. (`demo`), KX-DEV doctors `kxdev.*@kiorly.dev` (e2e) |
-| Pharmacy owner / pharmacist / cashier / manager | Pharmacy | :5190 | `owner|pharmacist|cashier|manager@demo.kiorly.local` / `Demo@12345` |
-| Lab owner / director / signatory / tech / phlebotomist / reception | Lab | :5191 | dev-login screen, org `demo-lab`, pick the role (`<role>@demo-lab.test`) |
+| Pre-existing Kiorly demo data (kept) | Kiorly Clinic | :5174 | `admin@kiorly.com` / `superadmin@kiorly.com` / `admin@drahmedshall.com`, password **`demo`** (not `Demo@12345`), KX-DEV doctors `kxdev.*@kiorly.dev` (e2e) |
+| Pharmacy owner / pharmacist / cashier / manager | Pharmacy | :5192 | `owner|pharmacist|cashier|manager@demo.kiorly.local` / `Demo@12345` |
+| Lab owner / director / signatory / tech / phlebotomist / reception | Lab | :5193 | dev-login screen, org `demo-lab`, pick the role (`<role>@demo-lab.test`) |
 
 ## What exists, where to click
 **Kiorly Clinic (3 orgs).** Dashboard (set reporting period to the last 60 days) · Appointments: list + calendar, all statuses, sources (Front desk, Phone, Walk-in, Clinic link, Kiorex WhatsApp, Kiorex marketplace) · Front desk board (`na`: 4 checked-in walk-ins WAITING/CALLED/IN_EXAM) ·
-Patients (70/39/24 with allergies, problems, families) → patient → encounters with SOAP/diagnosis/prescription (QR token) and lab/imaging orders · Revenue / Invoices (14 % VAT line, paid + receivable) · Expenses (approved/pending/rejected) ·
+Patients (70/40/24 with allergies, problems, families) → patient → encounters with SOAP/diagnosis/prescription (QR token) and lab/imaging orders · Revenue / Invoices (14 % VAT line, paid + receivable) · Expenses (approved/pending/rejected) ·
 Waitlist · Recall campaigns · Kiorex → listings (LIVE / PAUSED / PENDING verification), reviews, commission charges (pending/confirmed/billed/disputed/waived; demo rate is labelled *DEV-DEMO-NOT-A-REAL-RATE*) · Admin → plan & billing: Nile Care PRO active, Delta PRO active + commission on invoice, Smile & Skin on a 14-day trial; credit wallet + ledger; SaaS invoices (paid/issued/part-paid) ·
 Dev inbox messages (WhatsApp/e-mail, delivered/read/failed). Note: first login shows a "legal terms" acceptance banner (UI behaviour).
-**Kiorex patient web / Expo.** Search: 13 doctors across 8+ specialties with live slots · My bookings: confirmed, completed, cancelled (refund), no-show, held, pending clinic, checked-in · deposits (paid / released / forfeited / refunded) · reviews (some with clinic replies, one hidden) ·
+**Kiorex patient web / Expo.** Search: 14 LIVE demo providers (doctors, 2 physiotherapists, 2 home-nursing providers; plus 3 older KX-DEV ones) across 8+ specialties with live slots · My bookings: confirmed, completed, cancelled (refund), no-show, held, pending clinic, checked-in · deposits (paid / released / forfeited / refunded) · reviews (some with clinic replies, one hidden) ·
 Vault: visit summaries, prescriptions (QR) and an uploaded ECG · Family: dependants · Waitlist entries/offers · Pharmacy orders (8, every state) · Lab bookings (8, every state) · Telemedicine sessions (waiting/scheduled/ended).
-**Ops console.** Providers (sync from Kiorly) · Bookings · Payments, refunds, ledger, payouts · Reviews/moderation · Message log · Outbox · Partners (pharmacy/lab registrations) · Flags: registry of 52, non-default values (`clinic.waitlist_autofill` OFF for org `demo_t_df`, `clinic.kiorex_listing` OFF for org `demo_t_ss`) and gate evidence labelled **DEV-ONLY-NOT-A-REAL-GATE** for telemedicine, pharmacy orders, lab bookings, AI navigation, 3 specialty templates, market EG.
-**Passport.** `/account/family` (guardian links, act-as), `/account/orgs` (memberships, pending invitation for `+201000001010`, invite token `demo-invite-nile-nurse`), `/account/security` (sessions), ops reviewer queue `/account/ops/links` (one pending link request).
-**Pharmacy.** Dashboard KPIs · Catalogue 343 drugs · Inventory: valid, near-expiry (<30 d: 49), expired, quarantined, recalled lots · Receiving · Purchasing: draft/sent/partially received/received/cancelled POs, 5 suppliers · Rx queue (received/validated/rejected/dispensed) · POS (45 sales over 30 days) · Kiorex orders (new, ready, dispensed, rejected).
-**Lab.** Dashboard · Orders in every status (awaiting collection, collected, in lab, awaiting validation, validated, released, cancelled) · QC (history on analyzers; a deliberately failing TSH run from the base seed) · Critical alerts (haemoglobin, potassium) · Release/Reports · Billing (paid/unpaid) · Phlebotomist app `/phleb` (home-collection route today) · Kiorex bookings.
+**Ops console.** Providers (sync from Kiorly) · Bookings · Payments, refunds, ledger, payouts · Reviews/moderation · Message log · Outbox · Partners (pharmacy/lab registrations) · Flags: registry of 68 definitions, non-default values (`clinic.waitlist_autofill` OFF for org `demo_t_df`, `clinic.kiorex_listing` OFF for org `demo_t_ss`) and gate evidence labelled **DEV-ONLY-NOT-A-REAL-GATE** for telemedicine, pharmacy orders, lab bookings, AI navigation, 3 specialty templates, market EG.
+**Passport.** `/account/family` (guardian links, act-as), `/account/orgs` (memberships, pending invitation for `+201000001010`, invite token `demo-invite-nile-nurse`), `/account/security` (sessions), ops reviewer queue `/account/ops/links` (one request in the review queue: `pending_review` for the secondary phone `+201000001009`; `+201000001010` is `pending_verification` and not in the queue).
+**Pharmacy.** Dashboard KPIs · Catalogue 259 shared drugs (44 base + 215 generated) · Inventory: valid, near-expiry (<30 d: 49), expired, quarantined, recalled lots (`DM00013` with its `DEMO-RECALL-001` recall notice) · Receiving · Purchasing: draft/sent/partially received/received/cancelled POs, 5 seeded suppliers · Rx queue (received/validated/rejected/dispensed) · POS (45 sales over 30 days) · Kiorex orders (`kx_ph_demo_3..7`: expired by the SLA job here / rejected in Kiorex, ready, dispensed x2, rejected).
+**Lab.** Dashboard · Orders in every status (awaiting collection, collected, in lab, awaiting validation, validated, released, cancelled) · QC (history on analyzers; a deliberately failing TSH run from the base seed) · Critical alerts (haemoglobin, potassium, one deliberately OPEN: `DEMO-OPEN-ALERT-001`) · Release/Reports · Billing (paid/unpaid) · Phlebotomist app `/phleb` (home-collection route today) · Kiorex bookings.
 
 ## Rev 2.3: Kiorly Nurse, home visits, physio (added by the Q4 data task)
 **Nurse edition tenants** (`edition = NURSE`, password `Demo@12345`; the older `db:seed:nurse` is now folded into `db:seed:demo` and uses the same password): solo **Demo Home Nursing (Mona)** and agency **Demo Care Agency** (dispatcher, 5 nurses, aide, 3 local clients + the Kiorex personas as clients).
@@ -85,18 +86,18 @@ Everything below exists after `scripts/seed-all.sh` (same people/phones/ids in e
 | Book a doctor, deposit, review | Hoda `+201000001001` | Kiorex patient web :5180 / Expo :8081 | phone + OTP | Search -> doctor -> slot -> checkout (sandbox PSP) -> My bookings -> review |
 | Booking states (completed, cancelled+refund, no-show, held, checked-in) | Hoda / Mahmoud `…1005` | :5180 | phone + OTP | My bookings; Vault for visit summaries and the ECG; Family for the dependants |
 | Waitlist offer | Hoda | :5180 | phone + OTP | Waitlist (entries + an offer to accept); Kiorly side: Waitlist at `na` |
-| Pharmacy / Lab orders in every state | Nourhan `…1004`, Mariam `…1006`… | :5180 -> Pharmacy orders / Lab bookings; :5190 / :5191 | OTP; `pharmacist@demo.kiorly.local` / dev-login `demo-lab` | Order -> Pharmacy Rx queue / Lab worklist -> release -> result in the vault |
+| Pharmacy / Lab orders in every state | Nourhan `…1004`, Mariam `…1006`… | :5180 -> Pharmacy orders / Lab bookings; :5192 / :5193 | OTP; `pharmacist@demo.kiorly.local` / dev-login `demo-lab` | Order -> Pharmacy Rx queue / Lab worklist -> release -> result in the vault |
 | Telemedicine (waiting / scheduled / ended) | Hoda | :5180 -> Telemedicine | phone + OTP | Join the mock video room |
 | Home visit booking + live timeline + safety card | Hoda (+ mother's flat), Nabila `…1013` | :5180 -> Home visits | phone + OTP | Address book (confirmed / unconfirmed), book, timeline (assignee, ETA), family status share |
 | Nurse day: route, visit record, vitals, MAR, shifts | Heba (agency nurse 1) `nurse1@nurse-demo.kiorly.test`; Mona `mona@nurse-demo.kiorly.test` | Kiorly web (Nurse view) :5174 | `Demo@12345` or Passport `+201000003004` / `…3001` | Today route -> visit -> record -> vitals (one CRITICAL) -> doctor orders -> MAR |
 | Dispatch + unassigned agency queue + dispatch guard | Dina `dispatch@nurse-demo.kiorly.test` | :5174 | `Demo@12345` / Passport `…3003` | Dispatch: assign a nurse (nurses 3-5 and the aide are refused: rejected / expired / unverified) |
 | Care-plan requests inbox | Agency owner `owner@nurse-demo.kiorly.test` | :5174 -> Requests | `Demo@12345` / `…3002` | Accept `kx_cp_demo_2`; see the accepted `kx_cp_demo_1` and the declined `kx_cp_demo_3`; Kiorex side: Nabila's care plan |
-| **Nurse sample -> Lab -> result back (KNLAB01)** | Heba / Mona | :5174 -> Lab samples; Lab :5191 | `nurse1@…`; Lab dev-login `demo-lab` (reception / technologist / signatory) | Nurse: Lab samples -> nl1 (released, custody timeline, report link), nl2 (awaiting validation), nl3 (in transit), nl4 (rejected by the lab). Lab: Accessioning -> receive `DEMO-NL3-EDTA`; Validation -> nl2; Release -> nl2. Record a new one for Hoda/Nabila (consent granted); Rana (consent revoked) and Nourhan (none) show the named refusals |
+| **Nurse sample -> Lab -> result back (KNLAB01)** | Heba / Mona | :5174 -> Lab samples; Lab :5193 | `nurse1@…`; Lab dev-login `demo-lab` (reception / technologist / signatory) | Nurse: Lab samples -> nl1 (released, custody timeline, report link), nl2 (awaiting validation), nl3 (in transit), nl4 (rejected by the lab). Lab: Accessioning -> receive `DEMO-NL3-EDTA`; Validation -> nl2; Release -> nl2. Record a new one for Hoda/Nabila (consent granted); Rana (consent revoked) and Nourhan (none) show the named refusals |
 | Professions / registrations in all states | Agency owner / Ops | Kiorly Team; Ops console :5181 -> Providers | `owner@…`; `+201000000099` + OTP + TOTP | Verified / pending / rejected / expired / unverified nurses and physios; Dr Samah's paused listing |
 | Physio pack | Dr Mai `mai.na@demo.kiorex.test` | :5174 | `Demo@12345` / Passport `…3010` | Mahmoud: assessment, plan, progress notes, outcome trends, HEP link, 10-session series |
 | Safety console, held deposits, flags (launch-locked gates DEV-ONLY) | Ops super admin / admin | Ops console :5181 | `+201000000099` (TOTP `REMOVED-OLD-DEMO-TOTP-SECRET`) | Safety console (SOS, timer, unsafe abort + SLO breach), held-deposit review queue (35 min / 46 h), Flags: gates labelled `DEV-ONLY-NOT-A-REAL-GATE:G…` |
 | Passport: guardian / org / linking / security states | Hoda, Karim, Tarek, Omar, Dalia; Ahmed Fawzy; ops | Passport :4400/account | phone + OTP | `/account/family` (active, ended, expired, pending guardian links), `/account/orgs` (invitations pending / consumed / expired / revoked, ended membership), `/account/security` (passkeys, sessions), `/account/ops/links` (pending_review) |
-| Pharmacy POS / inventory / purchasing | `cashier@`, `owner@demo.kiorly.local` | :5190 | `Demo@12345` | POS, inventory (near-expiry, expired, quarantined, recalled), receiving, purchasing in every state |
+| Pharmacy POS / inventory / purchasing | `cashier@`, `owner@demo.kiorly.local` | :5192 | `Demo@12345` | POS, inventory (near-expiry, expired, quarantined, recalled), receiving, purchasing in every state |
 
 ## Ops outbox: DEAD rows and how to clear them (demo/e2e data only)
 A fresh `scripts/seed-all.sh --reset` produces **zero** new DEAD outbox events. Historic `kiorly.record_share_consent` DEAD rows (`Kiorly 404`, `timeout`, `circuit open`) all came from the e2e suite `04-pharmacy`, which links the demo patient to a FAKE Kiorly patient (`pat_e2e_*`); every later record-sharing toggle then pushed a consent to a patient the clinic does not know. Fixed at the root: Kiorex now treats a 404 on that push as a stale link (link `status='STALE'`, event dropped, no further fan-out), and `04-pharmacy` / the e2e global teardown delete their fake links and events (`purgeE2eConsentPushes` in `e2e/src/db.ts`).
@@ -128,13 +129,16 @@ Limits: steps 5-6 need the egress path HB07; Passport families/orgs/invitations 
 - Feature coverage: `kiorly-pharmacy/Docs/FEATURE_MATRIX.md`, `kiorly-lab/Docs/FEATURE_MATRIX.md`.
 
 ## Kiorly Work (mobile staff app, added 20 Nov 2026)
-App `kiorly-work` (Expo web :8082). Entitlement `mobile_staff_app` is ON for PRO/ENTERPRISE; Basic orgs see the upgrade screen but keep the safety-alert inbox. Staff password `Demo@12345`; seeds: clinic `npm run db:seed:mobile -w api`, pharmacy `npm run seed:mobile -w api`, lab `npm run db:seed:mobile -w api` (all idempotent, guarded; also run by `seed:all` in pharmacy). Details: `kiorly-work/Docs/TEST_DATA.md`.
+App `kiorly-work` (Expo web :8082). Entitlement `mobile_staff_app` is ON for PRO/ENTERPRISE; Basic orgs see the upgrade screen but keep the safety-alert inbox. Staff password `Demo@12345` (legacy `admin@kiorly.com`: `demo`); seeds: clinic `npm run db:seed:mobile -w api`, pharmacy `npm run seed:mobile -w api`, lab `npm run db:seed:mobile -w api` (all idempotent, guarded; run by `scripts/seed-all.sh` and by `seed:all` in pharmacy). Details: `kiorly-work/Docs/TEST_DATA.md`.
 | Product | Plan | Logins |
 |---|---|---|
 | Clinic Nile Care | PRO | `nadia.na@` (doctor), `nurse.na@`, `owner.na@`, `accountant.na@` (`@demo.kiorex.test`); solo nurse `mona@nurse-demo.kiorly.test` |
-| Clinic agency / group | ENTERPRISE | `owner@nurse-demo.kiorly.test`, `admin@kiorly.com` |
+| Clinic agency / group | ENTERPRISE | `owner@nurse-demo.kiorly.test` (`Demo@12345`), `admin@kiorly.com` (password `demo`) |
 | Clinic Corner Family Clinic | BASIC | `owner.basic@`, `doctor.basic@`, `nurse.basic@demo.kiorex.test` |
 | Pharmacy Demo (CHAIN) | ENTERPRISE | `owner@`, `pharmacist@`, `manager@`, `cashier@demo.kiorly.local` |
 | Pharmacy Solo | PRO | `solo.owner@`, `solo.pharmacist@demo.kiorly.local` |
 | Pharmacy Corner (Lite) | BASIC | `owner.basic@`, `pharmacist.basic@demo.kiorly.local` |
 | Lab `demo-lab` / `chain-lab` / `basic-lab` | PRO / ENTERPRISE / BASIC | org slug + `signatory|phleb|tech|director|owner@<slug>.test` (dev login, no password) |
+
+---
+Verified: 2026-11-21 (counts re-read from the dev databases with SELECT; see [DEMO_DATA.md](DEMO_DATA.md)).

@@ -9,7 +9,7 @@
 | App routes vs web API, Pharmacy | `e2e/test/17-staff-mobile-pharmacy.e2e.ts` | 30 passed |
 | App routes vs web API, Lab | `e2e/test/18-staff-mobile-lab.e2e.ts` | 34 passed |
 | Expo web, per role (Playwright, real APIs) | `kiorly-work/e2e-web/{clinic-roles,pharmacy-staff,lab-staff}.spec.ts` | clinic 6, pharmacy 19, lab 20 passed (run by the authoring agents against their own web builds; not re-run after the final API restart) |
-| Unit | `kiorly-work` jest 127; backends' mobile node tests; `tsc` clean in all four | green |
+| Unit | `kiorly-work` jest 140; backends' mobile node tests; `tsc` clean in all four | green |
 
 Run: `e2e/scripts/up.sh --build --restart`, then `cd e2e && npx vitest run test/16-… test/17-… test/18-…`. The suites create fresh fixtures per run and cap-tolerate the shared demo DB.
 
@@ -40,11 +40,23 @@ Run: `e2e/scripts/up.sh --build --restart`, then `cd e2e && npx vitest run test/
 3. **Finance officer** no longer has Admin tabs (operations, expenses, revenue, reports, profile); branch manager keeps branch admin.
 4. **Lite owners** see staff upgrade requests on the Home upgrade card (bootstrap `upgrade.openRequestItems`, approvers only, excluding their own), with a count badge on Me.
 
-## Found, not fixed (decisions or schema changes needed)
-1. Lab `release-queue` keeps a signed-but-unreleased order under "ready to sign" (re-sign 409); a naive fix would hide amendments.
-2. Lab summary `ordersToday` uses the UTC day; the app uses local midnight (disagree 00:00-02:00 Cairo).
-3. Replayed home-visit transitions answer 409 (shown as a conflict in Sync); a same-state transition could be treated as OK. Arrival is not checked against the district geofence (mock maps).
-4. Kiorex-side mirror of pharmacy orders and live lab bookings need `KIOREX_MODE=real` flag pollers; the dev stack runs them without polling a dev gate.
+## Open items fixed afterwards (21 Nov 2026)
+* **Lab release queue** now returns `{readyToSign, readyToRelease, signedNotReleased}`; a signed order no longer shows as ready to sign (re-sign 409).
+* **Lab "today"** uses local midnight in `LAB_TIMEZONE` (default Africa/Cairo).
+* **Replayed home-visit transitions** by the assigned clinician are idempotent (200, `replayed:true`); illegal ones still 409.
+* **Arrival distance**: stored as `arrivalDistanceM` / `arrivedOffSite` (default threshold 500 m, `HOME_VISIT_ARRIVAL_THRESHOLD_M`), never blocks, shown only to dispatchers/owners (web badge, `/mobile/schedule`).
+* **Lite plan gate beats permission errors** on every `/mobile` route in all three products (`FEATURE_DISABLED` first).
+* **Staff app**: notification permission asked via a one-time explanatory sheet (14-day "Not now", Me > Notifications switch); first-run direction banner in Expo Go and a guarded reload in real builds; Android clipped status pill fixed (`numberOfLines={1}` on Badge/Chip/Button labels); optional upgrade note; lab approver follows the server `canApprove`.
+* **Patient app**: forms lift above the keyboard (`KeyboardForm`, verified on the iPhone simulator). **Platform**: Kiorex DB client honours `sslrootcert` / `DATABASE_SSL_CA` / `PGSSLROOTCERT`; web and ops lint at zero warnings with the React Compiler rules on; TypeScript 7 type-checks cleanly (blockers are tooling only, see `kiorex-platform/Docs/UPGRADE_NOTES.md`); seed image aligned to Node 24 (Lambda runtime).
+* **Clinic web** lint: 246 warnings to 0, golden-flow and RBAC Playwright smoke green.
+* **Seeds/docs**: `seed-all.sh` runs the mobile seeds; dev scripts no longer touch ports 3000/5173/5175; pharmacy recall notice and an open lab alert seeded; DEMO_DATA counts corrected and verified; contracts fixtures cover all 35 personas; pharmacy/lab web default to 5192/5193.
+
+## Still open
+1. Automatic RTL reload and push notifications need a **development build** (EAS or `expo run`) to verify; Expo Go can only show the banner.
+2. Android re-check of other short Arabic labels, and a light-mode Android pass of the new UI; the patient-app keyboard fix is verified on iOS only.
+3. The seed Docker image has not been built (`docker build -f apps/api/Dockerfile.seed .` before the next deploy).
+4. Kiorex-side mirror of pharmacy orders and live lab bookings need `KIOREX_MODE=real` flag polling on the dev stack.
+5. The app is still titled "Kiorly Work" until the mobile design pack is approved.
 
 ## Not covered
 Native camera, biometrics, push tokens, a physical device, the offline conflict UI (only server idempotency), Passport sign-in for the staff app (not registered), and the Pharmacy/Lab modules on iOS/Android simulators.

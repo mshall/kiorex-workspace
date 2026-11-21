@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto';
 /**
  * Kiorly Work (staff app) pharmacy module against the REAL running Pharmacy API and the seeded demo tenants.
  * Every flow is performed the way the app does it (`X-Kiorly-Client: kiorly-work/*`, /mobile/* read models + the existing endpoints named in
- * kiorly-pharmacy/Docs/MOBILE.md) and then re-read through the WEB path (no client header = what the :5190 web app calls) to prove both
+ * kiorly-pharmacy/Docs/MOBILE.md) and then re-read through the WEB path (no client header = what the :5192 web app calls) to prove both
  * surfaces show the same state. Fixtures (drugs "E2E-Med-*", lots, POs, Rx) are created per run through the owner API; nothing is reset.
  */
 const MOBILE = { 'x-kiorly-client': 'kiorly-work/1.0-e2e' };
@@ -20,7 +20,7 @@ async function http(token: string | undefined, method: string, path: string, bod
 }
 /** What the Kiorly Work app sends. */
 const mob = (t: string, m: string, p: string, b?: unknown) => http(t, m, p, b, MOBILE);
-/** What the web app (:5190) sends: no client header. */
+/** What the web app (:5192) sends: no client header. */
 const web = (t: string, m: string, p: string, b?: unknown) => http(t, m, p, b);
 const login = async (user: string) => {
   const r = await http(undefined, 'POST', '/auth/login', { email: `${user}@demo.kiorly.local`, password: PHARMACY_PASSWORD });
@@ -128,8 +128,8 @@ describe('q. Kiorly Work pharmacy: role matrix (bootstrap per role, entitlement,
       for (const p of ['/mobile/inbox', '/mobile/devices', '/mobile/pharmacy/expiry-lowstock', '/mobile/pharmacy/shift-summary', '/mobile/pharmacy/controlled/pending-witness', '/mobile/pharmacy/search?q=para', '/mobile/pharmacy/barcode/123456', '/prescriptions/verification-queue', '/customers']) {
         const r = await mob(T[u], 'GET', p);
         expect(r.status, `${u} ${p}`).toBe(403);
-        // a role that lacks the route's RBAC permission is refused by the permission guard first (still 403); every permitted route must say FEATURE_DISABLED
-        if (r.body.code === 'PERMISSION_DENIED') expect(u).toBe('cashier.basic'); else expect(r.body).toMatchObject({ code: 'FEATURE_DISABLED', key: 'mobile_staff_app', scope: 'org' });
+        // the plan gate beats RBAC: even a role that lacks the route's permission (cashier.basic) gets FEATURE_DISABLED so the app routes to the upgrade screen
+        expect(r.body, `${u} ${p}`).toMatchObject({ code: 'FEATURE_DISABLED', key: 'mobile_staff_app', scope: 'org' });
       }
       expect((await mob(T[u], 'POST', '/mobile/devices', { deviceId: 'dev-basic-12345', platform: 'web', name: 'x' })).status).toBe(403);
     }
@@ -206,7 +206,7 @@ describe('r. Rx queue -> validate -> safety override -> dispense (FEFO) as the p
     const ov = must(await mob(T.pharmacist, 'POST', `/dispensings/${d.id}/override/${chk.id}`, { reason: 'Prescriber confirmed, INR monitored' }), 201);
     const after = ov.safetyChecks.find((c: any) => c.kind === 'INTERACTION');
     expect(after).toMatchObject({ outcome: 'OVERRIDDEN_BY_PHARMACIST', overriddenBy: boot.pharmacist.user.id, overrideReason: 'Prescriber confirmed, INR monitored' });
-    // web read of the same dispensing + override review list (what :5190 shows)
+    // web read of the same dispensing + override review list (what :5192 shows)
     const wd = must(await web(T.owner, 'GET', `/dispensings/${d.id}`));
     expect(wd.safetyChecks.find((c: any) => c.id === chk.id)).toMatchObject({ outcome: 'OVERRIDDEN_BY_PHARMACIST', overrideReason: 'Prescriber confirmed, INR monitored' });
     const ovl = must(await web(T.owner, 'GET', '/clinical/overrides'));
@@ -337,7 +337,7 @@ describe('t. Cashier shift open -> sales -> close with cash reconciliation (dedi
     const after = must(await mob(cashier, 'GET', '/mobile/pharmacy/shift-summary'));
     expect(after.open).toBe(false);
     expect(after.lastClosed).toMatchObject({ id: shift.id, variance: '-15.00', countedCash: counted, expectedCash: x.expectedCash });
-    // web: manager reads the Z-report of that shift (what the :5190 shifts screen calls)
+    // web: manager reads the Z-report of that shift (what the :5192 shifts screen calls)
     const z = must(await web(T.manager, 'GET', `/pos/shifts/${shift.id}/z-report`));
     expect(z).toMatchObject({ expectedCash: x.expectedCash, salesCount: 1 });
     const row = (await dbq(`select status, variance::text v, "countedCash"::text c from "Shift" where id=$1`, [shift.id]))[0];

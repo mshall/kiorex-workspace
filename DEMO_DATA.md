@@ -10,12 +10,12 @@
 |---|---|---|---|---|
 | **Kiorex Passport** (identity: OTP, families, orgs, invitations, ops TOTP) | [kiorex-account/DEMO_DATA.md](kiorex-account/DEMO_DATA.md) | http://localhost:4400/account · dev inbox `/dev/inbox` | :4400 | `cd kiorex-account && npm run db:seed:demo` (`npx tsx scripts/seed-demo.ts --reset` to re-create) |
 | **Kiorly Clinic + Nurse edition** (clinic, 3 orgs, Basic clinic, solo + agency nurses, home visits, physio) | [clinics-management/DEMO_DATA.md](clinics-management/DEMO_DATA.md) | http://localhost:5174 (`npm run dev -w web`) | :3010 | `cd clinics-management/apps/api && npm run db:seed:demo` (`-- --reset`); `npm run db:seed:mobile` for Kiorly Work |
-| **Kiorly Pharmacy** (chain, solo, Lite) | [kiorly-pharmacy/DEMO_DATA.md](kiorly-pharmacy/DEMO_DATA.md) | http://localhost:5190 (clash: see section 3) | :3100 | `cd kiorly-pharmacy/apps/api && npm run seed:all` (= seed, seed:demo, seed:suite, seed:mobile); no true reset |
-| **Kiorly Lab** (LIS: PRO, chain, Basic) | [kiorly-lab/DEMO_DATA.md](kiorly-lab/DEMO_DATA.md) | http://localhost:5191 (clash: see section 3) | :3200 | `cd kiorly-lab/apps/api && npm run db:seed && npm run db:seed:demo && npm run db:seed:mobile`; no true reset |
+| **Kiorly Pharmacy** (chain, solo, Lite) | [kiorly-pharmacy/DEMO_DATA.md](kiorly-pharmacy/DEMO_DATA.md) | http://localhost:5192 (was 5190, see section 3) | :3100 | `cd kiorly-pharmacy/apps/api && npm run seed:all` (= seed, seed:demo, seed:suite, seed:mobile); no true reset |
+| **Kiorly Lab** (LIS: PRO, chain, Basic) | [kiorly-lab/DEMO_DATA.md](kiorly-lab/DEMO_DATA.md) | http://localhost:5193 (was 5191, see section 3) | :3200 | `cd kiorly-lab/apps/api && npm run db:seed && npm run db:seed:demo && npm run db:seed:mobile`; no true reset |
 | **Kiorex platform**: patient web, patient Expo app, ops console, marketplace, Kiorex Pay | [kiorex-platform/DEMO_DATA.md](kiorex-platform/DEMO_DATA.md) | patient web http://localhost:5180 · Expo web http://localhost:8081 · ops http://localhost:5181 | :4000 | `cd kiorex-platform/apps/api && npm run db:seed:demo` (needs the Kiorly seed + provider sync first) |
 | **Kiorly Work** (staff mobile app: Clinic + Pharmacy + Lab modules, Basic/Lite gate) | [kiorly-work/DEMO_DATA.md](kiorly-work/DEMO_DATA.md) | Expo web http://localhost:8082 (`npm run web`), iOS / Android via Expo | uses :3010 / :3100 / :3200 | the three `*:mobile` seeds above |
 | **Kiorex contracts** (fixtures only, no service) | [kiorex-contracts/DEMO_DATA.md](kiorex-contracts/DEMO_DATA.md) | n/a | n/a | none: `npm test` |
-| **All products, in order** | this file + [TEST_DATA.md](TEST_DATA.md) | all of the above | | `scripts/seed-all.sh [--reset]` (see section 2) |
+| **All products, in order** | this file + [TEST_DATA.md](TEST_DATA.md) | all of the above | | `scripts/seed-all.sh [--reset]` (see section 2; includes the Kiorly Work seeds) |
 
 ## 2. Start the stack and seed everything
 
@@ -24,16 +24,14 @@
 e2e/scripts/up.sh --build --seed        # first time; afterwards just e2e/scripts/up.sh   (stop: e2e/scripts/down.sh)
 # 2) demo data in dependency order: Passport -> Kiorly (incl. Nurse tenants) -> Pharmacy -> Lab -> provider sync -> Kiorex
 scripts/seed-all.sh                     # idempotent; add --reset to remove demo records first (never non-demo data)
-# 3) staff-app seeds that seed-all.sh does NOT run (pharmacy seed:all already includes its own)
-(cd clinics-management/apps/api && npm run db:seed:mobile)
-(cd kiorly-lab/apps/api && npm run db:seed:mobile)
+#    seed-all.sh also runs the three Kiorly Work seeds (Clinic and Lab db:seed:mobile, Pharmacy seed:mobile), each right after its base demo seed; they are idempotent
 # 4) the web apps you want to look at (each is a Vite dev server; the APIs are already running)
-(cd clinics-management && npm run dev -w web)     # :5174
+(cd clinics-management && npm run dev -w web)     # :5174 (repo-level `npm run dev` is safe too since 21 Nov: it frees only 3010 / 5174 / 5176)
 (cd kiorex-platform && npm run dev -w apps/web)   # :5180
 (cd kiorex-platform && npm run dev -w apps/ops)   # :5181
 (cd kiorex-platform && npm run mobile:web)        # :8081 patient app
-(cd kiorly-pharmacy && PHARMACY_WEB_PORT=5192 npm run dev -w web)   # use 5192 if 5190 is taken
-(cd kiorly-lab && LAB_WEB_PORT=5193 npm run dev -w web)             # use 5193 if 5191 is taken
+(cd kiorly-pharmacy && npm run dev -w web)         # :5192 (PHARMACY_WEB_PORT overrides)
+(cd kiorly-lab && npm run dev -w web)              # :5193 (LAB_WEB_PORT overrides)
 (cd kiorly-work && npm run web)                    # :8082 staff app
 ```
 
@@ -51,16 +49,17 @@ Rules that apply to every seed:
 | 4400 / 4401 | Passport dev IdP / second fake upstream | |
 | 3010 / 5174 | Kiorly Clinic API / web | |
 | 4000 / 5180 / 5181 / 8081 | Kiorex API / patient web / ops console / patient Expo app | |
-| 3100 / 5190 | Pharmacy API / web | **5190 is also the default web port of the Kiorly Clinic *main* checkout** (`scripts/local-dev-ports.sh`: main = API 3020, web 5190, docs 5191). When that checkout runs, `http://localhost:5190` is Clinic, not Pharmacy. |
-| 3200 / 5191 | Lab API / web | **5191 is the Clinic main checkout's docs server.** Same clash. |
+| 3100 / 5192 | Pharmacy API / web | Web port configurable with `PHARMACY_WEB_PORT`. It was 5190, which is the default web port of the Kiorly Clinic *main* checkout (`scripts/local-dev-ports.sh`: main = API 3020, web 5190, docs 5191), so the default is now 5192. |
+| 3200 / 5193 | Lab API / web | Web port configurable with `LAB_WEB_PORT`. It was 5191 (the Clinic main checkout's docs server), the default is now 5193. |
 | 8082 | Kiorly Work (Expo web) | |
+| 5176 | Clinic docs portal (`npm run dev` at the clinic repo root) | moved from 5175 (the founder's other checkout) |
 
-Workaround used in the docs: `PHARMACY_WEB_PORT=5192` and `LAB_WEB_PORT=5193` (the Vite configs honour them; the APIs proxy through Vite so no CORS change is needed).
+The Vite configs of Pharmacy and Lab honour `PHARMACY_WEB_PORT` / `LAB_WEB_PORT` (defaults 5192 / 5193, start-up of both checked on 21 Nov 2026); the APIs proxy through Vite so no CORS change is needed. Dev scripts in every repo were reviewed: only `clinics-management` had a port-killing script (now limited to its own ports); the others (`kiorly-pharmacy`, `kiorly-lab`, `kiorex-platform`, `kiorex-account`, `kiorly-work`) kill nothing.
 
 ## 4. Shared logins in one place
 
-* Passport phone OTP for **every** demo phone: `000000`. Staff password `Demo@12345`. Lab: dev-login (org slug + `<role>@<slug>.test`, no password). Legacy `demo` password only for the older Clinic accounts (`admin@kiorly.com`, `superadmin@kiorly.com`, `admin@drahmedshall.com`).
-* Ops TOTP seeds (Base32): super admin `+201000000099` -> `REMOVED-OLD-DEMO-TOTP-SECRET`; admin `+201000009001` -> `REMOVED-OLD-DEMO-TOTP-SECRET`; finance `+201000009002` -> `REMOVED-OLD-DEMO-TOTP-SECRET`; support `+201000009003` enrols on first sign-in.
+* Passport phone OTP for **every** demo phone: `000000`. Staff password `Demo@12345`. Lab: dev-login (org slug + `<role>@<slug>.test`, no password). Legacy password **`demo`** (not `Demo@12345`) only for the older Clinic accounts (`admin@kiorly.com`, `superadmin@kiorly.com`, `admin@drahmedshall.com`).
+* Ops TOTP seeds (Base32): super admin `+201000000099` -> `REMOVED-OLD-DEMO-TOTP-SECRET`; admin `+201000009001` -> `REMOVED-OLD-DEMO-TOTP-SECRET`; finance `+201000009002` -> `REMOVED-OLD-DEMO-TOTP-SECRET`; support `+201000009003` has an unconfirmed TOTP row and no seeded secret, so it enrols on first sign-in. Finance and support are role claims only (the API treats every `ops_admin` alike).
 * The persona -> app -> login map, the flow -> persona -> click table (Q10) and the Rev 2.3 Nurse / home-visit description stay in [TEST_DATA.md](TEST_DATA.md); the per-product docs above add the step-by-step scripts and the role checklists.
 
 ## 5. Cross-product flows (end to end): which docs to follow
@@ -80,21 +79,33 @@ Workaround used in the docs: `PHARMACY_WEB_PORT=5192` and `LAB_WEB_PORT=5193` (t
 
 Logins actually exercised against the running stack: **Passport/Kiorex** Hoda `+201000001001` through the full OIDC code + PKCE flow (token accepted by `GET :4000/api/v1/me/profile`, name and sub match), ops super admin `+201000000099` with OTP + computed TOTP (`GET :4000/api/v1/admin/flags` -> 200); **Clinic** about 25 logins (all clinic staff roles of `na` / `ss` / `df` / Basic / Nurse tenants) + the three legacy `demo` accounts; **Pharmacy** all 15 logins (base, solo, Lite); **Lab** all 27 dev-logins (3 tenants x 9 roles); **Kiorly Work** `/mobile/bootstrap` for every login above (the matrices come from it), BASIC gate re-checked (403 `FEATURE_DISABLED` on `/mobile/schedule`, `/mobile/pharmacy/controlled/pending-witness`, `/mobile/summary`; 200 on bootstrap and alerts); **Contracts** `npm test` (116 passed) and a signed `GET :3010/marketplace/v1/providers` -> 200. Not exercised: the web UIs (not running at the time), `+201000009001/2` TOTP logins (secrets confirmed in the DB only), `+201000009003` enrolment, native iOS / Android runs.
 
-## 7. Inconsistencies found (existing docs, seeds and environment)
+## 7. Inconsistencies found (status 2026-11-21)
 
-1. **Port clash 5190 / 5191** between Pharmacy / Lab web and the Clinic *main* checkout (web / docs) running on the same Mac; `TEST_DATA.md` lists 5190 / 5191 as Pharmacy / Lab only.
-2. `clinics-management` (branch `kiorex`) `npm run dev` runs `scripts/free-dev-ports.sh`, which kills whatever listens on 3000, 5173, 5174, 5175 and 4175 (the founder's other checkout). Use `npm run dev -w web` instead.
-3. **Pharmacy `RecallNotice` is empty** while lot `DM00013` is RECALLED ("Recalled (DEMO-RECALL-001)"): dangling after a `--reset` (append-only lots stay). Docs claim a notice `DEMO-RECALL-001` exists.
-4. Pharmacy numbers: docs say 343 catalogue drugs and 5 suppliers; live: 299 tenant drugs (560 table rows), 6 suppliers; demo order `kx_ph_demo_3` documented as "new" is EXPIRED (SLA job) on the pharmacy side and REJECTED in Kiorex.
-5. Kiorex flag registry has **68** definitions (`TEST_DATA.md` says 52); 14 demo providers are LIVE (docs: "13 doctors"), plus 3 older KX-DEV ones and 3 DELISTED duplicates.
-6. Passport link requests: `pending_review` is for secondary `+201000001009` and `pending_verification` for `+201000001010` (docs say "1011/1009"). The support account `+201000009003` already has an unconfirmed TOTP credential (docs say "none": it must enrol on first sign-in).
-7. Delta Family Clinics has 40 patients (docs 39); Smile & Skin is a LITE-base org on a CLINIC trial.
-8. **Mona's tenant `demo_t_nsolo` holds 42 extra home-visit rows** (cuid ids) from integration/e2e runs on top of the 10 seeded: 52 rows (22 cancelled, 8 arrived), so the seeded "today route" is noisy.
-9. The API returns the group-admin tab set (Admin, Clinics, Encounters, Patients, Revenue, Expenses, Reports) for FINANCE_OFFICER and BRANCH_MANAGER, while `clinics-management/Docs/Test_Data_Users.md` says finance officers have "no Admin".
-10. Lab: dev-login e-mails use short role names (`tech@`, `phleb@`, `signatory@`), not "technologist"; `kx_lb_demo_7` is CANCELLED in the lab but REJECTED in Kiorex (consistent mapping, easy to misread); all current critical alerts are already ESCALATED; the dev DB holds 248 `demo-lab` orders (about 40-50 seeded, rest e2e).
-11. `kiorex-contracts/fixtures/demo-personas.json` has 20 personas while the Passport seed has 35 (missing Nabila, the Nurse cast, the ops super admin and the e2e fixtures).
-12. `kiorex-contracts/docs/USAGE.md` says the signed path is the "full path incl. /api/v1"; the Kiorly marketplace API actually answers at `/marketplace/v1/...` (signing `/marketplace/v1/providers` returns 200).
-13. `scripts/seed-all.sh` does not run the Kiorly Work seeds (`db:seed:mobile` of Clinic and Lab); the Basic clinic and the `chain-lab` / `basic-lab` tenants exist only after they are run by hand.
-14. `kiorly-work` has **no README.md** (one pointer file was created to link `DEMO_DATA.md`); its `.env.local` points at an alternate stack (3011 / 3190 / 3250); `Docs/ARCHITECTURE.md` says Xcode is absent while Xcode and an iPhone simulator exist now; the workspace README still draws kiorly-work as "planned".
-15. Dev databases carry e2e leftovers (hundreds of `kx-e2e-*` pharmacy orders, 41 safety alerts, 1,348 Kiorex booking intents, 124 lab home-collection rows, an `E2E Till Branch (test)`), so counts in any doc are snapshots; the states are what the seeds guarantee.
-16. The workspace Clinic API on :3010 was down for several minutes during this review (another process restarted it); nothing in the docs depends on it staying up.
+**Fixed on 2026-11-21**
+
+1. Port clash 5190 / 5191: Pharmacy and Lab web now default to 5192 / 5193 (configurable `PHARMACY_WEB_PORT` / `LAB_WEB_PORT`) in the Vite configs, scripts and every doc; start-up of both verified.
+2. `clinics-management` `npm run dev`: `scripts/free-dev-ports.sh` now frees only this checkout's own ports (API 3010, web 5174, docs 5176) and refuses 3000 / 5173 / 5175 / 4175; the docs portal moved from 5175 to 5176; `wait-api-ready.sh` defaults to 3010. The dev scripts of the other five repos kill nothing.
+3. Pharmacy `RecallNotice`: `seed:demo` now re-creates the `DEMO-RECALL-001` notice for lot `DM00013` when it is missing (verified: notice linked to the lot).
+4. Pharmacy numbers corrected: 259 shared catalogue rows (44 base + 215 generated; the live 524 tenant drugs and 32 suppliers include 523 `E2E-Med-*` drugs and 27 `E2E Supplier` rows), 5 seeded suppliers (the earlier "6 live" was an e2e leftover); `kx_ph_demo_3` is EXPIRED at the pharmacy and REJECTED (`SLA_EXPIRED`) in Kiorex, now documented as such.
+5. Kiorex flag registry: 68 definitions (docs said 52); 14 demo providers LIVE (docs said 13 doctors; plus 3 older KX-DEV LIVE, 2 demo PAUSED, 3 DELISTED).
+6. Passport link requests: `+201000001009` is `pending_review`, `+201000001010` is `pending_verification` (docs said 1011/1009); `+201000009003` already has an unconfirmed TOTP row (still enrols on first sign-in).
+7. Delta Family Clinics has 40 patients (docs said 39).
+8. `demo_t_nsolo` home visits: 10 seeded + 56 extra test rows = 66 (22 cancelled, 9 arrived); agency tenant 45 (22 seeded + 23 extra). The extras come from e2e runs and keep growing.
+9. `kiorex-contracts/fixtures/demo-personas.json` now holds all 35 Passport personas (phones and subs match `seed-users.json`); `npm test` 116 passed.
+10. `kiorex-contracts/docs/USAGE.md`: the signed path is `/marketplace/v1/...` (verified live: 200; the `/api/v1/marketplace/...` form is 404).
+11. `scripts/seed-all.sh` now runs the Clinic, Pharmacy and Lab Kiorly Work seeds (`db:seed:mobile` / `seed:mobile`) in dependency order; ran twice without errors (idempotent).
+12. Lab: one critical alert is now deliberately OPEN (`DEMO-OPEN-ALERT-001`, K 6.9, deadline a year ahead); the other alerts stay ESCALATED / ACKNOWLEDGED.
+13. `admin@kiorly.com`, `superadmin@kiorly.com`, `admin@drahmedshall.com` use the password `demo` (bcrypt-checked), now stated in the Test data tables; all other staff use `Demo@12345`.
+14. `kiorly-work`: `README.md` now exists; `.env.local` (git-ignored override) now equals `.env.example` (3010 / 3100 / 3200) and the doc explains that `.env.local` wins.
+15. Ops `finance` and `support` are role claims only (documented in the Passport, Kiorex and index docs).
+
+**Still open**
+
+* Docs drift not touched here: `kiorly-work/Docs/ARCHITECTURE.md` says Xcode is absent (Xcode and an iPhone simulator exist now) and the workspace README still draws kiorly-work as "planned" (not touched here).
+* The API returns the group-admin tab set for BRANCH_MANAGER (documented; FINANCE_OFFICER was fixed by the roles work).
+* Dev databases carry e2e leftovers (hundreds of `kx-e2e-*` pharmacy orders, 41+ safety alerts, 1,348+ Kiorex booking intents, 124 lab home-collection rows, an `E2E Till Branch (test)`, 248+ `demo-lab` orders), so counts in every doc are snapshots; the states are what the seeds guarantee.
+* Lab: dev-login e-mails use short role names (`tech@`, `phleb@`, `signatory@`); `kx_lb_demo_7` is CANCELLED in the lab but REJECTED in Kiorex (consistent mapping, easy to misread).
+* Not run: `seed-all.sh --reset` and the full `seed-all.sh` (Passport restart risk); the individual seeds it calls were run twice instead. Web UIs were not exercised.
+
+---
+Verified: 2026-11-21

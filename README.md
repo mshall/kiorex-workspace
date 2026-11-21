@@ -42,8 +42,8 @@ flowchart TB
   CT[(kiorex-contracts<br/>OpenAPI, events, flags, HMAC SDK)]
   subgraph Kiorly[Kiorly by Kiorex - providers]
     KC[Kiorly Clinic :3010 / :5174<br/>Clinic and Nurse editions]
-    KPH[Kiorly Pharmacy :3100 / :5190]
-    KLB[Kiorly Lab :3200 / :5191]
+    KPH[Kiorly Pharmacy :3100 / :5192]
+    KLB[Kiorly Lab :3200 / :5193]
     KW[kiorly-work<br/>mobile staff app (Expo)]
   end
   KXW --> KXA
@@ -167,8 +167,8 @@ Real captures from the apps with synthetic data (English, light). More, includin
 | Kiorex Expo (web + simulator) | kiorex-platform | 8081 | n/a |
 | Kiorex Passport (dev OIDC, `/account`) | kiorex-account | 4400 | `kiorex_account` |
 | Passport fake upstream IdP (federation tests) | kiorex-account | 4401 | n/a |
-| Kiorly Pharmacy API / web | kiorly-pharmacy | 3100 / 5190 | `kiorly_pharmacy` |
-| Kiorly Lab API / web | kiorly-lab | 3200 / 5191 | `kiorly_lab` |
+| Kiorly Pharmacy API / web | kiorly-pharmacy | 3100 / 5192 | `kiorly_pharmacy` |
+| Kiorly Lab API / web | kiorly-lab | 3200 / 5193 | `kiorly_lab` |
 
 :warning: Ports 3000 and 5173 belong to the founder's separate checkout and are never touched. Test databases end in `_test`. Connection pattern: `postgresql://postgres:postgres@127.0.0.1:5433/<db>?schema=public` (local development only).
 

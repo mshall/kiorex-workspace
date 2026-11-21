@@ -6,7 +6,7 @@ import { LAB_API } from '../src/env.js';
  * Kiorly Work (staff app) LAB module, END TO END against the real Lab API :3200 and the seeded demo tenants.
  * Every staff step goes through the endpoints the Expo app calls (/mobile/* + the product REST routes it documents in
  * kiorly-lab/Docs/MOBILE.md, always with X-Kiorly-Client: kiorly-work/*). After each step the same state is read through the
- * WEB endpoints (no client header = what the lab web app :5191 calls) and asserted equal; where a DB row is the effect it is read from Postgres.
+ * WEB endpoints (no client header = what the lab web app :5193 calls) and asserted equal; where a DB row is the effect it is read from Postgres.
  *
  * Isolation: a fresh analyte (E2EM...) with its own critical rule, QC materials and a 1-minute TAT test is created per run, so no demo QC state is
  * touched. Nothing here records a gate or resets data. Demo credentials only (dev-login: org slug + email).
@@ -22,8 +22,18 @@ async function login(org: string, role: string): Promise<Who> {
 }
 /** Staff-app call (mobile client header). */
 const app = (w: Who, method: string, path: string, body?: unknown, headers: Record<string, string> = {}) => lab(w.token, method, path, body, { ...APP, ...headers });
-/** Web-app call (no client header): what the lab web UI on :5191 sends. */
+/** Web-app call (no client header): what the lab web UI on :5193 sends. */
 const web = (w: Who, method: string, path: string, body?: unknown, headers: Record<string, string> = {}) => lab(w.token, method, path, body, headers);
+
+/** 00:00 of the current Africa/Cairo day as a UTC instant (what the app's orders screen and /mobile/summary ordersToday both use). */
+function cairoMidnight(now = new Date()): Date {
+  const parts = (d: Date) => Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'Africa/Cairo', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(d).filter((p) => p.type !== 'literal').map((p) => [p.type, Number(p.value)])) as Record<string, number>;
+  const off = (d: Date) => { const p = parts(d); return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - Math.floor(d.getTime() / 1000) * 1000; };
+  const o = off(now), p = parts(now);
+  let g = Date.UTC(p.year, p.month - 1, p.day) - o;
+  const o2 = off(new Date(g)); if (o2 !== o) g = Date.UTC(p.year, p.month - 1, p.day) - o2;
+  return new Date(g);
+}
 
 const KEYS = ['phlebotomy', 'accession', 'critical', 'validation', 'worklist', 'qc', 'tat', 'orders', 'reagents'] as const;
 const enabledModules = (b: any) => (b.modules as { key: string; enabled: boolean }[]).filter((m) => m.enabled).map((m) => m.key.replace('lab.', '')).sort();
@@ -90,6 +100,13 @@ describe('r. Kiorly Work LAB: role matrix and entitlement (bootstrap)', () => {
       expect(r.status, p).toBe(403);
       expect(r.body, p).toMatchObject({ code: 'FEATURE_DISABLED', key: 'mobile_staff_app', scope: 'org' });
     }
+    // the plan gate beats RBAC: a BASIC user who also LACKS the permission (reception: no results.read / inventory.read) still gets FEATURE_DISABLED
+    const lacking = await login('basic-lab', 'reception');
+    for (const p of ['/mobile/worklist/progress', '/mobile/reagents/low-stock']) {
+      const r = await app(lacking, 'GET', p);
+      expect([r.status, r.body.code], p).toEqual([403, 'FEATURE_DISABLED']);
+    }
+    expect((await app(lacking, 'GET', '/validation-queue?stage=medical')).body.code).toBe('FEATURE_DISABLED');
     // a product REST route carrying the app header is refused too, while the same call from the web (no header) is untouched
     expect((await app(w, 'GET', '/orders')).body).toMatchObject({ code: 'FEATURE_DISABLED' });
     expect((await web(w, 'GET', '/orders')).status).toBe(200);
@@ -155,7 +172,7 @@ describe('s. Kiorly Work LAB: reception -> phlebotomy -> bench -> critical -> si
     const after = (await app(who.reception, 'GET', '/mobile/summary')).body;
     expect(after.ordersToday).toBe(before.ordersToday + 1);
     expect(after.awaitingCollection).toBe(before.awaitingCollection + 1);
-    // same state through the WEB endpoint (:5191 uses GET /orders and /orders/:id)
+    // same state through the WEB endpoint (:5193 uses GET /orders and /orders/:id)
     const wl = await web(who.reception, 'GET', `/orders?search=${st.orderNumber}`);
     expect(wl.body.rows[0]).toMatchObject({ id: st.orderId, status: 'AWAITING_COLLECTION' });
     expect((await web(who.reception, 'GET', `/orders/${st.orderId}`)).body.patient.id).toBe(patient.id);
@@ -319,6 +336,13 @@ describe('s. Kiorly Work LAB: reception -> phlebotomy -> bench -> critical -> si
     const rep = await app(who.signatory, 'POST', `/orders/${st.orderId}/reports`);
     expect(rep.status, JSON.stringify(rep.body)).toBe(201);
     st.reportId = rep.body.id;
+    // signed but not released: the order moves from readyToSign to readyToRelease (the app must not offer it for signing again); a second sign is a 409
+    const rq2 = (await app(who.signatory, 'GET', '/release-queue')).body;
+    expect(rq2.readyToSign.map((o: any) => o.orderId), 'signed order must not be offered for signing again').not.toContain(st.orderId);
+    expect(rq2.readyToRelease.map((o: any) => o.orderId)).toContain(st.orderId);
+    expect(rq2.signedNotReleased.map((r: any) => r.reportId)).toContain(st.reportId);
+    const rep2 = await app(who.signatory, 'POST', `/orders/${st.orderId}/reports`);
+    expect([rep2.status, rep2.body.code]).toEqual([409, 'NO_CHANGES_TO_REPORT']);
     // the signing person is recorded; a second signing attempt does not create a second report version
     const rv = await q('kiorly_lab', `select id, "signedBy" from "ReportVersion" where "orderId" = $1`, [st.orderId]);
     expect(rv).toHaveLength(1); expect(rv[0]).toMatchObject({ id: st.reportId, signedBy: who.signatory.id });
@@ -330,7 +354,9 @@ describe('s. Kiorly Work LAB: reception -> phlebotomy -> bench -> critical -> si
     expect((await web(who.reception, 'GET', `/orders/${st.orderId}`)).body.status).toBe('RELEASED');
     const reps = (await web(who.reception, 'GET', `/orders/${st.orderId}/reports`)).body;
     expect(reps.map((r: any) => r.id)).toContain(st.reportId);
-    expect((await web(who.signatory, 'GET', '/release-queue')).body.readyToSign.map((o: any) => o.orderId)).not.toContain(st.orderId);
+    const rq3 = (await web(who.signatory, 'GET', '/release-queue')).body;
+    expect(rq3.readyToSign.map((o: any) => o.orderId)).not.toContain(st.orderId);
+    expect(rq3.readyToRelease.map((o: any) => o.orderId)).not.toContain(st.orderId);
     // app list filter by RELEASED now returns it; summary stops counting it
     expect((await app(who.reception, 'GET', `/orders?status=RELEASED&search=${st.orderNumber}`)).body.rows.map((o: any) => o.id)).toEqual([st.orderId]);
   });
@@ -558,7 +584,7 @@ describe('t. Kiorly Work LAB: QC pass/fail (a failing run blocks release), reage
       expect(a.rows.length).toBeLessThanOrEqual(1);
       for (const r of a.rows) expect(r.status).toBe(status);
     }
-    const day = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00.000Z'); // the server's day is UTC
+    const day = cairoMidnight(); // the lab's day is Africa/Cairo (LAB_TIMEZONE), same as the app's local midnight
     const today = (await app(rc, 'GET', `/orders?from=${day.toISOString()}&limit=200`)).body;
     const nonCancelled = (await q('kiorly_lab', `select count(*)::int c from "LabOrder" where "createdAt" >= $1::timestamp and status <> 'CANCELLED' and "orgId" = (select id from "Tenant" where slug = 'demo-lab')`, [day.toISOString().slice(0, 23)]))[0].c;
     expect(today.total).toBeGreaterThanOrEqual(nonCancelled);

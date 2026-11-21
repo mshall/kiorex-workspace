@@ -12,9 +12,9 @@ Authoritative shapes live in `kiorex-contracts`; this file pins the local wiring
 | Kiorex ops console / super admin | kiorex-platform/apps/ops | http://localhost:5181 (proxy `/api` → 4000) | — |
 | Kiorex mobile (Expo) | kiorex-platform/apps/mobile | Expo :8081 (web + iOS sim) | — |
 | Kiorly Pharmacy API | kiorly-pharmacy/apps/api | http://localhost:3100 (prefix `/api/v1`; Kiorex machine API at `/marketplace/v1`, NOT under the prefix) | kiorly_pharmacy |
-| Kiorly Pharmacy web | kiorly-pharmacy/apps/web | http://localhost:5190 (proxy `/api` → 3100) | — |
+| Kiorly Pharmacy web | kiorly-pharmacy/apps/web | http://localhost:5192 (proxy `/api` → 3100) | — |
 | Kiorly Lab API | kiorly-lab/apps/api | http://localhost:3200 (prefix `/api/v1`; Kiorex machine API at `/api/v1/integration/v1`) | kiorly_lab |
-| Kiorly Lab web | kiorly-lab/apps/web | http://localhost:5191 (proxy `/api` → 3200) | — |
+| Kiorly Lab web | kiorly-lab/apps/web | http://localhost:5193 (proxy `/api` → 3200) | — |
 | Kiorly Work (Expo staff app) | kiorly-work | Expo web http://localhost:8082 (APIs: clinic 3010, pharmacy 3100, lab 3200; `/mobile/*`) | - |
 | Kiorex Passport (dev OIDC) | kiorex-account/apps/dev-idp | http://localhost:4400 (issuer) | kiorex_account |
 
@@ -82,7 +82,7 @@ GitHub Packages publishing is not available (token lacks `write:packages`). `kio
 
 ## Vertical partners: Kiorex <-> Kiorly Pharmacy / Kiorly Lab (kiorex-contracts 1.4.1, first real-HTTP integration)
 
-**Canonical ports** (everything else, e.g. 3020/3030, is obsolete and must not appear in any config): Pharmacy API 3100 / web 5190, Lab API 3200 / web 5191, Kiorly Clinic 3010, Kiorex 4000. Contracts: `kiorex-contracts/openapi/kiorly-pharmacy.v1.openapi.json`, `kiorly-lab.v1.openapi.json`, `kiorex-webhooks.v1.openapi.json` (`/webhooks/pharmacy`, `/webhooks/lab`).
+**Canonical ports** (everything else, e.g. 3020/3030, is obsolete and must not appear in any config): Pharmacy API 3100 / web 5192, Lab API 3200 / web 5193, Kiorly Clinic 3010, Kiorex 4000. Contracts: `kiorex-contracts/openapi/kiorly-pharmacy.v1.openapi.json`, `kiorly-lab.v1.openapi.json`, `kiorex-webhooks.v1.openapi.json` (`/webhooks/pharmacy`, `/webhooks/lab`).
 
 **Conventions (decisions, resolve NH-PH-024 / NH-LB-025 / NEEDS_HUMAN #23 engineering side):**
 - **Auth**: the Kiorly request HMAC (`signKiorlyRequest` / `verifyKiorlyRequest` from `@kiorex/contracts` on BOTH sides): `X-Kiorly-Client-Key`, `-Timestamp` (ms), `-Nonce`, `-Signature` over `ts\nnonce\nMETHOD\npath\nsha256(body)`; path = full request path without query. Events back use the webhook scheme (`signWebhook`/`verifyWebhook`: `X-Kiorly-Timestamp` seconds, `X-Kiorly-Event`, `X-Kiorly-Event-Id`, `X-Kiorly-Signature: sha256=hex`).
