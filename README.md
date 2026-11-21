@@ -44,7 +44,7 @@ flowchart TB
     KC[Kiorly Clinic :3010 / :5174<br/>Clinic and Nurse editions]
     KPH[Kiorly Pharmacy :3100 / :5190]
     KLB[Kiorly Lab :3200 / :5191]
-    KW[kiorly-work<br/>mobile staff app, planned]
+    KW[kiorly-work<br/>mobile staff app (Expo)]
   end
   KXW --> KXA
   KXM --> KXA
@@ -92,7 +92,7 @@ flowchart TB
 | **kiorly-clinic** (dir `clinics-management`) | Kiorly Clinic and Nurse edition; owns appointments; marketplace API + outbox | [mshall/clinics-management](https://github.com/mshall/clinics-management) | **`kiorex`** (never `main`) | :white_check_mark: built | [GitHub](https://github.com/mshall/clinics-management/tree/kiorex#readme) |
 | **kiorly-pharmacy** | Pharmacy SaaS, Kiorex machine API | [mshall/kiorly-pharmacy](https://github.com/mshall/kiorly-pharmacy) | `main` | :construction: in progress | [GitHub](https://github.com/mshall/kiorly-pharmacy#readme) |
 | **kiorly-lab** | Lab SaaS, Kiorex machine API, nurse sample custody | [mshall/kiorly-lab](https://github.com/mshall/kiorly-lab) | `main` | :construction: in progress | [GitHub](https://github.com/mshall/kiorly-lab#readme) |
-| **kiorly-work** | Mobile staff app for Kiorly | not created yet | n/a | :hourglass_flowing_sand: planned | n/a |
+| **kiorly-work** | Mobile + web staff app (clinic, pharmacy, lab modules; role-scoped; Lite upgrade slice) | `mshall/kiorly-work` (private) | n/a | :white_check_mark: running, e2e per role | Expo web :8082 |
 | **kiorex-workspace** (this folder) | Coordination: docs, brand, e2e, scripts | [mshall/kiorex-workspace](https://github.com/mshall/kiorex-workspace) | `main` | :white_check_mark: | you are here |
 
 Kiorly Nurse is an **edition of Kiorly Clinic** (`Organization.edition = CLINIC | NURSE`, ADR-031), not a separate repo. `_legacy/*` holds the 2025 repos as read-only references (ADR-026). The product repos are separate nested git repos and are git-ignored by this workspace repo.
@@ -203,6 +203,8 @@ cd e2e && npm test                        # cross-service E2E against the real r
 <summary><b>Seed users, passwords and demo personas (pointer)</b></summary>
 
 All demo data is synthetic (phones `+20100000xxxx`, e-mails `@demo.kiorex.test`) and DEV ONLY; the seeds refuse to run in production. The persona list, Passport phone logins, staff logins, OTP behaviour and ops TOTP setup are in **[TEST_DATA.md](TEST_DATA.md)** (cross-product index); each repo has its own `TEST_DATA.md`. Dev client keys and webhook secrets for local wiring are in [INTEGRATION.md](INTEGRATION.md). Rotate everything for staging and production.
+
+Every demo (what it is for, personas, data, manual test scripts, role checklists, limitations) is indexed in [DEMO_DATA.md](DEMO_DATA.md); each repo has its own `DEMO_DATA.md`.
 </details>
 
 ## Standing rules
