@@ -26,7 +26,7 @@ e2e/scripts/up.sh --build --seed        # first time; afterwards just e2e/script
 scripts/seed-all.sh                     # idempotent; add --reset to remove demo records first (never non-demo data)
 #    seed-all.sh also runs the three Kiorly Work seeds (Clinic and Lab db:seed:mobile, Pharmacy seed:mobile), each right after its base demo seed; they are idempotent
 # 4) the web apps you want to look at (each is a Vite dev server; the APIs are already running)
-(cd clinics-management && npm run dev -w web)     # :5174 (repo-level `npm run dev` is safe too since 21 Nov: it frees only 3010 / 5174 / 5176)
+(cd clinics-management && npm run dev -w web)     # :5174 (CAUTION: repo-level `npm run dev` runs `scripts/free-dev-ports.sh`, which on the founder's 21 Nov version also kills anything on 3000 / 5173 / 5175 / 3020 / 5190 / 5191 / 4175; prefer `npm run dev -w web` while another checkout is running)
 (cd kiorex-platform && npm run dev -w apps/web)   # :5180
 (cd kiorex-platform && npm run dev -w apps/ops)   # :5181
 (cd kiorex-platform && npm run mobile:web)        # :8081 patient app
@@ -52,7 +52,7 @@ Rules that apply to every seed:
 | 3100 / 5192 | Pharmacy API / web | Web port configurable with `PHARMACY_WEB_PORT`. It was 5190, which is the default web port of the Kiorly Clinic *main* checkout (`scripts/local-dev-ports.sh`: main = API 3020, web 5190, docs 5191), so the default is now 5192. |
 | 3200 / 5193 | Lab API / web | Web port configurable with `LAB_WEB_PORT`. It was 5191 (the Clinic main checkout's docs server), the default is now 5193. |
 | 8082 | Kiorly Work (Expo web) | |
-| 5176 | Clinic docs portal (`npm run dev` at the clinic repo root) | moved from 5175 (the founder's other checkout) |
+| 5175 | Clinic docs portal on branch `kiorex` (`npm run dev` at the clinic repo root; `main` uses 3020 / 5190 / 5191, see `clinics-management/scripts/local-dev-ports.sh`) | |
 
 The Vite configs of Pharmacy and Lab honour `PHARMACY_WEB_PORT` / `LAB_WEB_PORT` (defaults 5192 / 5193, start-up of both checked on 21 Nov 2026); the APIs proxy through Vite so no CORS change is needed. Dev scripts in every repo were reviewed: only `clinics-management` had a port-killing script (now limited to its own ports); the others (`kiorly-pharmacy`, `kiorly-lab`, `kiorex-platform`, `kiorex-account`, `kiorly-work`) kill nothing.
 
@@ -84,7 +84,7 @@ Logins actually exercised against the running stack: **Passport/Kiorex** Hoda `+
 **Fixed on 2026-11-21**
 
 1. Port clash 5190 / 5191: Pharmacy and Lab web now default to 5192 / 5193 (configurable `PHARMACY_WEB_PORT` / `LAB_WEB_PORT`) in the Vite configs, scripts and every doc; start-up of both verified.
-2. `clinics-management` `npm run dev`: `scripts/free-dev-ports.sh` now frees only this checkout's own ports (API 3010, web 5174, docs 5176) and refuses 3000 / 5173 / 5175 / 4175; the docs portal moved from 5175 to 5176; `wait-api-ready.sh` defaults to 3010. The dev scripts of the other five repos kill nothing.
+2. `clinics-management` `npm run dev`: the founder's `scripts/free-dev-ports.sh` (21 Nov) frees this branch's ports plus the shared alternates (3000 / 3010 / 3020 / 5173 / 5174 / 5175 / 5190 / 5191 / 4175), so it kills a second checkout's servers on those ports. Open: scope it to this branch's own ports (founder's call).
 3. Pharmacy `RecallNotice`: `seed:demo` now re-creates the `DEMO-RECALL-001` notice for lot `DM00013` when it is missing (verified: notice linked to the lot).
 4. Pharmacy numbers corrected: 259 shared catalogue rows (44 base + 215 generated; the live 524 tenant drugs and 32 suppliers include 523 `E2E-Med-*` drugs and 27 `E2E Supplier` rows), 5 seeded suppliers (the earlier "6 live" was an e2e leftover); `kx_ph_demo_3` is EXPIRED at the pharmacy and REJECTED (`SLA_EXPIRED`) in Kiorex, now documented as such.
 5. Kiorex flag registry: 68 definitions (docs said 52); 14 demo providers LIVE (docs said 13 doctors; plus 3 older KX-DEV LIVE, 2 demo PAUSED, 3 DELISTED).
