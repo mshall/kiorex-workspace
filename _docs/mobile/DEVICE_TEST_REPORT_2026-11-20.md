@@ -36,9 +36,7 @@ Unit tests after the fixes: patient app 119 passed, staff app 76 passed, `tsc` c
 2. **i18next plural warning.** `Your environment seems not to be Intl API compatible` is logged at startup on Hermes in Expo Go; adding `intl-pluralrules` did not change it, so it was removed. Plurals fall back to the v3 format and render correctly. Re-check in a development build.
 3. **FIXED (21 Nov 2026): in-app explainer once, 14-day "Not now", Me > Notifications switch.** **Notification permission** was requested immediately after sign-in in the staff app, before any context; Android re-prompts on each launch after "Don't allow". Move the prompt behind an explanatory screen.
 4. **Staff app is still titled "Kiorly Work"** (login hero, header). Intentional until the design pack is approved.
-5. **FIXED (21 Nov 2026, reproduced and verified on the Android emulator).** Cause: Android measures the shrink-wrapped Arabic label on one line but lays it out on two, clipping line two; fix `numberOfLines={1}` in Badge/Chip/Button. **Clipped status pill (staff app, Arabic).** On the schedule screen the "waiting" pill shows "في" instead of "في الانتظار" while "في الكشف" renders fully. `flexShrink: 0` on `Badge` did not change it (reverted), so the cause is elsewhere (label text or Android RTL text measurement). Needs a closer look with a development build.
 6. Only guest screens were exercised in the patient app (sign-in goes through Passport in a browser); signed-in patient flows are covered by the headless Playwright run in `UPGRADE_2026-11_REPORT.md`.
-7. Patient forms (checkout, review, address) have no `KeyboardAvoidingView`; likely affected by the same Android 15 behaviour as #3. Verify on device.
 
 ## Specialty list (21 Nov 2026, founder request)
 
@@ -70,3 +68,18 @@ adb shell am start -a android.intent.action.VIEW -d exp://localhost:8082
 * Finding 3: in Expo Go on Android `getPermissionsAsync` reports "denied" before the first ask, so "denied with canAskAgain" is treated as "not asked yet".
 * Finding 5: before/after screenshots in `/private/tmp/claude-501/pill-shots/pill-before-ar-dark.png` and `pill-after-ar-dark.png`.
 * Android test used a local mock of the clinic API (the real stack was not running on :3010 in this session).
+
+## Update 22 Nov 2026 (Android pass: Arabic labels, light mode, keyboard)
+
+Android 15 emulator, Expo Go, production-mode Metro; screenshots in `/private/tmp/claude-501/android-pass/`.
+
+**Checked, no clipping or truncation.** Arabic (light and dark) and English (light and dark) on the staff app, signed in as the Basic clinic owner (`owner.basic@`), the Pro clinic owner (`owner.na@`), a nurse (`nurse1@nurse-demo`), the pharmacist and the lab signatory: status pills ("في الانتظار", "مؤكدة", "تم الإقرار", "مرتفع", "حرج"), chips and role badges on the Lite upgrade screen, KPI tiles, Home open-requests notice, locked-tile cards and tool sheet, upgrade note field with counter, push primer sheet, direction banner, tab labels. The finding-5 fix (single-line Badge/Chip/Button) holds on every pill seen. Light-mode pass of the new screens: Lite UI, nursing round note, pharmacy Rx queue/detail (`rx.validate` button), lab critical-value read-back note: all render correctly. Finding 5 and finding 7 are removed from the open list above.
+
+**Bug found and fixed (staff app): fields hidden under the keyboard on Android 15.** The Lite upgrade note field (`upgrade-note`) disappeared behind the keyboard: `Screen` and `Sheet` had no keyboard handling beyond the sign-in screen. Fix: ported the patient app's `KeyboardForm.tsx` parts (`KeyboardAvoider`, scroll-into-view, `useKeyboardVisible`) to `src/components/KeyboardForm.tsx` and used them in `Screen`, `Sheet` and `Field` (`src/components/ui.tsx`); test `src/__tests__/keyboard-form.test.tsx`. Verified on device: upgrade note, nursing round note, lab read-back note sheet stay visible above the keyboard (`upgrade-note-kb-fixed-ar-dark.png`, `round-note-kb-ar-light.png`, `lab-readback-kb-ar-light.png`).
+
+**Patient keyboard fix verified (Android 15 edge-to-edge, mock mode).** Home specialty filter and the address-book "add address" sheet (landmark field, the last one) scroll above the keyboard (`pat-home-kb.png`, `pat-sheet-kb-ar-light.png`). No patient code change needed. Checkout/review screens were not opened on device (they need a signed-in Passport session; they use the same `Screen`/`KeyboardForm`).
+
+**Still observed, not fixed.**
+* Expo Go on Android does not persist `forceRTL`: after the first run, relaunches show Arabic text in an LTR layout (tab order flips). Needs a development build (finding 1).
+* Pharmacy Rx detail shows the raw status "RECEIVED" in the badge and lab critical alert countdown "8738h 22m" is Latin-digit English text in an Arabic UI (cosmetic).
+* The round "Arrive" button needs a location fix; the emulator never returns one in Expo Go (arrival was posted through the API instead). Demo visit `demo_hv_cp1_7` (Nabila, nurse1) is now ARRIVED: re-run `scripts/seed-all.sh --reset` to restore.
