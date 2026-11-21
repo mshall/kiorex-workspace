@@ -58,7 +58,7 @@ describe('a. Role matrix: bootstrap modules, plan, safetyAlertsOnly and endpoint
     // Nurse edition: nurses carry role PHYSICIAN + profession NURSE and never get visit notes / prescription signing (ADR-029)
     { who: 'solo nurse Mona', email: 'mona@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'PRO', raw: 'NURSE_PRO', edition: 'NURSE', modules: 'schedule,patients,labs,vitals,homevisits,revenue' },
     { who: 'agency owner', email: 'owner@nurse-demo.kiorly.test', role: 'CLINIC_ADMIN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,visits,prescriptions,labs,vitals,homevisits,revenue' },
-    { who: 'agency dispatcher', email: 'dispatch@nurse-demo.kiorly.test', role: 'RECEPTIONIST', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients' },
+    { who: 'agency dispatcher', email: 'dispatch@nurse-demo.kiorly.test', role: 'RECEPTIONIST', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,homevisits' },
     { who: 'agency nurse 1', email: 'nurse1@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,labs,vitals,homevisits' },
     { who: 'agency nurse 2', email: 'nurse2@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,labs,vitals,homevisits' },
   ];
@@ -461,6 +461,17 @@ describe('d. Home-visit rounds: solo nurse Mona and an agency nurse (start, en r
     const sosId = sos.body.alert.id as string; alertsToResolve.push({ tenant: 'nagy', who: 'owner@nurse-demo.kiorly.test', id: sosId });
     for (const who of [owner, nurse]) expect((await app(who, 'GET', '/mobile/alerts')).body.items.find((x: any) => x.id === `hv_${sosId}`), 'SOS in the app inbox').toMatchObject({ kind: 'HOME_VISIT_SOS', severity: 'CRITICAL' });
     expect((await web(owner, 'GET', '/home-visits/safety-alerts')).body.items.find((x: any) => x.id === sosId), 'SOS on the web').toMatchObject({ kind: 'SOS', visitId: v1.id });
+    // the agency dispatcher sees the SOS in the app inbox and on the web, home-visit kinds only, scoped to the agency
+    const dAlerts = (await app(disp, 'GET', '/mobile/alerts')).body;
+    expect(dAlerts.items.find((x: any) => x.id === `hv_${sosId}`), 'dispatcher sees the SOS').toMatchObject({ kind: 'HOME_VISIT_SOS', severity: 'CRITICAL' });
+    expect(dAlerts.items.every((x: any) => x.id.startsWith('hv_') && ['HOME_VISIT_SOS', 'HOME_VISIT_MISSED_CHECKIN', 'NURSE_SAFETY'].includes(x.kind)), 'dispatcher gets home-visit alert kinds only').toBe(true);
+    const dWeb = await web(disp, 'GET', '/home-visits/safety-alerts');
+    expect(dWeb.status, 'dispatcher may read the web safety alerts').toBe(200);
+    expect(dWeb.body.items.find((x: any) => x.id === sosId)).toMatchObject({ kind: 'SOS', visitId: v1.id });
+    expect((await web(disp, 'POST', `/home-visits/safety-alerts/${sosId}/resolve`)).status, 'web resolve stays manager-only').toBe(403);
+    expect((await app(disp, 'POST', '/mobile/alerts/vit_any-id/ack', {})).status, 'dispatcher cannot ack clinical alerts').toBe(404);
+    // another org's dispatcher/owner does not see this agency's alert (Nile Care front desk has no alert access at all)
+    expect((await app(await tok(NA('frontdesk1')), 'GET', '/mobile/alerts')).body.items.find((x: any) => x.id === `hv_${sosId}`)).toBeUndefined();
     // nurse2 (another nurse) must not see this nurse's alert
     expect((await app(await tok('nurse2@nurse-demo.kiorly.test'), 'GET', '/mobile/alerts')).body.items.find((x: any) => x.id === `hv_${sosId}`)).toBeUndefined();
     expect((await app(owner, 'POST', `/mobile/alerts/hv_${sosId}/ack`, {})).body).toMatchObject({ alreadyAcknowledged: false });
@@ -474,6 +485,10 @@ describe('d. Home-visit rounds: solo nurse Mona and an agency nurse (start, en r
     expect(aborted, 'unsafe abort alert for the agency owner').toMatchObject({ severity: 'HIGH' });
     const webAb = (await web(owner, 'GET', '/home-visits/safety-alerts')).body.items.find((x: any) => x.visitId === v2.id);
     expect(webAb).toMatchObject({ kind: 'UNSAFE_ABORT' }); alertsToResolve.push({ tenant: 'nagy', who: 'owner@nurse-demo.kiorly.test', id: webAb.id });
+    const dAbort = (await app(disp, 'GET', '/mobile/alerts')).body.items.find((x: any) => x.kind === 'NURSE_SAFETY' && x.subject?.id === v2.id);
+    expect(dAbort, 'dispatcher sees the unsafe-abort alert').toMatchObject({ severity: 'HIGH' });
+    expect((await app(disp, 'POST', `/mobile/alerts/${dAbort.id}/ack`, { note: 'dispatcher called the nurse' })).body, 'dispatcher acknowledges').toMatchObject({ id: dAbort.id, alreadyAcknowledged: false });
+    expect((await app(owner, 'GET', '/mobile/alerts')).body.items.find((x: any) => x.id === dAbort.id), 'ack by the dispatcher clears it for the owner').toBeUndefined();
     // agency nurse finishing without a signed note is refused the same way
     const fin = await app(nurse, 'POST', `/home-visits/${v1.id}/finish`, G);
     expect(fin.status).toBe(400);

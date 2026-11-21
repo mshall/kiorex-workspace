@@ -276,11 +276,13 @@ describe('s. Kiorly Work LAB: reception -> phlebotomy -> bench -> critical -> si
     const again = await app(who.signatory, 'POST', `/mobile/alerts/${st.alertKey}/ack`, { note: 'duplicate attempt' });
     expect(again.status).toBeLessThan(300);
     expect(again.body).toMatchObject({ ackedBy: who.director.id, ackNote: note, ackedAt: ack.body.ackedAt });
-    expect((await q('kiorly_lab', `select count(*)::int c from "MobileAlertAck" where "alertKey" = $1`, [st.alertKey]))[0].c).toBe(1);
+    // one source of truth: the read-back note lives on CriticalAlert (no parallel MobileAlertAck row); the web list exposes it
+    expect((await q('kiorly_lab', `select count(*)::int c from "MobileAlertAck" where "alertKey" = $1`, [st.alertKey]))[0].c).toBe(0);
+    expect((await q('kiorly_lab', `select "readBackNote" n from "CriticalAlert" where id = $1`, [st.critId]))[0].n).toBe(note);
     expect((await q('kiorly_lab', `select count(*)::int c from "AuditLog" where action = 'critical.acknowledged' and "entityId" = $1`, [st.critId]))[0].c).toBe(1);
     // WEB: critical alert is ACKNOWLEDGED by the director, no longer open; the app lists it under all, not under open
     const w = (await web(who.director, 'GET', '/critical-alerts?status=ACKNOWLEDGED')).body.find((a: any) => a.id === st.critId);
-    expect(w).toMatchObject({ status: 'ACKNOWLEDGED', acknowledgedBy: who.director.id });
+    expect(w).toMatchObject({ status: 'ACKNOWLEDGED', acknowledgedBy: who.director.id, readBackNote: note });
     expect((await web(who.director, 'GET', '/critical-alerts?status=OPEN')).body.some((a: any) => a.id === st.critId)).toBe(false);
     expect(find((await app(who.director, 'GET', '/mobile/alerts?status=open')).body)).toBeUndefined();
     expect(find((await app(who.director, 'GET', '/mobile/alerts?status=all')).body)).toMatchObject({ ackedBy: who.director.id, ackNote: note });
@@ -619,9 +621,29 @@ describe('u. Kiorly Work LAB: BASIC plan keeps the safety-alert inbox working en
     expect(a1.body).toMatchObject({ ackedBy: d.id, ackNote: note });
     const a2 = await app(d, 'POST', `/mobile/alerts/${key}/ack`, { note });
     expect(a2.body.ackedAt).toBe(a1.body.ackedAt);
-    expect((await q('kiorly_lab', `select count(*)::int c from "MobileAlertAck" where "alertKey" = $1`, [key]))[0].c).toBe(1);
-    expect((await web(d, 'GET', '/critical-alerts?status=ACKNOWLEDGED')).body.find((a: any) => a.id === crit)).toMatchObject({ status: 'ACKNOWLEDGED', acknowledgedBy: d.id });
+    expect((await web(d, 'GET', '/critical-alerts?status=ACKNOWLEDGED')).body.find((a: any) => a.id === crit)).toMatchObject({ status: 'ACKNOWLEDGED', acknowledgedBy: d.id, readBackNote: note });
     expect((await app(d, 'GET', '/mobile/alerts?status=open')).body.items.some((a: any) => a.id === key)).toBe(false);
+    // WEB-first acknowledgement stores the same read-back note; the web list and the app both show it; a replay keeps the first acknowledger and note
+    const o2 = await orderInLab(fx, 'STAT');
+    const e2 = await web(fx.who.tech, 'POST', '/results', { orderItemId: o2.itemId, analyteId: fx.analyteId, instrumentId: fx.bench, value: 7.2 });
+    expect(e2.status, JSON.stringify(e2.body)).toBe(201);
+    const crit2 = (await q('kiorly_lab', `select id from "CriticalAlert" where "resultId" = $1`, [e2.body.id]))[0].id;
+    const wnote = '  READ-BACK (web): Dr. Web confirmed by phone  ';
+    expect((await web(fx.who.reception, 'POST', `/critical-alerts/${crit2}/ack`, { note: 'x' })).status).toBe(403);
+    expect((await web(d, 'POST', `/critical-alerts/${crit2}/ack`, { note: 'y'.repeat(501) })).status).toBe(400);
+    const w1 = await web(d, 'POST', `/critical-alerts/${crit2}/ack`, { note: wnote });
+    expect(w1.status, JSON.stringify(w1.body)).toBeLessThan(300);
+    expect(w1.body).toMatchObject({ status: 'ACKNOWLEDGED', acknowledgedBy: d.id, readBackNote: wnote.trim() });
+    expect((await web(d, 'GET', '/critical-alerts?status=ACKNOWLEDGED')).body.find((a: any) => a.id === crit2)).toMatchObject({ readBackNote: wnote.trim() });
+    expect((await app(d, 'GET', '/mobile/alerts?status=all')).body.items.find((a: any) => a.id === `crit_${crit2}`)).toMatchObject({ ackedBy: d.id, ackNote: wnote.trim() });
+    const w2 = await web(fx.who.owner, 'POST', `/critical-alerts/${crit2}/ack`, { note: 'second' });
+    expect(w2.status).toBe(409); expect(w2.body).toMatchObject({ code: 'ALERT_ALREADY_ACKNOWLEDGED' });
+    const m2 = await app(fx.who.owner, 'POST', `/mobile/alerts/crit_${crit2}/ack`, { note: 'third' });
+    expect(m2.body).toMatchObject({ ackedBy: d.id, ackNote: wnote.trim() });
+    expect((await q('kiorly_lab', `select "readBackNote" n, "acknowledgedBy" b from "CriticalAlert" where id = $1`, [crit2]))[0]).toEqual({ n: wnote.trim(), b: d.id });
+    expect((await q('kiorly_lab', `select count(*)::int c from "AuditLog" where action = 'critical.acknowledged' and "entityId" = $1`, [crit2]))[0].c).toBe(1);
+    // no PHI in notifications: the note never reaches any outbound message params
+    expect((await q('kiorly_lab', `select count(*)::int c from "NotificationAttempt" where "relatedId" = $1 and params::text like '%Dr. Web%'`, [crit2]))[0].c).toBe(0);
   });
 });
 

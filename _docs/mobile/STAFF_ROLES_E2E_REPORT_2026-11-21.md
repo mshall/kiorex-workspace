@@ -9,7 +9,7 @@
 | App routes vs web API, Pharmacy | `e2e/test/17-staff-mobile-pharmacy.e2e.ts` | 30 passed |
 | App routes vs web API, Lab | `e2e/test/18-staff-mobile-lab.e2e.ts` | 34 passed |
 | Expo web, per role (Playwright, real APIs) | `kiorly-work/e2e-web/{clinic-roles,pharmacy-staff,lab-staff}.spec.ts` | clinic 6, pharmacy 19, lab 20 passed (run by the authoring agents against their own web builds; not re-run after the final API restart) |
-| Unit | `kiorly-work` jest 113; backends' mobile node tests; `tsc` clean in all four | green |
+| Unit | `kiorly-work` jest 127; backends' mobile node tests; `tsc` clean in all four | green |
 
 Run: `e2e/scripts/up.sh --build --restart`, then `cd e2e && npx vitest run test/16-… test/17-… test/18-…`. The suites create fresh fixtures per run and cap-tolerate the shared demo DB.
 
@@ -34,15 +34,17 @@ Run: `e2e/scripts/up.sh --build --restart`, then `cd e2e && npx vitest run test/
 | Staff app | lab sign-off button shown from the licence flag alone | driven by the server `sign-off` screen |
 | Staff app | greeting "Good morning, Dr" | honorifics skipped |
 
+## Founder decisions applied (21 Nov 2026)
+1. **Dispatcher** (receptionist or call-centre user in a Nurse-edition org) now gets the home-visit module and the org's home-visit safety alerts (SOS, missed check-in, nurse safety) in the app, and read access to `/home-visits/safety-alerts` on the web (acknowledge/resolve stay manager-only). No clinical record access. Clinic front desk is unchanged.
+2. **Lab critical-value read-back note** is stored on web and app acknowledgements alike (`CriticalAlert.readBackNote`, 500 chars, first acknowledger wins, never in notifications or audit text).
+3. **Finance officer** no longer has Admin tabs (operations, expenses, revenue, reports, profile); branch manager keeps branch admin.
+4. **Lite owners** see staff upgrade requests on the Home upgrade card (bootstrap `upgrade.openRequestItems`, approvers only, excluding their own), with a count badge on Me.
+
 ## Found, not fixed (decisions or schema changes needed)
-1. Agency **dispatcher** has no home-visit or alert module in the app and cannot read safety alerts (clinic API 403). Product decision.
-2. Lab web `POST /critical-alerts/:id/ack` accepts a read-back note but does not store it (only the mobile route does); needs a schema field.
-3. Lab `release-queue` keeps a signed-but-unreleased order under "ready to sign" (re-sign 409); a naive fix would hide amendments.
-4. Lab summary `ordersToday` uses the UTC day; the app uses local midnight (disagree 00:00-02:00 Cairo).
-5. Replayed home-visit transitions answer 409 (shown as a conflict in Sync); a same-state transition could be treated as OK. Arrival is not checked against the district geofence (mock maps).
-6. On Basic, the owner cannot read the upgrade-request notification in the in-app inbox (`/mobile/inbox` is Pro-only); the bootstrap shows the open count.
-7. Finance and branch-manager roles get the group-admin tab set in the clinic API; confirm that is intended.
-8. Kiorex-side mirror of pharmacy orders and live lab bookings need `KIOREX_MODE=real` flag pollers; the dev stack runs them without polling a dev gate.
+1. Lab `release-queue` keeps a signed-but-unreleased order under "ready to sign" (re-sign 409); a naive fix would hide amendments.
+2. Lab summary `ordersToday` uses the UTC day; the app uses local midnight (disagree 00:00-02:00 Cairo).
+3. Replayed home-visit transitions answer 409 (shown as a conflict in Sync); a same-state transition could be treated as OK. Arrival is not checked against the district geofence (mock maps).
+4. Kiorex-side mirror of pharmacy orders and live lab bookings need `KIOREX_MODE=real` flag pollers; the dev stack runs them without polling a dev gate.
 
 ## Not covered
 Native camera, biometrics, push tokens, a physical device, the offline conflict UI (only server idempotency), Passport sign-in for the staff app (not registered), and the Pharmacy/Lab modules on iOS/Android simulators.
