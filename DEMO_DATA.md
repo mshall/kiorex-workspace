@@ -26,7 +26,7 @@ e2e/scripts/up.sh --build --seed        # first time; afterwards just e2e/script
 scripts/seed-all.sh                     # idempotent; add --reset to remove demo records first (never non-demo data)
 #    seed-all.sh also runs the three Kiorly Work seeds (Clinic and Lab db:seed:mobile, Pharmacy seed:mobile), each right after its base demo seed; they are idempotent
 # 4) the web apps you want to look at (each is a Vite dev server; the APIs are already running)
-(cd clinics-management && npm run dev -w web)     # :5174 (CAUTION: repo-level `npm run dev` runs `scripts/free-dev-ports.sh`, which on the founder's 21 Nov version also kills anything on 3000 / 5173 / 5175 / 3020 / 5190 / 5191 / 4175; prefer `npm run dev -w web` while another checkout is running)
+(cd clinics-management && npm run dev -w web)     # :5174 (`npm run dev` now frees only this branch's own ports; `KIORLY_FREE_ALL_PORTS=1` restores the old wide sweep)
 (cd kiorex-platform && npm run dev -w apps/web)   # :5180
 (cd kiorex-platform && npm run dev -w apps/ops)   # :5181
 (cd kiorex-platform && npm run mobile:web)        # :8081 patient app
@@ -84,7 +84,7 @@ Logins actually exercised against the running stack: **Passport/Kiorex** Hoda `+
 **Fixed on 2026-11-21**
 
 1. Port clash 5190 / 5191: Pharmacy and Lab web now default to 5192 / 5193 (configurable `PHARMACY_WEB_PORT` / `LAB_WEB_PORT`) in the Vite configs, scripts and every doc; start-up of both verified.
-2. `clinics-management` `npm run dev`: the founder's `scripts/free-dev-ports.sh` (21 Nov) frees this branch's ports plus the shared alternates (3000 / 3010 / 3020 / 5173 / 5174 / 5175 / 5190 / 5191 / 4175), so it kills a second checkout's servers on those ports. Open: scope it to this branch's own ports (founder's call).
+2. `clinics-management` `npm run dev` now frees only this branch's own ports (scoped 21 Nov); `KIORLY_FREE_ALL_PORTS=1` restores the wide sweep.
 3. Pharmacy `RecallNotice`: `seed:demo` now re-creates the `DEMO-RECALL-001` notice for lot `DM00013` when it is missing (verified: notice linked to the lot).
 4. Pharmacy numbers corrected: 259 shared catalogue rows (44 base + 215 generated; the live 524 tenant drugs and 32 suppliers include 523 `E2E-Med-*` drugs and 27 `E2E Supplier` rows), 5 seeded suppliers (the earlier "6 live" was an e2e leftover); `kx_ph_demo_3` is EXPIRED at the pharmacy and REJECTED (`SLA_EXPIRED`) in Kiorex, now documented as such.
 5. Kiorex flag registry: 68 definitions (docs said 52); 14 demo providers LIVE (docs said 13 doctors; plus 3 older KX-DEV LIVE, 2 demo PAUSED, 3 DELISTED).
