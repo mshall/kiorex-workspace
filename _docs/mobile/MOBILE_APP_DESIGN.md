@@ -23,7 +23,7 @@
 
 ## 1. Fixed decisions (from the founder brief, not reopened)
 
-1. **One Expo app named "Kiorly"** (no "Kiorly Team"). Product modules **Clinic** (Nurse edition when the active org is a Nurse tenant), **Pharmacy**, **Lab**; product names are singular.
+1. **One Expo app named "Kiorly Team"** (final, founder decision 23 Nov 2026; earlier drafts said "Kiorly"). Product modules **Clinic** (Nurse edition when the active org is a Nurse tenant), **Pharmacy**, **Lab**; product names are singular.
 2. Branded split builds stay possible later through **build-time config only** (section 11).
 3. Modules appear from **memberships + roles + per-org entitlements**. A user may belong to several orgs; switching org re-evaluates everything immediately; entitlements are never cached across orgs.
 4. **Safety is never paywalled** (extends ADR-025): enforced in code and by a failing test (section 6).
@@ -462,7 +462,7 @@ flowchart LR
 
 | Area | Decision |
 |---|---|
-| Brand kit, `components/ui|kit|states`, Logo, i18n bundles, haptics, motion, scanner | **Salvage** (rename strings "Kiorly Team" -> "Kiorly") |
+| Brand kit, `components/ui|kit|states`, Logo, i18n bundles, haptics, motion, scanner | **Salvage** (strings stay "Kiorly Team", the final name) |
 | Module screens `app/clinic|pharmacy|lab/*` (schedule, patients, prescriptions, lab-results, rounds, barcode, receiving, stockcount, controlled, orders, accession, phlebotomy, critical, validation ...) | **Salvage**, re-gate by capability key instead of `mobile_staff_app`; split into core/pro per the matrix |
 | `src/offline/*` | **Salvage and rework**: add idempotency/clientTime/deviceId/userId envelope, encrypted store, per-org namespace, `ENTITLEMENT_CHANGED` handling |
 | `hooks/useRead`, `useAlerts`, `NotificationDriver` | **Rework**: org-namespaced encrypted cache; silent-push events |
