@@ -13,3 +13,7 @@ Design only. No feature code, no pushes, no deploys. One Expo app named **Kiorly
 | [STORE_POLICY_NOTE.md](./STORE_POLICY_NOTE.md) | Apple/Google policy note (written separately). |
 
 Read order: design section 0 -> ADR-033 -> matrix -> questions.
+
+## Patient app parity update (22 Nov 2026)
+
+The patient Expo app (`kiorex-platform/apps/mobile`) now has the Services screen (with the WhatsApp booking card), the public family visit-status screen (`kiorex://visit-status/:token`) and push-tap routing (payload under the `body` key, `e2e-push/send.sh`). Details: `kiorex-platform/apps/mobile/README.md`, section "Services, family link and push taps". Device verification is still open.
