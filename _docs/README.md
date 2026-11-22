@@ -12,5 +12,6 @@ Extracts of the Kiorex v2 reference documents (Rev 2.3, 24 volumes KX-00 to KX-2
 | **Launch and brand** | [KX-17 Clinic launch readiness](KX-17_Kiorly_Clinic_Launch_Readiness.md) · [KX-19 Brand, domains, stores](KX-19_Brand_Domains_Store_Accounts.md) |
 | **Rev 2.3 changes** | [CHANGES_2.2_to_2.3.md](CHANGES_2.2_to_2.3.md) (read its backlog before building) · current extracts in [rev23/](rev23) |
 | **Decisions** | [FOUNDER_DECISIONS.md](FOUNDER_DECISIONS.md) |
+| **Provider go-live** | [PROVIDER_GO_LIVE.md](PROVIDER_GO_LIVE.md) |
 | **Quality reports** | [COMPLETENESS_MATRIX.md](COMPLETENESS_MATRIX.md) · [FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md) · [FINAL_VERIFICATION_REPORT.md](FINAL_VERIFICATION_REPORT.md) · [UI_REVIEW.md](UI_REVIEW.md) · screenshots in [ui-review/](ui-review) |
 | **Build queue notes** | [autopilot/](autopilot) |

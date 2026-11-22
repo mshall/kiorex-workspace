@@ -12,7 +12,7 @@ Kiorex (patients) and Kiorly by Kiorex (clinics, pharmacies, labs) built to work
 ![Stack](https://img.shields.io/badge/stack-NestJS%20%7C%20Prisma%20%7C%20React%20%7C%20Expo-3730A3)
 ![DB](https://img.shields.io/badge/PostgreSQL-16%2B-0369A1?logo=postgresql&logoColor=white)
 ![IaC](https://img.shields.io/badge/IaC-OpenTofu-3730A3)
-![Providers](https://img.shields.io/badge/providers-mocked-E8735E)
+![Providers](https://img.shields.io/badge/providers-ready%20for%20real%20URLs-E8735E)
 ![Tax authority](https://img.shields.io/badge/tax--authority%20reporting-never-E8735E)
 ![License](https://img.shields.io/badge/license-private-lightgrey)
 
@@ -80,7 +80,7 @@ flowchart TB
 | **Truth rule** | Kiorly Clinic is the only system of record for appointments (ADR-005) |
 | **Reference set** | Rev 2.3: 24 volumes KX-00 to KX-23, ADRs 001 to 032 |
 | **Infra** | OpenTofu only (ADR-028); nothing deployed, no AWS deploy until the founder says so |
-| **Providers** | Mocked everywhere until the pre-launch pass |
+| **Providers** | Mock by default; real SMS, Email, WhatsApp, payments, consent, AI and storage adapters are built and need only URLs and credentials: [_docs/PROVIDER_GO_LIVE.md](_docs/PROVIDER_GO_LIVE.md) |
 
 ## Repositories
 
@@ -211,7 +211,7 @@ Every demo (what it is for, personas, data, manual test scripts, role checklists
 
 > :no_entry: **No tax-authority reporting.** No product integrates with, submits to or reports to any tax authority (no ETA e-invoicing, ZATCA, FTA or similar), in any market (ADR-011, KX-01, FD-02). VAT appears only as a configurable line on Kiorly's own invoices and printed payment records; businesses export CSV/PDF for their accountant. A repo test fails if code references such endpoints.
 
-> :test_tube: **Providers are mocked.** Email, WhatsApp, SMS, push, PSPs (Paymob, Fawry, InstaPay), video, maps, OpenAI run on mock adapters (`MODE=mock`, default) that exercise the same code paths, until every other feature is verified. Real providers are wired before launch, staging first. No real credentials in code.
+> :test_tube: **Providers are mocked.** Email, WhatsApp, SMS, push, PSPs (Paymob, Fawry, InstaPay), video, maps, OpenAI run on mock adapters (`MODE=mock`, default) that exercise the same code paths, until every other feature is verified. The real adapters (SMS, Email, WhatsApp, payments, consent, AI, storage) are now built in every product and are switched on by env only: see [_docs/PROVIDER_GO_LIVE.md](_docs/PROVIDER_GO_LIVE.md). Staging first; no real credentials in code.
 
 | Rule | Detail |
 |---|---|

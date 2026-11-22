@@ -3,7 +3,7 @@
 > **DEV ONLY.** Everything below is fictional: names, phones (`+20100000xxxx`), e-mails (`@demo.kiorex.test`), ids. Passwords/OTPs/TOTP seeds are
 > local development values, never used in staging/production, and are blocked when `NODE_ENV=production`.
 > No tax-authority integration exists anywhere; VAT appears only as a plain configurable % line (14 %) on invoices.
-> Providers are mocked (messages land in the dev inbox / message log; PSP is `sandbox-fake`; video is `mock`).
+> Providers are mocked by default and have real adapters ready ([_docs/PROVIDER_GO_LIVE.md](_docs/PROVIDER_GO_LIVE.md)); messages land in the dev inbox / message log; PSP is `sandbox-fake`; video is `mock`).
 > Each repo has its own `TEST_DATA.md`; this file is the cross-product index.
 
 ## Run / reset
