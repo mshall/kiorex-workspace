@@ -151,7 +151,7 @@ The nurse edition runs on the phone in the single staff app **Kiorly Team** (ADR
 | Lite nurse plans (Nurse Lite) | Done (slice) | Safety alerts on every plan, upgrade request; full app is Pro and Agency today (single `mobile_staff_app` entitlement). Whether depart, arrive and finish should be Core on Lite follows the P5 question Q7 in the mobile design pack: Open |
 | Push for SOS and safety alerts | Done (simulator, mock token) | Real delivery unverified; do not rely on push alone (KX16 H19) |
 
-> **Note** Seeded demo nurses (solo nurse, agency nurses, aide, dispatcher, agency owner) are synthetic and DEV ONLY; their logins are in `TEST_DATA.md` and `kiorly-work/DEMO_DATA.md`.
+> **Note** Seeded demo nurses (solo nurse, agency nurses, aide, dispatcher, agency owner) are synthetic and DEV ONLY; their logins are in `TEST_DATA.md` and `kiorly-team/DEMO_DATA.md`.
 
 ## What changed in this revision (23 Nov 2026)
 - Added §11 describing the nurse experience inside the unified Kiorly Team app, the Lab-results restriction for nurses, dispatcher rights and arrival distance. Requirements KN*, plans and gates are unchanged.

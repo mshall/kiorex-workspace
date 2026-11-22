@@ -5,7 +5,7 @@ import { LAB_API } from '../src/env.js';
 /**
  * Kiorly Team (staff app) LAB module, END TO END against the real Lab API :3200 and the seeded demo tenants.
  * Every staff step goes through the endpoints the Expo app calls (/mobile/* + the product REST routes it documents in
- * kiorly-lab/Docs/MOBILE.md, always with X-Kiorly-Client: kiorly-work/*). After each step the same state is read through the
+ * kiorly-lab/Docs/MOBILE.md, always with X-Kiorly-Client: kiorly-team/*). After each step the same state is read through the
  * WEB endpoints (no client header = what the lab web app :5193 calls) and asserted equal; where a DB row is the effect it is read from Postgres.
  *
  * Isolation: a fresh analyte (E2EM...) with its own critical rule, QC materials and a 1-minute TAT test is created per run, so no demo QC state is
@@ -13,7 +13,7 @@ import { LAB_API } from '../src/env.js';
  */
 type Role = 'owner' | 'director' | 'signatory' | 'tech' | 'phleb' | 'reception' | 'manager' | 'supervisor';
 type Who = { token: string; id: string; role: string };
-const APP = { 'x-kiorly-client': 'kiorly-work/1.0.0-e2e' };
+const APP = { 'x-kiorly-client': 'kiorly-team/1.0.0-e2e' };
 
 async function login(org: string, role: string): Promise<Who> {
   const r = await lab(undefined, 'POST', '/auth/dev-login', { orgSlug: org, email: `${role}@${org}.test` });

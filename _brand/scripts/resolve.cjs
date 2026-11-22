@@ -4,7 +4,7 @@ const roots = [
   path.join(__dirname, ".."),
   path.join(__dirname, "../../kiorex-platform/apps/mobile"),
   path.join(__dirname, "../../kiorex-platform"),
-  path.join(__dirname, "../../kiorly-work"),
+  path.join(__dirname, "../../kiorly-team"),
   "/private/tmp/claude-501/-Users-shall--claude-spares-spare-WluYAN/4b62abbd-15dd-4d07-9114-584bae6ad2ed/scratchpad/gen-logo",
 ];
 module.exports = function (name) {

@@ -231,7 +231,7 @@ RULE: Not flags — never switchable: Rx safety checks (interactions, allergies,
 ACTIVATION IN 30 DAYS ≥ 60% (20 visits checked-in) · FOUNDING TRIAL → PAID ≥ 50% · MONTHLY PAID CHURN ≤ 2.5% · ACTIVE DAYS / CLINIC / MONTH ≥ 20 · HOME VISITS WITH FULL GEOSTAMP TRAIL ≥ 98% (v2.3) · SAFETY ALERTS RESOLVED ≤ 15 MIN 100% (v2.3)
 
 ## 13 Build status and changes since 19 Nov 2026 (23 Nov 2026)
-Observed in `clinics-management` (branch `kiorex`, never `main`; 322 commits since 19 Nov, including merges from main), `kiorly-work` and the workspace e2e suites. Local development only; nothing deployed or pushed.
+Observed in `clinics-management` (branch `kiorex`, never `main`; 322 commits since 19 Nov, including merges from main), `kiorly-team` and the workspace e2e suites. Local development only; nothing deployed or pushed.
 
 ### 13.1 Staff mobile app: Kiorly Team (Clinic and Nurse entries)
 | Capability | Status | Evidence and caveat |

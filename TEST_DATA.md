@@ -212,7 +212,7 @@ Limits: steps 5-6 need the egress path HB07; Passport families/orgs/invitations 
 - Feature coverage: `kiorly-pharmacy/Docs/FEATURE_MATRIX.md`, `kiorly-lab/Docs/FEATURE_MATRIX.md`.
 
 ## Kiorly Team (mobile staff app, added 20 Nov 2026)
-App `kiorly-work` (Expo web :8082). Entitlement `mobile_staff_app` is ON for PRO/ENTERPRISE; Basic orgs see the upgrade screen but keep the safety-alert inbox. Staff password `Demo@12345` (legacy `admin@kiorly.com`: `demo`); seeds: clinic `npm run db:seed:mobile -w api`, pharmacy `npm run seed:mobile -w api`, lab `npm run db:seed:mobile -w api` (all idempotent, guarded; run by `scripts/seed-all.sh` and by `seed:all` in pharmacy). Details: `kiorly-work/Docs/TEST_DATA.md`.
+App `kiorly-team` (Expo web :8082). Entitlement `mobile_staff_app` is ON for PRO/ENTERPRISE; Basic orgs see the upgrade screen but keep the safety-alert inbox. Staff password `Demo@12345` (legacy `admin@kiorly.com`: `demo`); seeds: clinic `npm run db:seed:mobile -w api`, pharmacy `npm run seed:mobile -w api`, lab `npm run db:seed:mobile -w api` (all idempotent, guarded; run by `scripts/seed-all.sh` and by `seed:all` in pharmacy). Details: `kiorly-team/Docs/TEST_DATA.md`.
 | Product | Plan | Logins |
 |---|---|---|
 | Clinic Nile Care | PRO | `nadia.na@` (doctor), `nurse.na@`, `owner.na@`, `accountant.na@` (`@demo.kiorex.test`); solo nurse `mona@nurse-demo.kiorly.test` |

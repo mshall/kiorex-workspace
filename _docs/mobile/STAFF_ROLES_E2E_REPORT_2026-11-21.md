@@ -1,6 +1,6 @@
 # Staff app: role-by-role end-to-end report (21 Nov 2026)
 
-> **Scope.** Kiorly Team (`kiorly-work`, still titled "Kiorly Team") for every Clinic, Pharmacy and Lab demo role, on the app routes (`/mobile/*`) **and** on the web (each product's web API, plus the staff app's Expo web build driven by Playwright). Seeded demo data only. Persona and login tables: [`DEMO_DATA.md`](../../DEMO_DATA.md) and `kiorly-work/DEMO_DATA.md`.
+> **Scope.** Kiorly Team (repo `kiorly-team`, renamed from `kiorly-work` on 23 Nov 2026) for every Clinic, Pharmacy and Lab demo role, on the app routes (`/mobile/*`) **and** on the web (each product's web API, plus the staff app's Expo web build driven by Playwright). Seeded demo data only. Persona and login tables: [`DEMO_DATA.md`](../../DEMO_DATA.md) and `kiorly-team/DEMO_DATA.md`.
 
 ## Result
 | Layer | Suite | Result |
@@ -8,8 +8,8 @@
 | App routes vs web API, Clinic | `e2e/test/16-staff-mobile-clinic.e2e.ts` | 46 passed |
 | App routes vs web API, Pharmacy | `e2e/test/17-staff-mobile-pharmacy.e2e.ts` | 30 passed |
 | App routes vs web API, Lab | `e2e/test/18-staff-mobile-lab.e2e.ts` | 34 passed |
-| Expo web, per role (Playwright, real APIs) | `kiorly-work/e2e-web/{clinic-roles,pharmacy-staff,lab-staff}.spec.ts` | clinic 6, pharmacy 19, lab 20 passed (run by the authoring agents against their own web builds; not re-run after the final API restart) |
-| Unit | `kiorly-work` jest 140; backends' mobile node tests; `tsc` clean in all four | green |
+| Expo web, per role (Playwright, real APIs) | `kiorly-team/e2e-web/{clinic-roles,pharmacy-staff,lab-staff}.spec.ts` | clinic 6, pharmacy 19, lab 20 passed (run by the authoring agents against their own web builds; not re-run after the final API restart) |
+| Unit | `kiorly-team` jest 140; backends' mobile node tests; `tsc` clean in all four | green |
 
 Run: `e2e/scripts/up.sh --build --restart`, then `cd e2e && npx vitest run test/16-… test/17-… test/18-…`. The suites create fresh fixtures per run and cap-tolerate the shared demo DB.
 

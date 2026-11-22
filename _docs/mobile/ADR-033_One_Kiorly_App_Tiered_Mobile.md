@@ -2,7 +2,7 @@
 
 **Proposed** · Distribution / Commercial / Clinical safety · drafted 20 Nov 2026 · records the founder's decisions of 20 Nov 2026; becomes **Accepted** when the founder signs it off.
 **Amends** ADR-018 (consequence only). **Extends** ADR-025 (adds a never-paywalled rule). **Relates to** ADR-023, ADR-024, ADR-027, ADR-031, ADR-032, KX-19 §04, KX-12 principle P5.
-**Supersedes** the in-repo design of `kiorly-work` ("Kiorly Team", single `mobile_staff_app` entitlement, upgrade screen).
+**Supersedes** the in-repo design of the app repo (then `kiorly-work`, now `kiorly-team`) ("Kiorly Team", single `mobile_staff_app` entitlement, upgrade screen).
 
 *Format follows `_docs/rev23/KX-01_Decision_Log_ADRs.md` (title line, Why, Consequence), expanded with Context and Decision because this ADR changes two earlier ones.*
 
@@ -39,9 +39,9 @@ Consequences for KX-19 §04 (text to update after sign-off, not edited by this A
 ## Consequences
 * **Backends** (clinics-management `kiorex`, kiorly-pharmacy, kiorly-lab): new `mobile.*` entitlement keys and `GET /mobile/me/entitlements?org=`; `@MobileCapability` guard replaces the single-key interceptor; `mobile.safety` forced true in `resolve()`; safety never-paid test in each repo; `kiorex-contracts` gains the capability registry and new flag keys (`mobile.clinic|pharmacy|lab`); `mobile_staff_app` is migrated (core + safety for every org, pro where it was true) and removed after one release.
 * **Existing contracts**: web keeps `402 PLAN_UPGRADE_REQUIRED`; mobile clients get `403 ENTITLEMENT_REQUIRED` and `403 FEATURE_DISABLED {key,scope}`; queued actions replayed after a downgrade get `409 ENTITLEMENT_CHANGED` and are retained, never lost.
-* **Identity**: Passport public client `kiorly-app`; Clinic needs a Passport token exchange and must allow one Passport subject in several Clinic organizations.
-* **Repo**: `kiorly-work` is renamed (proposed `kiorly-app`), salvaged per the migration table in the design, and its upgrade screen and `mobile_staff_app` logic deleted.
-* **Docs to update after sign-off**: `CLAUDE.md` and `INTEGRATION.md` (Kiorly Team rows), `kiorly-work/Docs/ENTITLEMENTS.md`, the entitlement sections of the three `Docs/MOBILE.md`, KX-19 §04, KX-01 index (add ADR033, amend ADR018 consequence).
+* **Identity**: Passport public client `kiorly-team` (redirect `kiorlyteam://auth/callback`; the earlier proposal `kiorly-app` is superseded by the founder decision of 23 Nov 2026); Clinic needs a Passport token exchange and must allow one Passport subject in several Clinic organizations.
+* **Repo**: the repo formerly called `kiorly-work` is renamed **`kiorly-team`** (founder decision, 23 Nov 2026; GitHub `mshall/kiorly-team`, local folder `kiorly-team/`, bundle id `com.kiorly.team`, scheme `kiorlyteam`). The earlier proposal `kiorly-app` / `com.kiorly.app` is superseded. The repo is salvaged per the migration table in the design, and its upgrade screen and `mobile_staff_app` logic deleted. Stores and the Passport client must be registered with the new bundle id; remove old simulator installs of `com.kiorly.work`. Backends accept both the new `kiorly-team/<v>` and the legacy `kiorly-work/<v>` client header.
+* **Docs to update after sign-off**: `CLAUDE.md` and `INTEGRATION.md` (Kiorly Team rows), `kiorly-team/Docs/ENTITLEMENTS.md`, the entitlement sections of the three `Docs/MOBILE.md`, KX-19 §04, KX-01 index (add ADR033, amend ADR018 consequence).
 * **Human gates untouched**: store accounts, Apple/Google review, counsel and CMO sign-offs (NH-*), prices and plan composition remain NEEDS_HUMAN; this ADR sets no price.
 * **Decision-log index**: the ADR row is **not** added to `_docs/rev23/KX-01_Decision_Log_ADRs.md` (a verbatim transcription of an Approved reference edition, and this ADR is only Proposed). Proposed row once accepted:
   `| ADR033 | One Kiorly app: Clinic, Pharmacy and Lab modules; tiered mobile entitlements; safety never paywalled | Accepted | Distribution / Clinical safety |`

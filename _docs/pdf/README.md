@@ -19,7 +19,7 @@ Output names follow the Drive naming, e.g. `KX-05_Kiorly_Clinic_PRD.pdf`. `build
 
 A document whose source is missing is skipped with a clear message (`SKIP KX-24 no Markdown source found ...`); exit code is 1 only when a build fails.
 
-**Browser.** No download needed: it drives the Chromium that `kiorly-work/e2e-web` already uses (`~/Library/Caches/ms-playwright/chromium-*`, newest wins). Override with `KX_CHROMIUM=/path/to/chrome`.
+**Browser.** No download needed: it drives the Chromium that `kiorly-team/e2e-web` already uses (`~/Library/Caches/ms-playwright/chromium-*`, newest wins). Override with `KX_CHROMIUM=/path/to/chrome`.
 
 **Fonts** are local (`fonts/`, SIL OFL): Inter (body), Jost (brand headings), JetBrains Mono (code), IBM Plex Sans Arabic (Arabic, the brand Arabic face), Noto Sans Math (arrows and comparison symbols). Chromium embeds only the glyphs used, so files stay around 0.7 to 1.2 MB.
 

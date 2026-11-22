@@ -4,7 +4,7 @@ Design only. No feature code, no pushes, no deploys. One Expo app named **Kiorly
 
 | Doc | What it answers |
 |---|---|
-| [MOBILE_APP_DESIGN.md](./MOBILE_APP_DESIGN.md) | Architecture, org switching, entitlement model and API contract, safety-never-paywalled enforcement and test, flag vs entitlement, offline conflict table, security, locked-feature UX, split-build triggers, plan mapping, shared packages, CI/EAS, migration from `kiorly-work`. Section 0 lists conflicts found. |
+| [MOBILE_APP_DESIGN.md](./MOBILE_APP_DESIGN.md) | Architecture, org switching, entitlement model and API contract, safety-never-paywalled enforcement and test, flag vs entitlement, offline conflict table, security, locked-feature UX, split-build triggers, plan mapping, shared packages, CI/EAS, migration from `kiorly-team`. Section 0 lists conflicts found. |
 | [ADR-033_One_Kiorly_App_Tiered_Mobile.md](./ADR-033_One_Kiorly_App_Tiered_Mobile.md) | The decision record: amends ADR-018's consequence, extends ADR-025 (safety never paywalled). Proposed until the founder signs. |
 | [FEATURE_TIER_MATRIX.md](./FEATURE_TIER_MATRIX.md) | Every capability x product x tier, with audited backend status, effort and file/route evidence; gaps listed, not invented. |
 | [RISKS_AND_OPEN_QUESTIONS.md](./RISKS_AND_OPEN_QUESTIONS.md) | Risks with mitigations, 20 numbered founder questions, NH-* legal sign-offs that apply to mobile. |

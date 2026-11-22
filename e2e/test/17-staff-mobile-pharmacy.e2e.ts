@@ -7,11 +7,11 @@ import { randomUUID } from 'node:crypto';
 
 /**
  * Kiorly Team (staff app) pharmacy module against the REAL running Pharmacy API and the seeded demo tenants.
- * Every flow is performed the way the app does it (`X-Kiorly-Client: kiorly-work/*`, /mobile/* read models + the existing endpoints named in
+ * Every flow is performed the way the app does it (`X-Kiorly-Client: kiorly-team/*`, /mobile/* read models + the existing endpoints named in
  * kiorly-pharmacy/Docs/MOBILE.md) and then re-read through the WEB path (no client header = what the :5192 web app calls) to prove both
  * surfaces show the same state. Fixtures (drugs "E2E-Med-*", lots, POs, Rx) are created per run through the owner API; nothing is reset.
  */
-const MOBILE = { 'x-kiorly-client': 'kiorly-work/1.0-e2e' };
+const MOBILE = { 'x-kiorly-client': 'kiorly-team/1.0-e2e' };
 type R = { status: number; body: any };
 async function http(token: string | undefined, method: string, path: string, body?: unknown, headers: Record<string, string> = {}): Promise<R> {
   const res = await fetch(PHARMACY_API + path, { method, headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}), ...headers }, body: body === undefined ? undefined : JSON.stringify(body) });
