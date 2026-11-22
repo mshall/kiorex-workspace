@@ -1,0 +1,366 @@
+{
+  "revisionDefault": "Rev 2.3",
+  "families": {
+    "platform": {
+      "label": "Platform",
+      "accent": "#3730A3",
+      "accent2": "#6C67BC",
+      "deep": "#11102E",
+      "tint": "#F1F1F9",
+      "logo": "kiorex",
+      "pulse": "#E8735E"
+    },
+    "clinic": {
+      "label": "Kiorly Clinic",
+      "accent": "#0369A1",
+      "accent2": "#4F96BD",
+      "deep": "#0B172E",
+      "tint": "#EDF5F8",
+      "logo": "clinic",
+      "pulse": "#E8735E"
+    },
+    "pharmacy": {
+      "label": "Kiorly Pharmacy",
+      "accent": "#15803D",
+      "accent2": "#4ADE80",
+      "deep": "#0B2A1A",
+      "tint": "#EAF7EF",
+      "logo": "pharmacy",
+      "pulse": "#E8735E",
+      "text": "#15803D"
+    },
+    "lab": {
+      "label": "Kiorly Lab",
+      "accent": "#6D28D9",
+      "accent2": "#A78BFA",
+      "deep": "#1C0F3F",
+      "tint": "#F3EFFD",
+      "logo": "lab",
+      "pulse": "#E8735E",
+      "text": "#6D28D9"
+    },
+    "nurse": {
+      "label": "Kiorly Nurse",
+      "accent": "#E11D48",
+      "accent2": "#FB7185",
+      "deep": "#2A0B1A",
+      "tint": "#FDEFF2",
+      "logo": "nurse",
+      "pulse": "#F5B4A8",
+      "text": "#BE123C"
+    },
+    "business": {
+      "label": "Business",
+      "accent": "#E8735E",
+      "accent2": "#F1ACA0",
+      "deep": "#1A1740",
+      "tint": "#FDF5F4",
+      "logo": "kiorex",
+      "pulse": "#E8735E",
+      "base": "#3730A3",
+      "text": "#B75C50"
+    }
+  },
+  "docs": [
+    {
+      "code": "KX-00",
+      "file": "KX-00_Master_Blueprint_and_Reading_Guide",
+      "title": "Master Blueprint and Reading Guide",
+      "subtitle": "One ecosystem, two brands, five products: how Kiorex and Kiorly decouple, make money, launch in Egypt and scale, and where every detail lives.",
+      "family": "platform",
+      "group": "Start here",
+      "sources": [
+        "_docs/rev23/KX-00_Master_Blueprint.md",
+        "_docs/KX-00_Master_Blueprint.md"
+      ]
+    },
+    {
+      "code": "KX-01",
+      "file": "KX-01_Decision_Log_and_ADRs",
+      "title": "Decision Log and ADRs",
+      "subtitle": "The decisions that shape Kiorex v2: what was decided, why, what it costs and how to change it.",
+      "family": "platform",
+      "group": "Start here",
+      "sources": [
+        "_docs/rev23/KX-01_Decision_Log_ADRs.md",
+        "_docs/KX-01_Decision_Log_ADRs.md"
+      ]
+    },
+    {
+      "code": "KX-02",
+      "file": "KX-02_Ecosystem_Business_Requirements",
+      "title": "Ecosystem Business Requirements",
+      "subtitle": "Business objectives, stakeholders, rules and journeys for the whole Kiorex and Kiorly ecosystem.",
+      "family": "business",
+      "group": "Product requirements",
+      "sources": [
+        "_docs/rev23/KX-02_Ecosystem_Business_Requirements.md",
+        "_docs/KX-02_Ecosystem_Business_Requirements.md"
+      ]
+    },
+    {
+      "code": "KX-03",
+      "file": "KX-03_Kiorex_Marketplace_PRD",
+      "title": "Kiorex Marketplace PRD",
+      "subtitle": "The patient marketplace: discovery, booking against live schedules in the clinic or at home, Kiorex Pay and verified reviews.",
+      "family": "platform",
+      "group": "Product requirements",
+      "sources": [
+        "_docs/rev23/KX-03_Kiorex_Marketplace_PRD.md",
+        "_docs/KX-03_Kiorex_Marketplace_PRD.md"
+      ]
+    },
+    {
+      "code": "KX-04",
+      "file": "KX-04_Kiorex_Account_Identity_PRD",
+      "title": "Kiorex Account: Identity PRD",
+      "subtitle": "One login for every Kiorex and Kiorly product, contextual roles per organization, and a hard wall between identity and medical data.",
+      "family": "platform",
+      "group": "Product requirements",
+      "sources": [
+        "_docs/rev23/KX-04_Kiorex_Account_Identity_PRD.md",
+        "_docs/KX-04_Kiorex_Account_Identity_PRD.md"
+      ]
+    },
+    {
+      "code": "KX-05",
+      "file": "KX-05_Kiorly_Clinic_PRD",
+      "title": "Kiorly Clinic PRD",
+      "subtitle": "The clinic management platform that is already built: capabilities, plans, the money engine and the Kiorex connector, plus professions, home visits and Phase 1b.",
+      "family": "clinic",
+      "group": "Product requirements",
+      "sources": [
+        "_docs/rev23/KX-05_Kiorly_Clinic_PRD.md",
+        "_docs/KX-05_Kiorly_Clinic_PRD.md"
+      ]
+    },
+    {
+      "code": "KX-06",
+      "file": "KX-06_Kiorly_Pharmacy_PRD",
+      "title": "Kiorly Pharmacy PRD",
+      "subtitle": "Lot-accurate inventory, pharmacist-gated dispensing, fast POS and supplier automation for Egypt's licensed pharmacies.",
+      "family": "pharmacy",
+      "group": "Product requirements",
+      "sources": [
+        "_docs/rev23/KX-06_Kiorly_Pharmacy_PRD.md",
+        "_docs/KX-06_Kiorly_Pharmacy_PRD.md"
+      ]
+    },
+    {
+      "code": "KX-07",
+      "file": "KX-07_Kiorly_Lab_PRD",
+      "title": "Kiorly Lab PRD",
+      "subtitle": "Laboratory information management: orders, barcode accession, chain of custody, analyzers, QC and authorized release.",
+      "family": "lab",
+      "group": "Product requirements",
+      "sources": [
+        "_docs/rev23/KX-07_Kiorly_Lab_PRD.md",
+        "_docs/KX-07_Kiorly_Lab_PRD.md"
+      ]
+    },
+    {
+      "code": "KX-08",
+      "file": "KX-08_Target_Architecture_and_Repositories",
+      "title": "Target Architecture and Repositories",
+      "subtitle": "Systems, containers, repositories, data ownership and deployment topology for the decoupled Kiorex ecosystem.",
+      "family": "platform",
+      "group": "Architecture and platform",
+      "sources": [
+        "_docs/rev23/KX-08_Target_Architecture_and_Repositories.md",
+        "_docs/KX-08_Target_Architecture_and_Repositories.md"
+      ]
+    },
+    {
+      "code": "KX-09",
+      "file": "KX-09_Integration_Contracts_Events_and_Money_Flows",
+      "title": "Integration Contracts, Events and Money Flows",
+      "subtitle": "Every cross-product call, event and money movement, with guarantees, failure handling and reconciliation.",
+      "family": "platform",
+      "group": "Architecture and platform",
+      "sources": [
+        "_docs/rev23/KX-09_Integration_Contracts_Events_and_Money_Flows.md",
+        "_docs/KX-09_Integration_Contracts_Events_and_Money_Flows.md"
+      ]
+    },
+    {
+      "code": "KX-10",
+      "file": "KX-10_Platform_DevOps_and_Security_Engineering",
+      "title": "Platform, DevOps and Security Engineering",
+      "subtitle": "How every product is built, shipped, observed and defended: IaC, CI/CD gates, on-call and security controls.",
+      "family": "platform",
+      "group": "Architecture and platform",
+      "sources": [
+        "_docs/rev23/KX-10_Platform_DevOps_Security.md",
+        "_docs/KX-10_Platform_DevOps_Security.md"
+      ]
+    },
+    {
+      "code": "KX-11",
+      "file": "KX-11_AI_Strategy_Architecture_and_Governance",
+      "title": "AI Strategy, Architecture and Governance",
+      "subtitle": "Where AI creates value, how it is built and paid for, and the governance that keeps it safe, honest and affordable.",
+      "family": "platform",
+      "group": "AI, safety and risk",
+      "sources": [
+        "_docs/rev23/KX-11_AI_Strategy_Architecture_Governance.md",
+        "_docs/KX-11_AI_Strategy_Architecture_Governance.md"
+      ]
+    },
+    {
+      "code": "KX-12",
+      "file": "KX-12_Monetization_and_Pricing_Architecture",
+      "title": "Monetization and Pricing Architecture",
+      "subtitle": "Every way the ecosystem earns money, the price points to test and the rules that keep pricing fair and predictable.",
+      "family": "business",
+      "group": "Business",
+      "sources": [
+        "_docs/rev23/KX-12_Monetization_Pricing.md",
+        "_docs/KX-12_Monetization_Pricing.md"
+      ]
+    },
+    {
+      "code": "KX-13",
+      "file": "KX-13_36_Month_Financial_Model_and_Unit_Economics",
+      "title": "36-Month Financial Model and Unit Economics",
+      "subtitle": "A driver-based model of revenue, costs, cash and runway, with scenarios, unit economics and funding gates.",
+      "family": "business",
+      "group": "Business",
+      "sources": [
+        "_docs/rev23/KX-13_Financial_Model_Unit_Economics.md",
+        "_docs/KX-13_Financial_Model_Unit_Economics.md"
+      ]
+    },
+    {
+      "code": "KX-14",
+      "file": "KX-14_Go_To_Market_and_Marketing_Plan",
+      "title": "Go-To-Market and Marketing Plan",
+      "subtitle": "Supply first, density second, demand third: how Kiorly wins providers and Kiorex turns that supply into bookings.",
+      "family": "business",
+      "group": "Business",
+      "sources": [
+        "_docs/rev23/KX-14_GTM_Marketing_Plan.md",
+        "_docs/KX-14_GTM_Marketing_Plan.md"
+      ]
+    },
+    {
+      "code": "KX-15",
+      "file": "KX-15_Risk_and_Compliance_Framework",
+      "title": "Risk and Compliance Framework",
+      "subtitle": "The obligations the ecosystem must meet, how they map to controls, and the risks managed actively.",
+      "family": "business",
+      "group": "AI, safety and risk",
+      "sources": [
+        "_docs/rev23/KX-15_Risk_Compliance_Framework.md",
+        "_docs/KX-15_Risk_Compliance_Framework.md"
+      ]
+    },
+    {
+      "code": "KX-16",
+      "file": "KX-16_Clinical_Safety_and_Quality",
+      "title": "Clinical Safety and Quality",
+      "subtitle": "How clinical risk is identified, controlled and monitored across Kiorly Clinic, Nurse, Pharmacy, Lab and the marketplace.",
+      "family": "clinic",
+      "group": "AI, safety and risk",
+      "sources": [
+        "_docs/rev23/KX-16_Clinical_Safety_Quality.md",
+        "_docs/KX-16_Clinical_Safety_Quality.md"
+      ]
+    },
+    {
+      "code": "KX-17",
+      "file": "KX-17_Kiorly_Clinic_Launch_Readiness_and_Go_Live",
+      "title": "Kiorly Clinic Launch Readiness and Go-Live",
+      "subtitle": "Readiness scorecard, human gates and the go-live plan for the Egypt pilot.",
+      "family": "clinic",
+      "group": "Launch and brand",
+      "sources": [
+        "_docs/rev23/KX-17_Kiorly_Clinic_Launch_Readiness.md",
+        "_docs/KX-17_Kiorly_Clinic_Launch_Readiness.md"
+      ]
+    },
+    {
+      "code": "KX-18",
+      "file": "KX-18_36_Month_Roadmap_and_Operating_Model",
+      "title": "36-Month Roadmap and Operating Model",
+      "subtitle": "Quarter-by-quarter delivery across six products, the team that delivers it and the operating rhythm.",
+      "family": "business",
+      "group": "Business",
+      "sources": [
+        "_docs/rev23/KX-18_Roadmap_Operating_Model.md",
+        "_docs/KX-18_Roadmap_Operating_Model.md"
+      ]
+    },
+    {
+      "code": "KX-19",
+      "file": "KX-19_Brand_Architecture_Domains_and_Store_Accounts",
+      "title": "Brand Architecture, Domains and Store Accounts",
+      "subtitle": "Endorsed-brand model, domains, app-store accounts and naming rules across Kiorex and Kiorly.",
+      "family": "business",
+      "group": "Launch and brand",
+      "sources": [
+        "_docs/rev23/KX-19_Brand_Domains_Store_Accounts.md",
+        "_docs/KX-19_Brand_Domains_Store_Accounts.md"
+      ]
+    },
+    {
+      "code": "KX-20",
+      "file": "KX-20_Investor_Brief",
+      "title": "Investor Brief",
+      "subtitle": "The opportunity, what is already built, the business model, the ask and the risks, on a few pages.",
+      "family": "business",
+      "group": "Business",
+      "sources": [
+        "_docs/rev23/KX-20_Investor_Brief.md",
+        "_docs/KX-20_Investor_Brief.md"
+      ]
+    },
+    {
+      "code": "KX-21",
+      "file": "KX-21_AWS_Cloud_Hosting_and_Infrastructure_Reference",
+      "title": "AWS Cloud Hosting and Infrastructure Reference",
+      "subtitle": "Every AWS component behind Kiorex and Kiorly: what runs where, how it scales, is secured, backed up and paid for.",
+      "family": "platform",
+      "group": "Architecture and platform",
+      "sources": [
+        "_docs/rev23/KX-21_AWS_Cloud_Hosting_Infrastructure.md",
+        "_docs/KX-21_AWS_Cloud_Hosting_Infrastructure.md"
+      ]
+    },
+    {
+      "code": "KX-22",
+      "file": "KX-22_GitHub_Repository_Map_and_Build_Agent_Handoff",
+      "title": "GitHub Repository Map and Build-Agent Handoff",
+      "subtitle": "Repository assessment, module map and the hand-off rules for build agents and engineering leads.",
+      "family": "platform",
+      "group": "Start here",
+      "sources": [
+        "_docs/rev23/KX-22_GitHub_Repo_Map_Build_Agent_Handoff.md",
+        "_docs/KX-22_GitHub_Repo_Map_Build_Agent_Handoff.md"
+      ]
+    },
+    {
+      "code": "KX-23",
+      "file": "KX-23_Kiorly_Nurse_PRD",
+      "title": "Kiorly Nurse PRD",
+      "subtitle": "Kiorly Clinic, tailored for nurses: care plans, nursing records, medication administration, dispatch and safety at the door.",
+      "family": "nurse",
+      "group": "Product requirements",
+      "sources": [
+        "_docs/rev23/KX-23_Kiorly_Nurse_PRD.md",
+        "_docs/KX-23_Kiorly_Nurse_PRD.md"
+      ]
+    },
+    {
+      "code": "KX-24",
+      "file": "KX-24_Notifications_and_Messaging_Architecture",
+      "title": "Notifications and Messaging Architecture",
+      "subtitle": "How Kiorex and Kiorly deliver push, WhatsApp, SMS and email notifications reliably and with consent.",
+      "family": "platform",
+      "group": "Architecture and platform",
+      "sources": [
+        "_docs/rev23/KX-24_Notifications_and_Messaging_Architecture.md",
+        "_docs/KX-24_Notifications_and_Messaging_Architecture.md"
+      ]
+    }
+  ]
+}

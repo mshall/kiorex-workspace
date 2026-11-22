@@ -1,0 +1,20 @@
+{
+  "name": "kiorex-docs-pdf",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Kiorex v2 document PDF generator (Markdown -> rich A4 PDF via headless Chromium + Paged.js)",
+  "scripts": {
+    "build": "node build.mjs --all",
+    "kx05": "node build.mjs --doc KX-05"
+  },
+  "dependencies": {
+    "highlight.js": "^11.10.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-task-lists": "^2.1.1",
+    "mermaid": "^11.4.0",
+    "pagedjs": "^0.4.3",
+    "pdf-lib": "^1.17.1",
+    "playwright-core": "1.57.0"
+  }
+}

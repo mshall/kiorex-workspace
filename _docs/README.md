@@ -16,6 +16,7 @@ Extracts of the Kiorex v2 reference documents (Rev 2.3, 25 volumes KX-00 to KX-2
 | **Mobile** | [mobile/](mobile) design pack, ADR-033, device and staff-role reports |
 | **Quality reports** | [COMPLETENESS_MATRIX.md](COMPLETENESS_MATRIX.md) · [FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md) · [FINAL_VERIFICATION_REPORT.md](FINAL_VERIFICATION_REPORT.md) · [UI_REVIEW.md](UI_REVIEW.md) · screenshots in [ui-review/](ui-review) |
 | **Build queue notes** | [autopilot/](autopilot) |
+| **PDF editions** | `node pdf/build.mjs --all` rebuilds every KX document as a designed PDF into `pdf/out/` (git-ignored); conventions and how to add a document in [pdf/README.md](pdf/README.md) |
 
 ## Update of 23 Nov 2026
 Volumes updated in `rev23/` with a "What changed in this revision (23 Nov 2026)" section: KX-00, 01, 03, 04, 05, 06, 07, 08, 09, 10, 16, 17, 18, 20, 22, 23; new volume KX-24. Left untouched (founder's financials, GTM and brand, or no change needed): KX-02, 11, 12, 13, 14, 15, 19, 21. Markdown conventions for rich PDF rendering: blockquotes starting `> **Note**`, `> **Decision**`, `> **Risk**`, `> **Open question**`, `> **Warning**`; status tables use Done, Open, Planned, Blocked; diagrams are mermaid fences.
