@@ -35,6 +35,13 @@ Legacy switches still work as defaults (`MESSAGING_MODE`, `PSP_MODE`, `MOBILE_PU
 
 Passport OTP: both WhatsApp and SMS real = WhatsApp first with SMS fallback; the code is never logged in real mode and the dev inbox is off.
 
+## Notification layer above the adapters (contracts 1.7.0)
+The per-repo provider adapters in this guide (SMS, Email, WhatsApp, push, payments excluded) are now the bottom of a shared stack: `@kiorex/contracts/notify` decides what is sent, to which channels, in which order and whether it is allowed (consent, opt-out, quiet hours with CRITICAL override, WhatsApp 24 h window, PHI-free guard on SMS/push), then calls the repo's adapter. A repo adopts it by implementing `ChannelAdapter` (`send`, `parseWebhook`, `verify`) over its existing provider client and mapping; mock and real mode, env names and webhook URLs in this document do not change.
+* **Status:** kiorex-platform is migrated (single-channel dispatch from the engagement queue, hub unchanged, in-app inbox = `Message` INAPP). Not yet migrated, in this order: Passport (OTP WhatsApp then SMS), kiorly-lab, kiorly-pharmacy, clinics-management.
+* **Go-live impact:** none for secrets or env. WhatsApp approved template names still go in the template definition (`whatsapp.template.name`; placeholders `TODO_NEEDS_HUMAN_*` today). Real-mode webhooks keep their URLs and signature checks; vendor statuses are normalized to QUEUED, SENT, DELIVERED, READ, FAILED, SKIPPED.
+* **What to check in staging:** one SMS and one push with a PHI-looking param is rejected (`PHI_BLOCKED`), a quiet-hours send is deferred, an opted-out channel is skipped with its reason.
+* Design, template model and migration order: [kiorex-contracts/docs/NOTIFICATION_LAYER.md](../kiorex-contracts/docs/NOTIFICATION_LAYER.md).
+
 ## Dummy-data flows to try in mock mode
 Appointment confirmation/reminder/waitlist offer (platform), OTP (Passport), receipt email and pay-link success/failure/refund (clinic, lab, pharmacy), lab result-ready and critical-alert SMS (lab), pharmacy order-ready and refill reminder, consent grant/revoke blocking dispensing, redacted AI forecast text, signed storage download (pharmacy). Run the demo endpoints on a dev DB: they write rows.
 

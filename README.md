@@ -86,7 +86,7 @@ flowchart TB
 
 | Repo | Role | GitHub | Branch | Status | README |
 |---|---|---|---|---|---|
-| **kiorex-contracts** | OpenAPI, event schemas, flags, HMAC SDK (`@kiorex/contracts`) | [mshall/kiorex-contracts](https://github.com/mshall/kiorex-contracts) | `main` | :white_check_mark: 1.6.0 | [GitHub](https://github.com/mshall/kiorex-contracts#readme) |
+| **kiorex-contracts** | OpenAPI, event schemas, flags, HMAC SDK (`@kiorex/contracts`) | [mshall/kiorex-contracts](https://github.com/mshall/kiorex-contracts) | `main` | :white_check_mark: 1.7.0 | [GitHub](https://github.com/mshall/kiorex-contracts#readme) |
 | **kiorex-platform** | Kiorex API, patient web, Expo app, ops console, Kiorex Pay, control plane | [mshall/kiorex-platform](https://github.com/mshall/kiorex-platform) | `main` | :white_check_mark: built, pre-launch | [GitHub](https://github.com/mshall/kiorex-platform#readme) |
 | **kiorex-account** | Kiorex Passport: IdP config-as-code, dev OIDC provider, OTP sender | [mshall/kiorex-account](https://github.com/mshall/kiorex-account) | `main` | :white_check_mark: dev complete | [GitHub](https://github.com/mshall/kiorex-account#readme) |
 | **kiorly-clinic** (dir `clinics-management`) | Kiorly Clinic and Nurse edition; owns appointments; marketplace API + outbox | [mshall/clinics-management](https://github.com/mshall/clinics-management) | **`kiorex`** (never `main`) | :white_check_mark: built | [GitHub](https://github.com/mshall/clinics-management/tree/kiorex#readme) |
@@ -289,6 +289,7 @@ Nothing is deployed; each repo carries `infra/tofu/` for staging and prod. See K
 | [_docs/README.md](_docs/README.md) | Map of the 24 reference volumes and reports |
 | [_docs/FOUNDER_DECISIONS.md](_docs/FOUNDER_DECISIONS.md) | Open human decisions |
 | [_docs/CHANGES_2.2_to_2.3.md](_docs/CHANGES_2.2_to_2.3.md) | What changed in Rev 2.3 |
+| [kiorex-contracts/docs/NOTIFICATION_LAYER.md](kiorex-contracts/docs/NOTIFICATION_LAYER.md) | Shared notification layer above the SMS / Email / WhatsApp / Push / in-app adapters (`@kiorex/contracts/notify`, 1.7.0): intents, templates, routing, consent, status model, migration order |
 | [e2e/README.md](e2e/README.md) | Cross-service E2E scenarios |
 | [scripts/README.md](scripts/README.md) | Seeding and helper scripts |
 | [_brand/README.md](_brand/README.md) | Brand kit and vendoring |
