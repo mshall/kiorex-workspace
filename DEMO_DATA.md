@@ -33,6 +33,7 @@ scripts/seed-all.sh                     # idempotent; add --reset to remove demo
 (cd kiorly-pharmacy && npm run dev -w web)         # :5192 (PHARMACY_WEB_PORT overrides)
 (cd kiorly-lab && npm run dev -w web)              # :5193 (LAB_WEB_PORT overrides)
 (cd kiorly-work && npm run web)                    # :8082 staff app
+# native dev build (iOS simulator / Android emulator) and push payload fixtures: kiorly-work/README.md (expo run:ios, e2e-push/send.sh)
 ```
 
 Rules that apply to every seed:

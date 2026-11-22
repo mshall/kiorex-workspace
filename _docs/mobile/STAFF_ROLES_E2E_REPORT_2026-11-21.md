@@ -51,12 +51,14 @@ Run: `e2e/scripts/up.sh --build --restart`, then `cd e2e && npx vitest run test/
 * **Clinic web** lint: 246 warnings to 0, golden-flow and RBAC Playwright smoke green.
 * **Seeds/docs**: `seed-all.sh` runs the mobile seeds; dev scripts no longer touch ports 3000/5173/5175; pharmacy recall notice and an open lab alert seeded; DEMO_DATA counts corrected and verified; contracts fixtures cover all 35 personas; pharmacy/lab web default to 5192/5193.
 
-## Still open
-1. Automatic RTL reload and push notifications need a **development build** (EAS or `expo run`) to verify; Expo Go can only show the banner.
-2. Android re-check of other short Arabic labels, and a light-mode Android pass of the new UI; the patient-app keyboard fix is verified on iOS only.
+## Still open (updated 22 Nov 2026)
+Resolved since 21 Nov: automatic RTL reload verified on real iOS and Android development builds; Android re-check of Arabic labels and the light-mode pass done (keyboard handling added to the staff app); raw status enums and Latin-digit countdowns fixed; pharmacy consent/AI/storage adapters wired; push registration, deep-link routing and payload fixtures built and verified on the iOS simulator. Details: [DEVICE_TEST_REPORT_2026-11-20.md](./DEVICE_TEST_REPORT_2026-11-20.md) and [../PROVIDER_GO_LIVE.md](../PROVIDER_GO_LIVE.md).
+1. Real push delivery (APNs/FCM), Android push, the home-screen badge number and a background-state tap are unverified: they need an EAS projectId, an APNs key, an FCM v1 key and `PUSH_MODE=real`.
+2. A release (production) build and the language switch in Me were not run on a dev build.
 3. The seed Docker image has not been built (`docker build -f apps/api/Dockerfile.seed .` before the next deploy).
-4. Kiorex-side mirror of pharmacy orders and live lab bookings need `KIOREX_MODE=real` flag polling on the dev stack.
+4. Kiorex-side mirror of pharmacy orders and live lab bookings needs `KIOREX_MODE=real` flag polling (already on in `e2e/scripts/up.sh`; not exercised on a deployed stack).
 5. The app is still titled "Kiorly Work" until the mobile design pack is approved.
+6. Real vendors for SMS/Email/WhatsApp/payments/consent/AI/storage: URLs and credentials only (see the provider guide).
 
 ## Not covered
 Native camera, biometrics, push tokens, a physical device, the offline conflict UI (only server idempotency), Passport sign-in for the staff app (not registered), and the Pharmacy/Lab modules on iOS/Android simulators.
