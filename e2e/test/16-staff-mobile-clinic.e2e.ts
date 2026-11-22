@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorly, q } from '../src/clients.js';
 
 /**
- * Kiorly Work (staff app) x Kiorly Clinic, REAL stack and the seeded demo data (TEST_DATA.md / kiorly-work/docs/TEST_DATA.md). Every flow is driven the way the app
+ * Kiorly Team (staff app) x Kiorly Clinic, REAL stack and the seeded demo data (TEST_DATA.md / kiorly-work/docs/TEST_DATA.md). Every flow is driven the way the app
  * drives it (`X-Kiorly-Client: kiorly-work/*`, the /mobile/* routes plus the existing clinic routes the app calls, see Docs/MOBILE.md section 5) and every result is
  * read back through the endpoints the CLINIC WEB APP uses (appointments, front-desk board, encounters, nurse vitals trend, /revenue/totals, /home-visits,
  * /home-visits/safety-alerts, /admin/audit-logs) so a mobile write is proven visible on the web.
@@ -50,17 +50,17 @@ describe('a. Role matrix: bootstrap modules, plan, safetyAlertsOnly and endpoint
     { who: 'manager', email: NA('manager'), role: 'BRANCH_MANAGER', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,vitals,revenue' },
     { who: 'front desk 1', email: NA('frontdesk1'), role: 'RECEPTIONIST', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients' },
     { who: 'front desk 2', email: NA('frontdesk2'), role: 'RECEPTIONIST', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients' },
-    { who: 'nurse', email: NA('nurse'), role: 'NURSE', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,labs,vitals,homevisits' },
+    { who: 'nurse', email: NA('nurse'), role: 'NURSE', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,vitals,homevisits' },
     { who: 'doctor Nadia', email: NA('nadia'), role: 'PHYSICIAN', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,visits,prescriptions,labs,vitals' },
     { who: 'doctor Tamer', email: NA('tamer'), role: 'PHYSICIAN', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,visits,prescriptions,labs,vitals' },
     { who: 'accountant', email: NA('accountant'), role: 'FINANCE_OFFICER', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,revenue' },
     { who: 'call centre', email: NA('callcenter'), role: 'CALL_CENTER', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients' },
     // Nurse edition: nurses carry role PHYSICIAN + profession NURSE and never get visit notes / prescription signing (ADR-029)
-    { who: 'solo nurse Mona', email: 'mona@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'PRO', raw: 'NURSE_PRO', edition: 'NURSE', modules: 'schedule,patients,labs,vitals,homevisits,revenue' },
+    { who: 'solo nurse Mona', email: 'mona@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'PRO', raw: 'NURSE_PRO', edition: 'NURSE', modules: 'schedule,patients,vitals,homevisits,revenue' },
     { who: 'agency owner', email: 'owner@nurse-demo.kiorly.test', role: 'CLINIC_ADMIN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,visits,prescriptions,labs,vitals,homevisits,revenue' },
     { who: 'agency dispatcher', email: 'dispatch@nurse-demo.kiorly.test', role: 'RECEPTIONIST', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,homevisits' },
-    { who: 'agency nurse 1', email: 'nurse1@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,labs,vitals,homevisits' },
-    { who: 'agency nurse 2', email: 'nurse2@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,labs,vitals,homevisits' },
+    { who: 'agency nurse 1', email: 'nurse1@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,vitals,homevisits' },
+    { who: 'agency nurse 2', email: 'nurse2@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,vitals,homevisits' },
   ];
   for (const r of matrix) {
     it(`${r.who} (${r.email}): ${r.role}, plan ${r.plan}, modules ${r.modules}`, async () => {
@@ -73,12 +73,12 @@ describe('a. Role matrix: bootstrap modules, plan, safetyAlertsOnly and endpoint
       for (const m of b.modules) expect(m.enabled ? m.screens.length > 0 : m.screens.length === 0, m.key).toBe(true);
     });
   }
-  it('semantic role invariants: only doctors + owners get visits/prescriptions; revenue only owner/manager/finance; no nurse-profession account can sign', async () => {
+  it('semantic role invariants: only doctors + owners get visits/prescriptions; revenue only owner/manager/finance; no nurse-profession account can sign or see the lab-results review queue (sample collection stays under home visits)', async () => {
     const all = await Promise.all(matrix.map(async (r) => ({ r, m: mods(await bootstrap(r.email)) })));
     for (const { r, m } of all) {
       if (m.includes('prescriptions') || m.includes('visits')) expect(['owner (Nile Care)', 'doctor Nadia', 'doctor Tamer', 'agency owner'], r.who).toContain(r.who);
       if (m.includes('revenue')) expect(['GROUP_ADMIN', 'CLINIC_ADMIN', 'BRANCH_MANAGER', 'FINANCE_OFFICER'], r.who).toContain(r.role === 'PHYSICIAN' ? 'GROUP_ADMIN' /* Mona is the org owner */ : r.role);
-      if (r.who.includes('nurse')) { expect(m, r.who).not.toContain('prescriptions'); expect(m, r.who).not.toContain('visits'); expect(m, r.who).toContain('homevisits'); }
+      if (r.who.includes('nurse')) { expect(m, r.who).not.toContain('prescriptions'); expect(m, r.who).not.toContain('visits'); expect(m, r.who).not.toContain('labs'); expect(m, r.who).toContain('homevisits'); }
     }
   });
 
@@ -329,8 +329,8 @@ describe('c. Clinic day (Nile Care, PRO): front desk -> nurse -> doctor -> lab a
     const pend = (await app(doc, 'GET', '/mobile/lab-results?status=pending')).body.items.find((x: any) => x.orderId === 'demo_co_mobile_crit');
     expect(pend, 'seeded critical potassium result').toMatchObject({ critical: true, review: null });
     expect(pend.items.some((i: any) => String(i.flag).startsWith('CRITICAL'))).toBe(true);
-    // the nurse sees the result (labs = view) but may not approve
-    expect((await app(nurse, 'GET', '/mobile/lab-results?status=pending')).body.items.map((x: any) => x.orderId)).toContain('demo_co_mobile_crit');
+    // the nurse has no Lab results queue at all (a physician concern): the endpoint is refused, not just hidden
+    expect((await app(nurse, 'GET', '/mobile/lab-results?status=pending')).status).toBe(403);
     expect((await app(nurse, 'POST', '/mobile/lab-results/demo_co_mobile_crit/approve', {})).status).toBe(403);
     expect((await app(await tok(NA('frontdesk1')), 'POST', '/mobile/lab-results/demo_co_mobile_crit/approve', {})).status).toBe(403);
     // the critical-lab alert is visible to the doctor and the owner; acknowledging it is separate from approving

@@ -10,7 +10,7 @@
 |---|---|---|---|
 | C1 | The founder summary of ADR-018 is close but not exact: ADR-018 says "Kiorex app + Kiorly app (edition-aware for Kiorly Nurse); field apps only on demand". The words "no separate Nurse app" are in `_docs/CHANGES_2.2_to_2.3.md` item 294 and KX-19 §04. | `_docs/rev23/KX-01` ADR018; KX-19 §04 | ADR-033 **amends the consequence** of ADR-018 (Kiorly app hosts Clinic, Pharmacy and Lab modules). Note `_docs/KX-01_Decision_Log_ADRs.md` (workspace root of `_docs`) is the stale Rev 2.2 copy (28 ADRs); `_docs/rev23/KX-01` is current (32 ADRs). |
 | C2 | KX-19 says "PWA remains primary at launch" for the Kiorly app and lists the Kiorly app audience as "doctors, physiotherapists, nurses & clinic staff" (no pharmacy or lab staff). | KX-19 §04 | Needs a founder ruling (Q1). This design assumes the native app ships beside the PWA, not instead. |
-| C3 | `CLAUDE.md`, `INTEGRATION.md` and all `kiorly-work/Docs/*` and `*/Docs/MOBILE.md` describe "Kiorly Work, for Pro/Enterprise plans". | workspace root | Stale after this design. Not edited by this task (design only); update list in section 14. |
+| C3 | `CLAUDE.md`, `INTEGRATION.md` and all `kiorly-work/Docs/*` and `*/Docs/MOBILE.md` describe "Kiorly Team, for Pro/Enterprise plans". | workspace root | Stale after this design. Not edited by this task (design only); update list in section 14. |
 | C4 | Clinic rejects plan-gated calls with **402 `PLAN_UPGRADE_REQUIRED`** (`apps/api/src/entitlements/plan-upgrade-required.exception.ts`) and flags with 403 `FEATURE_DISABLED {key,scope}`; the brief asks for **403 `ENTITLEMENT_REQUIRED`**. | clinics-management | New code applies only to the mobile surface; web keeps 402. Both documented in section 5.6. |
 | C5 | **One Passport subject cannot be linked to two Clinic orgs today**: `KiorexIdentityLink` has `userId @unique` and `@@unique([issuer, subject])`, and Clinic `User` rows are per tenant (`tenantId`). Pharmacy and Lab are fine (`@@unique([orgId, subject])`). Passport memberships (KA09/KA14) exist in the dev IdP (`kiorex-account/apps/dev-idp/src/orgs.ts`, `GET /api/orgs`) but are priority P2 in KX-04. | clinics-management `prisma/schema.prisma:4414`; kiorex-account | Multi-org is a real backend change (section 3.3), not just app work. |
 | C6 | Pharmacy `transfers` capability exists only on `CHAIN`/`ENTERPRISE` (`kiorly-pharmacy/apps/api/src/kernel-adapter/local/local-kernel.ts:13-15`), and `purchasing` (PO receiving) on `PRO`+. The brief puts branch transfers in **Pharmacy Pro**. | kiorly-pharmacy | Matrix marks transfers Chain/Enterprise-only unless the web plan changes (Q9). |
@@ -23,7 +23,7 @@
 
 ## 1. Fixed decisions (from the founder brief, not reopened)
 
-1. **One Expo app named "Kiorly"** (no "Kiorly Work"). Product modules **Clinic** (Nurse edition when the active org is a Nurse tenant), **Pharmacy**, **Lab**; product names are singular.
+1. **One Expo app named "Kiorly"** (no "Kiorly Team"). Product modules **Clinic** (Nurse edition when the active org is a Nurse tenant), **Pharmacy**, **Lab**; product names are singular.
 2. Branded split builds stay possible later through **build-time config only** (section 11).
 3. Modules appear from **memberships + roles + per-org entitlements**. A user may belong to several orgs; switching org re-evaluates everything immediately; entitlements are never cached across orgs.
 4. **Safety is never paywalled** (extends ADR-025): enforced in code and by a failing test (section 6).
@@ -462,7 +462,7 @@ flowchart LR
 
 | Area | Decision |
 |---|---|
-| Brand kit, `components/ui|kit|states`, Logo, i18n bundles, haptics, motion, scanner | **Salvage** (rename strings "Kiorly Work" -> "Kiorly") |
+| Brand kit, `components/ui|kit|states`, Logo, i18n bundles, haptics, motion, scanner | **Salvage** (rename strings "Kiorly Team" -> "Kiorly") |
 | Module screens `app/clinic|pharmacy|lab/*` (schedule, patients, prescriptions, lab-results, rounds, barcode, receiving, stockcount, controlled, orders, accession, phlebotomy, critical, validation ...) | **Salvage**, re-gate by capability key instead of `mobile_staff_app`; split into core/pro per the matrix |
 | `src/offline/*` | **Salvage and rework**: add idempotency/clientTime/deviceId/userId envelope, encrypted store, per-org namespace, `ENTITLEMENT_CHANGED` handling |
 | `hooks/useRead`, `useAlerts`, `NotificationDriver` | **Rework**: org-namespaced encrypted cache; silent-push events |
@@ -472,7 +472,7 @@ flowchart LR
 | Names: `kiorly-work`, scheme `kiorlywork`, bundle `com.kiorly.work`, header `kiorly-work/<v>` | **Rename** to Kiorly / `kiorly` / `com.kiorly.app` (placeholder, NEEDS_HUMAN) / `kiorly/<v>`; backends accept both client headers for one release |
 | `Docs/ENTITLEMENTS.md` and the entitlement sections of the three `Docs/MOBILE.md` | **Supersede** (point to this design) |
 | Backends `/mobile/*` (devices, inbox, alerts, summary, schedule, pharmacy read models, lab scan/search ...) | **Keep**; replace `MobileInterceptor`'s single-key check by `@MobileCapability` guard; add `/mobile/me/entitlements`, `/mobile/me/orgs`, queued-action envelope handling; deprecate `mobile_staff_app` after one release |
-| `CLAUDE.md`, `INTEGRATION.md` rows for Kiorly Work, `.gitignore` nested-repo entry | update when the founder approves ADR-033 (not done here) |
+| `CLAUDE.md`, `INTEGRATION.md` rows for Kiorly Team, `.gitignore` nested-repo entry | update when the founder approves ADR-033 (not done here) |
 
 **Phases**
 | Phase | Scope | Gate |

@@ -6,7 +6,7 @@ import { PHARMACY_API, PHARMACY_PASSWORD } from '../src/env.js';
 import { randomUUID } from 'node:crypto';
 
 /**
- * Kiorly Work (staff app) pharmacy module against the REAL running Pharmacy API and the seeded demo tenants.
+ * Kiorly Team (staff app) pharmacy module against the REAL running Pharmacy API and the seeded demo tenants.
  * Every flow is performed the way the app does it (`X-Kiorly-Client: kiorly-work/*`, /mobile/* read models + the existing endpoints named in
  * kiorly-pharmacy/Docs/MOBILE.md) and then re-read through the WEB path (no client header = what the :5192 web app calls) to prove both
  * surfaces show the same state. Fixtures (drugs "E2E-Med-*", lots, POs, Rx) are created per run through the owner API; nothing is reset.
@@ -18,7 +18,7 @@ async function http(token: string | undefined, method: string, path: string, bod
   const text = await res.text(); let json: any; try { json = text ? JSON.parse(text) : null; } catch { json = text; }
   return { status: res.status, body: json };
 }
-/** What the Kiorly Work app sends. */
+/** What the Kiorly Team app sends. */
 const mob = (t: string, m: string, p: string, b?: unknown) => http(t, m, p, b, MOBILE);
 /** What the web app (:5192) sends: no client header. */
 const web = (t: string, m: string, p: string, b?: unknown) => http(t, m, p, b);
@@ -83,7 +83,7 @@ async function receive(drugId: string, lot: string, qty: number, expDays: number
 }
 const lotQty = async (lotId: string) => Number((await dbq(`select coalesce(sum("qtyDelta"),0)::int n from "StockMovement" where "lotId"=$1 and type not in ('RESERVE','RELEASE_RESERVATION')`, [lotId]))[0].n);
 
-describe('q. Kiorly Work pharmacy: role matrix (bootstrap per role, entitlement, scoping)', () => {
+describe('q. Kiorly Team pharmacy: role matrix (bootstrap per role, entitlement, scoping)', () => {
   it('records modules / plan / entitlement for every demo login', () => {
     const rows = ALL_USERS.map((u) => `${u.padEnd(17)} ${boot[u].user.role.padEnd(15)} ${boot[u].org.plan.padEnd(10)} ent=${boot[u].entitlement.enabled} alertsOnly=${boot[u].safetyAlertsOnly} | ${mods(boot[u]).join(',')}`);
     console.log('\nROLE MATRIX\n' + rows.join('\n'));

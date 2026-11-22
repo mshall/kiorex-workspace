@@ -2,18 +2,18 @@
 
 **Proposed** · Distribution / Commercial / Clinical safety · drafted 20 Nov 2026 · records the founder's decisions of 20 Nov 2026; becomes **Accepted** when the founder signs it off.
 **Amends** ADR-018 (consequence only). **Extends** ADR-025 (adds a never-paywalled rule). **Relates to** ADR-023, ADR-024, ADR-027, ADR-031, ADR-032, KX-19 §04, KX-12 principle P5.
-**Supersedes** the in-repo design of `kiorly-work` ("Kiorly Work", single `mobile_staff_app` entitlement, upgrade screen).
+**Supersedes** the in-repo design of `kiorly-work` ("Kiorly Team", single `mobile_staff_app` entitlement, upgrade screen).
 
 *Format follows `_docs/rev23/KX-01_Decision_Log_ADRs.md` (title line, Why, Consequence), expanded with Context and Decision because this ADR changes two earlier ones.*
 
 ## Context
 * ADR-018 (Accepted): "One store account per platform; apps by audience." Consequence as recorded in Rev 2.3: "Kiorex app + Kiorly app (edition-aware for Kiorly Nurse); field apps only on demand." The sentence "no separate Kiorly Nurse app" lives in KX-19 §04 and `CHANGES_2.2_to_2.3.md` item 294, not in the ADR text itself.
 * KX-19 lists the Kiorly app audience as doctors, physiotherapists, nurses and clinic staff, says "PWA remains primary at launch", and names possible later field apps "Kiorly Lab Collect" and "Kiorly Pharmacy Rider".
-* A first mobile build named **Kiorly Work** was created with one `mobile_staff_app` entitlement that excludes Lite/entry plans, an iOS upgrade screen listing Pro features, and per-product login. It conflicts with the founder's product decisions and with store policy for iOS.
+* A first mobile build named **Kiorly Team** was created with one `mobile_staff_app` entitlement that excludes Lite/entry plans, an iOS upgrade screen listing Pro features, and per-product login. It conflicts with the founder's product decisions and with store policy for iOS.
 * ADR-025 makes safety controls never feature flags (fixed list in KX-08 §09; CI rejects flag keys on safety paths). It does not itself forbid putting a safety control behind a *plan*. The nearest precedent that does is Rev 2.3 principle P5 / KX-12 / KX-23: "home-visit safety is in every plan".
 
 ## Decision
-1. **One Expo app, named "Kiorly"**, for provider staff. It hosts three product modules: **Clinic** (re-branded as the Nurse edition when the active organization is a Nurse tenant, ADR-031), **Pharmacy** and **Lab**. Product names stay singular. There is no "Kiorly Work".
+1. **One Expo app, named "Kiorly"**, for provider staff. It hosts three product modules: **Clinic** (re-branded as the Nurse edition when the active organization is a Nurse tenant, ADR-031), **Pharmacy** and **Lab**. Product names stay singular. There is no "Kiorly Team".
 2. **Modules come from the server**: a module appears only from memberships + roles + per-organization entitlements. A person may belong to several organizations; switching organization re-evaluates entitlements at once; entitlements are never cached across organizations.
 3. **Tiered mobile entitlements per organization per product**: `mobile.clinic.core|pro`, `mobile.pharmacy.core|pro`, `mobile.lab.core|pro`, plus `mobile.safety` and an enterprise-controls key. Default mapping: Lite/entry = core + safety; Pro = core + pro + safety; Clinic plan = as Pro; Enterprise = as Pro + enterprise controls (enforced biometrics, session policy, MDM-friendly config). Chain editions map as Pro-equivalent. Configurable per market and overridable per organization.
 4. **Feature flags and entitlements are different questions**: flags (global, default ON, super-admin switchable, ADR-023) decide whether a capability *exists*; entitlements decide which organizations *may use* it. `available = flag ON AND entitled`, both evaluated **server-side**; the app only reflects. Existing launch locks (ADR-024) still apply (e.g. `clinic.home_visits`).
@@ -41,7 +41,7 @@ Consequences for KX-19 §04 (text to update after sign-off, not edited by this A
 * **Existing contracts**: web keeps `402 PLAN_UPGRADE_REQUIRED`; mobile clients get `403 ENTITLEMENT_REQUIRED` and `403 FEATURE_DISABLED {key,scope}`; queued actions replayed after a downgrade get `409 ENTITLEMENT_CHANGED` and are retained, never lost.
 * **Identity**: Passport public client `kiorly-app`; Clinic needs a Passport token exchange and must allow one Passport subject in several Clinic organizations.
 * **Repo**: `kiorly-work` is renamed (proposed `kiorly-app`), salvaged per the migration table in the design, and its upgrade screen and `mobile_staff_app` logic deleted.
-* **Docs to update after sign-off**: `CLAUDE.md` and `INTEGRATION.md` (Kiorly Work rows), `kiorly-work/Docs/ENTITLEMENTS.md`, the entitlement sections of the three `Docs/MOBILE.md`, KX-19 §04, KX-01 index (add ADR033, amend ADR018 consequence).
+* **Docs to update after sign-off**: `CLAUDE.md` and `INTEGRATION.md` (Kiorly Team rows), `kiorly-work/Docs/ENTITLEMENTS.md`, the entitlement sections of the three `Docs/MOBILE.md`, KX-19 §04, KX-01 index (add ADR033, amend ADR018 consequence).
 * **Human gates untouched**: store accounts, Apple/Google review, counsel and CMO sign-offs (NH-*), prices and plan composition remain NEEDS_HUMAN; this ADR sets no price.
 * **Decision-log index**: the ADR row is **not** added to `_docs/rev23/KX-01_Decision_Log_ADRs.md` (a verbatim transcription of an Approved reference edition, and this ADR is only Proposed). Proposed row once accepted:
   `| ADR033 | One Kiorly app: Clinic, Pharmacy and Lab modules; tiered mobile entitlements; safety never paywalled | Accepted | Distribution / Clinical safety |`

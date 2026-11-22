@@ -15,7 +15,7 @@ Authoritative shapes live in `kiorex-contracts`; this file pins the local wiring
 | Kiorly Pharmacy web | kiorly-pharmacy/apps/web | http://localhost:5192 (proxy `/api` → 3100) | — |
 | Kiorly Lab API | kiorly-lab/apps/api | http://localhost:3200 (prefix `/api/v1`; Kiorex machine API at `/api/v1/integration/v1`) | kiorly_lab |
 | Kiorly Lab web | kiorly-lab/apps/web | http://localhost:5193 (proxy `/api` → 3200) | — |
-| Kiorly Work (Expo staff app) | kiorly-work | Expo web http://localhost:8082 (APIs: clinic 3010, pharmacy 3100, lab 3200; `/mobile/*`) | - |
+| Kiorly Team (Expo staff app) | kiorly-work | Expo web http://localhost:8082 (APIs: clinic 3010, pharmacy 3100, lab 3200; `/mobile/*`) | - |
 | Kiorex Passport (dev OIDC) | kiorex-account/apps/dev-idp | http://localhost:4400 (issuer) | kiorex_account |
 
 DATABASE_URL pattern: `postgresql://postgres:postgres@127.0.0.1:5433/<db>?schema=public`

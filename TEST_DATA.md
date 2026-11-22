@@ -9,7 +9,7 @@
 ## Run / reset
 ```bash
 e2e/scripts/up.sh            # stack running (first time: --build --seed)
-scripts/seed-all.sh          # idempotent, dependency order: Passport -> Kiorly Clinic (incl. the Nurse edition tenants, Rev 2.3 home visits) -> Clinic Kiorly Work seed -> Pharmacy (+ its Kiorly Work seed) -> Lab -> Lab Kiorly Work seed -> provider sync -> Kiorex (incl. home bookings)
+scripts/seed-all.sh          # idempotent, dependency order: Passport -> Kiorly Clinic (incl. the Nurse edition tenants, Rev 2.3 home visits) -> Clinic Kiorly Team seed -> Pharmacy (+ its Kiorly Team seed) -> Lab -> Lab Kiorly Team seed -> provider sync -> Kiorex (incl. home bookings)
 scripts/seed-all.sh --reset  # first removes the demo records only (non-demo data and the e2e fixtures are never touched)
 scripts/seed-staging.sh --dry-run   # AWS staging (non-production only, after a human deployed it): prints the plan; see "Seeding staging on AWS" below
 ```
@@ -128,7 +128,7 @@ Limits: steps 5-6 need the egress path HB07; Passport families/orgs/invitations 
 - Lab: new onboarding creates STANDALONE tenants; existing demo tenants stay INTEGRATED (see `kiorly-lab/Docs/TEST_DATA.md`).
 - Feature coverage: `kiorly-pharmacy/Docs/FEATURE_MATRIX.md`, `kiorly-lab/Docs/FEATURE_MATRIX.md`.
 
-## Kiorly Work (mobile staff app, added 20 Nov 2026)
+## Kiorly Team (mobile staff app, added 20 Nov 2026)
 App `kiorly-work` (Expo web :8082). Entitlement `mobile_staff_app` is ON for PRO/ENTERPRISE; Basic orgs see the upgrade screen but keep the safety-alert inbox. Staff password `Demo@12345` (legacy `admin@kiorly.com`: `demo`); seeds: clinic `npm run db:seed:mobile -w api`, pharmacy `npm run seed:mobile -w api`, lab `npm run db:seed:mobile -w api` (all idempotent, guarded; run by `scripts/seed-all.sh` and by `seed:all` in pharmacy). Details: `kiorly-work/Docs/TEST_DATA.md`.
 | Product | Plan | Logins |
 |---|---|---|

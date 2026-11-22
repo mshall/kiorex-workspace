@@ -3,7 +3,7 @@ import { lab, rnd, waitFor, q, kiorex, patientToken } from '../src/verticals.js'
 import { LAB_API } from '../src/env.js';
 
 /**
- * Kiorly Work (staff app) LAB module, END TO END against the real Lab API :3200 and the seeded demo tenants.
+ * Kiorly Team (staff app) LAB module, END TO END against the real Lab API :3200 and the seeded demo tenants.
  * Every staff step goes through the endpoints the Expo app calls (/mobile/* + the product REST routes it documents in
  * kiorly-lab/Docs/MOBILE.md, always with X-Kiorly-Client: kiorly-work/*). After each step the same state is read through the
  * WEB endpoints (no client header = what the lab web app :5193 calls) and asserted equal; where a DB row is the effect it is read from Postgres.
@@ -38,7 +38,7 @@ function cairoMidnight(now = new Date()): Date {
 const KEYS = ['phlebotomy', 'accession', 'critical', 'validation', 'worklist', 'qc', 'tat', 'orders', 'reagents'] as const;
 const enabledModules = (b: any) => (b.modules as { key: string; enabled: boolean }[]).filter((m) => m.enabled).map((m) => m.key.replace('lab.', '')).sort();
 
-describe('r. Kiorly Work LAB: role matrix and entitlement (bootstrap)', () => {
+describe('r. Kiorly Team LAB: role matrix and entitlement (bootstrap)', () => {
   const must = (keys: readonly string[], have: string[]) => keys.forEach((k) => expect(have, `module ${k} missing from [${have}]`).toContain(k));
   const mustNot = (keys: readonly string[], have: string[]) => keys.forEach((k) => expect(have, `module ${k} must not be present in [${have}]`).not.toContain(k));
 
@@ -113,7 +113,7 @@ describe('r. Kiorly Work LAB: role matrix and entitlement (bootstrap)', () => {
   });
 });
 
-describe('s. Kiorly Work LAB: reception -> phlebotomy -> bench -> critical -> sign-off -> release (one order, app and web agree)', () => {
+describe('s. Kiorly Team LAB: reception -> phlebotomy -> bench -> critical -> sign-off -> release (one order, app and web agree)', () => {
   let who: Record<Role, Who>;
   let code: string, analyteId: string, bench: string, matIds: string[], patient: { id: string; fullName: string };
   const st: { orderId?: string; orderNumber?: string; items?: { id: string }[]; spec?: { id: string; barcode: string; accessionNumber: string }; resultId?: string; critId?: string; alertKey?: string; reportId?: string } = {};
@@ -401,7 +401,7 @@ async function orderInLab(fx: Fx, priority: 'ROUTINE' | 'STAT' = 'ROUTINE') {
   return { orderId: c.body.id as string, orderNumber: c.body.orderNumber as string, itemId: c.body.items[0].id as string, spec: sp as { id: string; barcode: string } };
 }
 
-describe('t. Kiorly Work LAB: QC pass/fail (a failing run blocks release), reagents, TAT breach, orders filters', () => {
+describe('t. Kiorly Team LAB: QC pass/fail (a failing run blocks release), reagents, TAT breach, orders filters', () => {
   let fx: Fx;
   const st: Record<string, any> = {};
   beforeAll(async () => { fx = await fixture('demo-lab', ['owner', 'director', 'signatory', 'tech', 'phleb', 'reception', 'manager', 'supervisor']); });
@@ -629,7 +629,7 @@ describe('t. Kiorly Work LAB: QC pass/fail (a failing run blocks release), reage
   });
 });
 
-describe('u. Kiorly Work LAB: BASIC plan keeps the safety-alert inbox working end to end (critical value -> acknowledge with read-back)', () => {
+describe('u. Kiorly Team LAB: BASIC plan keeps the safety-alert inbox working end to end (critical value -> acknowledge with read-back)', () => {
   it('a critical value raised in basic-lab appears in /mobile/alerts for the BASIC director, is acknowledged with a note (idempotent) while every other app route stays 403; the web sees ACKNOWLEDGED', async () => {
     const fx = await fixture('basic-lab', ['owner', 'director', 'tech', 'phleb', 'reception', 'supervisor']).catch((e) => { throw e; });
     await passBoth(fx, fx.who.tech);
@@ -674,7 +674,7 @@ describe('u. Kiorly Work LAB: BASIC plan keeps the safety-alert inbox working en
 });
 
 
-describe('v. Kiorly Work LAB: home collection round in the app (route, check-in, scan-confirm with a replayed Idempotency-Key) through to release', () => {
+describe('v. Kiorly Team LAB: home collection round in the app (route, check-in, scan-confirm with a replayed Idempotency-Key) through to release', () => {
   let fx: Fx;
   beforeAll(async () => { fx = await fixture('demo-lab', ['owner', 'director', 'signatory', 'tech', 'phleb', 'reception', 'manager', 'supervisor']); });
 
