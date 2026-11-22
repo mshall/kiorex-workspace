@@ -125,12 +125,15 @@ describe('q. Kiorly Team pharmacy: role matrix (bootstrap per role, entitlement,
       expect(boot[u].entitlement).toMatchObject({ enabled: false, reason: 'PLAN_BELOW_PRO', requiredPlan: 'PRO' });
       expect(boot[u]).toMatchObject({ safetyAlertsOnly: true, modules: [], device: null });
       const al = await mob(T[u], 'GET', '/mobile/alerts'); expect(al.status).toBe(200); expect(Array.isArray(al.body.items)).toBe(true);
-      for (const p of ['/mobile/inbox', '/mobile/devices', '/mobile/pharmacy/expiry-lowstock', '/mobile/pharmacy/shift-summary', '/mobile/pharmacy/controlled/pending-witness', '/mobile/pharmacy/search?q=para', '/mobile/pharmacy/barcode/123456', '/prescriptions/verification-queue', '/customers']) {
+      for (const p of ['/mobile/inbox', '/mobile/devices', '/mobile/pharmacy/expiry-lowstock', '/mobile/pharmacy/shift-summary', '/mobile/pharmacy/search?q=para', '/mobile/pharmacy/barcode/123456', '/prescriptions/verification-queue', '/customers']) {
         const r = await mob(T[u], 'GET', p);
         expect(r.status, `${u} ${p}`).toBe(403);
         // the plan gate beats RBAC: even a role that lacks the route's permission (cashier.basic) gets FEATURE_DISABLED so the app routes to the upgrade screen
         expect(r.body, `${u} ${p}`).toMatchObject({ code: 'FEATURE_DISABLED', key: 'mobile_staff_app', scope: 'org' });
       }
+      // the controlled-drug witness queue answers a safety alert, so it is exempt from the plan gate on every plan (RBAC still applies)
+      const pw = await mob(T[u], 'GET', '/mobile/pharmacy/controlled/pending-witness');
+      if (u === 'owner.basic') expect(pw.status).toBe(200); else expect(pw.body?.code).not.toBe('FEATURE_DISABLED');
       expect((await mob(T[u], 'POST', '/mobile/devices', { deviceId: 'dev-basic-12345', platform: 'web', name: 'x' })).status).toBe(403);
     }
     // the WEB app of the same Lite org is untouched
