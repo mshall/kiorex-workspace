@@ -209,7 +209,7 @@ Internal facts trace to mshall/clinics-management @ 6b24a79 (19 Nov 2026) or to 
 | clinics-management | `kiorex` (never `main`, no push without approval) | Built; staff `/mobile/*` API; 72-doctor demo tenant | Clinic web lint 0 warnings; golden-flow and RBAC smoke |
 | kiorly-pharmacy | main | In progress, ahead of plan | e2e 17; web spec 19 |
 | kiorly-lab | main | In progress, ahead of plan | e2e 18; web spec 20 |
-| kiorly-work | main | Kiorly Team app, dev builds | Jest 167 (165 pass on 23 Nov, 2 fail); web specs clinic 6; `tsc` clean |
+| kiorly-work | main | Kiorly Team app, dev builds | Jest 167 (all pass on 23 Nov); web specs clinic 6, pharmacy 19, lab 20; `tsc` clean |
 | workspace | main | Docs, brand, e2e, scripts | `cd e2e && npm test` runs 18 suites against the running stack |
 
 Scripts (workspace `scripts/`, `e2e/scripts/`): `e2e/scripts/up.sh [--build] [--seed] [--restart]` and `down.sh` start and stop Passport, Clinic, Kiorex, Pharmacy and Lab APIs (by port; never :3000); `scripts/seed-all.sh [--reset]` seeds synthetic demo data in dependency order (Passport, Clinic including Nurse tenants, Pharmacy, Lab, provider sync, Kiorex, and the three staff-app `seed:mobile` seeds), idempotent and refusing production; `scripts/seed-staging.sh --dry-run` prints the AWS staging plan (a human deploys first); `scripts/push-all.sh` pushes only with founder authorization and never touches Clinic `main`; `scripts/ops-sync.mjs` triggers a provider sync. Seed credentials are DEV ONLY and live in `TEST_DATA.md` and each repo's `DEMO_DATA.md`.

@@ -46,7 +46,7 @@ Engineering moved further ahead of operations. Everything below is observed in t
 | Demo data | Done | 36 specialties, 72 doctors, 12 patients, nurse and Lite tenants; seeds idempotent (`scripts/seed-all.sh`) | Re-run with `--reset` every few days (relative dates) |
 | AWS | Blocked | Founder: do not deploy; Passport Lambda reads secrets from env; tfvars hold `TODO_NEEDS_HUMAN` | Secret injection route; seed Docker image (`Dockerfile.seed`) not yet built; HB07 egress mode (FD-17) |
 | Store submissions | Blocked | Bundle ids `com.kiorly.work` and `com.kiorex.app` are placeholders | Apple and Google organization accounts (KX19); ADR-033 sign-off; app name decision |
-| Staff-app Jest | Open | 165 of 167 pass on the 23 Nov re-run | 2 failing tests in `lite-request.test.tsx` to investigate |
+| Staff-app Jest | Done | 167 of 167 pass on the 23 Nov re-run | Two tests had a fixed date that aged out of the upgrade-request window; fixtures now relative |
 
 > **Warning** The pilot scope above is unchanged: professions, home visits and Kiorly Nurse are post-GA (KX18) even though they are built locally. Flags keep them launch-locked (GHV1, GHV2, GKN1, GKN2).
 

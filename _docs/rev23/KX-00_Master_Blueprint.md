@@ -15,7 +15,7 @@ Kiorly suite adds Kiorly Nurse (an edition of Kiorly Clinic, ADR-031; providers 
 - Contracts `@kiorex/contracts` **1.7.0**; notification layer tests 60, 100 % coverage of `src/notify`.
 - Provider adapters: **8 kinds** (SMS, Email, WhatsApp, Payment, Push, Storage, Consent, AI), mock by default, real by configuration; **0** real vendors contacted.
 - Demo data: **36** medical specialties, **2** LIVE doctors each (72), **12** demo patients, 108 demo bookings, home visits and nurse tenants.
-- Tests: end-to-end suites 16/17/18 (staff app routes versus web) **46 + 30 + 34 = 110** in the 21 Nov report (the 22 Nov hand-off cites 111; recount on the next run); Expo web per-role specs clinic 6, pharmacy 19, lab 20; patient app Jest **157** (re-run 23 Nov, all pass); staff app Jest 167 (re-run 23 Nov: 165 pass, 2 fail in `lite-request.test.tsx`, not yet investigated).
+- Tests: end-to-end suites 16/17/18 (staff app routes versus web) **47 + 30 + 34 = 111**, all passing on the 23 Nov re-run; Expo web per-role specs clinic 6, pharmacy 19, lab 20; patient app Jest **157** (re-run 23 Nov, all pass); staff app Jest **167** (re-run 23 Nov, all pass; two upgrade-request tests used a fixed date that aged out of the request window and now use a relative one).
 - Not verified: real push delivery (APNs, FCM), a release build, the patient app on a device, any real vendor, any AWS deployment.
 
 ## Contents

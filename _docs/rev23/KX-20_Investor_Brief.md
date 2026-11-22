@@ -63,7 +63,7 @@ Facts below are observed in the code repositories and reports; status tag Observ
 - Contracts `@kiorex/contracts` **1.7.0**; notification layer tests 60, 100 % coverage of `src/notify`.
 - Provider adapters: **8 kinds** (SMS, Email, WhatsApp, Payment, Push, Storage, Consent, AI), mock by default, real by configuration; **0** real vendors contacted.
 - Demo data: **36** medical specialties, **2** LIVE doctors each (72), **12** demo patients, 108 demo bookings, home visits and nurse tenants.
-- Tests: end-to-end suites 16/17/18 (staff app routes versus web) **46 + 30 + 34 = 110** in the 21 Nov report (the 22 Nov hand-off cites 111; recount on the next run); Expo web per-role specs clinic 6, pharmacy 19, lab 20; patient app Jest **157** (re-run 23 Nov, all pass); staff app Jest 167 (re-run 23 Nov: 165 pass, 2 fail in `lite-request.test.tsx`, not yet investigated).
+- Tests: end-to-end suites 16/17/18 (staff app routes versus web) **47 + 30 + 34 = 111**, all passing on the 23 Nov re-run; Expo web per-role specs clinic 6, pharmacy 19, lab 20; patient app Jest **157** (re-run 23 Nov, all pass); staff app Jest **167** (re-run 23 Nov, all pass; two upgrade-request tests used a fixed date that aged out of the request window and now use a relative one).
 - Not verified: real push delivery (APNs, FCM), a release build, the patient app on a device, any real vendor, any AWS deployment.
 
 | What | Observed | Status |
@@ -73,7 +73,7 @@ Facts below are observed in the code repositories and reports; status tag Observ
 | Shared notification layer | Contracts 1.7.0, adopted in the marketplace; four migrations Planned | Done / Planned |
 | Staff mobile app | One app for clinic, nurse, pharmacy and lab staff, with plan and role gating; safety alerts on every plan | Done (dev builds); store submission Blocked |
 | Demo marketplace | 36 specialties, 2 live doctors each, 12 demo patients, bookings, home visits | Done (synthetic data) |
-| Automated checks | 18 cross-service end-to-end suites; staff app routes versus web (46 + 30 + 34 tests on 21 Nov); patient app Jest 157; contracts notify 60 tests at 100 % | Done; staff Jest 165 of 167 pass on the last re-run |
+| Automated checks | 18 cross-service end-to-end suites; staff app routes versus web (47 + 30 + 34 = 111 tests, 23 Nov); patient app Jest 157; contracts notify 60 tests at 100 % | Done; staff Jest 167 of 167 pass on the last re-run |
 | Not yet verified | Real push delivery, release builds, the patient app on a device, any real vendor, any AWS deployment | Open / Blocked |
 
 > **Note** Use these as engineering-progress evidence only. Pilot results (activation, bookings, revenue) will replace them as the traction section once the Egypt pilot produces observed data (KX17).
