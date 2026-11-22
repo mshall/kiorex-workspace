@@ -1,6 +1,6 @@
 # KX20 · Investor Brief
 Source: 1l3JjCKl-DuU5ZpSh1pISynrLCOqpQY0W
-Revision: Rev 2.1 · Reference Edition (19 November 2026, Approved reference) — NOTE: cover still prints Rev 2.1; this file was NOT revised for 2.3 and has no Superseded copy. Cover also prints "about:blank" artefact at top (print header).
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; previous text was Rev 2.1, 19 Nov 2026, not revised in 2.3; this update adds progress evidence only, financial content is the founder's and is untouched)
 
 > Extraction note: chart/table numeric values (ARR table, chart series) and some symbols were lost; "(not extracted)" marks them.
 
@@ -53,3 +53,32 @@ Prof. Dr. Ahmed El Shall — CMO (co-founder): clinical leadership and safety si
 | Founder bandwidth | CTO hire by M6; codified build sequences and runbooks |
 | Regulation | Counsel-gated verticals; no controlled medicines; privacy filings tracked |
 | Funding | Milestone-gated Series A; cost-down plan adds 4–6 months |
+
+## 08 Progress evidence (23 Nov 2026)
+Facts below are observed in the code repositories and reports; status tag Observed. They show build progress, not traction: no production deployment, no real vendor and no paying customer is evidenced in this section.
+
+### Key numbers (verified 23 Nov 2026)
+- Reference set: **25 volumes** (KX-00 to KX-24); decision log ADR-001 to ADR-035 (31 Accepted, 4 Proposed, see KX-01).
+- Code: **7 repositories** plus the workspace (contracts, platform, account, clinic, pharmacy, lab, kiorly-work). Commits since 19 Nov 2026 (git log of the local clones): contracts 23, platform 112, account 48, clinics-management 322 (branch kiorex, includes merges from main), pharmacy 60, lab 69, kiorly-work 19, workspace 34.
+- Contracts `@kiorex/contracts` **1.7.0**; notification layer tests 60, 100 % coverage of `src/notify`.
+- Provider adapters: **8 kinds** (SMS, Email, WhatsApp, Payment, Push, Storage, Consent, AI), mock by default, real by configuration; **0** real vendors contacted.
+- Demo data: **36** medical specialties, **2** LIVE doctors each (72), **12** demo patients, 108 demo bookings, home visits and nurse tenants.
+- Tests: end-to-end suites 16/17/18 (staff app routes versus web) **46 + 30 + 34 = 110** in the 21 Nov report (the 22 Nov hand-off cites 111; recount on the next run); Expo web per-role specs clinic 6, pharmacy 19, lab 20; patient app Jest **157** (re-run 23 Nov, all pass); staff app Jest 167 (re-run 23 Nov: 165 pass, 2 fail in `lite-request.test.tsx`, not yet investigated).
+- Not verified: real push delivery (APNs, FCM), a release build, the patient app on a device, any real vendor, any AWS deployment.
+
+| What | Observed | Status |
+|---|---|---|
+| Products running together locally | Marketplace, Passport, Kiorly Clinic (with Nurse edition), Kiorly Pharmacy, Kiorly Lab, patient app, staff app | Done (dev) |
+| Provider integration readiness | One adapter contract for SMS, email, WhatsApp, payments, push, storage, consent and AI; only vendor URLs and credentials remain | Done (not live) |
+| Shared notification layer | Contracts 1.7.0, adopted in the marketplace; four migrations Planned | Done / Planned |
+| Staff mobile app | One app for clinic, nurse, pharmacy and lab staff, with plan and role gating; safety alerts on every plan | Done (dev builds); store submission Blocked |
+| Demo marketplace | 36 specialties, 2 live doctors each, 12 demo patients, bookings, home visits | Done (synthetic data) |
+| Automated checks | 18 cross-service end-to-end suites; staff app routes versus web (46 + 30 + 34 tests on 21 Nov); patient app Jest 157; contracts notify 60 tests at 100 % | Done; staff Jest 165 of 167 pass on the last re-run |
+| Not yet verified | Real push delivery, release builds, the patient app on a device, any real vendor, any AWS deployment | Open / Blocked |
+
+> **Note** Use these as engineering-progress evidence only. Pilot results (activation, bookings, revenue) will replace them as the traction section once the Egypt pilot produces observed data (KX17).
+
+## What changed in this revision (23 Nov 2026)
+- Revision header corrected: this volume was never re-issued after Rev 2.1; this update adds §08 progress evidence only.
+- Market, business model, outlook, ask, team and risks are unchanged (financials and go-to-market belong to the founder).
+- No credentials or test logins appear in this volume. Not verified: any customer, revenue or production usage.

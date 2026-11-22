@@ -1,6 +1,6 @@
 # KX-16 Clinical Safety & Quality Framework
 Source: 1tK0CiOSRABzHtwlzT5D5eH4SXqWiWEb5
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference). Supersedes: KX16 Rev 2.1 19 Nov 2026
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the nurse lab restriction, mobile safety delivery and the PHI guard)
 
 > Extraction note: PDF text layer dropped symbols (<=, >=) and scrambled the principles and "Controls by product" diagrams; reconstructed best-effort.
 
@@ -48,6 +48,8 @@ Loop: Identify hazard (design · incident · feedback) -> Assess (severity x lik
 | H16 | Deterioration at home not escalated | Nurse alone; no protocol | Critical vitals thresholds prompt escalation guidance KNESC01; 123 shown; action logged | Medium |
 | H17 | Physiotherapist or nurse acts outside scope | No scope enforcement | Scope-of-practice matrix enforced server-side PRSOP | Low |
 | H18 | Patient's address exposed | Address visible to wrong staff or after the visit | Shared only after CONFIRMED to the assignee; masked after 24 h; access audited | Low |
+| H19 | Safety alert (SOS, critical lab value, controlled-drug discrepancy) not delivered to the phone | iOS push is best effort; notifications disabled by the user; device offline; real push never observed | Server escalation chains and SMS or dispatcher fallback remain; in-app polling and a persistent Home banner; critical alerts fan out to every channel at once in the notification layer (KX24); the app is never the only channel; Apple Critical Alerts and an Android max-priority channel to be requested. **Proposed, pending CMO sign-off** (mobile risk R8) | Medium until real delivery is verified |
+| H20 | Clinical detail leaks through SMS, push or WhatsApp | A free-text parameter or a careless template | Declared parameters only; PHI pattern scan fails the attempt (`PHI_BLOCKED`); detail only in authenticated email or in-app; push says "open the app". **Proposed, pending CMO and DPO review of the pattern list** | Low |
 
 ## 04 Controls by product
 - Kiorly Clinic (clinic): SOAP templates per specialty (board-signed); physio assessment and progress templates; Rx safety by ingredient; Rx QR verification; Sign-off & auto-lock; amendments; Scope of practice per profession; Home-visit safety: timer, SOS, unsafe-abort, address masking; Consent capture at check-in; no-show risk labelled rule-based.
@@ -55,6 +57,13 @@ Loop: Identify hazard (design · incident · feedback) -> Assess (severity x lik
 - Kiorly Pharmacy (pharmacy): Pharmacist sign-off on every Rx dispense; Substitution consent; Controlled log; never via Kiorex; Cold-chain excursions quarantine; Recall blocks across branches.
 - Kiorly Lab (lab): Two-identifier collection; Chain of custody; Westgard QC blocks release; Critical value escalation; Versioned corrections; phlebotomist field-visit safety.
 - Kiorex marketplace: Verified-only listings, badge naming the profession; Emergency routing; Medical content approved by CMO; No symptom data or addresses in analytics; Patient complaint SLA (home visits 1 h); safety console.
+
+Additions of 23 Nov 2026 (Proposed until the CMO signs; none is a flag):
+- Kiorly Team: safety capabilities (critical lab value, controlled-drug discrepancy, nurse SOS, missed safety check, unsafe abort, interaction and allergy warnings, recalls, cold chain) reach **every plan including Lite**; a Basic organization's app is a safety-alert slice (ADR-033, ADR-025).
+- Nurses and aides have **no access to the physician's Lab results review queue**, enforced by the server (403); sample collection stays under home visits. This follows the scope-of-practice rule (H17).
+- Lab critical-value read-back: the acknowledger's note is stored (500 characters), never copied into notifications or audit text; acknowledgement is idempotent.
+- Home-visit arrival distance is recorded and shown to dispatchers and owners; it never blocks the nurse.
+- Messages: PHI guard and consent gate sit in the notification layer; consent withdrawal is never behind a flag.
 
 ## 05 Incident management
 | Severity | Definition | Response time | Notification |
@@ -71,3 +80,8 @@ Loop: Identify hazard (design · incident · feedback) -> Assess (severity x lik
 - Pharmacy: expired lot sales: 0
 - Home visits: safety alerts resolved <=15 min: 100%
 - Kiorly Nurse: medication entries with a valid order: 100%
+
+## What changed in this revision (23 Nov 2026)
+- Added hazards H19 and H20 (Proposed) and the 23 Nov control additions above; no existing hazard or control was removed.
+- Safety alerts delivery (mobile risk R8): real push delivery to phones has not been observed; treat the hazard as Medium until a staging pass with real APNs and FCM keys.
+- Not verified: CMO sign-off of H19, H20 and the vitals thresholds (NH-034).

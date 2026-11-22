@@ -1,6 +1,6 @@
 # KX04 — Kiorex Account — Identity & Organizations PRD
 Source: 1yBWJ39HQkbeYBohg41bvLBMGyGeSKK6s
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference; supersedes KX04 Rev 2.1, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update records provider readiness and the mobile client)
 
 > Cleaned from Drive text extraction; symbols restored where obvious; headers/footers removed. Owner: Principal Identity Architect. Audience: Founders, investors, engineering & operations leads. Tags: OIDC + PKCE · Patients first · Provider federation · Account linking · Build vs buy.
 
@@ -89,3 +89,21 @@ Do not hand-write identity. Choose a managed or proven open-source IdP using thi
 | Keycloak (self-hosted) | Full control | Ops burden on a small team |
 | Zitadel / Ory (managed or self-hosted) | Modern, passkey-first | Evaluate WhatsApp OTP extension and pricing |
 **DECISION** Run a two-week spike with the top two options against the scorecard in month 1; record the result as an amendment to ADR012 (open question Q3).
+
+## 07 Build status: OTP providers and clients (23 Nov 2026)
+| Item | Status | Evidence and caveat |
+|---|---|---|
+| Phone OTP over WhatsApp with SMS fallback (KA-02) | Done (not live) | `kiorex-account` has env-driven real SMS and WhatsApp HTTP channels, delivery-status webhooks (`/webhooks/sms`, `/webhooks/whatsapp`) and dev simulators; when both are real the order is WhatsApp first, SMS second; the code is never logged in real mode and the dev inbox is off |
+| Real vendor, sender id and WhatsApp authentication template | Blocked | Human: vendor contract, sender registration, Meta approval |
+| Passport on the shared notification layer | Planned (step 2 of 5) | One SECURITY template, adapters over `provider.ts`; OTP bodies sent but never audited (KX24 §11) |
+| Secret injection for the Cognito Lambda | Open | The Lambda reads secrets from environment variables; no deploy-time injection mechanism and no AWS route for status webhooks to `DeliveryStatus.handleWebhook` exist |
+| Patient client `kiorex-mobile` (PKCE) | Done (dev) | Used by the Expo app |
+| Staff app sign-in | Done (product login) / Planned (Passport) | Kiorly Team signs in per product with that product's own login; Passport sign-in for the staff app is not registered (public client `kiorly-app` is part of ADR-033, Proposed) |
+| Dev demo logins | Done (DEV ONLY) | Phone OTP, staff and ops TOTP values live in `TEST_DATA.md`, never in this volume |
+
+> **Risk** A Clinic user is linked to one Clinic tenant per Passport subject today; multi-organization staff switching in the app needs a schema change first (mobile risk R9, ADR-033).
+
+## What changed in this revision (23 Nov 2026)
+- Added §07 build status for OTP providers, Passport readiness and the mobile client.
+- Identity model, flows and build-versus-buy are unchanged.
+- Not verified: any real SMS or WhatsApp delivery.

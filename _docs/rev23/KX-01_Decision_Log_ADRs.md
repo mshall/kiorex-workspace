@@ -1,17 +1,17 @@
 # KX01 — Decision Log & Architecture Decision Records
 Source: 1tQ5iEGdC3nQkK9TULztjRptMjb2KS9P4
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference; supersedes KX01 Rev 2.2, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; supersedes KX01 Rev 2.2, 19 Nov 2026; this update adds ADR-033 to ADR-035)
 
 > Cleaned from Drive text extraction; symbols restored where obvious; headers/footers removed. Owner: Chief Software Architect. Audience: Founders, engineering leads, Cursor sessions.
 
-Subtitle: The decisions that shape Kiorex v2 — what was decided, why, what it costs, and how to change it. Tags: 32 ADRs · Rationale & consequences · Supersession map · Open questions.
+Subtitle: The decisions that shape Kiorex v2 — what was decided, why, what it costs, and how to change it. Tags: 35 ADRs · Rationale & consequences · Supersession map · Open questions.
 
 ## WHAT CHANGED IN REV 2.3
 New ADR-029 (profession model), ADR-030 (service location / home visits), ADR-031 (Kiorly Nurse edition), ADR-032 (individual nurses and agencies) — all Accepted 20 Nov 2026. ADR-002 consequence extended to Kiorly Nurse; ADR-024 launch-locked list extended. Open questions Q7–Q13 added.
 
 ## 01 How decisions are recorded
 Short, numbered, immutable. Superseding a decision means a new ADR that references the old one. Process: Context (problem + evidence) → Options (2 real alternatives) → Decision (one sentence) → Consequences (cost · risk · rollback) → Status (Proposed → Accepted → Superseded). Accepted decisions are binding for all volumes and code. Proposed are validated in pilot. A volume that contradicts an Accepted ADR is wrong; raise a revision. ADR IDs are referenced in commit messages and Docs/.
-Counters: ACCEPTED 30 (binding) · PROPOSED 2 (validate in pilot) · V2-DRAFT ITEMS SUPERSEDED 9 (see §04) · OPEN QUESTIONS 13 (owners named).
+Counters: ACCEPTED 31 (binding) · PROPOSED 4 (ADR-033 and ADR-035 added 23 Nov; validate in pilot) · V2-DRAFT ITEMS SUPERSEDED 9 (see §04) · OPEN QUESTIONS 17 (owners named).
 
 ## 02 Decision register
 | ID | Decision | Status | Area |
@@ -48,6 +48,9 @@ Counters: ACCEPTED 30 (binding) · PROPOSED 2 (validate in pilot) · V2-DRAFT IT
 | ADR030 | Service location (in clinic, at home) is set per visit type; Kiorly stays system of record for home visits | Accepted | Product / Data |
 | ADR031 | Kiorly Nurse is an edition of Kiorly Clinic, not a separate product or repository | Accepted | Architecture / Brand |
 | ADR032 | Nurses can be tenants alone or as agencies; Kiorex listing of individual nurses is launch-locked | Accepted | Commercial / Compliance |
+| ADR033 | One Kiorly staff app with Clinic, Nurse, Pharmacy and Lab entries; tiered mobile entitlements; safety never paywalled | Proposed | Distribution / Clinical safety |
+| ADR034 | The notification layer is a shared package inside each product, not a central service | Accepted | Architecture / Platform |
+| ADR035 | Every outbound provider follows one adapter contract: port, mock, real, env, retries, idempotency, HMAC webhooks, fail-fast | Proposed | Platform / Security |
 
 ## 03 Decisions in detail
 **ADR001** Accepted · Strategy. Why: Decouples failure domains and lets each product be sold alone. Replaces the 34-module all-in-one model. Consequence: Separate repos, deployables and databases per product.
@@ -83,6 +86,10 @@ Counters: ACCEPTED 30 (binding) · PROPOSED 2 (validate in pilot) · V2-DRAFT IT
 **ADR031 · Kiorly Nurse is an edition of Kiorly Clinic** Accepted · Architecture / Brand. Why: Most of what a nurse or agency needs (Estimated ≈80%) already exists in Kiorly Clinic. A separate product would fork scheduling, payments, messaging and the Kiorex connector. Decision: Organization.edition ∈ CLINIC, NURSE; the NURSE edition has its own name, navigation, terminology, plans and modules (care plans, nursing records, vitals, MAR, shifts, dispatch) and hides doctor-only modules. Consequence: Same repository, API, database, kernel and connector; edition set at sign-up, changed only by the super admin; PRD is KX23.
 **ADR032 · Individual nurses and agencies are both tenants** Accepted · Commercial / Compliance. Why: Home nursing in Egypt is delivered by companies and by freelance nurses; excluding individuals leaves most supply out, but listing them to patients without a legal basis is a safety and regulatory risk. Decision: A solo nurse is an organization of one (Nurse Lite / Nurse Pro); agencies use Nurse Agency. Software use is open to both from day one; Kiorex listing of individual nurses is launch-locked (GKN2). Consequence: nurse.individual_kiorex_listing flag; stricter solo verification (ID selfie match, criminal-record certificate — Q8); agencies listed after GHV1/GHV2.
 
+**ADR033 · One Kiorly staff app, tiered mobile entitlements, safety never paywalled** Proposed (drafted 20 Nov 2026, `_docs/mobile/ADR-033_One_Kiorly_App_Tiered_Mobile.md`; becomes Accepted when the founder signs it). Amends the consequence of ADR018 (one store account per platform stays; the Kiorly app is the staff app and hosts the Clinic, Pharmacy and Lab modules and the Nurse edition) and extends ADR025. Decision: one Expo app for provider staff; modules appear only from memberships, roles and per-organization entitlements; entitlements (who may use) are separate from flags (whether a capability exists), both evaluated server-side; safety capabilities (critical lab value, controlled-drug discrepancy, nurse SOS and missed safety check, interaction and allergy warnings, recalls, cold chain) reach every plan including Lite, with no flag and no paid entitlement, guarded by a registry and a CI test; no commerce on iOS (neutral locked text, no prices); device-bound sessions and app lock; offline queue with per-action conflict policy, clinical sign-offs never queued; split into branded builds stays an option by build configuration only. **What is built (23 Nov 2026):** the app ships as **Kiorly Team** (renamed 22 Nov from Kiorly Work; bundle id `com.kiorly.work`, scheme `kiorlywork` unchanged) with sign-in entries Clinic, Nurse, Pharmacy and Lab, gated today by a single `mobile_staff_app` entitlement (ON for Pro and Enterprise plans, OFF for Basic/Lite) plus role-based modules from the server; a Basic organization gets a real slice (safety-alert inbox, remote sign-out, upgrade request) and `FEATURE_DISABLED` on every other `/mobile/*` route. The tiered `mobile.*` keys, the safety registry CI test, multi-organization switching and the Passport public client `kiorly-app` are **Planned**, not built. **Name conflict:** the ADR text says the app is named "Kiorly" and "there is no Kiorly Team"; the shipped name is Kiorly Team until the founder approves the mobile design pack (open questions Q14 and Q15).
+**ADR034 · The notification layer is a package, not a service** Accepted (founder decision recorded 23 Nov 2026 in `kiorex-contracts/docs/NOTIFICATION_LAYER.md`). Why: a central notification service would make every Kiorly product depend on Kiorex being up (violates principle P1), would carry PHI-adjacent data across products, and adds a service, a database and an on-call rota; the Kiorly pipeline already exists per product. Decision: intent, template registry, PHI guard, routing and fallback, consent and quiet-hours gate, status model and audit shape ship as `@kiorex/contracts/notify` (contracts 1.7.0, pure TypeScript, no I/O); each product injects its own channel adapters, preference store, audit sink, dispatch store and clock. Consequence: migration is one repo at a time (platform done; then Passport, Lab, Pharmacy, Clinic); a central service may be reconsidered only if cross-product operations justify it; Super Admin runtime template and routing control is a Proposed later layer (KX24 §10). Supersedes nothing; clarifies the "no service" row in §04. The Drive draft of KX24 (22 Nov) numbered this decision ADR-033; it is renumbered here because ADR-033 already exists.
+**ADR035 · One provider adapter contract for every outbound dependency** Proposed (implemented in kiorex-platform, kiorex-account, clinics-management, kiorly-pharmacy and kiorly-lab; awaiting founder sign-off). Why: founder decision 19 Nov 2026 to run every provider on mock adapters until a go-live pass, and to make going live a configuration change. Decision: each kind (SMS, EMAIL, WHATSAPP, PAYMENT, PUSH, STORAGE, CONSENT, AI) has a port with a `mock` and a `real` implementation selected by `<KIND>_MODE`, an env contract `<KIND>_API_URL`, `<KIND>_API_KEY`, `<KIND>_WEBHOOK_SECRET`, timeouts, retries with backoff on network, timeout, 429 and 5xx (never 4xx) with the same `Idempotency-Key` on every attempt, error mapping without vendor body or recipient, HMAC-SHA256 webhooks over the raw body with 5 min tolerance and de-duplication, forward-only statuses, startup refusal when `MODE=real` lacks a variable (names only), dev-only simulators that answer 404 in production, and one mapping file per kind as the only vendor-specific code. Consequence: only vendor URLs, credentials, template approvals and wire-format mapping remain for go-live; see `_docs/PROVIDER_GO_LIVE.md` and KX24 §05. Open: the consent registry wire format is an assumption; push has no HTTP provider in the clinic and platform repos.
+
 ## 04 What changed from the Kiorex v2 drafts
 | Draft position | Replaced by | Reason |
 |---|---|---|
@@ -97,6 +104,8 @@ Counters: ACCEPTED 30 (binding) · PROPOSED 2 (validate in pilot) · V2-DRAFT IT
 | Pharmacy/lab brands unresearched | Brand architecture fixed; discovery interviews required (KX06/07) | Close the gap explicitly |
 | Staged releases per product and wave | ADR023 deploy = live, switchable from super admin | Founder decision |
 | Home nursing as a P3 Kiorex-only module (M11) | ADR030/031 home visits in Kiorly; Kiorly Nurse edition (KX23) | Supply first, software before marketplace |
+| Central notification service owned by Kiorex (Drive KX24 draft, option A) | ADR034 package inside each product | Standalone products must work without Kiorex (P1); no new service |
+| Separate Kiorly Team app with one `mobile_staff_app` Pro-only entitlement and an upgrade screen | ADR033 (Proposed): one app, tiered entitlements, safety on every plan; interim: shipped as Kiorly Team with the single entitlement | Store policy (no commerce on iOS) and the safety-never-paywalled rule |
 
 (Extraction of the last two rows is jumbled; the final row's pairing is inferred from the text order "Home nursing as a P3 Kiorex-only module M11 / ADR030/031 ... / Supply first, software before marketplace".)
 
@@ -116,3 +125,13 @@ Counters: ACCEPTED 30 (binding) · PROPOSED 2 (validate in pilot) · V2-DRAFT IT
 | Q11 | Do nursing agencies need a facility licence (Law 51 of 1981) before listing, and what do we verify? | Counsel | Month 12 | Commercial registration + MoH licence where one exists; ops review |
 | Q12 | Final Arabic product name for Kiorly Nurse | CEO + brand | Month 9 | كيورلي نيرس (glyphs garbled in extraction; same as KX23) |
 | Q13 | Home-visit commission override and Kiorly Nurse plan prices | CEO | Pilot week 8 | EGP 40 flat; Nurse plans as KX23 §05 |
+| Q14 | ADR-033 sign-off: confirm one staff app for Clinic, Nurse, Pharmacy and Lab, tiered entitlements, and the rule that safety capabilities are never paywalled | CEO + CMO | Before store submission | Ship as built: single entitlement, safety alerts on every plan |
+| Q15 | Name of the staff app: "Kiorly" (ADR-033 text) or "Kiorly Team" (shipped 22 Nov); repo rename `kiorly-work` to `kiorly-app` and bundle id `com.kiorly.app` | CEO + brand | Before store accounts exist | Kiorly Team, bundle ids unchanged |
+| Q16 | Does the native staff app ship beside the PWA at launch (KX19 says PWA primary), and are pharmacy and lab staff in its audience | CEO | Pilot start | Native beside PWA, audience extended; pharmacy and lab modules OFF until their pilots (ADR017) |
+| Q17 | Confirm ADR renumbering for the notification decisions (ADR-034, ADR-035) and the revision label (Drive KX24 draft says Rev 2.4) | CEO | Next revision | As written here |
+
+## What changed in this revision (23 Nov 2026)
+- Added ADR-033 (Proposed), ADR-034 (Accepted) and ADR-035 (Proposed). ADR-018 and ADR-025 are not edited: ADR-033 clarifies the consequence of ADR-018 and extends ADR-025 once signed. No historical decision was removed.
+- Supersession map additions: ADR-033 clarifies ADR-018 and extends ADR-025; ADR-034 sits under the ADR-004 shared-package principle and the "no service" row of §04; ADR-035 implements founder decision FD-04.
+- §04 gains two rows; §05 gains Q14 to Q17.
+- Not verified: founder sign-off of ADR-033 and ADR-035 (no record found); the Drive KX24 draft's numbering.

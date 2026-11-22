@@ -1,7 +1,7 @@
 # KX07 — Kiorly Lab PRD
 
 Source: 1sPyClcmk-Yxo3TgKsYq7kE-Pzxv490Al
-Revision: Rev 2.3 · Reference Edition · 20 November 2026 (supersedes KX07 Rev 2.2, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds build status of 19-23 Nov 2026)
 
 ## What changed in Rev 2.3
 Home collection (KLORD04) is built on the shared @kiorly/field-visit package (ADR-030): coverage zones, travel buffers, on-my-way/arrived geostamps, safety timer and SOS for phlebotomists.
@@ -16,8 +16,8 @@ Tags: LIMS · Chain of custody · QC & Westgard · Critical values · Home colle
 | Field | Value |
 |---|---|
 | DOCUMENT | KX07 |
-| REVISION | Rev 2.3 · Reference Edition |
-| DATE | 20 November 2026 |
+| REVISION | Rev 2.3 · Reference Edition (updated 23 Nov 2026) |
+| DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Founders, investors, engineering & operations leads |
 | OWNER ROLE | Head of Diagnostics Product |
@@ -151,3 +151,25 @@ Every external figure in this document traces to one of these sources; internal 
 - TechSci Research: Egypt diagnostic labs market USD 2,267.10M (2024), 7.50% CAGR to 2030.
 - IDH corporate site: ~50% share of private chain market revenue (BCG).
 - poidata.io: 1,218 laboratories in Egypt (Jul 2026), 259 Cairo, 200 Giza.
+
+## 07 Build status (23 Nov 2026)
+Observed in `kiorly-lab` (69 commits since 19 Nov), contracts 1.6.0 and the e2e suite 18. Local development only; the lab pilot remains month 19 (ADR-017).
+
+| Capability | Status | Evidence and caveat |
+|---|---|---|
+| Lab module in the Kiorly Team staff app: reception creates STAT orders, phlebotomist collects by scan (wrong tube refused), technician receives and runs QC, critical value entry with dual control, read-back acknowledgement, validation, sign-off, release, TAT breach alert (once) | Done (dev) | e2e suite 18: 34 tests on 21 Nov; Expo web per-role spec 20 tests; lab modules not run on simulators |
+| Critical-value alert reaches director, signatory, technician and owner only; read-back note stored on web and app acknowledgements (500 chars, first acknowledger wins, never in notifications or audit text) | Done | Founder decision 21 Nov |
+| Sign-off only for a signatory with a licence (owner refused); screen driven by the server `sign-off` response | Done | Fixed 21 Nov |
+| Release queue returns `readyToSign`, `readyToRelease`, `signedNotReleased`; "today" counters use Cairo local midnight (`LAB_TIMEZONE`); QC failure blocks release | Done | |
+| Nurse-collected sample hand-off (KLORD05, KNLAB01): contracts 1.6.0 adds `nurseCollection`, `identifiersChecked`, source `KIORLY_NURSE`, a custody read endpoint and a status push through Kiorex | Done (dev) | Counsel/DPO review of patient data in `LabOrderPlaced` (NH-KNLAB01) is Open; the nurse never sees the doctor's Lab results queue |
+| Plan gate: Lite lab gets a safety-alert slice and an upgrade request (`mobile_staff_app` ON for Pro and Chain) | Done | Plan gate answers before RBAC errors |
+| Provider adapters: SMS, email, WhatsApp, payment (pay-by-link), push (Expo-compatible HTTP), storage | Done (not live) | Mock by default; webhook `POST /api/v1/webhooks/providers/{sms,email,whatsapp,payment}`; dev tools `/api/v1/dev/providers/*` |
+| Lab on the shared notification layer | Planned (step 3 of 5) | Critical lab alert becomes a CRITICAL intent (in-app, push, WhatsApp, SMS, email at once); result-ready is IMPORTANT with an app-only push |
+| Critical-value list sign-off by the clinical pathologist (NH-LB-006) | Open | Human |
+
+> **Risk** A critical value is a patient-safety event. Real push delivery has never been observed, so the existing server escalation chain and non-push channels must stay in place when push goes live (mobile risk R8, KX16 H19).
+
+## What changed in this revision (23 Nov 2026)
+- Added §07 build status: mobile lab module, critical-value read-back note, nurse sample hand-off, provider adapters and notification-layer migration step.
+- Workflow, QC rules and rollout gates are unchanged.
+- Not verified: lab modules on a device, real push, any real vendor.

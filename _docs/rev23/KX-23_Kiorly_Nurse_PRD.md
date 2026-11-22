@@ -1,5 +1,5 @@
 Source: 1KmhUM-11TEpgqAQfD-loqUbv0s3YUnCm
-Revision: Rev 2.3 · Reference Edition · 20 November 2026 · Status: Approved reference · Document KX-23 (new volume; owner: Head of Home Care Product; supersedes: none, introduced in Rev 2.3 with ADR-029..032)
+Revision: Rev 2.3 · Reference Edition · first issued 20 November 2026, updated 23 November 2026 for the unified Kiorly Team app · Status: Approved reference · Document KX-23 (new volume; owner: Head of Home Care Product; supersedes: none, introduced in Rev 2.3 with ADR-029..032)
 
 # KX-23 Kiorly Nurse PRD
 
@@ -137,3 +137,23 @@ Stop-ship conditions:
 | Q11 | Agency establishment licensing (Law 51 of 1981) and what we verify | Counsel | Commercial registration + MoH licence where one exists |
 | Q12 | Final Arabic product name | CEO + brand | (Arabic name, scrambled in extraction) |
 | Q13 | Nurse plan prices and home-visit commission override | CEO | As §05; EGP 40 flat |
+
+## 11 Mobile: Nurse in the Kiorly Team app (23 Nov 2026)
+The nurse edition runs on the phone in the single staff app **Kiorly Team** (ADR-033, Proposed): sign-in shows four entries (Clinic, **Nurse**, Pharmacy, Lab). **There is no separate nurse app.** The Nurse entry is the front door for nurses, aides and dispatchers: they have Kiorly Clinic accounts, so it signs in through the Clinic API and lands on today's home-visit rounds. The PWA remains the web surface (nurse.kiorly.com alias, KNED01).
+
+| Capability | Status | Evidence and caveat |
+|---|---|---|
+| Today's rounds, depart, arrive, finish; SOS and unsafe abort; nursing note (finish needs a finalized note) | Done (dev) | e2e suite 16; solo nurse and agency nurses exercised with seeded demo data |
+| Critical vitals alert to nurse, manager and owner; idempotent offline replay of vitals | Done | |
+| **Nurse sees no Lab results** (the physician's result-review queue): server returns 403 for role NURSE and for NURSE and ASSISTANT professions; sample collection stays under home visits (KNLAB01) | Done (server-enforced) | Changed 22 Nov; web unchanged. Rationale: scope of practice (PRSOP) and KX16 H17 |
+| Dispatcher: home-visit module and the organization's home-visit safety alerts; no clinical record access | Done | Founder decision 21 Nov |
+| Arrival distance recorded (500 m default threshold), never blocks, shown to dispatchers and owners only | Done | Supports H13 and dispatch review |
+| Lite nurse plans (Nurse Lite) | Done (slice) | Safety alerts on every plan, upgrade request; full app is Pro and Agency today (single `mobile_staff_app` entitlement). Whether depart, arrive and finish should be Core on Lite follows the P5 question Q7 in the mobile design pack: Open |
+| Push for SOS and safety alerts | Done (simulator, mock token) | Real delivery unverified; do not rely on push alone (KX16 H19) |
+
+> **Note** Seeded demo nurses (solo nurse, agency nurses, aide, dispatcher, agency owner) are synthetic and DEV ONLY; their logins are in `TEST_DATA.md` and `kiorly-work/DEMO_DATA.md`.
+
+## What changed in this revision (23 Nov 2026)
+- Added §11 describing the nurse experience inside the unified Kiorly Team app, the Lab-results restriction for nurses, dispatcher rights and arrival distance. Requirements KN*, plans and gates are unchanged.
+- This volume previously existed only under `rev23/`; a copy now also sits next to the other volumes in `_docs/`.
+- Not verified: nurse flows on a physical device, real push.

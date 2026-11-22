@@ -1,6 +1,6 @@
 # KX-05 — Kiorly Clinic PRD (as built)
 Source: 1JIhEl6TDzm69GR9lZLFpwUTH66mMtrVY
-Revision: Rev 2.3 · Reference Edition · 20 November 2026 · Approved reference (supersedes KX-05 Rev 2.2, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the build status of 19-23 Nov 2026)
 Owner role: VP Product, Kiorly. Audience: Product, engineering, sales, support.
 Extraction note: PDF text extraction; check/cross glyphs and some symbols lost (inferred where obvious).
 
@@ -229,3 +229,34 @@ RULE: Not flags — never switchable: Rx safety checks (interactions, allergies,
 
 ## 12 Success metrics
 ACTIVATION IN 30 DAYS ≥ 60% (20 visits checked-in) · FOUNDING TRIAL → PAID ≥ 50% · MONTHLY PAID CHURN ≤ 2.5% · ACTIVE DAYS / CLINIC / MONTH ≥ 20 · HOME VISITS WITH FULL GEOSTAMP TRAIL ≥ 98% (v2.3) · SAFETY ALERTS RESOLVED ≤ 15 MIN 100% (v2.3)
+
+## 13 Build status and changes since 19 Nov 2026 (23 Nov 2026)
+Observed in `clinics-management` (branch `kiorex`, never `main`; 322 commits since 19 Nov, including merges from main), `kiorly-work` and the workspace e2e suites. Local development only; nothing deployed or pushed.
+
+### 13.1 Staff mobile app: Kiorly Team (Clinic and Nurse entries)
+| Capability | Status | Evidence and caveat |
+|---|---|---|
+| `/mobile/*` API in the Clinic backend: bootstrap, schedule and queue, check-in, vitals, prescriptions, lab results, search, alerts, devices, upgrade request | Done | e2e suite 16 (46 tests on 21 Nov) compares app routes with the web API per role |
+| Role gating of modules from the server (front desk, nurse, doctor, accountant, manager, owner, dispatcher) | Done | Bugs found and fixed 21 Nov: `/mobile/search`, `/prescriptions`, `/lab-results` were open to every role; now 403 `MODULE_NOT_ALLOWED` |
+| Plan gate: `mobile_staff_app` entitlement ON for Pro, Clinic, Enterprise, Nurse Pro and Nurse Agency; OFF for Lite and Nurse Lite; Lite gets a safety-alert slice and an upgrade request (de-duplicated for 24 h); the plan gate answers before permission errors | Done | ADR-033 (Proposed) will replace the single key with `mobile.clinic.core` or `.pro` plus an always-on `mobile.safety`: Planned |
+| Nurse sign-in entry: nurses, aides and dispatchers sign in through the Clinic API and land on today's home-visit rounds; there is no separate nurse app | Done | Added 22 Nov |
+| Nurse sees no Lab results queue: `clinic.labs` is not granted to role NURSE or to NURSE and ASSISTANT professions; `GET /mobile/lab-results` answers 403; sample collection stays under home visits | Done (server-enforced, web unchanged) | Changed 22 Nov; asserted in e2e 16 |
+| Dispatcher (receptionist or call-centre user in a Nurse-edition organization) gets the home-visit module and the organization's home-visit safety alerts; read access to `/home-visits/safety-alerts`; acknowledge and resolve stay manager-only; no clinical record access | Done | Founder decision 21 Nov |
+| Home visit on the phone: depart, arrive, SOS, unsafe abort, nursing note, finish (finish needs a finalized nursing note); replayed transitions by the assigned clinician are idempotent | Done | Arrival distance stored as `arrivalDistanceM` and `arrivedOffSite` (default threshold 500 m, `HOME_VISIT_ARRIVAL_THRESHOLD_M`), never blocks, shown only to dispatchers and owners |
+| Critical vitals raise a safety alert to nurse, manager and owner (not front desk); offline replay of `POST /mobile/vitals` is idempotent on `Idempotency-Key` | Done | |
+| Push registration, deep-link routing and local simulation | Done (simulator, mock token) | Real APNs and FCM delivery never observed (Blocked on keys and EAS project id) |
+| Multi-organization staff accounts, tiered entitlements, Passport sign-in for staff | Planned | ADR-033; one Passport subject links to one Clinic user today |
+
+### 13.2 Clinic web and demo data
+- Web additions merged 22 Nov: patient appointment wizard, encounter-create doctor pick fix, Consent and Operation Report documents on create and after surgery, duplicate operation document types prevented with View and Download, invoice actions and dialog close polish, patient New operation, duplicate patient charts prevented on create (phone lock, unique demo phones), Arabic strings backfilled and the deploy reload banner localized. The AI assistant button is lifted above the mobile bottom navigation. Web lint went from 246 warnings to 0 and the golden-flow and RBAC Playwright smoke passed (21 Nov report).
+- Demo seed (DEV ONLY, synthetic): a tenant with **72 LIVE doctors covering all 36 Kiorex specialties** (2 each), plus the existing demo clinic, Basic (Lite) clinic, solo and agency Nurse tenants, home visits and care plans; `db:seed:mobile` adds the staff-app alerts. Logins and values are in `TEST_DATA.md` and `clinics-management/DEMO_DATA.md`, never in this volume.
+
+### 13.3 Providers
+SMS, email, WhatsApp and payment adapters follow the provider contract (ADR-035): `SMS_MODE`, `EMAIL_TRANSPORT=ses|http`, `WHATSAPP_PROVIDER=meta_cloud|http`, `PSP_MODE` with `PSP_API_URL`, `PSP_MERCHANT_ID`, `PSP_WEBHOOK_SECRET`; webhooks `POST /api/v1/webhooks/providers/{sms|whatsapp|email}` and `/webhooks/payments/:provider`; dev tools `POST /dev/inbox/send-test`. Push has no HTTP provider here (mock). The Clinic is the **last** product to move onto the shared notification layer (migration step 5, KX24 §11) because its messaging surface is the largest; until then its reminder scheduler does not filter by booking source and does not re-check appointment state before sending (KX24 §08). Status: Done (adapters, not live); Blocked on credentials and Meta template approvals (NH003 to NH015).
+
+> **Warning** Do not push branch `kiorex`: a push there used to trigger a deploy workflow (FD-18).
+
+## What changed in this revision (23 Nov 2026)
+- Added §13: Kiorly Team staff app (Clinic and Nurse entries), nurse Lab-results restriction, dispatcher rights, providers, demo data and web changes, each tagged Done, Planned or Blocked.
+- Plans, money engine, Kiorex connector and professions sections are unchanged.
+- Not verified: the 2 failing staff-app Jest tests (`lite-request.test.tsx`, 23 Nov re-run), real push delivery, a release build, a physical device.

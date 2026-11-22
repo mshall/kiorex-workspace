@@ -1,7 +1,7 @@
 # KX08 — Target Architecture & Repository Design
 
 Source: 1uLxpvO063I9jGeKscWTN5eJiou3mwfNs
-Revision: Rev 2.3 · Reference Edition · 20 November 2026 (supersedes KX08 Rev 2.2, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the notification layer, provider adapters, the staff app and the repository states of 23 Nov 2026)
 
 ## What changed in Rev 2.3
 Kiorly Nurse runs as an edition inside clinics-management (ADR-031); nurse.kiorly.com alias; no new repository or database.
@@ -16,8 +16,8 @@ Tags: C4 views · 6 repositories · Modular monoliths · Kernel & field-visit pa
 | Field | Value |
 |---|---|
 | DOCUMENT | KX08 (03 — Technical documents) |
-| REVISION | Rev 2.3 · Reference Edition |
-| DATE | 20 November 2026 |
+| REVISION | Rev 2.3 · Reference Edition (updated 23 Nov 2026) |
+| DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Engineering, Cursor sessions, technical due diligence |
 | OWNER ROLE | Chief Software Architect |
@@ -76,6 +76,19 @@ Six repositories. One per product plus identity and contracts; the kernel and fi
 | kiorly-lab (new) | Lab API + console + phlebotomist app + infra | Planned M15 | Scaffold from template; ASTM/HL7 adapters; consume field-visit |
 | kiorex-account (new) | IdP configuration-as-code, themes, OTP sender lambdas, back-channel logout | Planned M1 | Managed IdP; no custom crypto |
 | kiorex-contracts (new) | OpenAPI specs, JSON Schemas for events, generated TS SDKs, contract tests | Extract | Move marketplace.openapi.json + consumer contract here; both CIs pin versions (NH019) |
+
+> **Note** State on 23 Nov 2026. All repositories below now exist locally under one workspace (private GitHub remotes under the founder's account) and run together on one Postgres cluster; the "Planned" and "Create new" states in the table are historical. Plus one repository that this plan did not list: **kiorly-work**, the Kiorly Team staff app (Expo, iOS, Android, web). Pushes of `clinics-management` branch `kiorex` need founder approval; nothing is deployed.
+
+| Repository | Role | State (23 Nov 2026) |
+|---|---|---|
+| kiorex-contracts | OpenAPI, event schemas, flags, HMAC SDK, notification layer | Done: 1.7.0 |
+| kiorex-platform | Kiorex API, patient web, patient Expo app, ops console, Kiorex Pay, flag control plane | Done (pre-launch), mock providers |
+| kiorex-account | Passport: dev OIDC provider, config as code, OTP sender | Done (dev) |
+| clinics-management (branch `kiorex`) | Kiorly Clinic and Nurse edition, `/mobile/*` staff API | Done (dev) |
+| kiorly-pharmacy | Pharmacy API and web, Kiorex machine API, `/mobile/*` | In progress; built ahead of the M9 plan |
+| kiorly-lab | Lab API and web, Kiorex machine API, nurse custody, `/mobile/*` | In progress; built ahead of the M15 plan |
+| kiorly-work | Kiorly Team staff app; owns no data, calls the three product APIs | Done (dev builds) |
+| kiorex-workspace | Docs, brand kit, cross-service e2e (18 suites), seed scripts | Done |
 
 NOTE: The 2025 repositories kiorex-backend, kiorex-web-app, kiorex-ai-services and kiorex-backend-documentation were assessed on 19 Nov 2026 as prototypes and references only. Keep / harvest / archive decisions, the full repo map and the build-agent brief are in KX22. There is no kiorly-nurse repository (ADR-031).
 
@@ -294,3 +307,53 @@ Design for 10× without re-architecture; extract only with evidence.
 | > 3 consumers of the same events | Introduce EventBridge/SNS fan-out behind the outbox dispatcher |
 | A context needs independent scaling or team (e.g. Nurse edition with its own squad) | Extract per MODULAR_MONOLITH.md: stop imports → OpenAPI → own schema → route by path |
 | New market without suitable cell | Add cell to platform/data-cells.json; deploy stack in new region; tenants pinned to cell |
+
+## 12 Notification layer, provider adapters and the staff app (23 Nov 2026)
+### 12.1 Notification layer (ADR-034)
+A pure TypeScript layer, `@kiorex/contracts/notify` (contracts 1.7.0), decides which channels, in which order and in which words a message goes out and whether it is allowed (consent, opt-out, quiet hours, WhatsApp 24 h window, PHI guard). Each product injects its own channel adapters, preference store, audit sink, dispatch store and clock. There is no central service and no shared database. Full design, status model, provider table and migration plan: KX24.
+
+```mermaid
+flowchart LR
+  subgraph Product[Each product]
+    EV[Domain events] --> NS[NotificationService]
+    NS --> AD[Channel adapters<br/>SMS, Email, WhatsApp, Push, In-app]
+    PS[(Preferences + audit<br/>+ dispatch store)] --- NS
+  end
+  CT[(kiorex-contracts 1.7.0<br/>notify)] -. pinned .-> NS
+  AD -->|MODE=mock default| MK[Dev inbox / sandbox-fake]
+  AD -->|MODE=real| V[(Vendors)]
+```
+Adoption: kiorex-platform done; Passport, Lab, Pharmacy, Clinic planned in that order.
+
+### 12.2 Provider adapter contract (ADR-035)
+Every outbound dependency (SMS, Email, WhatsApp, Payment, Push, Storage, Consent, AI) has a port plus `mock` and `real` implementations chosen by `<KIND>_MODE`, with timeouts, retries (never on 4xx), the same idempotency key on every attempt, signed webhooks, fail-fast startup validation and one mapping file per vendor. Details: `_docs/PROVIDER_GO_LIVE.md`. Remaining for go-live is only URLs and credentials, template approvals and PSP onboarding.
+
+### 12.3 Staff mobile app (ADR-033, Proposed)
+```mermaid
+flowchart TB
+  APP[Kiorly Team app<br/>Expo: iOS, Android, web :8082]
+  APP -->|Clinic and Nurse entries| KC[Clinic API /mobile/*  :3010]
+  APP -->|Pharmacy entry| KPH[Pharmacy API /mobile/*  :3100]
+  APP -->|Lab entry| KLB[Lab API /mobile/*  :3200]
+  KC --- G1{{plan gate + role modules}}
+  KPH --- G1
+  KLB --- G1
+```
+The app owns no data; each backend decides, per role and plan, which modules exist and answers 403 `FEATURE_DISABLED` for a Lite organization on every route except alerts and the upgrade request (safety alerts reach every plan, ADR-025). One session is kept per product. Today's gate is the single `mobile_staff_app` entitlement; the tiered `mobile.*` model of ADR-033 is Planned.
+
+### 12.4 Local ports (dev)
+| Service | Port |
+|---|---|
+| Clinic API / web | 3010 / 5174 |
+| Kiorex API / patient web / ops console / patient Expo web | 4000 / 5180 / 5181 / 8081 |
+| Passport / second fake IdP | 4400 / 4401 |
+| Pharmacy API / web | 3100 / 5192 |
+| Lab API / web | 3200 / 5193 |
+| Kiorly Team (Expo web) | 8082 |
+| Postgres | 5433 |
+Ports 3000, 5173 and 5175 belong to the founder's other checkout and are never touched.
+
+## What changed in this revision (23 Nov 2026)
+- §04 gains the repository states table (including kiorly-work); new §12 on the notification layer, the provider adapter contract, the staff app and local ports.
+- Containers, data model, deployment topology, flag control plane, flag catalogue and scaling path are unchanged. Nothing was deployed.
+- Not verified: any AWS deployment; Pharmacy and Lab schedules (M9, M15) were not re-planned though the code is ahead of them.

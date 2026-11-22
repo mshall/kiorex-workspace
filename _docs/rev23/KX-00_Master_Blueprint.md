@@ -1,6 +1,6 @@
 # KX00 — Master Blueprint & Reading Guide
 Source: 1PCtr6eLZsin2wRXCw6MiC0YikOBrvSFV
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; supersedes the 20 Nov 2026 text of this volume)
 
 > Cleaned from Drive text extraction; symbols dropped by extractor (≥ ≤ × → bullets) restored where obvious; headers/footers removed. Owner role: CEO. Supersedes: KX00 Rev 2.2 (19 Nov 2026). Audience: Founders, investors, engineering & operations leads.
 
@@ -8,6 +8,15 @@ Subtitle: One ecosystem, two brands, five products — how Kiorex and Kiorly dec
 
 ## WHAT CHANGED IN REV 2.3
 Kiorly suite adds Kiorly Nurse (an edition of Kiorly Clinic, ADR-031; providers now include physiotherapists and nurses, ADR-029). Home visits by doctors, physiotherapists and nurses become part of the ecosystem (ADR-030); new principle P12. Document map adds KX-23 Kiorly Nurse PRD (24 volumes).
+
+## Key numbers (verified 23 Nov 2026)
+- Reference set: **25 volumes** (KX-00 to KX-24); decision log ADR-001 to ADR-035 (31 Accepted, 4 Proposed, see KX-01).
+- Code: **7 repositories** plus the workspace (contracts, platform, account, clinic, pharmacy, lab, kiorly-work). Commits since 19 Nov 2026 (git log of the local clones): contracts 23, platform 112, account 48, clinics-management 322 (branch kiorex, includes merges from main), pharmacy 60, lab 69, kiorly-work 19, workspace 34.
+- Contracts `@kiorex/contracts` **1.7.0**; notification layer tests 60, 100 % coverage of `src/notify`.
+- Provider adapters: **8 kinds** (SMS, Email, WhatsApp, Payment, Push, Storage, Consent, AI), mock by default, real by configuration; **0** real vendors contacted.
+- Demo data: **36** medical specialties, **2** LIVE doctors each (72), **12** demo patients, 108 demo bookings, home visits and nurse tenants.
+- Tests: end-to-end suites 16/17/18 (staff app routes versus web) **46 + 30 + 34 = 110** in the 21 Nov report (the 22 Nov hand-off cites 111; recount on the next run); Expo web per-role specs clinic 6, pharmacy 19, lab 20; patient app Jest **157** (re-run 23 Nov, all pass); staff app Jest 167 (re-run 23 Nov: 165 pass, 2 fail in `lite-request.test.tsx`, not yet investigated).
+- Not verified: real push delivery (APNs, FCM), a release build, the patient app on a device, any real vendor, any AWS deployment.
 
 ## Contents
 01 Executive summary · 02 The ecosystem at a glance · 03 Brand, domains and store accounts · 04 Operating principles · 05 Business model in one page · 06 Where we are and the critical path · 07 Lean governance and decision rights · 08 Document map · 09 How to use this set with Cursor and the team · 10 Glossary
@@ -28,6 +37,8 @@ Tiles: BRANDS 2 (Kiorex (patients) · Kiorly (providers)); PRODUCTS 5 (Marketpla
 6. Care happens in the clinic or at home: doctors, physiotherapists and nurses can all take home visits, with safety controls that are never switchable.
 
 **What we ask of the reader.** Treat this set as the single reference. Where it disagrees with the 2025 PRD/BRD, the 2025 roadmap or the Kiorex v2 draft volumes of 19 Nov 2026, this set wins. Where it disagrees with the Kiorly repository, the repository wins for what is already built and this set wins for what is planned.
+
+> **Note** Current status, 23 Nov 2026. All five backends, the patient app and the staff app run locally against mock providers and seeded demo data; nothing is deployed, no real vendor has been contacted and no launch gate is recorded by code. The staff mobile app is now one app, "Kiorly Team", covering Clinic, Nurse, Pharmacy and Lab sign-in entries (ADR-033, Proposed). Every outbound provider (SMS, email, WhatsApp, payments, push, storage, consent, AI) is ready for real URLs and credentials, and a shared notification layer (contracts 1.7.0) sits above the channel adapters (KX24). What remains is human: credentials, template approvals, PSP onboarding, push keys, store accounts, counsel and clinical sign-offs.
 
 **DECISION** Strategic thesis: win the provider's daily workflow first (Kiorly Clinic, free to start), then route patient demand to those providers through Kiorex, and charge only when a new patient actually attends. Each new vertical (nursing, pharmacy, lab) repeats the pattern: software first, marketplace second.
 
@@ -109,6 +120,20 @@ Status by product on 20 Nov 2026.
 
 Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clinic pilot · GA; Kiorex patient MVP build · beta M4 · public; Kiorex Account (patients) OIDC; Professions + physio pack M7–9; Home visits (doctors, physio) M10–12; Kiorly Nurse disc · build · pilot M13 · GA M16–18 [extraction merges: "M79, M1012, disc · pilot M13 · GA M1618"]; Kiorly Pharmacy disc · build · pilot M13 · GA M16; Kiorly Lab build · pilot M19 · GA M21; Market 2 GCC pack · pilot M25; Series A raise.
 
+### Build status at 23 Nov 2026
+| Area | Status | Evidence / what remains |
+|---|---|---|
+| Kiorly Clinic and Nurse edition | Done | Built and running locally; demo tenants, home visits, care plans, nurse role |
+| Kiorly Team staff app (Clinic, Nurse, Pharmacy, Lab entries) | Done (dev) | Dev builds on iOS simulator and Android emulator; e2e 16/17/18; release build and physical device Open |
+| Patient app (Expo) | Done (dev) | Services, family visit status, push-tap routing, sign-out; Jest and tsc only, device check Open |
+| Provider adapters (mock and real, all backends) | Done | Tested against a local fake server only |
+| Notification layer (`@kiorex/contracts/notify` 1.7.0) | Done in platform; Planned in Passport, Lab, Pharmacy, Clinic | KX-24 §11 |
+| Communications control plane (runtime templates and routing) | Planned (Proposed) | KX-24 §10 |
+| Real vendor URLs and credentials (SMS, email, WhatsApp, PSP, consent, AI, storage) | Blocked | Human: contracts, templates, sender ids, PSP onboarding |
+| Real push delivery (APNs, FCM, EAS project id) | Blocked | Human: keys and accounts; never observed |
+| Store submissions (Apple, Google) | Blocked | Store accounts (KX-19); ADR-033 still Proposed |
+| AWS deployment and secret injection | Blocked | Founder instruction: no deploy; Passport Lambda secrets route missing |
+
 ## 07 Lean governance and decision rights
 | Decision class | Decides | Consulted | Evidence required |
 |---|---|---|---|
@@ -122,7 +147,7 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 **NOTE** When headcount passes 40 (KX18), split the CEO's architecture and security rights to a hired CTO and security lead; until then, three founders' signatures replace five councils.
 
 ## 08 Document map
-24 volumes in ten folders mirroring the Kiorex Drive structure.
+25 volumes (KX00 to KX24) in ten folders mirroring the Kiorex Drive structure. KX24 Notifications & Messaging Architecture was added on 23 Nov 2026; KX23 Kiorly Nurse PRD was added in Rev 2.3.
 
 | ID | Folder | Document | Written as |
 |---|---|---|---|
@@ -140,6 +165,7 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 | KX10 | 03 | Platform, DevOps & Security Engineering | CISO |
 | KX21 | 03 | AWS Cloud Hosting & Infrastructure Reference | Principal Cloud Architect |
 | KX22 | 03 | GitHub Repository Map & Build-Agent Handoff | Chief Software Architect |
+| KX24 | 03 | Notifications & Messaging Architecture (shared notification layer, provider adapters) | Chief Software Architect |
 | KX11 | 03 / AI docs | AI Strategy, Architecture & Governance | Chief AI Officer |
 | KX12 | 04 Financial Model & GTM | Monetization & Pricing Architecture | CRO |
 | KX13 | 04 | 36-Month Financial Model & Unit Economics | CFO |
@@ -151,7 +177,7 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 | KX19 | 08 Brand, Domains & Accounts | Brand Architecture, Domains & Store Accounts | Chief Brand Officer |
 | KX20 | 09 Pitch Deck | Investor Brief | CEO & CFO |
 
-Reading paths: Investor (30 min) KX20 · KX13 · KX14 · KX15. Engineer joining (2 h) KX08 · KX21 · KX09 · KX10 · KX05. Clinical/compliance (1 h) KX16 · KX15 · KX11 · KX17 go-live gates · KX23 nursing scope. Commercial team (1 h) KX12 · KX14 · KX19 · KX05 and KX23 capabilities. Build agent: KX22 · KX01 · KX08 · KX09 · KX21 · Product PRD for the repo.
+Reading paths: Messaging and providers (1 h) KX24 · KX09 · KX10 §08 · _docs/PROVIDER_GO_LIVE.md. Staff and patient mobile apps (1 h) KX01 ADR033 · KX05 §13 · KX23 · _docs/mobile/. Investor (30 min) KX20 · KX13 · KX14 · KX15. Engineer joining (2 h) KX08 · KX21 · KX09 · KX10 · KX05. Clinical/compliance (1 h) KX16 · KX15 · KX11 · KX17 go-live gates · KX23 nursing scope. Commercial team (1 h) KX12 · KX14 · KX19 · KX05 and KX23 capabilities. Build agent: KX22 · KX01 · KX08 · KX09 · KX21 · Product PRD for the repo.
 
 ## 09 How to use this set with Cursor and the team
 - Cursor sessions: attach the relevant PRD (KX03…07, KX23) plus KX08/KX09. Kiorly work continues to follow Docs/kiorly-cursor-build-sequence.md in the repo; new repos get their own build sequence derived from these PRDs.
@@ -174,3 +200,10 @@ Reading paths: Investor (30 min) KX20 · KX13 · KX14 · KX15. Engineer joining 
 | Profession | Licensed discipline of a clinician (physician, dentist, physiotherapist, nurse); drives verification and scope of practice. |
 | Home visit | An appointment whose visit type has serviceLocation = HOME; arrival geostamp = check-in. |
 | Care plan | Recurring home services (e.g. dressing daily × 14 days) sold as a package; only the first attended visit of a new patient is commissionable. |
+
+## What changed in this revision (23 Nov 2026)
+- Reading guide extended with KX24 (notifications and messaging) and the mobile design pack; document count 24 to 25.
+- Key numbers and a Done/Open/Planned/Blocked status table added from the repositories as they stand on 23 Nov 2026.
+- Decision log now runs to ADR-035: ADR-033 (one staff app, tiered mobile entitlements, Proposed), ADR-034 (notification layer is a package, Accepted), ADR-035 (provider adapter contract, Proposed). Details in KX01.
+- Unchanged: strategy, brands, business model, governance. Figures in KX12, KX13 and KX14 are the founder's and were not touched.
+- Not verified: anything running on real vendors, real devices or AWS.

@@ -1,6 +1,6 @@
 # KX03 — Kiorex Marketplace PRD
 Source: 1jyq4wTn3bBW4xEahE3-crbpZwrJB18o7
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference; supersedes KX03 Rev 2.2, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update records the patient app and notification changes of 22-23 Nov 2026)
 
 > Cleaned from Drive text extraction; symbols restored where obvious; headers/footers removed. Owner: Chief Product Officer. Audience: Founders, investors, engineering & operations leads. Tags: Egypt MVP · Requirement IDs · Booking state machine · Kiorly contract consumer · Home visits · Phase-2 verticals. (Cover requirement-count figure not recoverable from this extraction; Rev 2.2 printed "120".)
 
@@ -203,3 +203,29 @@ Each marketplace surface consumes the vertical's operational API; it never becom
 | Pharmacy | Search, cart, order intent, delivery choice, payment | Rx validation, stock reservation, dispensing, pharmacist sign-off | 4% of fulfilled order value |
 | Lab tests | Test catalogue search, booking, home-collection slot, payment | Accession, collection, QC, result release | 8% of booking value |
 | Telemedicine | Matching, video session orchestration | Clinician record in Kiorly Clinic | Per-consult fee (P3) |
+
+## 09 Build status: patient app, notifications and demo data (23 Nov 2026)
+Observed in `kiorex-platform` (API, web, ops, Expo app `apps/mobile`) and its `DEMO_DATA.md`. All with mock providers and seeded data; nothing deployed.
+
+| Capability | Status | Evidence and caveat |
+|---|---|---|
+| Patient Expo app (iOS, Android, web), Passport sign-in client `kiorex-mobile` (PKCE), Arabic and English with RTL | Done (dev) | Jest 157 tests pass (re-run 23 Nov), tsc clean; verified on iOS simulator and Android emulator in Expo Go and on web in mock mode |
+| Services screen: Telemedicine, Pharmacy, Lab, Safety, Reminders cards with Available, Awaiting approval, Temporarily unavailable from `GET /flags/effective`; WhatsApp booking card | Done (dev) | The `wa.me` button shows only when `EXPO_PUBLIC_WHATSAPP_NUMBER` is set; otherwise "announced at launch" |
+| Public family visit-status link `kiorex://visit-status/<token>`, no login: steps timeline, ETA, provider name, stop sharing | Done (dev) | Fields are whitelisted so address, fee, phone and reason cannot render. Only the custom scheme is registered; universal links need a decided domain (Open) |
+| Push-tap routing from the payload under the `body` key: booking, results, pharmacy order, lab booking, telemedicine; replay after sign-in | Done (dev) | The API's real push data keys for the patient app are assumed and must be confirmed with the backend (Open). Not exercised on a device |
+| Tab bar on every screen, sign-out sheet that removes this device's push registration, keyboard-aware forms | Done (dev) | Verified on web and the iPhone simulator; checkout and the telemedicine room stay full-screen on purpose |
+| Specialty list | Done | `GET /specialties` returns 36 specialties sorted A-Z; the provider mapper folds legacy codes (for example OBSTETRICS_GYNECOLOGY and PHYSIO_THERAPY) onto obgyn and physiotherapy; a full provider sync always re-upserts and stale rows refresh when the derived specialty changes |
+| Notifications through the shared layer (KXMNT01..03) | Done (mock) | `EngagementService.deliver()` dispatches intents via `@kiorex/contracts/notify` 1.7.0; 25 templates; consent, opt-out, quiet hours, PHI guard; in-app inbox is a channel (KX24) |
+| Real SMS, email, WhatsApp, payment adapters | Done (not live) | Env-driven, HMAC webhooks, dev simulators; Blocked on vendor credentials and WhatsApp template approval |
+| Real push delivery to the patient app | Blocked | Platform push has no HTTP provider (stays mock); needs EAS project id, APNs and FCM keys |
+| Patient app on a physical device or dev build | Open | Expo Go 58 lacks the `ExpoCrypto` module; there is no patient dev build yet |
+
+Demo data (DEV ONLY, synthetic): every one of the 36 specialties has 2 LIVE verified doctors with bookable slots, 3 demo bookings in varied states (108 in total), 14 home-visit doctors and 11 video bookings, for 12 demo patients (phones `+201000001001` to `+201000001012`). Test values and logins are in `TEST_DATA.md` and `kiorex-platform/Docs/TEST_DATA.md`, not in this document.
+
+> **Open question** Do universal links (`/visit-status/:token`) and a `wa.me` number ship at launch? Both depend on a domain and a number the founder has not fixed.
+
+## What changed in this revision (23 Nov 2026)
+- Added §09 build status of the patient app, notifications and demo data (Done, Open, Blocked).
+- KXMNT notification requirements now run through the shared layer (KX24); channel list unchanged.
+- Product scope, booking state machine and fee design are unchanged.
+- Not verified: patient app on a device, real push, real vendors, the backend's real push `data` keys.

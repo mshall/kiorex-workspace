@@ -1,6 +1,6 @@
 # KX22 · GitHub Repository Map & Build-Agent Handoff
 Source: 17aubh5cfA7Vx_t9Wv6YXXCTQ1AawGXvx
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference). Supersedes: KX22 Rev 2.2 19 Nov 2026
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the repository states and scripts of 23 Nov 2026)
 
 > Extraction note: symbols restored by inference; §06 repo table and §07 two-column module map interleaved on extraction and were re-paired best-effort (cells flagged where ambiguous).
 
@@ -69,6 +69,7 @@ Six repositories. Figure 1 — Repository dependency graph: kiorex-contracts (Op
 | kiorex-contracts | OpenAPI specs, event JSON Schemas, generated TS SDKs, contract tests | — (CI; GitHub Packages) | docs.kiorly.com (published specs) | — | KX09 | M1 |
 | kiorly-pharmacy | Kiorly Pharmacy API, POS PWA | kiorly-pharmacy | pharmacy.kiorly.com | `pharmacy.*` | KX06 | M9 |
 | kiorly-lab | Kiorly Lab API, console, phlebotomist app, analyzer bridge | kiorly-lab | lab.kiorly.com | `lab.*` | KX07 | M15 |
+| kiorly-work | Kiorly Team: one Expo staff app (iOS, Android, web :8082) with Clinic, Nurse, Pharmacy and Lab sign-in entries; owns no data, calls `/mobile/*` in the three product APIs | not in the original plan (ADR-033, Proposed) | bundle ids `com.kiorly.work` (placeholder), scheme `kiorlywork` | `mobile.*` (Planned); today `mobile_staff_app` | `_docs/mobile/` | built |
 
 ## 07 Legacy module map (M01–M34 → v2 repositories)
 | ID | Module | v2 home |
@@ -198,3 +199,24 @@ RULE — Mission: build the Kiorex v2 ecosystem exactly as specified in KX00…K
 
 ## 12 Sources & evidence
 Internal facts trace to mshall/clinics-management @ 6b24a79 (19 Nov 2026) or to founder decisions in KX01. Sources: clinics-management @ 6b24a79 (19 Nov 2026); kiorex-web-app @ bef5c0d (30 Sep 2025); kiorex-backend @ c55ddcb (7 Oct 2025); kiorex-ai-services @ 81d3049 (5 Oct 2025); kiorex-backend-documentation @ 2bb88a3 (23 Sep 2025).
+
+## 13 Repository states, scripts and seeds (23 Nov 2026)
+| Repository | Branch | State | Tests and checks observed |
+|---|---|---|---|
+| kiorex-contracts | main | 1.7.0 (notification layer) | `npm test`; notify 60 tests at 100 % coverage |
+| kiorex-platform | main | Built, pre-launch; patient app has Services, family visit status, push taps | patient app Jest 157; web and ops lint at zero warnings; TypeScript 7 type-check clean (tooling blockers noted in the repo) |
+| kiorex-account | main | Dev complete; OTP provider channels ready | repo tests |
+| clinics-management | `kiorex` (never `main`, no push without approval) | Built; staff `/mobile/*` API; 72-doctor demo tenant | Clinic web lint 0 warnings; golden-flow and RBAC smoke |
+| kiorly-pharmacy | main | In progress, ahead of plan | e2e 17; web spec 19 |
+| kiorly-lab | main | In progress, ahead of plan | e2e 18; web spec 20 |
+| kiorly-work | main | Kiorly Team app, dev builds | Jest 167 (165 pass on 23 Nov, 2 fail); web specs clinic 6; `tsc` clean |
+| workspace | main | Docs, brand, e2e, scripts | `cd e2e && npm test` runs 18 suites against the running stack |
+
+Scripts (workspace `scripts/`, `e2e/scripts/`): `e2e/scripts/up.sh [--build] [--seed] [--restart]` and `down.sh` start and stop Passport, Clinic, Kiorex, Pharmacy and Lab APIs (by port; never :3000); `scripts/seed-all.sh [--reset]` seeds synthetic demo data in dependency order (Passport, Clinic including Nurse tenants, Pharmacy, Lab, provider sync, Kiorex, and the three staff-app `seed:mobile` seeds), idempotent and refusing production; `scripts/seed-staging.sh --dry-run` prints the AWS staging plan (a human deploys first); `scripts/push-all.sh` pushes only with founder authorization and never touches Clinic `main`; `scripts/ops-sync.mjs` triggers a provider sync. Seed credentials are DEV ONLY and live in `TEST_DATA.md` and each repo's `DEMO_DATA.md`.
+
+Build-agent additions: read `_docs/PROVIDER_GO_LIVE.md`, `kiorex-contracts/docs/NOTIFICATION_LAYER.md` and KX24 before touching messaging; new messaging code goes through `@kiorex/contracts/notify`; staff-app work follows `_docs/mobile/` and never adds prices or upgrade buttons on iOS.
+
+## What changed in this revision (23 Nov 2026)
+- Added kiorly-work to the repository map and §13 with repository states, scripts and seeds.
+- Legacy module map, harvest map, conventions, migration sequence and build-agent brief are unchanged apart from the reading additions in §13.
+- Not verified: GitHub remotes and visibility (the Drive KX24 draft could not see five of them); the 2 failing Jest tests in kiorly-work.

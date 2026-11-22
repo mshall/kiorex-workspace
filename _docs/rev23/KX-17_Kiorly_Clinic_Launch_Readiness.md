@@ -1,6 +1,6 @@
 # KX-17 Kiorly Clinic Launch Readiness & Go-Live Plan
 Source: 1acyKWJ3OZS1XvlgzOnzMZq6eGVvdthKi
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference). Supersedes: KX17 Rev 2.2 19 Nov 2026
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the done-versus-open status of 23 Nov 2026)
 
 > Extraction note: symbols (>=, <=, arrows, ranges) dropped; table columns reconstructed best-effort.
 
@@ -28,6 +28,29 @@ Engineering is ahead of operations. The remaining work is approvals, accounts, p
 | Professions, home visits, Kiorly Nurse (v2.3) | Specified, not in pilot | KX05 §06-08, KX23, ADR029…032 | Profession migration before Phase 1b; field-visit package (M7-9) |
 
 Tiles: STOP ITEMS 6 (block GA); OTHER HUMAN ITEMS 17 (parallelisable); PILOT LENGTH 4 wks (20 clinics); TARGET GA Apr 2027 (month 4).
+
+## 01a Done versus open, 23 Nov 2026
+Engineering moved further ahead of operations. Everything below is observed in the repositories; nothing is deployed and no launch gate is recorded by code.
+
+| Area | Status | Evidence | Remaining (needs a human unless noted) |
+|---|---|---|---|
+| Provider readiness (SMS, email, WhatsApp, payment, push, storage, consent, AI) | Done | Port, mock and real adapters in all five backends; tested against a local fake vendor | Real URLs and credentials only |
+| Real vendor contact | Blocked | None made | Contracts, credentials, a staging pass (FD-04) |
+| WhatsApp templates | Blocked | Placeholders `TODO_NEEDS_HUMAN_*` in template definitions | Meta approval (NH003 to NH015) |
+| PSP onboarding (Paymob, Fawry, InstaPay) | Blocked | `sandbox-fake` mock | Merchant accounts; wire-format mapping |
+| SMS sender id and vendor | Blocked | Neutral adapter | Vendor choice (KX24 OD-1), carrier registration |
+| Notification layer | Done in platform; Planned in Passport, Lab, Pharmacy, Clinic | contracts 1.7.0, 60 tests | Engineering, in a fixed order (KX24 §11) |
+| Staff app Kiorly Team | Done (dev) | iOS simulator and Android emulator dev builds; e2e 16/17/18; per-role web specs | Release build, physical device, store submission |
+| Real push delivery | Blocked | Mock token; `simctl push` fixtures; foreground and cold-start taps verified on the iOS simulator | EAS project id (`eas init`), APNs key, FCM v1 service account, `PUSH_MODE=real`; background-state tap and badge count unverified; Android push unexercised |
+| Patient app | Done (dev) | Jest 157, tsc; web and simulator checks | A patient dev build and device check |
+| Demo data | Done | 36 specialties, 72 doctors, 12 patients, nurse and Lite tenants; seeds idempotent (`scripts/seed-all.sh`) | Re-run with `--reset` every few days (relative dates) |
+| AWS | Blocked | Founder: do not deploy; Passport Lambda reads secrets from env; tfvars hold `TODO_NEEDS_HUMAN` | Secret injection route; seed Docker image (`Dockerfile.seed`) not yet built; HB07 egress mode (FD-17) |
+| Store submissions | Blocked | Bundle ids `com.kiorly.work` and `com.kiorex.app` are placeholders | Apple and Google organization accounts (KX19); ADR-033 sign-off; app name decision |
+| Staff-app Jest | Open | 165 of 167 pass on the 23 Nov re-run | 2 failing tests in `lite-request.test.tsx` to investigate |
+
+> **Warning** The pilot scope above is unchanged: professions, home visits and Kiorly Nurse are post-GA (KX18) even though they are built locally. Flags keep them launch-locked (GHV1, GHV2, GKN1, GKN2).
+
+New human items since the register above was written (no NH numbers assigned yet; add them to the repositories' NEEDS_HUMAN files): real provider credentials per kind; SMS sender-id registration; PSP onboarding; APNs key, FCM service account and EAS project id; AWS secret injection design; Apple and Google store organization accounts and first submissions; founder sign-off of ADR-033 and the staff app name; counsel and DPO review of the PHI pattern list.
 
 ## 02 Needs-human register
 From Docs/KIORLY_NEEDS_HUMAN.md. STOP items must close before general availability.
@@ -90,3 +113,7 @@ Rollback: redeploy previous image via tofu apply (CDK until migration T5); expan
 Month 1: Founding cohort sales push; Kiorex closed beta (clusters 1-2).
 Month 2: Kiorex public launch; Phase 1b: KX11, CL06, MS06.
 Month 3: Commerce-kernel package extraction; Sign in with Kiorex (provider SSO design); Profession migration PRSOP01 and physio pack build start.
+
+## What changed in this revision (23 Nov 2026)
+- Added §01a (Done, Open, Blocked) and the list of new human items. Pilot design, gates, cutover and the first 90 days are unchanged.
+- Not verified: everything marked Blocked (never run against a real vendor, device push or AWS); the 2 failing Jest tests.

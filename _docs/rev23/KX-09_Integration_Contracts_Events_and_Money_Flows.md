@@ -1,7 +1,7 @@
 # KX09 — Integration Contracts, Events & Money Flows
 
 Source: 1p5Hwgw5gCg7L3A6gsIVxYcN2p6WZKUl7
-Revision: Rev 2.3 · Reference Edition · 20 November 2026 (supersedes KX09 Rev 2.1, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds contracts 1.7.0 and the provider webhook convention)
 
 ## What changed in Rev 2.3
 Additive (minor) contract version: provider sync adds profession, edition, service locations and coverage districts; slots accept serviceLocation=HOME; holds carry visitAddress. New events HOME_VISIT_ASSIGNED / _EN_ROUTE / _ABORTED_UNSAFE, SAFETY_ALERT_RAISED, CARE_PLAN_*, ReferralIssued, MedicationOrderShared. Money flows: home surcharge, cash at home, agency nurse pay, deposit hold on unsafe abort.
@@ -15,8 +15,8 @@ Tags: HMAC API · Outbox events · Idempotency · Kiorex Pay ledger · Home visi
 | Field | Value |
 |---|---|
 | DOCUMENT | KX09 (03 — Technical documents) |
-| REVISION | Rev 2.3 · Reference Edition |
-| DATE | 20 November 2026 |
+| REVISION | Rev 2.3 · Reference Edition (updated 23 Nov 2026) |
+| DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Engineering, finance operations, auditors |
 | OWNER ROLE | Principal Integration Architect |
@@ -170,3 +170,26 @@ RULE: Commission charges are created by Kiorly, not Kiorex — the provider syst
 - Consumer-driven contract tests: Kiorex's expectations file runs in Kiorly CI (already shipped: kiorex-consumer-contract.json) and Kiorly's spec in Kiorex CI (NH019).
 - Event schema registry in kiorex-contracts/events/*.schema.json; payloads validated at dispatch in non-production.
 - Deprecations announced in the Kiorly Docs hub and the ops console banner.
+
+## 08 Contract versions and the notify entry (23 Nov 2026)
+`@kiorex/contracts` is consumed by all products from a vendored tarball until publishing to GitHub Packages is approved (FD-20).
+
+| Version | Date | Content | Status |
+|---|---|---|---|
+| 1.5.0 | 20 Nov | Home-visit OpenAPI additions (profession, edition, serviceLocation, coverage, `OUT_OF_COVERAGE`), Rev 2.3 events, 15 flag keys, never-a-flag safety controls | Done |
+| 1.6.0 | 20 Nov | Nurse-collected lab hand-off (`nurseCollection`, `identifiersChecked`, source `KIORLY_NURSE`), custody read, Kiorex status push, `originEdition` | Done |
+| 1.7.0 | 23 Nov | New subpath `@kiorex/contracts/notify`: intent, template registry, PHI guard, routing, consent gate, normalized statuses, audit record, `ChannelAdapter`, mock adapters | Done; additive minor, root entry point unchanged |
+
+The notify entry is a library contract, not a wire contract: products do not call each other to notify. Webhook receipts from vendors use the neutral body `{ "events": [ { "id", "status", "error?", "occurredAt?" } ] }`, signed with HMAC-SHA256 over the raw body and a timestamp (5 min tolerance), de-duplicated and applied forward-only. Cross-product HMAC REST and outbox webhooks (sections 02 to 05) are unchanged.
+
+| Item | Status |
+|---|---|
+| `/mobile/*` staff API contract (bootstrap, alerts, devices, upgrade request) | Open: implemented by hand in three backends, not in contracts; drift risk (mobile risk R11); generated client Planned |
+| Kiorex flag key for `mobile_staff_app` | Open: not yet in the flag catalogue (cross-repo TODO) |
+| `comms.*` flags and `comms/*` schemas (control plane, KX24 §10) | Planned (Proposed) |
+| Pharmacy and Lab consumers pin the vendored tarball | Open: pharmacy and lab still reference `file:../kiorex-contracts` in places (FD-20) |
+
+## What changed in this revision (23 Nov 2026)
+- Added §08: contracts 1.5.0 to 1.7.0 history, the notify entry, the vendor webhook convention and open contract items.
+- Command and event catalogues, booking consistency, money flows and governance rules are unchanged; all changes were additive minors.
+- Not verified: the Pharmacy and Lab pin state beyond what FD-20 says.

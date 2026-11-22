@@ -1,7 +1,7 @@
 # KX06 — Kiorly Pharmacy PRD
 
 Source: 16xpvUfI-F2iI1IR6lk461_o6B0qIcsRw
-Revision: Rev 2.2 · Reference Edition · 19 November 2026 (cover still prints Rev 2.2 - document NOT revised in 2.3; text compared and found content-identical to the earlier extract; this file is the earlier extract re-verified against the current Drive text)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; previous text was Rev 2.2, 19 Nov 2026, not revised in the 20 Nov edition; this update adds build status)
 
 Pharmacy operating software for Egypt's 88,000 licensed pharmacies: lot-accurate inventory, pharmacist-gated dispensing, fast POS, supplier automation — and, when ready, Kiorex orders.
 
@@ -12,8 +12,8 @@ Tags: Inventory & lots · Rx validation · POS · Suppliers & recalls · Kiorex 
 | Field | Value |
 |---|---|
 | DOCUMENT | KX06 |
-| REVISION | Rev 2.2 · Reference Edition |
-| DATE | 19 November 2026 |
+| REVISION | Rev 2.3 · Reference Edition (updated 23 Nov 2026) |
+| DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Founders, investors, engineering & operations leads |
 | OWNER ROLE | Head of Pharmacy Product |
@@ -177,3 +177,26 @@ Every external figure in this document traces to one of these sources; internal 
 - Arab Finance 2025: EGP 422B pharma market, 4B units.
 - Scene Now: Yodawy Series B, 3,000 pharmacies integrated, eight insurers.
 - Kiorly repository: EGYPT_DRUG_DATABASE.md, CLINICAL_RX_SAFETY.md.
+
+## 08 Build status (23 Nov 2026)
+Observed in `kiorly-pharmacy` (60 commits since 19 Nov) and the e2e suite 17. Local development only; the pharmacy pilot remains month 13 (ADR-017).
+
+| Capability | Status | Evidence and caveat |
+|---|---|---|
+| Pharmacy module in the Kiorly Team staff app: Rx queue and validation (`rx.validate`), interaction override with reason and pharmacist sign-off, FEFO dispensing, receiving purchase orders (partial then full), stock count with manager approval, expiry and recalled-lot screens, controlled-drug discrepancy with a different witness, online Kiorex orders, shift open and close | Done (dev) | e2e suite 17: 30 tests on 21 Nov; Expo web per-role spec 19 tests; pharmacy modules not run on iOS or Android simulators |
+| Role rules: cashier cannot validate, receive, count or witness; assistant and manager can receive and count; managers have the validate screen | Done | Bugs fixed 21 Nov: recalled lot invisible on the expiry screen, no alert for a recalled lot without a notice, `lots?status=bad` returned 500 |
+| Plan gate: Lite pharmacy gets a safety-alert slice and an upgrade request; the plan gate answers before RBAC errors; witness route exempt from the plan gate | Done | `mobile_staff_app` ON for Pro, Chain, Enterprise (not when the subscription is suspended) |
+| Provider adapters: SMS, email, WhatsApp, payment (pay-by-link), push (Expo-compatible HTTP), storage (signed URLs), consent registry, AI gateway | Done (not live) | Mock by default; `CONSENT_MODE`, `AI_MODE` (token and daily budget guards) and `STORAGE_MODE` added 22 Nov; webhook `POST /api/v1/webhooks/providers/{sms,email,whatsapp,payment,consent}`; dev tools under `/api/v1/dev/providers/*` |
+| Consent registry wire format | Open | An assumption (`POST /consents`, `GET /consents`, `POST /consents/{id}/revoke`, `POST /consents/introspect`); adapt `consent.mapping.ts` to the real service |
+| AI daily token budget | Open | Counted per API instance; needs a shared counter before scaling out |
+| Pharmacy on the shared notification layer | Planned (step 4 of 5) | REMINDER and TRANSACTIONAL templates; existing consent registry becomes the preference store |
+| Kiorex order mirror (`KIOREX_MODE=real` flag polling) | Open | On in `e2e/scripts/up.sh`; not exercised on a deployed stack |
+| Real vendor credentials, PSP onboarding | Blocked | Human, see `kiorly-pharmacy/Docs/NEEDS_HUMAN.md` |
+
+> **Note** Demo tenants (DEV ONLY): Solo (Pro), Corner (Lite), chain, with `seed:mobile` alerts; web port defaults to 5192 (`PHARMACY_WEB_PORT`).
+
+## What changed in this revision (23 Nov 2026)
+- Revision header moved from Rev 2.2 to the 23 Nov 2026 update (the 20 Nov edition did not revise this volume).
+- Added §08 build status for the mobile pharmacy module, provider adapters (consent, AI, storage), plan gate and role fixes.
+- Product requirements, dispensing flow, commercial model and compliance gates are unchanged.
+- Not verified: pharmacy modules on a simulator or device, any real vendor.

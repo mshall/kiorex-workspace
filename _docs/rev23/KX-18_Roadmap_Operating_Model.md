@@ -1,6 +1,6 @@
 # KX18 · 36-Month Roadmap & Operating Model
 Source: 1agB72kMlqgTC4JTaiu3UhEanK_YF792e
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference). Supersedes: KX18 Rev 2.2 19 Nov 2026
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds progress against the roadmap)
 
 > Extraction note: Gantt chart text is scrambled; quarter table rows reconstructed from text order (PDF text layer places some cells after the next row header). Symbols restored by inference.
 
@@ -86,3 +86,25 @@ Repository map, migration order and the build-agent brief: KX22.
 - Each new repo gets a Docs/<product>-cursor-build-sequence.md modelled on Kiorly's: stages, numbered steps with IDs, acceptance tests, 'stop and ask the human' rules, progress tracker. Kiorly Nurse is a stage inside the Kiorly build sequence, not a new repo.
 - Steps cite PRD requirement IDs (KXM, KP, KL, KA, PR, HV, KN*). Definition of done per step: migration + API + UI + tests + doc status row updated in the same change (GT06 convention).
 - Human-only items go to a NEEDS_HUMAN.md register with STOP flags, as in Kiorly (counsel memos GHV1, GKN2 and CMO sign-offs GHV2, GKN1, GPR2 are human items).
+
+## 08 Progress against the roadmap (23 Nov 2026)
+The roadmap dates (month 1 = January 2027) are the founder's gates and were not changed. Build progress is ahead of the plan in several lanes because the work is local and mock-provider based; go-live dates still depend on human gates.
+
+| Lane | Plan | Observed on 23 Nov 2026 | Status |
+|---|---|---|---|
+| Kiorly Clinic pilot, GA | Q1, Q2 2027 | Built; STOP items and operations work open (KX17) | Open |
+| Kiorex patient MVP | Build Q1, beta M4 | API, web, ops console and Expo app running locally with 36 specialties of demo doctors | Done (dev) |
+| Kiorex Account | Month 1 | Dev OIDC provider, OTP providers ready | Done (dev) |
+| Professions, home visits, Kiorly Nurse | Q3 2027 to Q6 2028 | Built locally behind launch-locked flags; Nurse entry in the staff app | Done (dev); gates Open |
+| Kiorly Pharmacy | Build Q4 2027, pilot M13 | Built locally incl. mobile module and provider adapters | Done (dev); pilot Planned |
+| Kiorly Lab | Build Q7 2028, pilot M19 | Built locally incl. mobile module and nurse hand-off | Done (dev); pilot Planned |
+| Staff mobile app | not in the roadmap | Kiorly Team, one app for four entries (ADR-033, Proposed) | Done (dev); store submission Blocked |
+| Notification layer | not in the roadmap | Platform done; four migrations Planned | Planned |
+| Communications control plane | not in the roadmap | Proposed in KX24 §10 | Planned (Proposed) |
+| Real providers and push | before pilot | Adapters ready | Blocked (human) |
+
+> **Risk** Capacity rule R17: more built surface raises review, QA and support load before any revenue. Pharmacy and Lab modules ship OFF globally until their pilots (ADR-017) unless the founder rules otherwise (mobile Q6).
+
+## What changed in this revision (23 Nov 2026)
+- Added §08 progress table. Quarter plan, team plan, topology, cadence and scorecard are unchanged.
+- Not verified: team capacity and spend; no change to dates was made.

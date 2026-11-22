@@ -434,3 +434,18 @@ Flags with zero test refs are only enforced through the generic flag machinery (
 | UX01 |  | DONE+TESTED | CM:api/prisma/migrations/20261119210000_ux01_push_subscriptions/migration.sql; CM:api/prisma/schema.prisma \| tests: CM:push/ux01-push.node.test.ts |
 | UX03 |  | DONE+TESTED | CM:web/src/lib/arabic-numerals.ts; CM:web/src/lib/locale-display.ts \| tests: CM:web/src/lib/ux03-locale-parity.node.test.ts |
 | UX04 | Thermal printing & accessibility | DONE+TESTED | CM:billing-platform/thermal-templates.ts; CM:front-desk/front-desk.controller.ts \| tests: CM:billing-platform/ux04-thermal-print.node.test.ts; CM:web/e2e/ux04-thermal-print.spec.ts |
+
+## Update 23 Nov 2026 (not regenerated; added by hand from the repositories)
+The matrix above was generated on 20 Nov 2026 and was not re-run. Items that appeared since, with their status:
+
+| Item | Status | Evidence |
+|---|---|---|
+| Notification layer `@kiorex/contracts/notify` (KX-24, ADR-034) | DONE+TESTED (platform adopted; four products PLANNED) | `kiorex-contracts/test/notify/` 60 tests, 100 % coverage; `docs/NOTIFICATION_LAYER.md` |
+| Provider adapters, all kinds (KX-24, ADR-035) | DONE-UNTESTED against real vendors (tested against local fake servers) | `_docs/PROVIDER_GO_LIVE.md`; BLOCKED-HUMAN for credentials (FD-04) |
+| Staff app Kiorly Team: Clinic, Nurse, Pharmacy, Lab entries (ADR-033, Proposed) | DONE+TESTED in dev (e2e 16/17/18, per-role web specs); PARTIAL for tiered entitlements and device hardening (Planned) | `_docs/mobile/STAFF_ROLES_E2E_REPORT_2026-11-21.md`, `DEVICE_TEST_REPORT_2026-11-20.md` |
+| Nurse sees no Lab results (server-enforced) | DONE+TESTED | e2e 16 |
+| Patient app Services, family visit status, push taps | DONE+TESTED (Jest 157, tsc); device check MISSING | `kiorex-platform/apps/mobile/README.md` |
+| Real push delivery (APNs, FCM) | BLOCKED-HUMAN | keys and EAS project id |
+| Staff-app Jest | 165 of 167 pass on the 23 Nov re-run (2 failing in `lite-request.test.tsx`) | re-run 23 Nov |
+| Communications control plane (KX-24 §10) | MISSING (Proposed) | not built |
+

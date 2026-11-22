@@ -1,7 +1,7 @@
 # KX10 — Platform, DevOps & Security Engineering
 
 Source: 14qj8qS2R5Q4rtAJyhIs-fajHPKSKA9-0
-Revision: Rev 2.2 · Reference Edition (19 Nov 2026) — not re-issued in Rev 2.3; identical to Rev 2.2 extract (modulo extraction symbols)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; previous text was Rev 2.2, 19 Nov 2026; this update adds provider and mobile security)
 
 How every Kiorex and Kiorly product is built, shipped, observed and defended — controls already in Kiorly become the standard for the whole ecosystem.
 
@@ -12,8 +12,8 @@ Tags: OpenTofu IaC · CI/CD gates · Observability & on-call · Security control
 | Field | Value |
 |---|---|
 | DOCUMENT | KX10 (03 — Technical documents) |
-| REVISION | Rev 2.2 · Reference Edition |
-| DATE | 19 November 2026 |
+| REVISION | Rev 2.3 · Reference Edition (updated 23 Nov 2026) |
+| DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Engineering, security reviewers, auditors, enterprise customers |
 | OWNER ROLE | Chief Information Security Officer |
@@ -131,3 +131,31 @@ Flags are production controls. They are tested, audited and owned like code.
 | Kiorex | ≤ 15 min | ≤ 8 h | Hide booking, show clinic phone |
 | Kiorly Pharmacy | ≤ 5 min | ≤ 4 h | Offline POS with queued sync |
 | Kiorly Lab | ≤ 5 min | ≤ 4 h | Manual result release with dual control |
+
+## 08 Provider security, secrets and mobile (23 Nov 2026)
+| Control | Design | Status |
+|---|---|---|
+| Webhook authenticity | HMAC-SHA256 over the raw body, 5 min timestamp tolerance, de-duplication by event id, forward-only statuses; per-kind secret `<KIND>_WEBHOOK_SECRET` (16 characters or more) | Done in all five backends (tested against a local fake vendor) |
+| Secrets | Never in code, logs, audit or git; `.env` and build output ignored; gitleaks in each repo's CI; on AWS from Secrets Manager or SSM (documented, nothing created) | Done in code; injection on AWS Open |
+| Startup validation | `MODE=real` with a missing or invalid URL, key, sender id or secret refuses to start and names the variable, never the value; mock in production starts with a warning | Done |
+| Retries and idempotency | Timeouts, backoff on network, timeout, 429 and 5xx, never on 4xx; the same `Idempotency-Key` on every attempt (message id, `checkout:<paymentId>`, `refund:<refundId>`) | Done |
+| Error hygiene | Vendor body, URL, key and recipient never stored or logged; real mode stores no message body and a masked recipient (platform) | Done |
+| Dev simulators | Inbox, sample sends, webhook simulation and demo runs answer 404 in production and in real mode | Done |
+| PHI in messages | Declared parameters plus pattern scan on SMS, push and WhatsApp (`PHI_BLOCKED`); audit holds no body or raw address | Done in the layer; pattern list needs DPO review |
+| Consent | Pharmacy consent registry blocks dispensing on revoke; platform consent centre; marketing opt-in | Done (registry wire format assumed) |
+| Seeds and demo data | Seeds refuse to run in production (`DEMO_SEED_ALLOWED`, non-production check); demo secrets are DEV ONLY and must be rotated for staging and production | Done |
+| Mobile sessions | Per-product session, remote sign-out by an administrator kills tokens (e2e 16), sign-out removes the device's push registration | Done (dev) |
+| Mobile device hardening | Encrypted minimal cache with wipe, screenshot protection, app lock policy, jailbreak posture, remote wipe (ADR-033) | Planned; biometric lock and secure-store sessions exist in the app but are not verified on a device |
+| Staff push payloads | No patient data in push bodies; payload carries ids and a route only | Done in fixtures; real delivery unverified |
+| TLS to Postgres | Kiorex DB client honours `sslrootcert`, `DATABASE_SSL_CA`, `PGSSLROOTCERT` | Done |
+
+> **Warning** `AI_DAILY_TOKEN_BUDGET` is counted per API instance; use a shared counter before scaling out. The consent registry wire format is an assumption until the real service exists.
+
+> **Risk** The Passport Cognito Lambda reads secrets from environment variables, and tfvars still hold `TODO_NEEDS_HUMAN` placeholders for `PSP_MODE` and `MESSAGING_MODE` (to be mapped to `<KIND>_MODE`). Nothing can go live on AWS until secret injection is defined.
+
+STRIDE additions: spoofed vendor receipt (HMAC plus timestamp), replayed receipt (event id de-duplication), information disclosure through a message body (declared params plus PHI guard), repudiation (one audit record per attempt).
+
+## What changed in this revision (23 Nov 2026)
+- Revision header moved from Rev 2.2 (not re-issued on 20 Nov) to the 23 Nov 2026 update; added §08 provider security, secrets and mobile.
+- Platform baseline, delivery pipeline, observability, resilience and the pen-test and restore-drill items (NH017, NH018) are unchanged and still open.
+- Not verified: AWS secret injection, real-vendor webhook signature formats, device hardening.
