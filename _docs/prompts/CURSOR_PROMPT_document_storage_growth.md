@@ -119,7 +119,17 @@ Find every call site of `this.uploads.put(...)` and `this.uploads.deleteObject(.
 
 ## 5. Phase 3: server-side processing (compression, thumbnails, PDF optimisation)
 
-**Goal:** make stored bytes smaller and previews fast, without ever destroying the original evidence unless the clinic chooses to.
+**Goal:** medical documents keep their **original quality**. A file of **4 MB or less is never recompressed, resized or visually altered**. A file **over 4 MB** is reduced automatically, only as far as needed to reach about 4 MB, at the **highest quality that gets there**, never below hard quality floors, and always with a measured quality check. Thumbnails and previews are separate copies, never a replacement of the document.
+
+**The quality policy (the rule everything below implements):**
+
+| Case | What happens |
+|---|---|
+| File of **4 MB or less** (`STORAGE_QUALITY_THRESHOLD_BYTES = 4194304`, config) | Stored **pixel-identical**. No resize, no re-encode, no recompression. The only allowed change is removing GPS and location metadata **losslessly** (metadata only, pixels untouched; setting `stripLocationMetadata`, default on). If that cannot be done losslessly for a format, leave the file exactly as uploaded. |
+| Image **over 4 MB** | Adaptive reduction, see 5.2 ladder. Target is the **smallest change that reaches 4 MB**, not a fixed profile. |
+| PDF **over 4 MB** | Lossless optimisation first; only if still over 4 MB, a conservative image downsample with floors, see 5.2. |
+| Any other type (DOCX, XLSX, text, etc.) | Never altered. |
+| Any reduction that fails the quality gate | Rejected; the next gentler step or the original is kept. A document is never stored at lower quality than the floors. |
 
 ### 5.1 Schema (additive migration `document_processing`)
 
@@ -131,6 +141,7 @@ Add these **nullable** columns to `PatientDocument`, `EncounterDocument`, `Opera
 - `processingStatus String @default("NONE")` (`NONE | PENDING | PROCESSING | DONE | SKIPPED | FAILED`)
 - `processingError String?`, `processedAt DateTime?`
 - `width Int?`, `height Int?`, `pageCount Int?`
+- `qualityNote String?` (`ORIGINAL_KEPT | LOSSLESS | REDUCED | FLOOR_REACHED`), `ssim Float?`, `qualityUsed Int?`, `longEdgeUsed Int?`
 - Indexes: `@@index([tenantId, processingStatus])` and `@@index([tenantId, sha256])`.
 
 Add a small `StorageJob` table for the work queue: `id`, `tenantId`, `kind` (`PROCESS_DOCUMENT | PURGE | RECONCILE | BACKFILL`), `refModel`, `refId`, `status`, `attempts`, `runAfter`, `lockedUntil`, `lastError`, `createdAt`. Index `(status, runAfter)`. Use `SELECT ... FOR UPDATE SKIP LOCKED` so several API instances can run workers safely. Do not introduce Redis or SQS now.
@@ -139,16 +150,25 @@ Add a small `StorageJob` table for the work queue: `id`, `tenantId`, `kind` (`PR
 
 Create `apps/api/src/storage/processing/` with:
 
+- `quality-policy.ts`: one place that holds every number below as configuration (`STORAGE_QUALITY_THRESHOLD_BYTES` 4 MB, `STORAGE_JPEG_QUALITY_START` 95, `STORAGE_JPEG_QUALITY_FLOOR` 80, `STORAGE_MIN_LONG_EDGE_PX` 3000, `STORAGE_SSIM_MIN` 0.985, `STORAGE_PDF_IMAGE_DPI_FLOOR` 300, `STORAGE_PDF_JPEG_QUALITY_FLOOR` 85) and a pure function `decide(file) -> { action: "KEEP" | "REDUCE", reason }`. Files at or under the threshold always return `KEEP`. Unit-test the boundary exactly: 4,194,304 bytes is KEEP, 4,194,305 is REDUCE.
 - `image-processor.ts` using `sharp` (add the dependency, pin the version, make sure the Docker image builds it for linux x64 and arm64). Behaviour:
-  - Auto-rotate by EXIF orientation, then **strip all EXIF/GPS/maker metadata** (location in a patient photo is PHI).
-  - Resize so the long edge is at most **2400 px** for `camera`/clinical photos and **2000 px** for scanned documents (**PROPOSAL**, config), never upscale.
-  - Re-encode: JPEG quality 82 with `mozjpeg`, or WebP quality 80 when the uploader's `Accept`/client flag allows it; keep PNG only if it is a screenshot-like image with transparency or fewer than 256 colours. Keep the smaller of "re-encoded" and "original"; if re-encoding does not save at least **10 percent**, keep the original and set `processingStatus = SKIPPED`.
-  - Create `thumbSmall` (256 px) and `thumbLarge` (1024 px) as WebP, stored under the same prefix with suffixes `-t256.webp` and `-t1024.webp`.
-  - Never process HEIC/HEIF unless `sharp` in our build supports it; otherwise convert on the client (see 5.4) or mark `SKIPPED`.
-- `pdf-processor.ts`: for PDFs larger than **3 MB** (config), run **`qpdf --linearize --object-streams=generate --recompress-flate --compression-level=9`** (lossless) via a sandboxed child process with a timeout of 60 s and a memory ulimit. Optional second step (feature flag `storage.pdf.lossy`, default off): Ghostscript `-dPDFSETTINGS=/ebook` for scanned PDFs where more than 80 percent of the size is images. Read the page count with `pdf-lib` or `qpdf --show-npages`. Never run a PDF through anything that executes embedded scripts; reject PDFs with JavaScript or embedded files in the validation step.
+  - **KEEP path (4 MB or less):** do not decode or re-encode pixels. Only strip GPS/location tags losslessly (for JPEG remove the GPS IFD from the APP1/EXIF segment without touching image data; for PNG/WebP drop location chunks; **keep the orientation tag** so the image still displays correctly). If parsing fails, store the bytes untouched. Verify afterwards that decoded pixels are identical (hash of the decoded raster) and fail the job to "original kept" if they are not.
+  - **REDUCE path (over 4 MB), quality ladder.** Work down this ladder and **stop at the first step that gets the file to the threshold or below**, and that passes the quality gate:
+    1. **Lossless**: strip metadata, optimise Huffman tables and progressive encoding (mozjpeg lossless/`jpegtran`-style), optimise PNG (zlib level 9, filter search). Pixels identical.
+    2. **Quality reduction at full resolution**: re-encode JPEG (mozjpeg) with a **binary search over quality from 95 down to the floor of 80**, keeping the highest quality whose output is at or under the threshold. For WebP use the equivalent range. For PNG photos over the threshold convert to JPEG only if the image has no transparency and has more than 256 colours; otherwise keep PNG and go to step 3.
+    3. **Gentle resolution reduction**: shrink the long edge in **10 percent steps**, each with quality 90, never below **3000 px** long edge (`STORAGE_MIN_LONG_EDGE_PX`), Lanczos resampling, no sharpening artefacts.
+    4. **If still over the threshold at the floors**: stop reducing. Store the result of the last allowed step (it may be somewhat above 4 MB; the hard per-file cap still applies), set `processingStatus = DONE`, `qualityNote = "FLOOR_REACHED"`, and show a neutral note in the document details. Never go below the floors to hit 4 MB.
+  - **Quality gate:** after every lossy step compute **SSIM** between the original and the candidate on matching downscaled luma (use a small, pinned library such as `ssim.js`, or `sharp` raw buffers; keep it fast, under 2 s for a 20 MP image). Require SSIM at or above `STORAGE_SSIM_MIN` (0.985). If the gate fails, go back to the previous quality value (higher quality) and retry once, else keep the previous step's result. Store `ssim`, `qualityUsed`, `longEdgeUsed` on the row.
+  - Never upscale. Never convert colour spaces destructively (keep the embedded ICC profile, keep sRGB/Display P3 as uploaded). Auto-orientation is applied only by writing pixels if a reduction step already re-encodes; otherwise keep the orientation tag.
+  - Create `thumbSmall` (256 px) and `thumbLarge` (1024 px) as WebP, stored under the same prefix with suffixes `-t256.webp` and `-t1024.webp`. Thumbnails are generated for every image **regardless of the KEEP/REDUCE decision** and are never used as the document.
+  - Never process HEIC/HEIF unless `sharp` in our build supports it; otherwise store the file untouched (it counts as KEEP even above 4 MB unless a conversion is available), generate no thumbnail, and set `processingStatus = SKIPPED`.
+- `pdf-processor.ts`: **4 MB or less: store untouched** (only read the page count). **Over 4 MB:**
+  1. Lossless: **`qpdf --linearize --object-streams=generate --recompress-flate --compression-level=9`** via a sandboxed child process (timeout 60 s, memory ulimit). If the result is at or under the threshold, stop.
+  2. Only if still over the threshold **and** the images make up more than 60 percent of the file: Ghostscript with **conservative** settings (`-dPDFSETTINGS=/printer`, `-dColorImageResolution` and `-dGrayImageResolution` not below `STORAGE_PDF_IMAGE_DPI_FLOOR` = 300, JPEG quality not below `STORAGE_PDF_JPEG_QUALITY_FLOOR` = 85, never convert to greyscale or 1-bit, keep text and vector content untouched). Feature flag `storage.pdf.lossy`, default **on** for files over the threshold because the founder asked for automatic reduction, with the floors above; clinics can turn it off in settings. Compare page count and rendered page 1 (and a sampled middle page) against the original with SSIM at or above `STORAGE_SSIM_MIN`; on failure keep the lossless result.
+  3. Never run a PDF through anything that executes embedded scripts; reject PDFs with JavaScript or embedded files in the validation step. Read the page count with `pdf-lib` or `qpdf --show-npages`.
 - `validate-upload.ts`: **sniff the real file type from magic bytes** (not just the client mime) for JPEG, PNG, WebP, GIF, HEIC, PDF, DOCX, XLSX, plain text; reject mismatches; block executables and archives; enforce per-kind max size from a config map `UPLOAD_MAX_BYTES_BY_KIND` (default 15 MB images, **PROPOSAL** 25 MB PDF) instead of the single `MAX_UPLOAD_BYTES`. Keep `MAX_UPLOAD_BYTES` exported for old callers.
 - `processing.worker.ts`: a `@nestjs/schedule` worker (interval 10 s, batch of 5, per-job timeout, exponential back-off, max 5 attempts, then `FAILED` with the original left intact). It reads the original through `getReadStream`, writes the processed file and thumbnails with `put`, then in **one transaction** updates the row (`sizeBytes`, `originalSizeBytes`, paths, `sha256`, dimensions, status) and adjusts the storage meter by the size delta. It must be **idempotent**: re-running a job for a `DONE` row is a no-op.
-- Keep the **original** only when the clinic setting `keepOriginalUploads` (new boolean on the clinic or tenant settings, default `false`) is true; in that case store it under `<prefix>/orig/...`. When false, replace the original with the processed file. Document this default in the PRD section.
+- **Originals of reduced files.** When a file was reduced (over 4 MB), keep the untouched original only when the clinic setting `keepOriginalUploads` (boolean on the clinic or tenant settings, default `false`; **NEEDS_HUMAN: founder and clinical lead confirm the default**) is true; the original goes under `<prefix>/orig/...` and is excluded from the quota-saving claim. Files at or under 4 MB are already original, so the setting does not apply to them. In the first two weeks after Phase 3 is switched on (shadow mode) always keep originals of reduced files regardless of the setting, so the results can be reviewed. Document the policy in the PRD section.
 
 ### 5.3 Wiring
 
@@ -158,11 +178,14 @@ Create `apps/api/src/storage/processing/` with:
 
 ### 5.4 Client changes (`apps/web`)
 
-- Keep `enhance-image.ts`, but add **HEIC to JPEG conversion** on the client when `createImageBitmap` supports the file (iPhone photos), and show a per-file progress bar and the "saved X percent" result.
+- **Stop altering images on the client.** Today `apps/web/src/lib/enhance-image.ts` resizes document images to a 1,600 px long edge at JPEG 0.8 before upload, so the server never receives the true original. Change it so the document, camera and general profiles send the **original file unchanged** (the server applies the quality policy). Keep the client-side processing only for avatars and logos, and as a fallback when the file exceeds the per-kind hard cap. Update its unit tests accordingly.
+- Raise the per-kind hard cap (`UPLOAD_MAX_BYTES_BY_KIND`) for images to **25 MB** (phone photos and scans are often 8 to 15 MB); show a clear error above it.
+- Add **HEIC to JPEG conversion** on the client only if the server cannot read HEIC, using the highest quality (0.95) and keeping full resolution; otherwise send the HEIC file unchanged.
+- Show a per-file progress bar. After processing, show a neutral line in the document details: "Original quality kept" for files at or under 4 MB, or "Optimised to X MB (quality Y)" for reduced files, plus "Original available" when kept.
 - Add upload concurrency limits (max 3 parallel) and retry with back-off for flaky mobile connections.
 - Show "Processing..." chip while `processingStatus` is `PENDING` or `PROCESSING`, then the thumbnail.
 
-**Tests for Phase 3:** golden-file tests with a small set of fixtures (a 6 MB phone photo, a 4 MB scanned PDF, a text PDF, a corrupted JPEG, a PDF with JavaScript, a disguised `.exe` renamed `.jpg`); assert size reduction, EXIF removed, thumbnails exist, original preserved when the setting is on, `FAILED` leaves the original usable, job idempotency, concurrency (two workers never process the same row), and meter exactness after processing.
+**Tests for Phase 3:** golden-file tests with fixtures: a 3.9 MB JPEG, a file of exactly 4,194,304 bytes, one of 4,194,305 bytes, a 6 MB and a 14 MB phone photo, a 5 MB PNG scan, a 4 MB text PDF, a 9 MB scanned PDF, a corrupted JPEG, a PDF with JavaScript, a disguised `.exe` renamed `.jpg`. Assert: files at or under 4 MB come out with **identical decoded pixels** (and byte-identical when they carry no location data); location metadata is removed without changing pixels and the orientation tag survives; over-4 MB images land at or under 4 MB with the **highest** quality found by the search, SSIM at or above the minimum, never below the quality, resolution and DPI floors; when the floors are reached the job ends with `FLOOR_REACHED` and the file is kept at the last allowed step; thumbnails exist for every image; `keepOriginalUploads` and the shadow period behave as written; `FAILED` leaves the original usable; job idempotency; concurrency (two workers never process the same row); meter exactness after processing. Also add a regression test that no code path re-encodes a file of 4 MB or less.
 
 ## 6. Phase 4: retention, legal hold, soft delete and purge
 
