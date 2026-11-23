@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { q, sleep, waitFor, kiorex, opsLogin } from '../src/clients.js';
-import { recordDevGate, revokeDevGate, setFlag, waitPartnerFlags, patientToken, payFake } from '../src/verticals.js';
+import { recordDevGate, releaseDevGate, revokeDevGate, setFlag, waitPartnerFlags, patientToken, payFake } from '../src/verticals.js';
 import { purgeE2eConsentPushes } from '../src/db.js';
 import { PHARMACY_API, PHARMACY_PASSWORD } from '../src/env.js';
 import { randomUUID } from 'node:crypto';
@@ -594,7 +594,7 @@ describe('x. Online (Kiorex) order status progression on the app, mirrored in Ki
     // the pharmacy/lab flag pollers of a long-running dev stack can lag; order ingestion does not depend on the partner snapshot, so do not fail on it
     await waitPartnerFlags(4_000).catch(() => console.warn('[17] partner flag snapshot not refreshed (pollers idle); continuing'));
   });
-  afterAll(async () => { await revokeDevGate(ops, 'kiorex.pharmacy_orders'); await purgeE2eConsentPushes(); });
+  afterAll(async () => { await releaseDevGate(ops, 'kiorex.pharmacy_orders'); await purgeE2eConsentPushes(); });
 
   async function placeOrder(qty: number) {
     const d = await makeDrug({ price: '40.00' }); await receive(d.id, `ORD-${d.tag}`, 10, 300);

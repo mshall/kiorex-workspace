@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorex, opsLogin, waitFor, q, sleep } from '../src/clients.js';
-import { pharmacy, pharmacyStaff, recordDevGate, revokeDevGate, setFlag, waitPartnerFlags, patientToken, payFake, rnd } from '../src/verticals.js';
+import { pharmacy, pharmacyStaff, recordDevGate, releaseDevGate, revokeDevGate, setFlag, waitPartnerFlags, patientToken, payFake, rnd } from '../src/verticals.js';
 import { partnerCall, kiorexWebhook } from '../src/hmac.js';
 import { PH_PARTNER, WEBHOOK_SECRET, PATIENT_1 } from '../src/env.js';
 import { randomUUID } from 'node:crypto';
@@ -24,25 +24,27 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     await recordDevGate(ops, 'kiorex.pharmacy_orders');
     await waitPartnerFlags();
   });
-  afterAll(async () => { await revokeDevGate(ops, 'kiorex.pharmacy_orders'); await purgeE2eConsentPushes(); }); // fake pat_e2e_* link must not outlive the suite
+  afterAll(async () => { await releaseDevGate(ops, 'kiorex.pharmacy_orders'); await purgeE2eConsentPushes(); }); // fake pat_e2e_* link must not outlive the suite
 
-  async function makeDrug(o: { rx?: boolean; price?: string; qty?: number } = {}) {
+  async function makeDrug(o: { rx?: boolean; price?: string; qty?: number; schedule?: string } = {}) {
     const tag = rnd();
-    const d = await pharmacy(owner, 'POST', '/catalogue/drugs', { brandName: `E2E-Med-${tag}`, activeIngredient: `e2e-ing-${tag}`, strength: '500 mg', dosageForm: 'tablet', packSize: '20', rxOnly: o.rx ?? false, price: o.price ?? '40.00' });
+    const d = await pharmacy(owner, 'POST', '/catalogue/drugs', { brandName: `E2E-Med-${tag}`, activeIngredient: `e2e-ing-${tag}`, strength: '500 mg', dosageForm: 'tablet', packSize: '20', rxOnly: o.rx ?? false, price: o.price ?? '40.00', ...(o.schedule ? { controlledSchedule: o.schedule } : {}) });
     expect(d.status, JSON.stringify(d.body)).toBe(201);
+    if (o.qty === 0) return { id: d.body.id as string, name: d.body.brandName as string, price: o.price ?? '40.00', lotId: '' }; // listed and priced, never received
     const exp = new Date(Date.now() + 365 * 86400_000).toISOString().slice(0, 10);
     const r = await pharmacy(owner, 'POST', '/inventory/receipts', { branchId, invoiceNo: `E2E-${tag}`, lines: [{ drugId: d.body.id, lotNumber: `L-${tag}`, expiryDate: exp, quantity: o.qty ?? 20, unitCost: '20.00' }] });
     expect(r.status, JSON.stringify(r.body)).toBe(201);
     return { id: d.body.id as string, name: d.body.brandName as string, price: o.price ?? '40.00', lotId: r.body.lines[0].lotId as string };
   }
   /** Patient: search -> cart -> pickup -> order -> pay. Returns the Kiorex order after the hand-over to the pharmacy. */
-  async function order(drug: { id: string; name: string }, qty: number, rxRecordId?: string) {
+  async function order(drug: { id: string; name: string }, qty: number, rxRecordId?: string, delivery?: { line1: string; area?: string; governorate?: string; phone?: string }) {
     const s = await kiorex(p1, 'GET', `/pharmacy/search?q=${encodeURIComponent(drug.name)}&pharmacyId=${branchId}`);
     expect(s.status, JSON.stringify(s.body)).toBe(200);
     expect(s.body.items.find((i: any) => i.sku === drug.id)).toMatchObject({ available: true });
     const cart = await kiorex(p1, 'PUT', '/pharmacy/cart', { pharmacyId: branchId, items: [{ sku: drug.id, qty }], ...(rxRecordId ? { prescriptionRecordId: rxRecordId } : {}) });
     expect(cart.status, JSON.stringify(cart.body)).toBe(200);
-    expect((await kiorex(p1, 'PUT', '/pharmacy/cart/delivery', { method: 'PICKUP' })).status).toBe(200);
+    const d = await kiorex(p1, 'PUT', '/pharmacy/cart/delivery', delivery ? { method: 'DELIVERY', address: delivery } : { method: 'PICKUP' });
+    expect(d.status, JSON.stringify(d.body)).toBe(200);
     const o = await kiorex(p1, 'POST', '/pharmacy/orders', {});
     expect(o.status, JSON.stringify(o.body)).toBe(201);
     expect(o.body.status).toBe('PENDING_PAYMENT');
@@ -234,9 +236,99 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     expect((await kiorex(p1, 'GET', '/pharmacy/pharmacies')).status).toBe(200);
   });
 
+  it('DELIVERY order: address is mandatory, shown on the patient order, reaches the pharmacy inbox with the delivery method; ready + dispensed flow back (delivered)', async () => {
+    const drug = await makeDrug({ price: '30.00', qty: 10 });
+    await kiorex(p1, 'PUT', '/pharmacy/cart', { pharmacyId: branchId, items: [{ sku: drug.id, qty: 1 }] });
+    const noAddr = await kiorex(p1, 'PUT', '/pharmacy/cart/delivery', { method: 'DELIVERY' });
+    expect(noAddr.status).toBe(400);
+    expect(noAddr.body.code).toBe('ADDRESS_REQUIRED');
+    const addr = { line1: '12 Road 9, Maadi', area: 'Maadi', governorate: 'Cairo', phone: '+201000001001' };
+    const o = await order(drug, 1, undefined, addr);
+    const placed = await get(o.id);
+    expect(placed).toMatchObject({ deliveryMethod: 'DELIVERY', deliveryAddress: addr });
+    expect(JSON.stringify(placed)).not.toContain('_feeMinor');
+    await waitOrder(o.id, 'SUBMITTED');
+    const inbox = await inboxOrder(o.id);
+    expect(inbox).toMatchObject({ deliveryMethod: 'DELIVERY', prepaid: true });
+    expect(inbox.deliveryAddress).toContain('12 Road 9');
+    const acc = await pharmacy(pharm, 'POST', `/kiorex-orders/${inbox.id}/accept`, {});
+    await pharmacy(pharm, 'POST', `/dispensings/${acc.body.dispensing.id}/signoff`, {});
+    await pharmacy(pharm, 'POST', `/kiorex-orders/${inbox.id}/ready`);
+    expect((await waitOrder(o.id, 'READY')).deliveryMethod).toBe('DELIVERY');
+    await pharmacy(pharm, 'POST', `/dispensings/${acc.body.dispensing.id}/complete`, { idempotencyKey: randomUUID() });
+    expect((await waitOrder(o.id, 'DISPENSED')).dispensedAt).toBeTruthy();
+    // patient was notified at READY and DISPENSED (mock WhatsApp + push go through the same templates and consent checks as real ones)
+    const sub = (await q('kiorex_platform', `select sub from "PharmacyOrder" where id = $1`, [o.id]))[0].sub;
+    await waitFor('patient notified (ready + dispensed)', async () => (await q('kiorex_platform', `select count(distinct "templateId")::int c from "MessageLog" where sub = $1 and "templateId" in ('TODO_NEEDS_HUMAN_pharmacy_order_ready','TODO_NEEDS_HUMAN_pharmacy_order_dispensed') and "createdAt" > (now() at time zone 'utc') - interval '5 minutes'`, [sub]))[0].c >= 2, 10_000, 500);
+  });
+
+  it('controlled medicines are never orderable: not in search, cart refused, a forged order intent is refused by the pharmacy (KPRX05)', async () => {
+    const drug = await makeDrug({ price: '99.00', qty: 5, schedule: 'SCHEDULE_2', rx: true });
+    const s = await kiorex(p1, 'GET', `/pharmacy/search?q=${encodeURIComponent(drug.name)}&pharmacyId=${branchId}`);
+    expect(s.status).toBe(200);
+    expect(s.body.items.find((i: any) => i.sku === drug.id)).toBeUndefined();
+    const cart = await kiorex(p1, 'PUT', '/pharmacy/cart', { pharmacyId: branchId, items: [{ sku: drug.id, qty: 1 }] });
+    expect(cart.status, JSON.stringify(cart.body)).toBe(422);
+    expect(cart.body.code).toBe('CONTROLLED_NOT_ORDERABLE');
+    const forged = await partnerCall('http://localhost:3100', PH_PARTNER, 'POST', '/marketplace/v1/orders', { orderId: `kx_ph_forged_${rnd()}`, branchId, lines: [{ sku: drug.id, quantity: 1, unitPrice: '99.00' }], prescription: { prescriberName: 'Dr X', prescriberLicenceNo: '1' } });
+    expect(forged.status, JSON.stringify(forged.body)).toBe(422);
+    expect(JSON.stringify(forged.body)).toContain('CONTROLLED_NOT_ORDERABLE');
+    const catalogue = await partnerCall('http://localhost:3100', PH_PARTNER, 'GET', `/marketplace/v1/catalogue?pharmacyId=${branchId}&q=${encodeURIComponent(drug.name)}`);
+    expect(JSON.stringify(catalogue.body)).not.toContain(drug.id);
+  });
+
+  it('out of stock: listed as unavailable, cannot be ordered; a pharmacist OUT_OF_STOCK rejection after payment refunds in full with a localisable reason code', async () => {
+    const none = await makeDrug({ qty: 0 }); // priced but never received: no stock to promise, so it is not even listed
+    const s = await kiorex(p1, 'GET', `/pharmacy/search?q=${encodeURIComponent(none.name)}&pharmacyId=${branchId}`);
+    expect(s.body.items.find((i: any) => i.sku === none.id)).toBeUndefined();
+    await kiorex(p1, 'PUT', '/pharmacy/cart', { pharmacyId: branchId, items: [{ sku: none.id, qty: 1 }] });
+    await kiorex(p1, 'PUT', '/pharmacy/cart/delivery', { method: 'PICKUP' });
+    const blocked = await kiorex(p1, 'POST', '/pharmacy/orders', {});
+    expect(blocked.status).toBe(409);
+    expect(blocked.body.code).toBe('ITEM_UNAVAILABLE');
+    // more than the shelf holds is just as unavailable
+    const few = await makeDrug({ qty: 2 });
+    await kiorex(p1, 'PUT', '/pharmacy/cart', { pharmacyId: branchId, items: [{ sku: few.id, qty: 5 }] });
+    const cartView = (await kiorex(p1, 'GET', '/pharmacy/cart')).body;
+    expect(cartView.items[0]).toMatchObject({ available: false });
+    await kiorex(p1, 'DELETE', '/pharmacy/cart');
+    // stock disappears after the patient paid: the pharmacist rejects with a code, Kiorex refunds in full and keeps the code
+    const drug = await makeDrug({ qty: 3 });
+    const o = await order(drug, 1);
+    await waitOrder(o.id, 'SUBMITTED');
+    const inbox = await inboxOrder(o.id);
+    await pharmacy(pharm, 'POST', `/kiorex-orders/${inbox.id}/reject`, { reason: 'Out of stock', reasonCode: 'OUT_OF_STOCK' });
+    const b = await waitOrder(o.id, 'REJECTED');
+    expect(b).toMatchObject({ rejectionReason: 'OUT_OF_STOCK', payment: { status: 'REFUNDED' } });
+    expect((await q('kiorex_platform', `select "amountMinor" from "Refund" where "paymentId" = $1`, [o.payment.paymentId]))[0].amountMinor).toBe(o.totalMinor);
+  });
+
+  it('patient cancels AFTER the pharmacy accepted: the pharmacy releases the reserved stock, Kiorex refunds in full; an unanswered order expires (SLA) and is refunded', async () => {
+    const drug = await makeDrug({ qty: 4 });
+    const o = await order(drug, 2);
+    await waitOrder(o.id, 'SUBMITTED');
+    const inbox = await inboxOrder(o.id);
+    const acc = await pharmacy(pharm, 'POST', `/kiorex-orders/${inbox.id}/accept`, {});
+    expect(acc.status).toBe(201);
+    const c = await kiorex(p1, 'POST', `/pharmacy/orders/${o.id}/cancel`);
+    expect(c.status, JSON.stringify(c.body)).toBe(200);
+    expect(c.body).toMatchObject({ status: 'CANCELLED', payment: { status: 'REFUNDED' } });
+    expect((await pharmacy(pharm, 'GET', `/kiorex-orders/${inbox.id}`)).body.status).toBe('CANCELLED');
+    // SLA expiry: the pharmacy never answered
+    const o2 = await order(drug, 1);
+    await waitOrder(o2.id, 'SUBMITTED');
+    const inbox2 = await inboxOrder(o2.id);
+    await q('kiorly_pharmacy', `update "KiorexOrder" set "slaDueAt" = (now() at time zone 'utc') - interval '1 minute' where id = $1`, [inbox2.id]);
+    const exp = await pharmacy(owner, 'POST', '/kiorex-orders/jobs/expire-overdue');
+    expect(exp.status).toBe(201);
+    expect(exp.body.expired).toBeGreaterThanOrEqual(1);
+    const b2 = await waitOrder(o2.id, 'REJECTED');
+    expect(b2).toMatchObject({ rejectionReason: 'SLA_EXPIRED', payment: { status: 'REFUNDED' } });
+  });
+
   it('launch-locked: without gate evidence kiorex.pharmacy_orders is AWAITING_GATE (403 scope GATE); evidence in this run is labelled DEV-ONLY-NOT-A-REAL-GATE', async () => {
     const ev = await q('kiorex_platform', `select "gateId" from "FlagGateEvidence" where "flagKey" = 'kiorex.pharmacy_orders'`);
-    expect(ev.at(-1)?.gateId).toBe('DEV-ONLY-NOT-A-REAL-GATE');
+    expect(ev.at(-1)?.gateId).toMatch(/^DEV-ONLY-NOT-A-REAL-GATE/);
     await revokeDevGate(ops, 'kiorex.pharmacy_orders');
     const r = await kiorex(p1, 'GET', '/pharmacy/pharmacies');
     expect(r.status).toBe(403);

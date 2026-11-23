@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorex, opsLogin, waitFor, q } from '../src/clients.js';
-import { lab, labStaff, recordDevGate, revokeDevGate, setFlag, waitPartnerFlags, patientToken, payFake, rnd } from '../src/verticals.js';
+import { lab, labStaff, recordDevGate, releaseDevGate, revokeDevGate, setFlag, waitPartnerFlags, patientToken, payFake, rnd } from '../src/verticals.js';
 import { partnerCall } from '../src/hmac.js';
 import { LAB_PARTNER } from '../src/env.js';
 
@@ -26,7 +26,7 @@ describe('l. Kiorex lab bookings against the real Kiorly Lab', () => {
     labId = (await lab(owner, 'GET', '/auth/me')).body?.labs?.[0]?.id ?? (await q('kiorly_lab', `select id from "Lab" order by "createdAt" limit 1`))[0].id;
     bench = (await lab(tech, 'GET', '/instruments')).body.find((i: any) => i.kind === 'MANUAL_BENCH').id;
   });
-  afterAll(async () => { await revokeDevGate(ops, 'kiorex.lab_bookings'); });
+  afterAll(async () => { await releaseDevGate(ops, 'kiorex.lab_bookings'); });
 
   const slotFor = async () => {
     const from = new Date(Date.now() + 2 * 86400_000), to = new Date(Date.now() + 5 * 86400_000);

@@ -15,7 +15,10 @@ Running now (health = `/api/v1/health/ready`; Passport = `/.well-known/openid-co
 PIDs change on restart; `.e2e/pids/*.pid` holds the last recorded ones. Logs: `../.e2e/logs/*.log`. Postgres :5433. :3000 / :5173 = founder's other checkout, never touched.
 
 ```bash
-scripts/up.sh [--build] [--seed] [--restart]   # whole stack (--build rebuilds the four Nest APIs; needed after API source changes)
+scripts/up.sh [--build] [--seed] [--restart] [--only=a,b] [--web]   # whole stack (--build rebuilds the four Nest APIs; needed after API source changes)
+#   --only=pharmacy[,lab,kiorex,kiorly,passport] restarts just those services (shared stack: do not bounce what you do not need)
+#   --web  also starts the Kiorly Pharmacy staff web on :5192
+#   Pharmacy runs KIOREX_MODE=real + FLAGS_POLL_ENABLED=true here; standalone: `npm run dev:kiorex -w api` in kiorly-pharmacy. In mock mode its outbox marks events SENT without calling Kiorex, so patient orders stop at SUBMITTED (it now logs a warning).
 scripts/svc.sh kiorly stop|start               # Kiorly Clinic only
 scripts/down.sh                                # stop by port (never :3000)
 npm test                                       # 15 files (11 skipped here), 62 tests + 5 skipped, ~3 min, files in name order (global teardown cancels the slots it booked)
