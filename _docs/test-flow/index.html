@@ -1,0 +1,1511 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Kiorex Test Flow Guide</title>
+<style>
+:root{
+  --indigo:#3730A3;--indigo-50:#F1F1F9;--indigo-100:#DCDBEF;--indigo-200:#C7C5E5;--indigo-900:#221E62;
+  --ocean:#0369A1;--ocean-50:#EDF5F8;--ocean-100:#CFE2ED;--ocean-800:#064974;
+  --coral:#E8735E;--coral-50:#FDF5F4;--coral-100:#F9DED8;--coral-700:#8F4944;
+  --ground:#F4F6FC;--card:#fff;--ink:#16163A;--ink2:#4B4F6B;--line:#DEE1F0;--line2:#EBEDF7;
+  --clinic:#0F766E;--lab:#6D28D9;--pharm:#15803D;--ok:#15803D;--warn:#B45309;--bad:#B91C1C;
+  --font:"Jost","Avenir Next","Avenir","Segoe UI","Helvetica Neue",system-ui,-apple-system,"IBM Plex Sans Arabic","Noto Sans Arabic",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --side:312px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.55 var(--font);-webkit-font-smoothing:antialiased}
+a{color:var(--ocean);text-decoration-thickness:1px;text-underline-offset:2px}
+a:hover{color:var(--indigo)}
+code,.mono{font-family:var(--mono);font-size:.86em}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--coral);outline-offset:2px;border-radius:4px}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:8px 18px;min-height:58px}
+.top .brand{display:flex;align-items:center;gap:12px;min-width:0;flex:0 1 auto}
+.top .brand svg{height:34px;width:138px;flex:none;display:block}
+.top .ttl{font-weight:600;color:var(--indigo);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.top .ttl small{display:block;font-weight:400;color:var(--ink2);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase}
+.top .sp{flex:1}
+.burger{display:none;border:1px solid var(--line);background:#fff;border-radius:10px;width:42px;height:42px;font-size:20px;cursor:pointer}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink2)}
+.pill.dev{background:var(--coral-50);border-color:var(--coral-100);color:var(--coral-700)}
+.tbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 12px;cursor:pointer;font-weight:500}
+.tbtn:hover{border-color:var(--indigo);color:var(--indigo)}
+
+/* layout */
+.wrap{display:grid;grid-template-columns:var(--side) minmax(0,1fr);align-items:start}
+.side{position:sticky;top:58px;height:calc(100vh - 58px);overflow:auto;background:#fff;border-right:1px solid var(--line);padding:14px 12px 40px;font-size:.92rem}
+main{padding:22px 28px 90px;max-width:1120px;width:100%;min-width:0}
+main{overflow-wrap:break-word}
+.fbody,.note,.exp,.st{overflow-wrap:anywhere}
+code{overflow-wrap:anywhere}
+.lk{max-width:100%;flex-wrap:wrap}
+.lk .u{overflow-wrap:anywhere}
+ol.steps li>*{min-width:0}
+body.searching .hero,body.searching .how{display:none}
+
+/* sidebar bits */
+.search{position:relative;margin-bottom:12px}
+.search input{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 34px 10px 36px;font:inherit;background:var(--ground)}
+.search input::-webkit-search-cancel-button{display:none}
+.search input:focus{outline:2px solid var(--indigo);background:#fff}
+.search .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink2);pointer-events:none}
+.search .x{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;cursor:pointer;color:var(--ink2);font-size:18px;display:none}
+.search.has .x{display:block}
+.sres{font-size:.78rem;color:var(--ink2);min-height:1.2em;margin:-6px 4px 8px}
+.prog{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:linear-gradient(180deg,#fff,var(--indigo-50));margin-bottom:12px}
+.prog h4{margin:0 0 6px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--indigo)}
+.bar{height:8px;border-radius:99px;background:var(--line2);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--indigo),var(--ocean));transition:width .25s}
+.prog .num{display:flex;justify-content:space-between;font-size:.82rem;margin-top:5px;color:var(--ink2)}
+.prog .acts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.prog .acts button{border:1px solid var(--line);background:#fff;border-radius:8px;font-size:.76rem;padding:3px 8px;cursor:pointer;color:var(--ink2)}
+.prog .acts button:hover{border-color:var(--coral);color:var(--coral-700)}
+.nav details{border-radius:10px}
+.nav>details>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;font-weight:600;color:var(--ink)}
+.nav>details>summary::-webkit-details-marker{display:none}
+.nav>details>summary:hover{background:var(--indigo-50)}
+.nav>details>summary .car{width:14px;transition:transform .15s;color:var(--ink2)}
+.nav>details[open]>summary .car{transform:rotate(90deg)}
+.nav .mic{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:.72rem;font-weight:700;color:#fff;background:var(--indigo);flex:none}
+.nav .mt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav .mc{font-size:.72rem;color:var(--ink2);font-weight:500;flex:none}
+.nav .mc.done{color:var(--ok);font-weight:700}
+.nav ul{list-style:none;margin:0 0 6px 18px;padding:0 0 0 10px;border-left:2px solid var(--line2)}
+.nav li a{display:flex;gap:6px;align-items:baseline;padding:4px 8px;border-radius:8px;text-decoration:none;color:var(--ink2);font-size:.88rem;line-height:1.3}
+.nav li a:hover{background:var(--ground);color:var(--ink)}
+.nav li a.act{background:var(--coral-50);color:var(--coral-700);font-weight:600}
+.nav li a .fc{margin-left:auto;font-size:.7rem;white-space:nowrap}
+.nav li a.done .fc{color:var(--ok);font-weight:700}
+.nav li.hide,.nav>details.hide{display:none}
+.navsec{margin:14px 6px 4px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.navlink{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:10px;text-decoration:none;color:var(--ink);font-weight:600}
+.navlink:hover{background:var(--indigo-50)}
+
+/* banners */
+.banner{border:1.5px solid var(--coral);background:var(--coral-50);border-radius:16px;padding:14px 18px;margin:0 0 20px;display:flex;gap:14px;align-items:flex-start}
+.banner b{color:var(--coral-700)}
+.banner .ic{font-size:1.4rem;line-height:1}
+.hero{background:linear-gradient(135deg,var(--indigo) 0%,var(--ocean) 100%);color:#fff;border-radius:22px;padding:26px 28px;margin-bottom:20px;position:relative;overflow:hidden}
+.hero h1{margin:0 0 6px;font-size:1.9rem;font-weight:600;letter-spacing:.01em}
+.hero p{margin:6px 0;max-width:70ch;color:#E5E7FA}
+.hero .pulse{position:absolute;right:-10px;bottom:-6px;width:340px;opacity:.35}
+.hero a{color:#fff}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:0 0 22px}
+.how div{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:.92rem}
+.how b{display:block;color:var(--indigo);margin-bottom:2px}
+
+/* module + flow */
+section.mod{margin:0 0 38px}
+.mhead{display:flex;gap:14px;align-items:flex-start;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--indigo-100)}
+.mhead .mic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;background:var(--indigo);flex:none}
+.mhead h2{margin:0;font-size:1.5rem;color:var(--indigo);font-weight:600}
+.mhead p{margin:2px 0 0;color:var(--ink2);font-size:.95rem;max-width:80ch}
+.mhead .mp{margin-left:auto;text-align:right;font-size:.8rem;color:var(--ink2);white-space:nowrap}
+.mhead .mp button{display:block;margin:4px 0 0 auto;border:0;background:none;color:var(--ink2);text-decoration:underline;cursor:pointer;font-size:.75rem}
+.note{background:var(--ocean-50);border:1px solid var(--ocean-100);border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:.92rem}
+.warn{background:#FFF8EB;border:1px solid #F5DDAA;border-radius:12px;padding:10px 14px;margin:8px 0;font-size:.92rem}
+
+details.flow{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:0 0 12px;box-shadow:0 1px 2px rgba(34,30,98,.04)}
+details.flow>summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:10px;border-radius:16px}
+details.flow>summary::-webkit-details-marker{display:none}
+details.flow[open]>summary{border-bottom:1px solid var(--line2);border-bottom-left-radius:0;border-bottom-right-radius:0}
+details.flow>summary:hover{background:var(--indigo-50)}
+.fid{font-family:var(--mono);font-size:.74rem;font-weight:700;background:var(--indigo-50);color:var(--indigo);border-radius:8px;padding:2px 7px;flex:none}
+.fttl{font-weight:600;flex:1;min-width:0}
+.fprog{font-size:.78rem;color:var(--ink2);white-space:nowrap}
+.fprog.done{color:var(--ok);font-weight:700}
+.fcar{color:var(--ink2);transition:transform .15s}
+details.flow[open] .fcar{transform:rotate(90deg)}
+.fbody{padding:14px 18px 18px}
+.goal{margin:0 0 10px;color:var(--ink)}
+.goal b{color:var(--indigo)}
+.lbl{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);font-weight:700;margin:14px 0 6px}
+.users{display:flex;flex-wrap:wrap;gap:8px}
+.user{border:1px solid var(--line);border-radius:12px;padding:7px 10px;background:var(--ground);font-size:.86rem;min-width:200px;max-width:100%}
+.user .un{font-weight:600}
+.user .ur{color:var(--ink2);font-size:.78rem}
+.user .uc{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:3px}
+.copy{cursor:pointer;border:1px dashed var(--indigo-200);background:#fff;border-radius:7px;padding:1px 6px;font-family:var(--mono);font-size:.8rem;color:var(--indigo);user-select:all;max-width:100%;overflow-wrap:anywhere;text-align:left}
+.copy:hover{background:var(--indigo-50);border-style:solid}
+.copy.ok{background:#E8F6EC;border-color:var(--ok);color:var(--ok)}
+.copy.pw::before{content:"pw ";color:var(--ink2);font-family:var(--font);font-size:.72rem}
+.copy.otp::before{content:"otp ";color:var(--ink2);font-family:var(--font);font-size:.72rem}
+.copy.tp::before{content:"totp seed ";color:var(--ink2);font-family:var(--font);font-size:.72rem}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.lk{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--ocean-100);background:var(--ocean-50);border-radius:999px;padding:3px 11px;text-decoration:none;font-size:.86rem;color:var(--ocean-800)}
+.lk:hover{border-color:var(--ocean);background:#fff}
+.lk .u{font-family:var(--mono);font-size:.74rem;color:var(--ink2)}
+.dl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border:1px solid var(--coral-100);background:var(--coral-50);border-radius:10px;padding:4px 8px;font-size:.84rem}
+.dl code{color:var(--coral-700)}
+.dl button{border:1px solid var(--coral-100);background:#fff;border-radius:7px;padding:1px 8px;cursor:pointer;font-size:.76rem;color:var(--coral-700)}
+.dl button:hover{border-color:var(--coral)}
+.dl button.ok{background:#E8F6EC;border-color:var(--ok);color:var(--ok)}
+ol.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:8px 6px;border-radius:10px}
+ol.steps li:nth-child(even){background:#FAFBFE}
+ol.steps li.on .st{color:var(--ink2);text-decoration:line-through;text-decoration-color:var(--line)}
+ol.steps li.on .exp{opacity:.7}
+ol.steps input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--indigo);cursor:pointer;grid-row:1/3}
+ol.steps .st::before{content:counter(s)".";font-weight:700;color:var(--indigo);margin-right:6px}
+.exp{grid-column:2;font-size:.9rem;color:var(--ink2);border-left:3px solid var(--ok);padding:1px 0 1px 9px;margin-top:2px}
+.exp::before{content:"Expected: ";font-weight:700;color:var(--ok)}
+.exp.neg{border-left-color:var(--bad)}
+.exp.neg::before{content:"Not expected: ";color:var(--bad)}
+ul.plain{margin:4px 0;padding-left:20px}
+ul.plain li{margin:2px 0}
+.inbox{background:#F4FBF6;border:1px solid #CDE9D5;border-radius:12px;padding:8px 12px;font-size:.9rem}
+.inbox ul{margin:3px 0;padding-left:18px}
+.flowact{display:flex;gap:8px;margin-top:12px}
+.flowact button{border:1px solid var(--line);background:#fff;border-radius:8px;font-size:.76rem;padding:3px 10px;cursor:pointer;color:var(--ink2)}
+.flowact button:hover{border-color:var(--indigo);color:var(--indigo)}
+
+/* tables */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:#fff;margin:0 0 16px}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:7px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line2)}
+th{background:var(--indigo-50);color:var(--indigo);font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;position:sticky;top:0;z-index:1}
+tr:last-child td{border-bottom:0}
+tr.hide{display:none}
+#utable td:nth-child(2){min-width:250px}#utable td:nth-child(3){min-width:150px}#utable td:nth-child(1){min-width:170px}
+.tw .copy{overflow-wrap:break-word}
+tr.grp td{background:var(--ground);font-weight:700;color:var(--indigo);font-size:.8rem;letter-spacing:.04em;text-transform:uppercase}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:#B8BCD3;vertical-align:middle;margin-right:6px;box-shadow:0 0 0 3px rgba(184,188,211,.25)}
+.dot.up{background:#22A05A;box-shadow:0 0 0 3px rgba(34,160,90,.2)}
+.dot.down{background:var(--bad);box-shadow:0 0 0 3px rgba(185,28,28,.15)}
+.dot.na{background:#E3E5F0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 12px;font-size:.82rem;cursor:pointer}
+.chip.on{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.totp{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin:0 0 14px}
+.totp .code{font:700 1.5rem var(--mono);letter-spacing:.14em;color:var(--indigo);cursor:pointer}
+.totp select{border:1px solid var(--line);border-radius:8px;padding:4px 8px;font:inherit;background:#fff}
+.tleft{width:90px;height:6px;border-radius:99px;background:var(--line2);overflow:hidden}
+.tleft i{display:block;height:100%;background:var(--coral);width:100%}
+mark{background:#FFE9A8;color:inherit;border-radius:3px;padding:0 1px}
+.empty{padding:30px;text-align:center;color:var(--ink2);display:none}
+footer{color:var(--ink2);font-size:.82rem;border-top:1px solid var(--line);padding-top:14px;margin-top:30px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--indigo-900);color:#fff;padding:8px 16px;border-radius:12px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}
+.toast.show{opacity:1}
+.scrim{display:none}
+.rtl{direction:rtl;unicode-bidi:plaintext}
+
+@media (max-width:980px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .burger{display:block}
+  .side{position:fixed;left:0;top:58px;bottom:0;height:auto;width:min(88vw,340px);z-index:60;transform:translateX(-102%);transition:transform .2s;box-shadow:6px 0 24px rgba(34,30,98,.18)}
+  body.navopen .side{transform:none}
+  body.navopen .scrim{display:block;position:fixed;inset:58px 0 0 0;background:rgba(22,22,58,.35);z-index:55}
+  main{padding:16px 16px 70px}
+  .mhead{flex-wrap:wrap}.mhead .mp{margin-left:0;text-align:left}
+  .hero{padding:20px}.hero h1{font-size:1.5rem}
+  .top .ttl small{display:none}
+}
+@media (max-width:520px){.pill .long,#printbtn{display:none}.pill{white-space:nowrap}.top{padding:6px 12px}.fbody{padding:12px}}
+
+@media print{
+  @page{margin:14mm}
+  body{background:#fff;font-size:11pt}
+  .top,.side,.scrim,.toast,.flowact,.search,#printbtn,.totp,.burger,.mp button,.chips{display:none!important}
+  .wrap{display:block}
+  main{padding:0;max-width:none}
+  details.flow{break-inside:avoid-page;box-shadow:none}
+  details.flow>summary{background:#fff!important}
+  .hero{background:#fff;color:#000;border:2px solid var(--indigo)}.hero p{color:#222}
+  .copy{border:0;padding:0}
+  .fcar{display:none}
+  a{color:#000;text-decoration:none}
+  a.lk::after{content:" " attr(href);font-size:8pt;color:#555}
+  tr.hide,.hide{display:revert}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="burger" id="burger" aria-label="Open navigation" aria-expanded="false">&#9776;</button>
+  <div class="brand">
+    <svg class="lockup" xmlns="http://www.w3.org/2000/svg" viewBox="190 190 2030 500" role="img" aria-label="Kiorex">
+  <polyline points="373,237 505,440 373,643" fill="none" stroke="#3730A3" stroke-width="38" stroke-linejoin="miter"/>
+  <polyline points="720,237 588,440 720,643" fill="none" stroke="#0369A1" stroke-width="38" stroke-linejoin="miter"/>
+  <path d="M222 440 H510 L525 428 L540 466 L557 392 L574 460 L588 441 H877" fill="none" stroke="#E8735E" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/>
+  <line x1="1062" y1="210" x2="1062" y2="670" stroke="#E8735E" stroke-width="4"/>
+  <g transform="translate(1149 129.5)">
+    <path fill="#3730A3" d="M121.34 243L98 243L98 378L121.34 378L121.34 243ZM199.06 243L171.48 243L114.59 306.84L173.79 378L201.95 378L141.97 306.26L199.06 243Z"/>
+    <path fill="#3730A3" d="M298.14 243L275 243L275 378L298.14 378L298.14 243Z"/>
+    <path fill="#3730A3" d="M404.11 310.50L404.11 310.50Q404.11 296.61 410.09 285.72Q416.06 274.82 426.38 268.65Q436.70 262.48 450.01 262.48L450.01 262.48Q463.70 262.48 474.02 268.65Q484.34 274.82 490.12 285.72Q495.91 296.61 495.91 310.50L495.91 310.50Q495.91 324.39 490.02 335.19Q484.14 345.99 473.83 352.25Q463.51 358.52 450.01 358.52L450.01 358.52Q436.70 358.52 426.38 352.25Q416.06 345.99 410.09 335.19Q404.11 324.39 404.11 310.50ZM380 310.50L380 310.50Q380 325.54 385.21 338.46Q390.41 351.39 399.86 360.84Q409.31 370.29 422.14 375.59Q434.96 380.89 450.01 380.89L450.01 380.89Q465.44 380.89 478.16 375.59Q490.89 370.29 500.34 360.84Q509.79 351.39 515 338.46Q520.21 325.54 520.21 310.50L520.21 310.50Q520.21 295.26 515 282.54Q509.79 269.81 500.25 260.45Q490.70 251.10 477.97 245.80Q465.24 240.49 450.01 240.49L450.01 240.49Q435.16 240.49 422.33 245.80Q409.51 251.10 399.96 260.45Q390.41 269.81 385.21 282.54Q380 295.26 380 310.50Z"/>
+    <path fill="#3730A3" d="M650.46 313.59L625.96 313.59L668.78 378L696.36 378L650.46 313.59ZM620.76 243L598 243L598 378L620.76 378L620.76 243ZM611.50 243L611.50 262.67L638.69 262.67Q646.60 262.67 652.39 265.37Q658.17 268.07 661.45 273.09Q664.73 278.10 664.73 285.43L664.73 285.43Q664.73 292.56 661.45 297.68Q658.17 302.79 652.39 305.39Q646.60 307.99 638.69 307.99L638.69 307.99L611.50 307.99L611.50 326.89L639.66 326.89Q654.51 326.89 665.31 321.69Q676.11 316.48 682.18 307.03Q688.26 297.58 688.26 284.85L688.26 284.85Q688.26 272.12 682.18 262.77Q676.11 253.41 665.31 248.21Q654.51 243 639.66 243L639.66 243L611.50 243Z"/>
+    <path fill="#3730A3" d="M784.08 357.94L784.08 378L852.16 378L852.16 357.94L784.08 357.94ZM784.08 243L784.08 263.06L852.16 263.06L852.16 243L784.08 243ZM784.08 295.84L784.08 315.51L848.30 315.51L848.30 295.84L784.08 295.84ZM792.37 243L770 243L770 378L792.37 378L792.37 243Z"/>
+    <path fill="#0369A1" d="M1037.28 243L1009.51 243L983.66 288.51L958.40 243L930.82 243L970.94 307.80L926 378L953.58 378L983.47 326.12L1012.40 378L1040.17 378L996.39 307.80L1037.28 243Z"/>
+  </g>
+</svg>
+    <div class="ttl">Test Flow Guide<small>Whole system &middot; web + mobile</small></div>
+  </div>
+  <div class="sp"></div>
+  <span class="pill dev" title="All credentials in this page are synthetic and for the local DEV stack only">DEV ONLY<span class="long"> &middot; synthetic data</span></span>
+  <button class="tbtn" id="printbtn" title="Print or save as PDF (all flows expanded)">Print</button>
+</header>
+<div class="scrim" id="scrim"></div>
+<div class="wrap">
+  <aside class="side" id="side" aria-label="Guide navigation">
+    <div class="search" id="searchbox">
+      <span class="ic">&#128269;</span>
+      <input id="q" type="search" placeholder="Filter flows, users, links...  ( / )" autocomplete="off" aria-label="Search the guide">
+      <button class="x" id="qx" aria-label="Clear search">&times;</button>
+    </div>
+    <div class="sres" id="sres"></div>
+    <div class="prog" id="prog" aria-live="polite">
+      <h4>On this page &middot; progress</h4>
+      <div class="bar"><i id="pbar"></i></div>
+      <div class="num"><span id="pnum">0 / 0 steps</span><span id="ppct">0%</span></div>
+      <div class="acts"><button id="expand">Expand all</button><button id="collapse">Collapse all</button><button id="resetall">Reset ticks</button></div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Modules"></nav>
+  </aside>
+  <main id="main">
+    <div class="banner" role="note"><span class="ic">&#9888;</span><div><b>DEV-ONLY, SYNTHETIC CREDENTIALS.</b> Every phone, e-mail, password, OTP and TOTP seed on this page belongs to the fictional local demo data (<code>+20100000xxxx</code>, <code>@demo.kiorex.test</code>, <code>@demo.kiorly.local</code>, <code>@nurse-demo.kiorly.test</code>). They only work on the local stack, are refused when <code>NODE_ENV=production</code>, and must never be reused anywhere real. Providers are mocked (messages land in the dev inbox, PSP is <code>sandbox-fake</code>, video is <code>mock</code>). Never touch ports <code>3000</code>, <code>5173</code>, <code>5175</code> (the founder's other checkout).</div></div>
+    <div class="hero">
+      <svg class="pulse" viewBox="0 0 700 120" aria-hidden="true"><path d="M0 60 H250 L270 40 L290 92 L312 14 L334 84 L350 60 H700" fill="none" stroke="#E8735E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h1>Kiorex test flow guide</h1>
+      <p>How to test every flow across the whole ecosystem, module by module, on web and mobile: who to sign in as, the exact localhost deep links, the seeded dummy data, the expected result of each step and where the mocked WhatsApp / SMS / e-mail / push shows up. Tick steps as you go: progress is saved in this browser.</p>
+      <p style="font-size:.85rem;opacity:.9">Stack: Kiorex (patients) &middot; Kiorex Passport (identity) &middot; Kiorly Clinic / Pharmacy / Lab by Kiorex (providers) &middot; <b>Kiorly</b> staff app (Clinic, Nurse, Pharmacy, Lab modules) &middot; Ops console. Generated <span id="gen"></span>.</p>
+    </div>
+    <div class="how">
+      <div><b>1. Start the stack</b>Module 1 has the start and seed commands and a live ports table.</div>
+      <div><b>2. Pick a flow</b>Use the left navigation or the filter box. Each flow lists goal, test users, links, steps, data and inbox checks.</div>
+      <div><b>3. Copy, don't type</b>Click any dashed value (phone, password, id) to copy it. Mobile deep links have a Copy button.</div>
+      <div><b>4. Tick as you go</b>Ticks persist in this browser (localStorage). Print gives a clean checklist.</div>
+    </div>
+    <div id="content"></div>
+    <div class="empty" id="empty">No flow matches your filter.</div>
+    <footer>Kiorex v2 workspace &middot; DEV-ONLY test guide &middot; companion markdown: <code>TEST_GUIDE.md</code> (workspace root) &middot; sources: <code>TEST_DATA.md</code>, <code>DEMO_DATA.md</code> (index + per repo), <code>INTEGRATION.md</code>, <code>e2e/README.md</code>, <code>_brand/</code>, <code>_docs/mobile/*</code>, router files of every app, and checks against the running stack. No tax-authority integration exists anywhere (VAT is a plain % line).</footer>
+  </main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+/* ===== Ports (single source of truth for {placeholders}) ===== */
+const PORTS = {
+  web:'http://localhost:5180', ops:'http://localhost:5181', expo:'http://localhost:8081', kapi:'http://localhost:4000',
+  clinic:'http://localhost:5174', capi:'http://localhost:3010', pass:'http://localhost:4400',
+  pharm:'http://localhost:5192', papi:'http://localhost:3100', lab:'http://localhost:5193', lapi:'http://localhost:3200',
+  staff:'http://localhost:8082'
+};
+const PORT_ROWS = [
+  // [name, port, url, kind, note, pingable]
+  ['Postgres (shared dev cluster)',5433,'tcp://127.0.0.1:5433','DB','user/pass postgres/postgres (DEV ONLY). DBs: kiorly, kiorex_platform, kiorex_account, kiorly_pharmacy, kiorly_lab. Not HTTP, so no dot.',false],
+  ['Kiorex Passport (dev OIDC IdP)',4400,'{pass}/account','Identity','Sign-in for every Kiorex web/app. Dev inbox (OTP messages): /dev/inbox',true],
+  ['Kiorex API',4000,'{kapi}/api/v1/specialties','API','Patient + ops API. Swagger/flags/outbox. /api/v1/dev/messaging/outbox = mock messages',true],
+  ['Kiorex patient web',5180,'{web}','Web','Vite dev server (npm run dev -w apps/web)',true],
+  ['Kiorex ops console',5181,'{ops}','Web','Vite dev server (npm run dev -w apps/ops). Needs ops login + TOTP',true],
+  ['Kiorex patient app (Expo web)',8081,'{expo}','Web (mobile)','npm run mobile:web. EXPO_PUBLIC_MOCK=1 = offline fixtures',true],
+  ['Kiorly Clinic API',3010,'{capi}/api/v1/health/live','API','Branch kiorex of clinics-management. Also serves /mobile/* for the staff app',true],
+  ['Kiorly Clinic web',5174,'{clinic}/login','Web','Vite dev server (npm run dev -w web). Includes Nurse edition + Platform admin',true],
+  ['Kiorly Pharmacy API',3100,'{papi}/api/v1/auth/config','API','Binds 127.0.0.1 only. /mobile/* for the staff app',true],
+  ['Kiorly Pharmacy web',5192,'{pharm}/login','Web','PHARMACY_WEB_PORT overrides (was 5190 = founder checkout clash)',true],
+  ['Kiorly Lab API',3200,'{lapi}/api/v1/auth/dev/orgs','API','Binds 127.0.0.1 only. Dev-login orgs listing',true],
+  ['Kiorly Lab web',5193,'{lab}/login','Web','LAB_WEB_PORT overrides (was 5191)',true],
+  ['Kiorly staff app (Expo web)',8082,'{staff}','Web (mobile)','cd kiorly-team && npm run web. Open at ~390 px width',true],
+  ['Passport second fake upstream',4401,'http://localhost:4401','Identity','Only used by account-linking tests (usually not running)',true],
+  ['Metro for native dev builds',8091,'http://localhost:8091/status','Mobile','iOS: npx expo start --dev-client --port 8091. Android uses 8092',true],
+  ['Metro (Android)',8092,'http://localhost:8092/status','Mobile','Android dev build Metro port',true],
+  ['Android emulator to Mac loopback',null,'http://10.0.2.2','Mobile','Inside the emulator, 10.0.2.2 = this Mac (set EXPO_PUBLIC_*_API to 10.0.2.2:3010/3100/3200)',false],
+  ['FORBIDDEN: 3000, 5173, 5175',null,'','Do not touch','Founder\'s other checkout (and Clinic docs portal). Never start, kill or test against these.',false]
+];
+
+/* ===== Test users directory ===== */
+// [id, group, name, role, login, kind(otp|pw|dev|totp), secret, where, note, totpSeed]
+const GROUPS = {
+  patient:'Patients: phone + OTP (Kiorex web / Expo app / Passport)',
+  passport:'Provider-org people in Passport (phone + OTP)',
+  nurse:'Nurse edition in Passport (phone + OTP)',
+  ops:'Ops console (phone + OTP + TOTP)',
+  clinic:'Kiorly Clinic staff (e-mail + password, web :5174 and Kiorly app)',
+  nclinic:'Kiorly Clinic, Nurse edition (e-mail + password)',
+  basic:'Plan-gating tenants (BASIC / Lite)',
+  pharm:'Kiorly Pharmacy staff (e-mail + password, web :5192 and Kiorly app)',
+  lab:'Kiorly Lab staff (dev-login: org slug + e-mail, no password)',
+  legacy:'Legacy Clinic accounts (password is "demo", NOT Demo@12345)',
+  e2e:'e2e fixtures (do not edit)'
+};
+const U = [
+ // patients
+ ['hoda','patient','Hoda Mahmoud / هدى محمود','Patient, guardian of Yassin (8y) and Laila (4y); richest history','+201000001001','otp','000000','Kiorex web/Expo, Passport','Completed visits mk01/mk02, expired hold mk28, 4 saved addresses, home bookings with Nurse Mona, waitlist OFFER, telemedicine ENDED, pharmacy kx_ph_demo_1 PENDING_PAYMENT'],
+ ['samir','patient','Samir Ali Nassar','Patient, co-guardian of Yassin','+201000001002','otp','000000','Kiorex web/Expo','mk03 confirmed (5 days ahead, cancel/refund demo), mk27 cancelled+refunded, telemedicine WAITING, pharmacy kx_ph_demo_2 PAID'],
+ ['karim','patient','Karim Mostafa','Patient, legal guardian of Salma (15)','+201000001003','otp','000000','Kiorex web/Expo','Dr Ingy mk18/mk19, pharmacy kx_ph_demo_3 REJECTED (SLA_EXPIRED), physio'],
+ ['nourhan','patient','Nourhan Fathy / نورهان فتحي','Patient','+201000001004','otp','000000','Kiorex web/Expo','Pharmacy kx_ph_demo_4 READY, lab kx_lb_demo_1 PENDING_PAYMENT, mk26 pending clinic, solo-nurse client (Lab consent never asked)'],
+ ['mahmoud','patient','Mahmoud El-Sayed / محمود السيد','Patient, cardiology, guardian of Adam (2y)','+201000001005','otp','000000','Kiorex web/Expo','Dr Tamer mk07/mk08, ECG in vault, pharmacy kx_ph_demo_5 DISPENSED, lab kx_lb_demo_2 PAID, physio 10-session series, care-plan request kx_cp_demo_2'],
+ ['mariam','patient','Mariam Adel','Patient','+201000001006','otp','000000','Kiorex web/Expo','Telemedicine SCHEDULED (demo_ts_mk05), pharmacy kx_ph_demo_6 DISPENSED, lab kx_lb_demo_3 SUBMITTED'],
+ ['omar','patient','Omar Hegazy','Patient','+201000001007','otp','000000','Kiorex web/Expo','Lab kx_lb_demo_4 COLLECTED (release it in Lab), pharmacy kx_ph_demo_7 REJECTED'],
+ ['dalia','patient','Dalia Ibrahim','Patient','+201000001008','otp','000000','Kiorex web/Expo','No-show with forfeited deposit (mk06), lab kx_lb_demo_5 RELEASED, pharmacy kx_ph_demo_8 CANCELLED'],
+ ['tarek','patient','Tarek Zaki','Patient','+201000001009','otp','000000','Kiorex web/Expo','Checked in today (mk09, deposit paid), lab kx_lb_demo_6 RELEASED; Passport secondary phone is pending_review'],
+ ['heba','patient','Heba Salah','Patient','+201000001010','otp','000000','Kiorex web/Expo, Passport orgs','Cancelled+refunded mk12; pending Nile Care nurse invitation (token demo-invite-nile-nurse); lab kx_lb_demo_7 REJECTED'],
+ ['youssef','patient','Youssef Ramadan','Patient','+201000001011','otp','000000','Kiorex web/Expo','Dr Khaled mk14, Dr Medhat mk25; lab kx_lb_demo_8 CANCELLED'],
+ ['rana','patient','Rana Khaled / رنا خالد','Patient','+201000001012','otp','000000','Kiorex web/Expo','Cancelled+refunded mk15; agency client with Nurse-lab consent REVOKED (refusal demo)'],
+ ['nabila','patient','Nabila Hamdy / نبيلة حمدي','Patient (68), agency home-care client','+201000001013','otp','000000','Kiorex web/Expo','Care plan kx_cp_demo_1 (10 visits, 4 done), MAR, shifts'],
+ // passport provider org
+ ['ahmedf','passport','Ahmed Fawzy','Org owner, "Nile Care Medical Center (DEMO)"; STAFF link: Clinic owner.na@ (GROUP_ADMIN)','+201000002001','otp','000000','Passport /account/orgs; "Sign in with Kiorex Passport" on Clinic :5174 and Kiorly app','Members Sara, Dr Amr, Dr Mai; invitations pending/consumed/expired'],
+ ['sara','passport','Sara Lotfy / سارة لطفي','Receptionist member; STAFF link: Clinic frontdesk1.na@ (RECEPTIONIST)','+201000002002','otp','000000','Passport /account/orgs; Clinic Passport sign-in',''],
+ ['amr','passport','Dr Amr Salem','Doctor member','+201000002003','otp','000000','Passport /account/orgs',''],
+ ['mostafa','passport','Mostafa Reda','Pharmacist member, "Delta Pharmacy Group (DEMO)"; STAFF link: Pharmacy pharmacist@','+201000002004','otp','000000','Passport /account/orgs; Pharmacy :5192 Passport sign-in',''],
+ ['dina_lab','passport','Dina Wagdy / دينا وجدي','Lab technician member; STAFF link: Lab demo-lab tech@','+201000002005','otp','000000','Passport /account/orgs; Lab :5193 Passport sign-in',''],
+ ['nadia_pp','passport','Dr Nadia Fouad','STAFF link: Clinic nadia.na@ (PHYSICIAN)','+201000002006','otp','000000','Clinic Passport sign-in, Kiorly app',''],
+ ['phown_pp','passport','Demo Pharmacy Owner','STAFF link: Pharmacy owner@','+201000002007','otp','000000','Pharmacy Passport sign-in',''],
+ ['phcash_pp','passport','Omar Cashier','STAFF link: Pharmacy cashier@','+201000002008','otp','000000','Pharmacy Passport sign-in',''],
+ ['labsig_pp','passport','Dr Salma (Lab signatory)','STAFF link: Lab demo-lab signatory@','+201000002009','otp','000000','Lab Passport sign-in',''],
+ ['labown_pp','passport','Demo Lab Owner','STAFF link: Lab demo-lab owner@','+201000002010','otp','000000','Lab Passport sign-in',''],
+ ['multiws','passport','Demo Multi-Workspace Owner','Several workspaces under one Passport identity','+201000002021','otp','000000','Passport /account/orgs',''],
+ ['nows','passport','Demo No-Workspace Newcomer','No workspace yet (onboarding / PASSPORT_NOT_LINKED path)','+201000002022','otp','000000','Passport',''],
+ // nurse
+ ['mona_pp','nurse','Mona Adel','Solo nurse, owner of "Demo Home Nursing (Mona)" (also agency member)','+201000003001','otp','000000','Passport orgs (edition NURSE), "Sign in with Kiorex Passport" in Clinic','Also email login mona@nurse-demo.kiorly.test'],
+ ['agency_owner_pp','nurse','Agency owner','Owner, "Demo Care Agency"','+201000003002','otp','000000','Passport / Clinic Nurse view',''],
+ ['dina_pp','nurse','Dina (dispatcher)','Dispatcher, Demo Care Agency','+201000003003','otp','000000','Passport / Clinic',''],
+ ['nurses_pp','nurse','Agency nurses Heba, Salma, Nadine, Rawan, Yara','Nurses 1..5','+201000003004','otp','000000','Passport / Clinic','Phones 3004 (Heba), 3005 (Salma), 3007 (Nadine), 3008 (Rawan), 3009 (Yara); aide Aya = 3006'],
+ ['noha','nurse','Noha Nurse','Pending invitation to the agency','+201000003011','otp','000000','Passport /account/orgs','Invitation token demo-invite-agency-nurse'],
+ ['mai_pp','nurse','Dr Mai Hassan','Physiotherapist, Nile Care','+201000003010','otp','000000','Passport / Clinic','Clinic e-mail mai.na@demo.kiorex.test'],
+ // ops
+ ['ops_super','ops','Ops super admin','The only role that can change flags / gates / approve two-person actions','+201000000099','totp','000000','Ops console :5181','OTP 000000 then TOTP code from the seed','REMOVED-OLD-DEMO-TOTP-SECRET'],
+ ['ops_admin','ops','Ops admin','ops_admin (read + act, no flag changes)','+201000009001','totp','000000','Ops console :5181','OTP 000000 then TOTP','REMOVED-OLD-DEMO-TOTP-SECRET'],
+ ['ops_fin','ops','Ops finance','Role claim only (API treats as ops_admin)','+201000009002','totp','000000','Ops console :5181','OTP 000000 then TOTP','REMOVED-OLD-DEMO-TOTP-SECRET'],
+ ['ops_sup','ops','Ops support','Role claim only; no seeded secret','+201000009003','otp','000000','Ops console :5181','First sign-in asks you to ENROL a TOTP (scan QR, confirm)'],
+ // clinic Nile Care (na)
+ ['owner.na','clinic','Ahmed Fawzy','GROUP_ADMIN, Nile Care (PRO active)','owner.na@demo.kiorex.test','pw','Demo@12345','Clinic :5174, Kiorly app','Tenants na (Nile Care), df (Delta), ss (Smile & Skin), sp (Specialties Network) use the same pattern'],
+ ['manager.na','clinic','Branch manager','BRANCH_MANAGER, Nile Care','manager.na@demo.kiorex.test','pw','Demo@12345','Clinic, Kiorly app',''],
+ ['frontdesk1.na','clinic','Front desk 1','RECEPTIONIST, Nile Care','frontdesk1.na@demo.kiorex.test','pw','Demo@12345','Clinic, Kiorly app','frontdesk2.na@ also exists. Legal-terms banner on first login'],
+ ['nurse.na','clinic','Nurse Nile Care','NURSE, Nile Care','nurse.na@demo.kiorex.test','pw','Demo@12345','Clinic, Kiorly app',''],
+ ['accountant.na','clinic','Accountant','FINANCE_OFFICER, Nile Care','accountant.na@demo.kiorex.test','pw','Demo@12345','Clinic, Kiorly app','Revenue, Expenses, Reports reachable'],
+ ['callcenter.na','clinic','Call centre','CALL_CENTER, Nile Care','callcenter.na@demo.kiorex.test','pw','Demo@12345','Clinic, Kiorly app',''],
+ ['nadia.na','clinic','Dr Nadia Fouad','PHYSICIAN, paediatrics (Kiorex id demo_l_na_nadia)','nadia.na@demo.kiorex.test','pw','Demo@12345','Clinic, Kiorly app','Mobile: pending Rx (Cetirizine 10 mg, Hoda) + critical potassium 6.9'],
+ ['walid.na','clinic','Dr Walid Samy','PHYSICIAN, dermatology','walid.na@demo.kiorex.test','pw','Demo@12345','Clinic',''],
+ ['tamer.na','clinic','Dr Tamer Shawky','PHYSICIAN, cardiology','tamer.na@demo.kiorex.test','pw','Demo@12345','Clinic','Also rania, khaled, hossam, ingy, sherif .na@'],
+ ['mai.na','clinic','Dr Mai Hassan','PHYSICIAN, physiotherapist (physio pack)','mai.na@demo.kiorex.test','pw','Demo@12345','Clinic','Mahmoud El-Sayed: assessment, plan, 10-session series'],
+ ['owner.df','clinic','Delta owner','GROUP_ADMIN, Delta Family Clinics (PRO)','owner.df@demo.kiorex.test','pw','Demo@12345','Clinic','Dr Samah PAUSED (licence expired); waitlist autofill OFF by flag. Doctors ola.df, medhat.df, samah.df, hany.df (physio)'],
+ ['owner.ss','clinic','Smile & Skin owner','GROUP_ADMIN, TRIALING (14-day trial)','owner.ss@demo.kiorex.test','pw','Demo@12345','Clinic','Kiorex listings OFF (flag); Dr Adham verification pending'],
+ ['owner.sp','clinic','Specialties Network owner','GROUP_ADMIN, 72 doctors in 36 specialties','owner.sp@demo.kiorex.test','pw','Demo@12345','Clinic','Doctors: <key>.sp@demo.kiorex.test, e.g. enta.sp@ (Dr Jihan Eissa, 100 EGP deposit), psychiatrya.sp@'],
+ ['enta.sp','clinic','Dr Jihan Eissa','PHYSICIAN, ENT, deposit 100 EGP (demo_l_sp_enta)','enta.sp@demo.kiorex.test','pw','Demo@12345','Clinic','Public booking slug demo-sp-enta'],
+ // nurse clinic
+ ['mona','nclinic','Mona Adel','Solo nurse (NURSE_PRO)','mona@nurse-demo.kiorly.test','pw','Demo@12345','Clinic Nurse view, Kiorly app (Nurse tile)','Today route /home-visits/today; 12 open safety alerts'],
+ ['agency_owner','nclinic','Agency Owner','CLINIC_ADMIN, Demo Care Agency (ENTERPRISE)','owner@nurse-demo.kiorly.test','pw','Demo@12345','Clinic, Kiorly app','Care-plan inbox /nurse/inbox, devices of the org'],
+ ['dispatch','nclinic','Dina (dispatcher)','RECEPTIONIST, Demo Care Agency','dispatch@nurse-demo.kiorly.test','pw','Demo@12345','Clinic /nurse/dispatch','Assign Heba/Salma OK; Nadine, Rawan, Yara, Aya refused'],
+ ['nurse1','nclinic','Heba (agency nurse 1)','Nurse, VERIFIED','nurse1@nurse-demo.kiorly.test','pw','Demo@12345','Clinic, Kiorly app','nurse2@ Salma (licence expires in 18 days), nurse3@ Nadine REJECTED, nurse4@ Rawan EXPIRED, nurse5@ Yara UNVERIFIED'],
+ ['aide','nclinic','Aya (aide)','Aide','aide@nurse-demo.kiorly.test','pw','Demo@12345','Clinic, Kiorly app',''],
+ // basic
+ ['owner.basic','basic','Ramy Hafez','GROUP_ADMIN, Corner Family Clinic (BASIC)','owner.basic@demo.kiorex.test','pw','Demo@12345','Clinic, Kiorly app (upgrade screen)','doctor.basic@ (Dr Heba Lotfy), nurse.basic@ (Mervat Adel)'],
+ ['pharm.basic','basic','Dr Basic Owner','OWNER, Kiorly Corner Pharmacy (Lite/BASIC)','owner.basic@demo.kiorly.local','pw','Demo@12345','Pharmacy :5192, Kiorly app (upgrade screen)','pharmacist.basic@, cashier.basic@demo.kiorly.local'],
+ ['lab.basic','basic','Lab basic director','DIRECTOR, org basic-lab (BASIC)','director@basic-lab.test','dev','basic-lab','Lab :5193 dev-login, Kiorly app (upgrade screen)','Org slug basic-lab, no password'],
+ // pharmacy
+ ['ph.owner','pharm','Dr. Demo Owner','OWNER (licensed pharmacist), Kiorly Demo Pharmacy (CHAIN, ENTERPRISE)','owner@demo.kiorly.local','pw','Demo@12345','Pharmacy :5192, Kiorly app','All 54 permissions'],
+ ['ph.pharmacist','pharm','Ph. Salma Demo','PHARMACIST (can sign off), Maadi','pharmacist@demo.kiorly.local','pw','Demo@12345','Pharmacy, Kiorly app','Rx validate/dispense, orders respond, controlled'],
+ ['ph.pharmacist2','pharm','Pharmacist 2 (witness)','PHARMACIST, second signer for controlled drugs','pharmacist2@demo.kiorly.local','pw','Demo@12345','Pharmacy, Kiorly app','Countersigns the Morphicure discrepancy'],
+ ['ph.manager','pharm','Mona Manager','BRANCH_MANAGER','manager@demo.kiorly.local','pw','Demo@12345','Pharmacy, Kiorly app','Inventory, purchasing, receiving, witness'],
+ ['ph.cashier','pharm','Omar Cashier','CASHIER','cashier@demo.kiorly.local','pw','Demo@12345','Pharmacy, Kiorly app','POS, shift; no validate/sign-off'],
+ ['ph.assistant','pharm','Asma Assistant','ASSISTANT','assistant@demo.kiorly.local','pw','Demo@12345','Pharmacy, Kiorly app','Receiving, count; no controlled'],
+ ['ph.chain','pharm','Chain Ops','CHAIN_OPS (both branches)','chain@demo.kiorly.local','pw','Demo@12345','Pharmacy, Kiorly app','Catalogue, transfers, PO; no Rx/POS'],
+ ['ph.solo','pharm','Dr. Solo Owner','OWNER, Kiorly Solo Pharmacy (PRO, STANDALONE: no Kiorex orders)','solo.owner@demo.kiorly.local','pw','Demo@12345','Pharmacy, Kiorly app','solo.pharmacist@, solo.manager@, solo.cashier@, solo.assistant@'],
+ // lab
+ ['lab.owner','lab','Layla Owner','OWNER, demo-lab (PRO)','owner@demo-lab.test','dev','demo-lab','Lab :5193 /login, Kiorly app','Dev-login: pick org then role. Also chain-lab (ENTERPRISE) and basic-lab (BASIC)'],
+ ['lab.director','lab','Dr. Karim Director','LAB_DIRECTOR','director@demo-lab.test','dev','demo-lab','Lab, Kiorly app',''],
+ ['lab.signatory','lab','Dr. Salma Signatory','AUTHORIZED_SIGNATORY (pathologist)','signatory@demo-lab.test','dev','demo-lab','Lab, Kiorly app','Medical validation, release, critical alerts, QC clear'],
+ ['lab.tech','lab','Omar Technologist','TECHNOLOGIST','tech@demo-lab.test','dev','demo-lab','Lab, Kiorly app','Accessioning, worklist, QC'],
+ ['lab.phleb','lab','Nour Phlebotomist','PHLEBOTOMIST','phleb@demo-lab.test','dev','demo-lab','Lab /phleb, Kiorly app','Home-collection route; 7 permissions'],
+ ['lab.reception','lab','Mona Reception','RECEPTION','reception@demo-lab.test','dev','demo-lab','Lab',''],
+ ['lab.supervisor','lab','Rania Supervisor','SUPERVISOR','supervisor@demo-lab.test','dev','demo-lab','Lab','Duplicate-patient merge'],
+ ['lab.finance','lab','Fady Finance','FINANCE','finance@demo-lab.test','dev','demo-lab','Lab, Kiorly app (TAT, orders, reagents)',''],
+ ['lab.manager','lab','Hassan Manager','BRANCH_MANAGER (also supervisor@, finance@)','manager@demo-lab.test','dev','demo-lab','Lab','Duplicate-patient merge (supervisor@ or manager@)'],
+ // legacy
+ ['legacy.admin','legacy','Group Administrator','GROUP_ADMIN, Kiorly Clinic Group (Demo, ENTERPRISE)','admin@kiorly.com','pw','demo','Clinic, Kiorly app','Also superadmin@kiorly.com (PLATFORM_SUPER_ADMIN, /platform) and admin@drahmedshall.com, all password demo'],
+ ['legacy.super','legacy','Platform super admin','PLATFORM_SUPER_ADMIN (Clinic /platform console)','superadmin@kiorly.com','pw','demo','Clinic /platform',''],
+ // e2e
+ ['amira','e2e','Amira','e2e fixture patient','+201000000001','otp','000000','Passport','Do not edit; unseeded numbers print their OTP in .e2e/logs/passport.log'],
+ ['hassan','e2e','Hassan','e2e fixture patient','+201000000002','otp','000000','Passport','Do not edit']
+];
+const UBY = Object.fromEntries(U.map(u=>[u[0],u]));
+
+const MODULES = [];
+const W = '/Users/shall/Documents/Peraonal/Work/kiorex-v2';
+
+/* ---------------------------------------------------------------- 1 SETUP */
+MODULES.push({id:'setup',ic:'1',title:'Setup and stack',blurb:'Start Postgres and the five APIs, seed the demo data, start the web apps, check the ports. Run these from the workspace folder; everything is local and DEV ONLY.',
+ intro:'Workspace root: `'+W+'`. The shared Postgres runs natively on **:5433** (no Docker needed). Never run commands that touch ports 3000 / 5173 / 5175.',
+ flows:[
+ {id:'S1',title:'Start Postgres and the five APIs',goal:'Get Passport :4400, Kiorly Clinic :3010, Kiorex :4000, Pharmacy :3100 and Lab :3200 running against Postgres :5433.',
+  steps:[
+   ['`cd '+W+'`','You are in the workspace parent folder (it holds clinics-management, kiorex-platform, kiorly-pharmacy, kiorly-lab, kiorly-team, e2e ...).'],
+   ['If Postgres is not running: `PATH=/Users/postgres/bin:$PATH pg_ctl -D .pgdata -l .pgdata/server.log -o "-p 5433" start`','`pg_isready -h 127.0.0.1 -p 5433` says accepting connections. (up.sh also starts it when needed.)'],
+   ['First time only: `e2e/scripts/up.sh --build --seed`. Afterwards just `e2e/scripts/up.sh` (add `--restart --only=pharmacy` to bounce one service).','All five services listen; logs go to `.e2e/logs/<service>.log`, pids to `.e2e/pids`.'],
+   ['Open the Ports table below (or module "Reference > Ports") and look at the live dots.','Passport 4400, Kiorex API 4000, Clinic API 3010, Pharmacy API 3100, Lab API 3200 are green.']
+  ],
+  inbox:['Stop everything: `e2e/scripts/down.sh` (stops by port, never :3000). One service: `e2e/scripts/svc.sh kiorly stop|start`.','Tail a service: `tail -f .e2e/logs/kiorex.log` (also kiorly.log, passport.log, pharmacy.log, lab.log).']},
+ {id:'S2',title:'Seed the demo data (all products, in order)',goal:'Create every persona, doctor, order and message used by this guide. Idempotent.',
+  steps:[
+   ['`scripts/seed-all.sh`','Runs, in order: Passport -> Kiorly Clinic (3 Nile/Delta/Smile orgs + Nurse edition + 36-specialty network) -> Clinic staff-app seed -> Pharmacy (+ its staff-app seed) -> Lab (+ staff-app seed) -> provider sync -> Kiorex (incl. home bookings).'],
+   ['Optional fresh live data: `scripts/seed-all.sh --reset` (removes only demo records). Do NOT run it while other people or agents use the stack: it can restart the Passport IdP.','Live home visits (en route / arrived / just aborted) are re-anchored to "now".'],
+   ['After running the e2e suite (`cd e2e && npm test`) re-run `scripts/seed-all.sh`.','The suite revokes some dev gate evidence; the seed restores it.'],
+   ['Sanity check: `curl -s localhost:4000/api/v1/specialties | head -c 200`','JSON list of the 36 specialties (EN + AR names).']
+  ],
+  data:['Dates are relative to the seed day (-45 ... +14 days). A freshly seeded HELD booking expires after its hold time (mk28 already is EXPIRED).','Seeds refuse to run unless `DEMO_SEED_ALLOWED=true` and the environment is non-production (the scripts set it).','Per-repo seeds: Clinic `cd clinics-management/apps/api && npm run db:seed:demo` (and `db:seed:mobile`), Pharmacy `cd kiorly-pharmacy/apps/api && npm run seed:all`, Lab `cd kiorly-lab/apps/api && npm run db:seed && npm run db:seed:demo && npm run db:seed:mobile`, Kiorex `cd kiorex-platform/apps/api && npm run db:seed:demo`, Passport `cd kiorex-account && npm run db:seed:demo`.']},
+ {id:'S3',title:'Start the web apps and the mobile web builds',goal:'One Vite / Expo dev server per front end. The APIs are already running (do not run the repo-level `npm run dev`, it would start a second Kiorex API on :4000).',
+  steps:[
+   ['`(cd clinics-management && npm run dev -w web)` then open {clinic}/login','Kiorly Clinic sign-in on :5174.'],
+   ['`(cd kiorex-platform && npm run dev -w apps/web)` then open {web}','Kiorex patient web on :5180 (Arabic/English switch in the header).'],
+   ['`(cd kiorex-platform && npm run dev -w apps/ops)` then open {ops}','Ops console on :5181 (redirects to Passport).'],
+   ['`(cd kiorex-platform && npm run mobile:install && npm run mobile:web)` then open {expo}','Patient Expo web app on :8081. `EXPO_PUBLIC_MOCK=1` runs offline fixtures with no API or IdP.'],
+   ['`(cd kiorly-pharmacy && npm run dev -w web)` then open {pharm}/login','Pharmacy web on :5192.'],
+   ['`(cd kiorly-lab && npm run dev -w web)` then open {lab}/login','Lab web on :5193.'],
+   ['`(cd kiorly-team && npm install && npm run web)` then open {staff}','Kiorly staff app (Expo web) on :8082. Use a ~390 px wide window.']
+  ],
+  links:[['Clinic','{clinic}/login'],['Patient web','{web}'],['Ops','{ops}'],['Patient Expo web','{expo}'],['Pharmacy','{pharm}/login'],['Lab','{lab}/login'],['Kiorly Expo web','{staff}']]},
+ {id:'S4',title:'Verify the stack responds (login smoke test)',goal:'Five quick checks that prove the logins in this guide work on your machine.',
+  steps:[
+   ['`curl -s -o /dev/null -w "%{http_code}\\n" {pass}/account`','200.'],
+   ['Clinic API login (the running API accepts form-encoded bodies): `curl -s -X POST {capi}/api/v1/auth/login -d "email=owner.na@demo.kiorex.test&password=Demo@12345" | head -c 120`','JSON with `accessToken`.'],
+   ['Pharmacy API login: `curl -s -X POST {papi}/api/v1/auth/login -H "Content-Type: application/json" -d \'{"email":"pharmacist@demo.kiorly.local","password":"Demo@12345"}\' | head -c 80`','JSON with `accessToken`.'],
+   ['Lab dev orgs: `curl -s {lapi}/api/v1/auth/dev/orgs | head -c 200`','Lists demo-lab (PRO), chain-lab (CHAIN), basic-lab (LITE) with their staff.'],
+   ['Passport OTP smoke: sign in at {pass}/account with `+201000001001` and `000000`.','Account home for Hoda Mahmoud.']
+  ],
+  note:'Observed on 23 Nov 2026: a JSON POST to the Clinic API login returned 400 "email must be an email" on the already-running process (global JSON body parsing bug), while a form-encoded POST returned 200. It is fixed in clinics-management commit 997c3304 ("fix global JSON body parsing"): rebuild and restart that API (`e2e/scripts/up.sh --build --restart --only=kiorly`). See Troubleshooting T2.'},
+ {id:'S5',title:'Reset, re-seed and e2e',goal:'Know how to get back to a clean state and how to run the automated suites.',
+  steps:[
+   ['Reset a single Passport OTP rate limit: `cd kiorex-account && npm run db:reset` (5 OTP sends per phone per hour).','Next OTP request works.'],
+   ['Run all cross-service e2e: `cd e2e && npm test` (one file: `npm test -- test/07-cancellation-refund.e2e.ts`).','Files 01..19 run sequentially against the real stack. 11-nurse-lab runs separately: `npm run test:nurse`.'],
+   ['Clear old DEAD outbox rows (dev DB only): see the SQL in `TEST_DATA.md` section "Ops outbox".','Ops > Outbox shows no DEAD `kiorly.record_share_consent` rows.']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 2 PASSPORT */
+MODULES.push({id:'passport',ic:'2',title:'Passport sign-in / sign-out',blurb:'Kiorex Passport is the single OIDC identity (phone OTP, passkeys, families, organisations). Every Kiorex web/app and the provider "Sign in with Kiorex Passport" buttons go through it.',
+ intro:'Dev IdP: {pass}/account. OTP for every seeded phone is `000000`. The OTP text also appears in the dev inbox {pass}/dev/inbox (WhatsApp template `kx_otp_*_mock`).',
+ flows:[
+ {id:'P1',title:'Patient phone-OTP sign-in and sign-out',goal:'Sign in on Passport, then through each Kiorex client, and sign out everywhere.',who:['hoda'],
+  links:[['Passport account','{pass}/account'],['Dev inbox','{pass}/dev/inbox'],['Kiorex patient web','{web}']],
+  steps:[
+   ['Open {pass}/account, enter the phone, press continue.','OTP step appears.'],
+   ['Enter the code. Skip the passkey prompt.','Account home for "Hoda Mahmoud / هدى محمود".'],
+   ['Open {pass}/dev/inbox (new tab).','A message to `+201000001001`, template `kx_otp_en_mock`, body "code 000000", state delivered, provider ref `mock_whatsapp_n`.'],
+   ['Open {web} and press Sign in.','Redirect to Passport (OIDC code + PKCE, client `kiorex-web`); you return to {web}/auth/callback already signed in as Hoda.'],
+   ['In the web header open the account menu and sign out (confirm).','Session cleared; Passport end-session is called. Reloading {web}/appointments sends you to sign in again.']
+  ],
+  inbox:['Dev inbox: {pass}/dev/inbox (JSON-backed page). Kiorex-side OTP/booking messages: `curl -s {kapi}/api/v1/dev/messaging/outbox`.','`tail -f .e2e/logs/passport.log` shows `to=+20... locale=.. code=......` for numbers not seeded.']},
+ {id:'P2',title:'Wrong code and OTP rate limit',goal:'Bad codes are refused and sends are limited to 5 per phone per hour.',who:['nourhan'],links:[['Passport','{pass}/account']],
+  steps:[
+   ['Enter `+201000001004` then the wrong code `123456`.','Inline error, no sign-in.'],
+   ['Request a new code 6 times for the same phone.','The 6th is refused (5 per hour). Clear with `cd kiorex-account && npm run db:reset`.'],
+   ['Enter a malformed phone (for example `0100`).','Validation message; no OTP sent.']
+  ]},
+ {id:'P3',title:'"Test users (dev only)" quick-login panels and "Sign in with Kiorex Passport" for staff',goal:'Every dev login screen shows a DEV-ONLY panel of synthetic users; the provider webs and the Kiorly app can also sign staff in through Passport (phone + OTP).',
+  note:'Panels (coral DEV tag, English + Arabic RTL, light/dark, phone width) exist on: Passport (`kiorex-account/apps/dev-idp/src/dev-test-users.ts`), Clinic / Pharmacy / Lab web (`src/dev/dev-test-users.tsx`), the Kiorly staff app and the Kiorex patient app (`src/dev/DevTestUsers.tsx`). They render only in dev builds; hide with `VITE_DEV_TEST_USERS=false` (Clinic, Pharmacy, Lab web), `EXPO_PUBLIC_DEV_TEST_USERS=false` (patient app, Kiorly app) or `KX_DEV_TEST_USERS=false` (Passport). Each repo has `npm run check:dev-test-users`, which builds production and development bundles and fails if the panel or any credential leaks. Smoke test: `node e2e/dev-test-users/smoke.mjs [passport|ops|mobile|team|clinic|pharmacy|lab|api|all]` (Playwright; needs the stack, seeds and web servers; `KX_TEAM_PORT` picks the staff-app port). Companion markdown guide: `TEST_GUIDE.md` at the workspace root.',
+  links:[['Passport sign-in','{pass}/account'],['Clinic /login','{clinic}/login'],['Pharmacy /login','{pharm}/login'],['Lab /login','{lab}/login'],['Kiorly sign-in','{staff}/sign-in']],
+  steps:[
+   ['Passport {pass}/account (signed out): panel "Test users (dev only)" with groups Patients, Provider staff (Clinic, Pharmacy, Lab), Nurse edition, Ops console (needs authenticator code).','Click a patient: the phone is filled, code 000000 used, "Signing in as ... (dev test user)". The same panel appears when {web} or {ops} redirects to Passport, so it covers the patient web, ops and patient apps.'],
+   ['Click an Ops user.','TOTP step shows "Dev only: the current code for this ops test user" with "Fill current code and verify" and the dev seed with "Copy seed". If it says wrong code, that 30-second code was already used: wait for the next one.'],
+   ['Clinic {clinic}/login: panel groups Nile Care (PRO), Delta (PRO), Smile & Skin (Lite trial), Corner (Basic), Nurse edition, Older demo accounts (password demo). Click a card.','One click signs in (e-mail + password filled). Arabic headings when the UI language is Arabic.'],
+   ['Pharmacy {pharm}/login: groups chain (Enterprise, Kiorex orders), solo (Pro, standalone), basic (Lite): 15 logins. Lab {lab}/login: 3 orgs x 9 roles = 27 dev-logins (no password). Kiorly app sign-in: chips under the form per product tab (Clinic, Nurse, Pharmacy, Lab), press Sign in afterwards. Kiorex patient app sign-in: 13 patient chips that pass the phone as `login_hint` to Passport (pre-filled, signs in by itself).','Each card or chip signs in as that persona (Clinic panel lists 26 logins, all verified through the API on 23 Nov 2026).'],
+   ['Staff Passport sign-in: on Clinic, Pharmacy or Lab press "Sign in with Kiorex Passport" and use a linked phone: `+201000002001` (Clinic owner.na@), `+201000002002` (frontdesk1.na@), `+201000002006` (nadia.na@); Pharmacy `+201000002004` (pharmacist@), `+201000002007` (owner@), `+201000002008` (cashier@); Lab demo-lab `+201000002005` (tech@), `+201000002009` (signatory@), `+201000002010` (owner@). OTP `000000`.','You land in the product with the ROLE of the linked staff row (Passport proves identity only). Sign-out also ends the Passport session, so the next Passport sign-in asks for the OTP again. An unlinked phone gets `PASSPORT_NOT_LINKED` (try `+201000002022`).'],
+   ['If Passport shows no panel it was started before the change: `e2e/scripts/up.sh --restart --only=passport`. Optionally set `KX_DEV_TEST_USERS=false` and restart.','The panel appears or disappears.']
+  ]},
+ {id:'P4',title:'Guardian links (family) in every state',goal:'Active, ended, expired and pending-review guardian links and "act as".',who:['hoda','samir','karim','tarek','omar','dalia'],links:[['Family','{pass}/account/family']],
+  steps:[
+   ['Sign in as Hoda, open {pass}/account/family.','Yassin and Laila ACTIVE with "act as".'],
+   ['Sign in as Samir.','Yassin shown as co-guardian.'],
+   ['Sign in as Karim.','Salma (15), legal guardian with court-order evidence.'],
+   ['Tarek: Zeina ENDED. Omar: Kareem EXPIRED. Dalia: Mariam pending review.','Status badge matches; ended or expired links offer no act-as.','neg']
+  ],data:['Dependants (Yassin, Laila, Salma, Adam, ...) have no login: they exist only under their guardian.']},
+ {id:'P5',title:'Organisations, invitations and Nurse edition',goal:'Org owner view, accept an invitation, multi-edition membership.',who:['ahmedf','heba','mona_pp','agency_owner_pp','noha'],links:[['Orgs','{pass}/account/orgs']],
+  steps:[
+   ['Sign in as Ahmed Fawzy `+201000002001` and open {pass}/account/orgs.','Nile Care with members (Sara, Dr Amr, Dr Mai), an ended membership (Youssef), invitations pending / consumed / expired with masked phones.'],
+   ['Revoke the pending invitation.','It becomes revoked (re-seed with `--reset` to restore).'],
+   ['Sign in as Heba `+201000001010`, accept the Nile Care nurse invitation (or paste `demo-invite-nile-nurse`).','Heba becomes a nurse member; invitation consumed. Changes data: reset with `cd kiorex-account && npx tsx scripts/seed-demo.ts --reset`.'],
+   ['Sign in as Mona `+201000003001`.','Two organisations: her own solo NURSE org (owner) and the agency (nurse), with the NURSE edition hint.'],
+   ['Agency owner `+201000003002`.','Members: owner, dispatcher, 5 nurses, assistant. Noha `+201000003011` has `demo-invite-agency-nurse` pending.']
+  ]},
+ {id:'P6',title:'Security page, sessions and back-channel logout',goal:'Passkeys, sessions list, revoke, and a revoked Passport session invalidating the Kiorex session.',who:['hoda'],links:[['Security','{pass}/account/security']],
+  steps:[
+   ['Open {pass}/account/security as Hoda.','Two synthetic passkeys, a sessions list, and events (step-up success 3 min ago, step-up failed, session revoked).'],
+   ['Revoke one session.','It disappears. A privileged action (revoke all) asks for step-up.'],
+   ['Sign in to {web} in one tab, then revoke that session from Passport.','Back-channel logout: the next API call in the web app returns 401 and you are sent to sign in.']
+  ]},
+ {id:'P7',title:'Ops TOTP step and account-link review queue',goal:'Ops users need a TOTP; the review queue shows one pending link request.',who:['ops_super','ops_admin','ops_sup'],links:[['Link review','{pass}/account/ops/links']],
+  steps:[
+   ['Sign in as `+201000000099`, code `000000`.','TOTP prompt.'],
+   ['Use the TOTP generator in "Reference > Test users" (seed `REMOVED-OLD-DEMO-TOTP-SECRET`) and enter the 6-digit code.','Signed in. Each 30 s code is accepted once: on "wrong code" wait for the next one.'],
+   ['Open {pass}/account/ops/links.','Exactly one `pending_review` request (secondary phone `+201000001009`). DO NOT approve unless you want two demo accounts merged.'],
+   ['Repeat as `+201000009001` with its own seed.','Same queue.'],
+   ['Sign in as `+201000009003` (support).','You are asked to ENROL a TOTP (scan the QR, confirm) because no secret is seeded.']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 3 KIOREX PATIENT WEB */
+MODULES.push({id:'patient',ic:'3',title:'Kiorex patient web',blurb:'The marketplace on :5180: search, booking with deposit (Kiorex Pay sandbox), reschedule/cancel, waitlist, family, reviews, record vault, notifications, account data, home visits, care plans, telemedicine.',
+ intro:'All routes verified from `kiorex-platform/apps/web/src/App.tsx`: `/`, `/search`, `/doctors/:id`, `/checkout/:bookingId`, `/appointments`, `/appointments/:id`, `/appointments/:id/review`, `/services`, `/waitlist`, `/records`, `/records/:id`, `/pharmacy`, `/pharmacy/orders`, `/lab`, `/lab/bookings`, `/telemedicine`, `/telemedicine/:id/room`, `/account`, `/account/addresses`, `/notifications`, `/care-plans`, `/visit-status/:token`. Sign-in via Passport (phone + OTP `000000`).',
+ flows:[
+ {id:'K1',title:'Sign in, search, filters, map',goal:'Find a doctor by specialty and see live slots.',who:['hoda'],
+  links:[['Home','{web}'],['Search all','{web}/search'],['Cardiology','{web}/search?specialty=cardiology'],['Paediatrics','{web}/search?specialty=paediatrics'],['Dermatology','{web}/search?specialty=dermatology'],['ENT','{web}/search?specialty=ent'],['Services','{web}/services']],
+  steps:[
+   ['Open {web}, Sign in, Passport phone `+201000001001`, code `000000`.','Back on the web app as Hoda. Switch to Arabic and back: RTL layout flips.'],
+   ['Search > filter Cardiology ({web}/search?specialty=cardiology).','Dr Tamer Shawky (`demo_l_na_tamer`), Dr Basma Barakat, Dr Eman Habib, each with next slots. Map view shows pins in Cairo/Giza (offline mock tiles).'],
+   ['Open a doctor page: {web}/doctors/demo_l_na_nadia','Fees, languages, clinic, verified badge, reviews, slot picker.'],
+   ['Search a home-care type: {web}/search?careType=HOME_NURSING','Nurse Mona Adel and Demo Care Agency (service location HOME, coverage districts).']
+  ],
+  data:['Kiorex provider ids: Nile Care `demo_l_na_nadia` (paediatrics, Dr Nadia Fouad), `demo_l_na_walid` (dermatology), `demo_l_na_tamer` (cardiology), `demo_l_na_rania` (ob-gyn), `demo_l_na_khaled` (dentistry), `demo_l_na_hossam` (orthopaedics), `demo_l_na_ingy` (ENT), `demo_l_na_sherif` (internal medicine). Delta: `demo_l_df_ola` (paediatrics), `demo_l_df_medhat` (family). Physio: `demo_l_rev23_na_mai` (Dr Mai Hassan), `demo_l_rev23_df_hany`. Home nurses: `demo_l_rev23_nsolo_mona`, `demo_l_rev23_nagy_nurse1`.','All 36 specialties: 2 LIVE doctors each, ids `demo_l_sp_<key>` e.g. `demo_l_sp_enta` (Dr Jihan Eissa), `demo_l_sp_psychiatrya`, `demo_l_sp_cardiologyb` (full table in TEST_DATA.md). Specialty codes: `GET {kapi}/api/v1/specialties`.','PAUSED (should NOT be bookable): Dr Samah Aref (licence expired), Dr Lamia Hafez (org flag OFF).']},
+ {id:'K2',title:'Book with a deposit (Kiorex Pay sandbox)',goal:'Hold -> checkout -> pay deposit -> booking CONFIRMED and visible in Kiorly Clinic as source Kiorex marketplace.',who:['hoda','frontdesk1.na'],
+  links:[['Dr Jihan Eissa (100 EGP deposit)','{web}/doctors/demo_l_sp_enta'],['Dr Nadia Fouad','{web}/doctors/demo_l_na_nadia'],['My bookings','{web}/appointments'],['Clinic appointments','{clinic}/appointments']],
+  steps:[
+   ['As Hoda open {web}/doctors/demo_l_sp_enta, pick a slot, continue.','Checkout shows "Due now 100 EGP" (deposit configured on Dr Jihan only; all other doctors have no deposit because `DEPOSIT_DEFAULT_MINOR=0`).'],
+   ['Confirm.','Redirect to the Kiorex Pay sandbox page (`PSP_MODE=sandbox-fake`, no real card, URL like {kapi}/api/v1/pay/fake-checkout/<id>). Press Pay.'],
+   ['Return to the appointment.','Booking CONFIRMED, deposit chip PAID; a confirmation message exists in the message log.'],
+   ['Slot race: open the same slot as Samir (`+201000001002`) in a private window before confirming in the first.','The second confirm fails with a slot-taken error.'],
+   ['In Kiorly Clinic sign in as `frontdesk1.na@demo.kiorex.test` (Dr Nadia booking) or `owner.sp@demo.kiorex.test` (Dr Jihan booking), open Appointments.','New appointment with source "Kiorex marketplace" and a deposit badge.']
+  ],
+  inbox:['Ops > Messaging {ops}/messaging: booking confirmation row (WhatsApp / SMS / e-mail mock).','`curl -s {kapi}/api/v1/dev/messaging/outbox` and `GET /api/v1/dev/payments`.','Ops > Finance {ops}/finance: CAPTURE + PSP-fee ledger rows for the deposit.','Simulate PSP outcomes: `POST {kapi}/api/v1/dev/payments/<id>/simulate {"outcome":"captured|failed|refund_settled"}`.'],
+  data:['If Dr Jihan\'s deposit disappears after a re-sync: `update "Provider" set "acceptsDeposit"=true, raw=jsonb_set(raw,\'{provider,fees,0,depositAmount}\',\'100\') where id=\'demo_l_sp_enta\'` (DB kiorex_platform).']},
+ {id:'K3',title:'Booking states: completed, expired hold, no-show, checked-in, cancelled, pending clinic',goal:'Every status badge and deposit chip matches the seed.',who:['hoda','dalia','tarek','heba','nourhan'],links:[['My bookings','{web}/appointments']],
+  steps:[
+   ['Hoda: My bookings.','COMPLETED `mk01`, `mk02` (Dr Nadia); the held booking `mk28` (Dr Tamer) is already EXPIRED; home bookings with Mona.'],
+   ['Dalia `+201000001008`.','NO_SHOW (`mk06`, Dr Walid) with deposit FORFEITED.'],
+   ['Tarek `+201000001009`.','CHECKED_IN today (`mk09`, Dr Tamer), deposit PAID.'],
+   ['Heba `+201000001010`.','CANCELLED (`mk12`) with deposit REFUNDED.'],
+   ['Nourhan `+201000001004`.','`mk26` PENDING_CLINIC with Dr Medhat (waiting for clinic confirmation).']
+  ]},
+ {id:'K4',title:'Reschedule, cancel and refund',goal:'Cancel inside the policy window refunds the deposit; outside it does not; reschedule has a window and a limit.',who:['samir','mariam'],links:[['My bookings','{web}/appointments']],
+  steps:[
+   ['As Samir open My bookings > `mk03` (5 days ahead, deposit PAID) > Cancel appointment.','Policy copy shown on the dialog. Inside the window: CANCELLED, deposit refund requested then REFUNDED.'],
+   ['Ops > Finance {ops}/finance.','REFUND ledger rows for the booking (request then settle).'],
+   ['As Mariam `+201000001006` open `mk05` (CONFIRMED, future) and press Reschedule, choose another slot.','Toast "rescheduled" and the new time; Kiorly shows the moved appointment.'],
+   ['Reschedule a booking close to its start, or reschedule repeatedly.','Error `RESCHEDULE_WINDOW_CLOSED` or `RESCHEDULE_LIMIT_REACHED` (localized text); `CANCELLATION_WINDOW_CLOSED` for late cancels (allowed without refund).','neg']
+  ],
+  inbox:['Refund message in Ops > Messaging; clinic-side cancel: Kiorly Appointments > cancel on the Kiorex booking and watch Kiorex flip to CANCELLED with a refund.','Kiorly public reschedule link page `{clinic}/r/<token>` and deposit page `{clinic}/pay/<token>` exist for clinic-originated bookings (token arrives in the mock message).']},
+ {id:'K5',title:'Waitlist (offer, accept, decline)',goal:'Join, receive an offer, accept (5-minute hold) or decline.',who:['hoda','owner.df'],links:[['Waitlist','{web}/waitlist']],
+  steps:[
+   ['As Hoda open {web}/waitlist.','Entries in WAITING, and one OFFERED with a countdown.'],
+   ['Accept the offer, then confirm within 5 minutes.','Booking CONFIRMED and visible in Kiorly. Decline instead: the entry returns to WAITING.'],
+   ['Try to join the waitlist for a day that still has slots.','Refused: 409 `SLOTS_AVAILABLE`.','neg'],
+   ['Delta Family Clinics: autofill is OFF by flag `clinic.waitlist_autofill` for org `demo_t_df`.','No automatic offers there; Kiorly > Waitlist (as `owner.df@`) shows the entries.']
+  ]},
+ {id:'K6',title:'Family accounts and acting for a dependant',goal:'Book for a child; guardian pays; vault is shared with the guardian.',who:['hoda','mahmoud'],links:[['Account (family section)','{web}/account']],
+  steps:[
+   ['As Hoda open {web}/account and the Family section.','Yassin (8y) and Laila (4y).'],
+   ['Book Dr Ola (`demo_l_df_ola`, paediatrics) for Yassin.','The booking belongs to the dependant; Hoda pays.'],
+   ['Add a new dependant (name, date of birth) and remove it again.','Appears and disappears.'],
+   ['Mahmoud `+201000001005`: Adam (2y) and the uploaded ECG in the vault.','Dependant visible, ECG record opens.']
+  ]},
+ {id:'K7',title:'Reviews',goal:'Leave a verified review after a completed visit; clinic replies; moderation.',who:['hoda','owner.na','ops_super'],links:[['Review page','{web}/appointments'],['Moderation','{ops}/moderation']],
+  steps:[
+   ['As Hoda: My bookings > completed `mk02` > Leave a review ({web}/appointments/<id>/review).','Stars + text; "verified" review posted; the doctor\'s aggregate rating updates. Edit allowed within 7 days.'],
+   ['Kiorly as `owner.na@`: Kiorex tab > reviews > reply.','The reply appears on the doctor page.'],
+   ['Ops > Moderation.','The one HIDDEN demo review is listed (39 VISIBLE, 1 HIDDEN).']
+  ]},
+ {id:'K8',title:'Records vault and sharing consent',goal:'Visit summaries, prescriptions with QR, uploaded ECG, share consents, follow-ups.',who:['hoda','mahmoud'],links:[['Records','{web}/records'],['Prescriptions tab','{web}/records?tab=prescriptions']],
+  steps:[
+   ['As Hoda open {web}/records.','Visit summaries, prescriptions (QR), follow-ups.'],
+   ['Toggle a share consent (record sharing with the clinic).','Kiorly receives the consent (outbox event `kiorly.record_share_consent`; Ops > Outbox shows it DELIVERED).'],
+   ['Open a prescription record.','QR / verification token; the public verify page is `{clinic}/rx/<token>` (token from the record or from Kiorly encounter).']
+  ]},
+ {id:'K9',title:'Notifications inbox and channel preferences',goal:'In-app inbox, mark read, channel preferences (WhatsApp / SMS / e-mail / push).',who:['hoda'],links:[['Notifications','{web}/notifications']],
+  steps:[
+   ['Open {web}/notifications.','Inbox of recent messages and a preferences section.'],
+   ['Turn a channel off and book something.','No message on that channel in Ops > Messaging (consent is checked on every send).'],
+   ['Trigger sample messages: `curl -s -X POST {kapi}/api/v1/dev/messaging/samples` (booking confirmation, reminder, waitlist offer, refund).','Rows appear in the inbox and in `GET {kapi}/api/v1/dev/messaging/outbox`.']
+  ]},
+ {id:'K10',title:'Account, data export and delete',goal:'Edit profile, consents, sessions, download my data (JSON), delete account.',who:['hoda'],links:[['Account','{web}/account'],['Addresses','{web}/account/addresses']],
+  steps:[
+   ['Open {web}/account > Edit profile, change the name spelling, save.','Saved; reflected in the header.'],
+   ['Press "Download my data".','`kiorex-data-export.json` downloads (everything Kiorex holds about you).'],
+   ['Sessions list: revoke another session.','Removed.'],
+   ['Delete account (use a throw-away e2e number such as `+201000000002`, NOT a demo persona): tick export, confirm.','Account removal requested; sign-in afterwards starts a fresh profile. Do this only on a persona you can re-seed.','neg']
+  ]},
+ {id:'K11',title:'Home visits: address book, booking, live timeline, safety card',goal:'Rev 2.3 home care: saved addresses (OTP-confirmed), HOME slots, coverage, timeline and safety card.',who:['hoda','nabila'],links:[['Addresses','{web}/account/addresses'],['Nurse Mona','{web}/doctors/demo_l_rev23_nsolo_mona'],['Care plans','{web}/care-plans'],['Home nursing search','{web}/search?careType=HOME_NURSING']],
+  steps:[
+   ['As Hoda open {web}/account/addresses.','Four addresses: confirmed default, mother\'s flat, one unconfirmed (needs an OTP), one deleted.'],
+   ['Book Nurse Mona: choose a HOME slot with a confirmed address in nasr-city / heliopolis / new-cairo.','Deposit 100-200 EGP; booking CONFIRMED.'],
+   ['Choose an address in Maadi (outside Mona\'s districts).','Error `OUT_OF_COVERAGE` (422).','neg'],
+   ['Open a booking detail.','Timeline (assigned, en route with ETA, arrived), the SAFETY CARD (photo, name, badge, emergency number, report-a-problem). Address visible within 24 h of the visit, masked after.'],
+   ['Share status with a family member.','2 active shares and 1 stopped exist; the public page is {web}/visit-status/<token> (only steps, ETA and provider name render).']
+  ],
+  data:['An unsafe abort is NEVER a no-show: its deposit goes to HOLD_FOR_REVIEW (Ops > Held deposits).','Agency visits can show `assignmentPending` until the dispatcher assigns a nurse.']},
+ {id:'K12',title:'Care plans',goal:'10-day post-operative wound-care plan: view, request, accept on the agency side.',who:['nabila','mahmoud','agency_owner'],links:[['Care plans','{web}/care-plans'],['Agency inbox','{clinic}/nurse/inbox']],
+  steps:[
+   ['As Nabila `+201000001013` open {web}/care-plans.','`kx_cp_demo_1` CONFIRMED: 10 visits, 4 done, 6 upcoming.'],
+   ['As Mahmoud open Care plans.','Request `kx_cp_demo_2` is pending (REQUESTED).'],
+   ['In Clinic as `owner@nurse-demo.kiorly.test` open /nurse/inbox and accept `kx_cp_demo_2`.','Care plan with visits created; Mahmoud\'s Kiorex page flips to CONFIRMED. `kx_cp_demo_3` shows DECLINED with a reason.']
+  ]},
+ {id:'K13',title:'Telemedicine (mock video room)',goal:'Waiting, scheduled and ended sessions; join the mock room.',who:['samir','mariam','hoda'],links:[['Telemedicine','{web}/telemedicine']],
+  steps:[
+   ['As Samir open {web}/telemedicine.','Session `demo_ts_mk03` WAITING.'],
+   ['Open the session and Join.','Mock video room at {web}/telemedicine/<id>/room; no media leaves the machine.'],
+   ['Mariam: `demo_ts_mk05` SCHEDULED. Hoda: `demo_ts_mk01` ENDED.','Status matches.'],
+   ['Specialty network: 11 confirmed bookings are flagged "(video)" (psychiatry, nutrition, family medicine, dermatology, ...).','Flag `kiorex.telemedicine` is ON with a DEV-ONLY gate.']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 4 PHARMACY */
+MODULES.push({id:'pharmacy',ic:'4',title:'Pharmacy ordering: patient to Kiorly Pharmacy',blurb:'A patient orders from Kiorly Demo Pharmacy - Maadi Branch on Kiorex (pickup or delivery, Rx or OTC, paid through Kiorex Pay sandbox); the pharmacist accepts, readies, sends out for delivery and dispenses in Kiorly Pharmacy.',
+ intro:'Patient side {web}/pharmacy and {web}/pharmacy/orders. Staff side {pharm}/orders (route "Kiorex orders") and {pharm}/rx. Status chain: `PENDING_PAYMENT > PAID > SUBMITTED > READY > OUT_FOR_DELIVERY (delivery only) > DISPENSED`, or `PARTIALLY_FULFILLED` / `PARTIAL_REVIEW` / `REJECTED` / `CANCELLED`. Controlled medicines are never listed and never orderable online.',
+ flows:[
+ {id:'X1',title:'Order for pickup (OTC) and dispense',goal:'Happy path: add OTC items, choose pickup, pay, pharmacist accepts, marks ready, dispenses.',who:['nourhan','ph.pharmacist'],
+  links:[['Patient: pharmacy','{web}/pharmacy'],['Patient: my orders','{web}/pharmacy/orders'],['Pharmacy login','{pharm}/login'],['Pharmacy: Kiorex orders','{pharm}/orders']],
+  steps:[
+   ['As Nourhan `+201000001004` open {web}/pharmacy, pick "Kiorly Demo Pharmacy - Maadi Branch" (pickup, prep about 25 min, delivery fee 0).','Pharmacy card shows Pickup and Delivery chips.'],
+   ['Search `para`, add `Paracetol 500mg` (25 EGP, OTC) x2 and `Cetirex 10mg` (32 EGP) x1.','Cart: subtotal 82 EGP, no Rx warning.'],
+   ['Choose Pickup, press Place order, then pay on the Kiorex Pay sandbox page.','Order PENDING_PAYMENT, then PAID, then SUBMITTED; order page {web}/pharmacy/orders/<id>.'],
+   ['Pharmacy web: sign in as `pharmacist@demo.kiorly.local`, open Orders (Kiorex orders), find the new RECEIVED order, press Accept (full quantities).','Status ACCEPTED; the patient sees it update.'],
+   ['Press Ready.','READY; the patient gets a "ready for pickup" message.'],
+   ['Open the dispensing screen and complete the dispense (pharmacist sign-off).','DISPENSED; patient order DISPENSED; payment released to the pharmacy minus the platform fee.']
+  ],
+  inbox:['Patient messages: Ops > Messaging {ops}/messaging and `curl -s {kapi}/api/v1/dev/messaging/outbox` (kinds PHARMACY_ORDER_*).','Pharmacy side: notifications {pharm}/notifications; `tail -f .e2e/logs/pharmacy.log`.','Ops > Orders {ops}/orders shows the order and partner status (resubmit button if the submit failed).'],
+  data:['OTC (no Rx): `Paracetol 500mg` 25 EGP, `Febrimol 500mg` 25 EGP, `Cetirex 10mg` 32 EGP, `Aspirex 81mg` 30 EGP, `Brufcare 400mg` 45 EGP, `Losecure 20mg` 66 EGP, `Omerex 20mg` 60 EGP, `Cevirex 1000mg` 55 EGP.','Per-line cap in the UI: 10. Available stock drifts with e2e runs and POS sales.']},
+ {id:'X2',title:'Order for delivery, out for delivery',goal:'Delivery address form, the extra OUT_FOR_DELIVERY step, delivery fee handling.',who:['mariam','ph.pharmacist'],
+  links:[['Pharmacy','{web}/pharmacy'],['Kiorex orders','{pharm}/orders']],
+  steps:[
+   ['As Mariam `+201000001006` add `Brufcare 400mg` x1 and `Aspirex 81mg` x1.','Cart total 75 EGP.'],
+   ['Choose Delivery and fill the address form.','Required: address line; optional area, governorate, phone, notes. Delivery fee for this pharmacy: 0 EGP (shown).'],
+   ['Place and pay (sandbox).','Order PAID / SUBMITTED with delivery method DELIVERY.'],
+   ['Pharmacy: Accept, then Ready.','The order card shows the delivery address and customer phone block.'],
+   ['Press the courier hand-over button ("Out for delivery").','Status OUT_FOR_DELIVERY (delivery orders only). Patient message kind `PHARMACY_ORDER_OUT_FOR_DELIVERY`; the patient order page shows the extra step.'],
+   ['Dispense / complete.','DISPENSED, payment released.']
+  ],
+  data:['Address to type: Line `12 Syria Street, Mohandessin`, Area `Mohandessin`, Governorate `Giza`, Phone `+201000001006`, Notes `Call at the gate (TEST)`.']},
+ {id:'X3',title:'Prescription-required order (Rx)',goal:'An Rx-only medicine cannot be ordered without picking a prescription from the vault.',who:['hoda','ph.pharmacist'],
+  links:[['Pharmacy','{web}/pharmacy'],['Vault: prescriptions','{web}/records?tab=prescriptions'],['Pharmacy Rx queue','{pharm}/rx']],
+  steps:[
+   ['As Hoda add `Amoxirex 500mg` (70 EGP, Rx required) to the cart.','Amber "prescription needed" box; Place order is disabled.'],
+   ['If the vault has no prescription the box links to {web}/records?tab=prescriptions. Otherwise pick one in the dropdown.','Place order is enabled once a prescription is selected.'],
+   ['Place and pay.','Order carries `prescriptionRecordId`.'],
+   ['Pharmacy: open the Rx queue {pharm}/rx and the Kiorex order. Validate (allergy / interaction / dose checks appear; an override needs a reason), then dispense.','Rx VALIDATED then DISPENSED with pharmacist sign-off; patient order DISPENSED.'],
+   ['Reject path: reject the order with a reason code.','REJECTED, patient refunded in full, reason shown.','neg']
+  ],
+  data:['Rx-only samples: `Amoxirex 500mg` 70 EGP, `Amlorex 5mg` 55 EGP, `Atorex 20mg` 120 EGP, `Azithrex 500mg` 95 EGP, `Augmacure 1000mg` 176 EGP, `Aspartcure 100IU/ml` insulin 671 EGP, `Glucocure 850mg` 52.8 EGP, `Metforex 850mg` 48 EGP.','Pharmacy-side seeded Rx states: RECEIVED 14, VALIDATING 1, VALIDATED 12, REJECTED 36, PARTIALLY_DISPENSED 1, DISPENSED 54 (patients named "... (DEMO)").']},
+ {id:'X4',title:'Controlled drugs',goal:'Controlled medicines cannot be ordered online; the register and the witness rule work in the pharmacy.',who:['ph.pharmacist','ph.manager','ph.pharmacist2'],
+  links:[['Pharmacy controlled register','{pharm}/controlled'],['Patient search','{web}/pharmacy']],
+  steps:[
+   ['As any patient search `morph` in {web}/pharmacy.','No results: controlled items are never returned (KPRX05).'],
+   ['API check: put a controlled sku in the cart and `POST /pharmacy/orders`.','422 `CONTROLLED_NOT_ORDERABLE` "Controlled medicines cannot be ordered online".','neg'],
+   ['Pharmacy web as `pharmacist@`: Controlled {pharm}/controlled: "Morphicure 10 mg (DEMO)", expected 40, counted 38 (difference -2, CRITICAL), OPEN.','Discrepancy awaiting a witness.'],
+   ['Try to countersign as the same user.','Refused: a different person must witness.','neg'],
+   ['Sign in as `manager@demo.kiorly.local` (or `pharmacist2@`) and countersign.','Discrepancy closes with the witness name and an audit entry. Same flow on mobile: Kiorly > Pharmacy > Controlled.']
+  ]},
+ {id:'X5',title:'Out of stock and limited availability',goal:'Availability-to-promise: lines that cannot be fulfilled block checkout; stock changes lead to partial acceptance.',who:['omar','ph.pharmacist'],
+  links:[['Pharmacy search','{web}/pharmacy'],['Pharmacy inventory','{pharm}/inventory']],
+  steps:[
+   ['Search `vit` and pick a low-stock line (when checked, `Pharmocalc 10mg` had only 2 in stock and `Nilomult 250mg` 16).','Search rows carry availability and a quantity cap.'],
+   ['Raise the quantity above the available stock.','The line is flagged unavailable and Place order is disabled.','neg'],
+   ['In Pharmacy > Inventory {pharm}/inventory quarantine or sell down the lot, then refresh the patient cart.','Availability drops. Blocked lots (expired `DMEXP0`, quarantined `L00089`, recalled `DM00013`) are never sellable. Release the quarantine afterwards.'],
+   ['Place an order, then in Pharmacy accept fewer units than requested.','Continue with X6 (partial).']
+  ],
+  note:'The seeded catalogue has no permanently out-of-stock Kiorex item, so create the condition: quarantine a lot in Pharmacy Inventory (and release it again) or use a low-quantity item.'},
+ {id:'X6',title:'Partial acceptance and partial refund',goal:'The pharmacy accepts fewer units or lines; the patient is refunded pro-rata (plus the delivery fee when no delivery); the fulfilled goods are released to the pharmacy.',who:['mahmoud','ph.pharmacist','ops_super'],
+  links:[['Kiorex orders','{pharm}/orders'],['Patient orders','{web}/pharmacy/orders'],['Ops orders','{ops}/orders'],['Ops finance','{ops}/finance']],
+  steps:[
+   ['As Mahmoud order 3 x `Paracetol 500mg`, 2 x `Cetirex 10mg`, 1 x `Brufcare 400mg`, choose Delivery, pay.','Order PAID / SUBMITTED (25x3 + 32x2 + 45 = 184 EGP + delivery fee).'],
+   ['Pharmacy: in the Accept dialog set accepted quantities Paracetol 3, Cetirex 1, Brufcare 0 and confirm.','Dialog summary "accepted n of total"; status PARTIALLY_ACCEPTED.'],
+   ['Ready, then complete the dispense with the partial quantities.','Event `DispenseCompleted` with `partial`. Policy `pharmacy.partial_fulfilment` (PRO_RATA_REFUND): order becomes PARTIALLY_FULFILLED with an itemised refund (goods + delivery fee when no delivery was made).'],
+   ['Patient order page and message log.','Message kind `PHARMACY_ORDER_PARTIAL_REFUND` with the amount; the order shows the refunded lines.'],
+   ['Ops > Finance.','Refund row with reason `PARTIAL_FULFILMENT` (idempotency key `refund-partial:<payment>`), release of the fulfilled part, ledger postings.'],
+   ['If the market policy is manual or the event carries no lines: the order shows PARTIAL_REVIEW.','Ops > Orders settles it (`POST /admin/pharmacy/orders/:id/resolve-partial`). Nothing is auto-released.']
+  ]},
+ {id:'X7',title:'Cancel, reject and expire',goal:'Patient cancel before ready (refund), reject with a reason, SLA expiry.',who:['dalia','karim','omar'],
+  links:[['Patient orders','{web}/pharmacy/orders']],
+  steps:[
+   ['Create an order and cancel it while PENDING_PAYMENT.','CANCELLED, no payment taken.'],
+   ['Create and pay another, then cancel before the pharmacy marks it ready.','CANCELLED with a refund (ledger rows).'],
+   ['Try to cancel after READY.','Refused (cancel only before ready).','neg'],
+   ['Pharmacy: reject a new order with a reason (`PHARMACY_REJECTED`, or `OUT_OF_STOCK` for the out-of-stock case).','Patient sees REJECTED + reason (`rejectionReason`); full refund.'],
+   ['Seeded examples: Dalia `kx_ph_demo_8` CANCELLED, Omar `kx_ph_demo_7` REJECTED, Karim `kx_ph_demo_3` REJECTED with `SLA_EXPIRED` (the pharmacy shows it EXPIRED).','Statuses match.']
+  ]},
+ {id:'X8',title:'Seeded Kiorex pharmacy orders (all states) and flag',goal:'Browse every order state without creating data.',who:['hoda','samir','karim','nourhan','mahmoud','mariam','omar','dalia'],
+  links:[['Patient orders','{web}/pharmacy/orders'],['Ops orders','{ops}/orders'],['Pharmacy orders','{pharm}/orders']],
+  steps:[
+   ['Open each patient\'s {web}/pharmacy/orders.','`kx_ph_demo_1` Hoda PENDING_PAYMENT; `_2` Samir PAID; `_3` Karim REJECTED; `_4` Nourhan READY; `_5` Mahmoud DISPENSED; `_6` Mariam DISPENSED; `_7` Omar REJECTED; `_8` Dalia CANCELLED.'],
+   ['Pharmacy orders {pharm}/orders as `pharmacist@`.','Mirrors of `_3` to `_7` (`_3` EXPIRED here, `_4` READY, `_5` and `_6` DISPENSED, `_7` REJECTED). `_1`, `_2`, `_8` exist only in Kiorex. Many `kx-e2e-*` rows are e2e leftovers.'],
+   ['Flag check: Ops super admin switches `pharmacy.kiorex_orders` OFF.','Pharmacy Orders shows 403 FEATURE_DISABLED within about 2 s; safety alerts keep working. Switch it back ON.']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 5 LAB */
+MODULES.push({id:'lab',ic:'5',title:'Lab booking and results: patient to Kiorly Lab',blurb:'Book tests on Kiorex (home collection or walk-in, pay), the lab collects, runs, validates and releases; the result PDF returns to the patient vault.',
+ intro:'Patient side {web}/lab and {web}/lab/bookings. Lab web {lab}/login uses DEV-LOGIN: pick org `demo-lab` (labelled "Cairo Diagnostics Lab" in the dev panel, "Demo Diagnostics (synthetic)" by the org-list API) and a role (no password). Staff can also use "Sign in with Kiorex Passport" with a linked phone (see P3). Lab API :3200. Booking chain: `PENDING_PAYMENT > PAID > SUBMITTED > COLLECTED > RESULT_RELEASED` (or REJECTED / CANCELLED).',
+ flows:[
+ {id:'L1',title:'Book a lab test on Kiorex',goal:'Pick tests, collection type and slot, pay (sandbox).',who:['omar'],links:[['Lab','{web}/lab'],['My lab bookings','{web}/lab/bookings']],
+  steps:[
+   ['As Omar `+201000001007` open {web}/lab (the lab is "Cairo Central Lab"), search `CBC`, add "Complete blood count" (120 EGP, Arabic name صورة دم كاملة, home collection available) and `LIPID` "Lipid profile" (220 EGP, fasting required).','Quote with total 340 EGP and a fasting hint.'],
+   ['Choose home collection (or walk-in) and a slot, confirm.','Booking PENDING_PAYMENT; pay with the sandbox.'],
+   ['Booking detail {web}/lab/bookings/<id>.','PAID then SUBMITTED to the lab (the lab order appears in Lab Orders with source Kiorex booking).']
+  ],
+  note:'Observed 23 Nov 2026: `GET {kapi}/api/v1/lab/tests` once returned `LAB_SYSTEM_BUSY` ("Lab system busy, try again shortly") while the Lab API itself answered; minutes later `GET /lab/tests?q=CBC` returned 200 (the query `q` is required). If you see it, wait a few seconds, check `.e2e/logs/kiorex.log` and the Lab partner registration (Ops > Operations), then retry.',
+  data:['Lab catalogue (Lab API `/api/v1/catalogue/tests`, 369 tests): `CBC` 120 EGP, `CBCD` 170, `CRP` 90, `FERR` 150, `GLU` 40 (fasting), `GLU2` 40, `GLUR` 35, `HBA1C` 120, `HSCRP` 160, `LFT` 140, `LFTX` 280, `LIPID` 220 (fasting), `LIPIDC` 230.','Seeded Kiorex lab bookings: `kx_lb_demo_1` Nourhan PENDING_PAYMENT, `_2` Mahmoud PAID, `_3` Mariam SUBMITTED, `_4` Omar COLLECTED, `_5` Dalia and `_6` Tarek RESULT_RELEASED, `_7` Heba REJECTED, `_8` Youssef CANCELLED.']},
+ {id:'L2',title:'Lab side: receive, enter results, validate, release',goal:'Process a Kiorex booking through the LIS and watch RESULT_RELEASED and the PDF reach the patient.',who:['lab.reception','lab.phleb','lab.tech','lab.signatory','omar'],
+  links:[['Lab login','{lab}/login'],['Orders','{lab}/orders'],['New order','{lab}/orders/new'],['Accessioning','{lab}/accessioning'],['Worklist','{lab}/worklist'],['Validation','{lab}/validation'],['Release','{lab}/release'],['Phlebotomist app','{lab}/phleb'],['Queue board','{lab}/queue-board']],
+  steps:[
+   ['Sign in at {lab}/login: org `demo-lab`, role Reception (`reception@demo-lab.test`). Open Orders.','The Kiorex booking shows as an order (AWAITING_COLLECTION). Walk-in register: Orders > New order: patient Hala Fouad, CBC + a lipid panel, priority routine; take cash payment; issue a STAT ticket (shows on /queue-board).'],
+   ['Phlebotomist `phleb@demo-lab.test` opens {lab}/phleb: pick a home-collection stop, collect, label tubes, scan.','Specimen COLLECTED with a custody event; order moves to COLLECTED. This role has no Validation menu.'],
+   ['Technologist `tech@demo-lab.test`: Accessioning (receive tube), Worklist: enter results (a delta check may flag), technically validate.','Order in lab, then awaiting validation.'],
+   ['Signatory `signatory@demo-lab.test`: Validation > medically validate > Release.','Report version created, order RELEASED, report link generated.'],
+   ['Back in Kiorex as Omar: {web}/lab/bookings.','`kx_lb_demo_4` (seeded tests ACTH and Albumin, home collection) or your new booking is RESULT_RELEASED and the result PDF is in the Vault {web}/records.'],
+   ['Open the public report link `{lab}/r/<token>` (and `{lab}/verify/<id>`).','Report renders without login; the verify page confirms authenticity.']
+  ],
+  inbox:['Lab notifications / Reports; Kiorex "result ready" message in Ops > Messaging.','Webhook back to Kiorex: the Lab outbox delivers to `POST {kapi}/api/v1/webhooks/lab` (Ops > Outbox shows it; replay if DEAD).','`tail -f .e2e/logs/lab.log`.']},
+ {id:'L3',title:'Critical value and QC failure',goal:'Critical alerts must be acknowledged; a failing QC run blocks the analyte until cleared.',who:['lab.signatory','lab.tech'],links:[['Critical','{lab}/critical'],['QC','{lab}/qc'],['Validation','{lab}/validation']],
+  steps:[
+   ['As `signatory@demo-lab.test` open Critical.','OPEN `DEMO-OPEN-ALERT-001` (K 6.9), escalated HB 5.9 and K 6.8, positive blood culture.'],
+   ['Acknowledge one with a note.','Closes with who and when; the audit shows it.'],
+   ['QC: the TSH run with rule `1_3s` is FAIL and TSH is blocked. As tech re-run QC (a passing run), then the signatory clears the block (`qc.clear_block`).','QC alert resolved; Validation allows TSH orders again.']
+  ]},
+ {id:'L4',title:'Nurse sample to Lab and result back (KNLAB01)',goal:'A Kiorly nurse records a collected sample; it is relayed through Kiorex to the lab; custody, results and the secure link come back.',who:['nurse1','lab.tech','lab.signatory','hoda'],
+  links:[['Nurse lab samples','{clinic}/nurse/lab'],['Lab accessioning','{lab}/accessioning'],['Lab validation','{lab}/validation']],
+  steps:[
+   ['As Heba `nurse1@nurse-demo.kiorly.test` open {clinic}/nurse/lab.','`nl1` released (custody timeline + report link), `nl2` awaiting validation, `nl3` in transit, `nl4` refused (`SAMPLE_UNMATCHED`).'],
+   ['Record a new sample for Hoda or Nabila (consent granted).','Hand-over succeeds (HANDED_OFF).'],
+   ['Try Rana (consent revoked) and Nourhan (never asked).','Refused with `LAB_HANDOFF_NO_CONSENT`.','neg'],
+   ['In Lab as `tech@demo-lab.test` receive tube `DEMO-NL3-EDTA` (Accessioning); as signatory validate and release `nl2`.','Custody continues the nurse\'s hand-over; the clinic nurse sees status, custody and report link; the Kiorex relay `demo_lo_nl*` updates (Ops > Orders).']
+  ]},
+ {id:'L5',title:'Lab editions and duplicate patients',goal:'Lite and chain tenants; patient merge.',who:['lab.manager','lab.basic'],links:[['Lab login','{lab}/login'],['Patients','{lab}/patients']],
+  steps:[
+   ['Sign in with org `chain-lab` (ENTERPRISE), role director.','Delta Diagnostics Group (small chain).'],
+   ['Sign in with org `basic-lab`, role director.','The web app works; the Kiorly mobile app is limited to the safety inbox (see module Kiorly staff app, plan gating).'],
+   ['As `manager@demo-lab.test`: Patients > the two `Ahmed Samy` records > Merge.','One survivor, history merged, the merge audited.']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 6 CLINIC */
+MODULES.push({id:'clinic',ic:'6',title:'Kiorly Clinic',blurb:'Owner, doctor, nurse edition, reception and billing, Basic plan gating, prescriptions flowing to the patient Records, Kiorex tab, import wizard and the platform console.',
+ intro:'Web {clinic}/login (e-mail + password `Demo@12345`; the three legacy accounts use `demo`). First login shows a legal-terms banner. Routes verified in `clinics-management/apps/web/src/app/router.tsx`: `/`, `/appointments`, `/front-desk/board|cash-drawer|installments|claims|waiting-room`, `/patients`, `/encounters`, `/clinics`, `/kiorex`, `/expenses`, `/revenue`, `/reports`, `/hr`, `/operations`, `/team`, `/admin`, `/platform/*`, `/onboarding`, `/onboarding/import`, `/home-visits/today`, `/nurse/*`, `/guide`, `/help`, `/dev/inbox`, public `/b/:slug`, `/r/:token`, `/pay/:token`, `/rx/:token`.',
+ flows:[
+ {id:'C1',title:'Reception: front desk day',goal:'Walk-in board, call next, phone booking, check-in.',who:['frontdesk1.na','hoda'],links:[['Login','{clinic}/login'],['Front desk board','{clinic}/front-desk/board'],['Appointments','{clinic}/appointments'],['Waiting room','{clinic}/front-desk/waiting-room'],['Cash drawer','{clinic}/front-desk/cash-drawer']],
+  steps:[
+   ['Log in as `frontdesk1.na@demo.kiorex.test`, accept the legal banner.','Dashboard with reception tabs only.'],
+   ['Open the Front desk board.','Four walk-ins today: WAITING / CALLED / IN_EXAM.'],
+   ['Call the next ticket.','Ticket moves to CALLED.'],
+   ['Appointments > New appointment: Hoda Mahmoud, Dr Nadia Fouad, first free slot, source Phone.','SCHEDULED in the list.'],
+   ['Check Hoda in.','CHECKED_IN and a queue ticket.']
+  ],
+  data:['Patients: 70 (Nile Care) / 40 (Delta) / 24 (Smile) with allergies, problems, families. Appointment sources: Front desk, Phone, Walk-in, Clinic link, Kiorex WhatsApp, Kiorex marketplace.']},
+ {id:'C2',title:'Doctor consultation and prescription',goal:'SOAP note, diagnosis, prescription with QR, encounter locks.',who:['nadia.na'],links:[['Appointments','{clinic}/appointments'],['Encounters','{clinic}/encounters'],['Patients','{clinic}/patients']],
+  steps:[
+   ['Log in as `nadia.na@demo.kiorex.test`. Appointments shows only her own.','Own schedule only.'],
+   ['Open a CHECKED_IN patient > Encounter. Add SOAP, a diagnosis, a prescription line (for example Cetirizine 10 mg), finalize.','Encounter locks; the prescription gets a QR token and a public page `{clinic}/rx/<token>`.'],
+   ['Patients > Hoda.','Allergies and problems are shown.'],
+   ['Look for Revenue and Admin tabs.','Not present for a physician.','neg']
+  ]},
+ {id:'C3',title:'Prescription flows to the patient Records (Kiorex vault)',goal:'A finalized prescription appears in the patient\'s Kiorex vault and can be used for a pharmacy order.',who:['nadia.na','hoda'],links:[['Vault: prescriptions','{web}/records?tab=prescriptions'],['Pharmacy','{web}/pharmacy']],
+  steps:[
+   ['As Dr Nadia finalize an encounter with a prescription for Hoda (a Kiorex-linked patient with record sharing enabled).','Encounter locked; prescription QR token exists.'],
+   ['As Hoda open {web}/records?tab=prescriptions.','The prescription (with QR) is in the vault; seeded ones exist already. If a new one is missing, check Hoda\'s share consent (K8) and Ops > Outbox for a DEAD `kiorly.record_share_consent` row.'],
+   ['Use it in a pharmacy order (flow X3).','The Rx picker lists it.'],
+   ['Open `{clinic}/rx/<token>` signed out.','Public verification page for the prescription.']
+  ]},
+ {id:'C4',title:'Owner dashboard, revenue and billing',goal:'KPIs, invoices with a 14% VAT line, expenses, plan and billing, credit wallet, Kiorex commission.',who:['owner.na','accountant.na'],links:[['Dashboard','{clinic}/'],['Revenue','{clinic}/revenue'],['Expenses','{clinic}/expenses'],['Reports','{clinic}/reports'],['Admin','{clinic}/admin'],['Kiorex tab','{clinic}/kiorex']],
+  steps:[
+   ['As `owner.na@demo.kiorex.test`: Dashboard, set the reporting period to the last 60 days.','KPIs for 2 branches.'],
+   ['Revenue / Invoices.','A 14 % VAT line (a plain configurable %; no tax-authority integration), paid and receivable rows.'],
+   ['Expenses: approve a pending one.','Moves to approved.'],
+   ['Admin > plan and billing.','Nile Care PRO active; credit wallet + ledger; SaaS invoices (paid / issued / part-paid).'],
+   ['Kiorex tab.','Listings (LIVE), reviews (reply to one), commission charges (pending / confirmed / billed / disputed / waived; the rate is labelled DEV-DEMO-NOT-A-REAL-RATE).'],
+   ['As `accountant.na@`: Revenue, Expenses, Reports.','Reachable; no Admin, Clinics, Patients or Encounters tabs (compare with the role guide {clinic}/guide).']
+  ]},
+ {id:'C5',title:'Basic plan gating (and trial / PRO differences)',goal:'Basic hides modules and shows a paywall; trial banner; PRO vs Enterprise.',who:['owner.basic','owner.ss','owner.na'],links:[['Expenses (gated on Basic)','{clinic}/expenses'],['Reports (gated on Basic)','{clinic}/reports']],
+  steps:[
+   ['Log in as `owner.basic@demo.kiorex.test`.','No Clinics, Expenses or Reports tabs; opening `{clinic}/expenses` or `/reports` directly is refused or shows the plan paywall (Lite has no `mod_expenses` / `mod_reports`).'],
+   ['Log in as `owner.ss@demo.kiorex.test` (TRIALING).','Trial banner with days left; Operations and HR tabs present.'],
+   ['Log in as `owner.na@demo.kiorex.test` (PRO).','Reports present; Operations absent (`mod_operations` is false on PRO).'],
+   ['Sign in to the Kiorly staff app as `owner.basic@`.','Upgrade screen; the safety inbox still works (module "Kiorly staff app").']
+  ]},
+ {id:'C6',title:'Nurse edition: day, dispatch, care-plan inbox',goal:'Home-visit rounds, vitals escalation, MAR, SOS; dispatcher guard; care-plan requests.',who:['nurse1','dispatch','agency_owner','mona'],links:[['Today route','{clinic}/home-visits/today'],['Dispatch','{clinic}/nurse/dispatch'],['Inbox','{clinic}/nurse/inbox'],['Safety','{clinic}/nurse/safety'],['MAR','{clinic}/nurse/mar'],['Shifts','{clinic}/nurse/shifts'],['Services','{clinic}/nurse/services']],
+  steps:[
+   ['Log in as Heba `nurse1@nurse-demo.kiorly.test`, open {clinic}/home-visits/today.','Her route for today (assigned, en route, arrived).'],
+   ['Open a visit.','The address is readable for the assigned nurse.'],
+   ['Depart, Arrive, record vitals with a systolic far out of range.','A CRITICAL vitals alert and an escalation.'],
+   ['Fill the visit record and sign. Open Orders / MAR: administer a shared doctor order; a controlled one asks for a witness.','Record signed; MAR entry saved.'],
+   ['Press SOS on a test visit.','SOS alert in {clinic}/nurse/safety and in the agency owner\'s inbox.'],
+   ['As Dina `dispatch@nurse-demo.kiorly.test` open Dispatch.','Unassigned agency visits queue. Assign Heba or Salma: OK (Salma shows a licence-expiry warning). Try Nadine, Rawan, Yara, Aya: refused (REJECTED / EXPIRED / UNVERIFIED / aide) with a named reason.'],
+   ['As `owner@nurse-demo.kiorly.test` open /nurse/inbox.','Accept `kx_cp_demo_2`; `kx_cp_demo_1` ACCEPTED and `kx_cp_demo_3` DECLINED are read-only.']
+  ]},
+ {id:'C7',title:'Physio pack',goal:'Assessments, plans, progress notes, outcome trends, HEP link, 10-session series.',who:['mai.na'],links:[['Patients','{clinic}/patients']],
+  steps:[
+   ['Log in as `mai.na@demo.kiorex.test`, Patients > Mahmoud El-Sayed.','Assessment, active plan, progress notes, pain/ROM trend, HEP link, 10-session series (3 done).'],
+   ['Compare with a PRO tenant lacking the pack.','Not available there (`pack_physio` is on only for Nile Care and Delta).','neg']
+  ]},
+ {id:'C8',title:'Listing states and Kiorex tab (flags)',goal:'Paused / off / pending-verification listings, and flag propagation from Ops.',who:['owner.df','owner.ss','ops_super'],links:[['Kiorex tab','{clinic}/kiorex'],['Ops flags','{ops}/flags']],
+  steps:[
+   ['As `owner.df@` open Kiorex.','Dr Samah is PAUSED (licence expired, eligibility sweep).'],
+   ['As `owner.ss@` open Kiorex.','Listings OFF because `clinic.kiorex_listing` is OFF for org `demo_t_ss`; Dr Adham verification PENDING.'],
+   ['As ops super admin switch the flag in Ops > Flags and watch the Kiorly tab follow.','It follows within seconds (fast polling in the demo stack).']
+  ]},
+ {id:'C9',title:'Onboarding import wizard (clinic side)',goal:'Org onboarding and the data import wizard in the Clinic app.',who:['owner.na'],links:[['Onboarding','{clinic}/onboarding'],['Import wizard','{clinic}/onboarding/import']],
+  steps:[
+   ['As group admin `owner.na@demo.kiorex.test` open {clinic}/onboarding (checklist) then {clinic}/onboarding/import.','The import wizard: pick Patients, Appointments, Price list or Staff.'],
+   ['Download the CSV template, fill a few rows (include one invalid row and one duplicate), upload, choose the duplicate handling, review the preview and the error report, then commit.','History lists the job with counts; invalid rows are reported with row, field and code, never silently dropped.'],
+   ['Press Undo on the committed batch.','The batch is reverted.'],
+   ['The ops-side import of another organisation\'s legacy SQL dump + patient files (with the human-resolution queue and the two-person commit) is module "Ops console", flow O6.','Committed ops batches appear in this Clinic as imported patients tagged with the batch.']
+  ]},
+ {id:'C10',title:'Platform console and public pages',goal:'Super-admin tenant console, markets, plans, commission disputes; public booking / Rx pages; dev inbox.',who:['legacy.super'],links:[['Platform','{clinic}/platform'],['Organizations','{clinic}/platform/organizations'],['Markets','{clinic}/platform/markets'],['Plans','{clinic}/platform/plans'],['Kiorex rates','{clinic}/platform/kiorex-rates'],['Public booking (Dr Jihan)','{clinic}/b/demo-sp-enta'],['Dev inbox','{clinic}/dev/inbox'],['Guide book','{clinic}/guide']],
+  steps:[
+   ['Log in as `superadmin@kiorly.com` / `demo`, open /platform.','Overview; tabs markets, organizations, users, clinics, insights, drug-datasets, plans, kiorex-rates, verifications, disputes. Country/market selectors are hidden while only Egypt is live.'],
+   ['Open {clinic}/b/demo-sp-enta signed out.','Public booking page for Dr Jihan Eissa (slug pattern `demo-sp-<key>`).'],
+   ['Open {clinic}/dev/inbox.','Dev inbox of mocked WhatsApp / e-mail from the clinic (delivered / read / failed).']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 7 OPS */
+MODULES.push({id:'ops',ic:'7',title:'Ops console',blurb:'Feature-flag control plane, launch gates, two-person rule, markets, providers, finance, outbox, safety console, held deposits, and organisation onboarding import with the human-resolution queue.',
+ intro:'Console {ops} (Vite :5181). Sign in through Passport: phone + OTP `000000` + TOTP. Routes verified in `apps/ops/src/App.tsx`: `/flags` (index), `/providers`, `/bookings`, `/outbox`, `/finance`, `/moderation`, `/liquidity`, `/messaging`, `/orders`, `/fees`, `/operations`, `/safety`, `/held-deposits`, `/home-gate`, `/onboarding`, `/onboarding/:id`. Only `super_admin` can change flags or record gates; `ops_admin` is read + act. The page has a live TOTP generator under Reference > Test users.',
+ flows:[
+ {id:'O1',title:'Ops sign-in with TOTP (super admin, admin, support enrol)',goal:'Three kinds of ops login.',who:['ops_super','ops_admin','ops_fin','ops_sup'],links:[['Ops console','{ops}'],['Flags','{ops}/flags']],
+  steps:[
+   ['Open {ops}: you are sent to Passport. Enter `+201000000099`, OTP `000000`.','TOTP prompt.'],
+   ['Open Reference > Test users and press "Generate TOTP now" for the super-admin seed `REMOVED-OLD-DEMO-TOTP-SECRET`. Enter the 6-digit code within its 30 s window.','Signed in; lands on Flags (index route). A code is accepted once: after "wrong code" wait for the next one.'],
+   ['Sign in as `+201000009001` with seed `REMOVED-OLD-DEMO-TOTP-SECRET`.','Console loads; flag changes are refused (`super_admin` only).'],
+   ['Sign in as `+201000009003`.','You are asked to enrol an authenticator (scan QR, confirm).'],
+   ['Sign in as a patient (for example Hoda) on {ops}.','A no-access page (API 403).','neg']
+  ]},
+ {id:'O2',title:'Feature flags: switch OFF, observe 403 FEATURE_DISABLED, switch ON',goal:'Every capability ships ON and is switchable off at global / market / org scope; OFF returns 403 FEATURE_DISABLED {key,scope} and never hides data.',who:['ops_super','hoda'],links:[['Flags','{ops}/flags'],['Patient search','{web}/search']],
+  steps:[
+   ['As super admin open Flags, search `kiorex.marketplace`, toggle OFF at global scope (reason + ticket + expiry are required).','State changes with an audit entry (68 definitions in the registry).'],
+   ['As Hoda open {web}/search.','Error state from `403 FEATURE_DISABLED {key, scope}`; data is not silently missing.'],
+   ['Switch it back ON.','Search works again.'],
+   ['Try to switch off a safety control.','Refused: safety controls are never flags (ADR-025).','neg'],
+   ['Org scope: `clinic.kiorex_listing` OFF for `demo_t_ss`, `clinic.waitlist_autofill` OFF for `demo_t_df`, `lab.module` OFF for `demo_lab_example`.','Visible as overrides in the registry; the Clinic Kiorex tab follows within seconds.'],
+   ['Staff app: switch `mobile_staff_app` OFF at org scope for Nile Care.','That org\'s bootstrap returns `reason: FLAG_OFF`; Kiorly shows the upgrade screen; safety alerts still work. A plan below PRO can never be switched ON by a flag.']
+  ],
+  data:['Flag keys seen live: `kiorex.marketplace`, `kiorex.reviews`, `kiorex.telemedicine` (launch-locked), `kiorex.pharmacy_orders`, `kiorex.lab_bookings`, `kiorex.home_visits`, `kiorex.pay_deposits`, `kiorex.sponsored_listings`, `clinic.kiorex_listing`, `clinic.waitlist_autofill`, `clinic.home_visits`, `clinic.home_dispatch`, `pharmacy.kiorex_orders`, `lab.home_collection`, `nurse.individual_kiorex_listing`, `mobile_staff_app`, `card_payments`, `fawry`, `instapay`.']},
+ {id:'O3',title:'Launch-locked gates (DEV-ONLY evidence)',goal:'Launch-locked flags are effective only with gate evidence; the seeds record only labelled dev rows.',who:['ops_super','ops_admin'],links:[['Flags','{ops}/flags'],['Home gate metric','{ops}/home-gate']],
+  steps:[
+   ['Flags: open a launch-locked flag (for example `kiorex.telemedicine`, `kiorex.home_visits`).','Evidence labelled `DEV-ONLY-NOT-A-REAL-GATE` (telemedicine, pharmacy orders, lab bookings, AI navigation, market EG, 3 specialty templates, plus `GHV1/GHV2/GKN1/GKN2/GPR1/GPR2`).'],
+   ['Open the "Launch gates" tab.','Board with the gate ids per flag; a human super admin records a gate for each flag that lists it. Never record a real gate from a seed.'],
+   ['Open {ops}/home-gate.','Home-enabled providers per cluster next to GHV1/GHV2 evidence; the demo data does NOT meet "at least 50 providers per cluster" and the metric never satisfies a gate.']
+  ]},
+ {id:'O4',title:'Two-person rule on money-path flags and on onboarding commits',goal:'Money-path flags and import commits need a second human.',who:['ops_super','ops_admin'],links:[['Flags','{ops}/flags'],['Onboarding','{ops}/onboarding']],
+  steps:[
+   ['Money-path flags (marked with a money-path badge: `kiorex.pay_deposits`, `kiorex.pharmacy_orders`, `kiorex.lab_bookings`, `kiorex.home_visits`, `kiorex.sponsored_listings`, `card_payments`, `fawry`, `instapay`, `clinic.commission_settlement`, `clinic.kiorly_pay_deposits`): request a change as super admin.','The change stays pending until a DIFFERENT super admin approves (`kiorex.sponsored_listings` OFF at market EG may legitimately stay pending). Only one super admin is seeded, so approval cannot be completed locally without creating a second one.'],
+   ['Onboarding batch: `+201000009001` (ops_admin) requests commit; try to approve as the same person.','`TWO_PERSON_RULE` refusal: approve is super_admin only and not the requester or creator.','neg'],
+   ['Approve as `+201000000099`, presenting the dry-run report hash.','Batch APPROVED; any data-changing decision after the request voids it (`REPORT_CHANGED`, back to READY).']
+  ]},
+ {id:'O5',title:'Markets and market selectors',goal:'Egypt is the only live market, so market / country selectors must be hidden everywhere; the API stays multi-market.',who:['ops_super','owner.na'],links:[['Flags','{ops}/flags'],['Clinic platform markets','{clinic}/platform/markets'],['Clinic sign-up','{clinic}/signup']],
+  steps:[
+   ['Ops > Flags: look for a market filter.','None while only one market is live (`market.<cc>.live`); values fixed to EG, phone `+20`, EGP.'],
+   ['Kiorex patient web header, Passport org-create, Clinic {clinic}/signup, Clinic platform tenant-create.','No country / market selector rendered.'],
+   ['Gate evidence list includes "market EG" (DEV-ONLY).','Market EG flag-gate is satisfied by dev evidence only.'],
+   ['Clinic platform {clinic}/platform/markets as `superadmin@kiorly.com`.','Markets tab for tenants (market assignment: "Organization is not assigned to a launched market" warnings in kiorly.log for stale scheduled reports are expected noise).']
+  ]},
+ {id:'O6',title:'Org onboarding import: upload, human-resolution queue, two-person commit, rollback',goal:'Import another organisation\'s legacy SQL dump + patient files into a quarantined batch; resolve every ambiguity by hand; commit with a second super admin.',who:['ops_admin','ops_super'],links:[['Onboarding imports','{ops}/onboarding'],['Clinic import wizard','{clinic}/onboarding/import']],
+  steps:[
+   ['Generate the 100 % fake sample files (20 files + a SQL dump + one malware test file): `cd '+'/Users/shall/Documents/Peraonal/Work/kiorex-v2/kiorex-platform/apps/api && npx tsx -e \'import {buildSample} from "./src/onboarding-import/sample/sample-data"; import {mkdirSync,writeFileSync} from "node:fs"; const s=buildSample(); const d=process.env.HOME+"/Desktop/onb-sample"; mkdirSync(d,{recursive:true}); writeFileSync(d+"/clinicpro_dump.sql",s.sql); for(const f of s.files) writeFileSync(d+"/"+f.name,f.bytes); writeFileSync(d+"/"+s.extras.malware.name.replace(".pdf","_bad.pdf"),s.extras.malware.bytes)\'`','`~/Desktop/onb-sample` holds `clinicpro_dump.sql`, `P1001_lab_cbc.pdf`, `01012345678_prescription.pdf`, `IMG_0001.jpg`, `invoice_scan_bad.pdf` (EICAR-style, rejected) and more.'],
+   ['As `+201000009001` or the super admin open {ops}/onboarding > New batch (name it, DRAFT), upload the SQL dump and all patient files.','Files are sniffed by magic bytes (extension / MIME never trusted). `invoice_scan_bad.pdf` becomes a `FILE_REJECTED` task; uploading a file twice raises `DUPLICATE_FILE`. The SQL is parsed, never executed.'],
+   ['Open the batch {ops}/onboarding/<id>: Tasks (resolution queue).','Tasks by type: `CONFIRM_MAPPING` (0.6-0.85 confidence), `MAP_COLUMN_REQUIRED`, `TABLE_UNCLASSIFIED`, duplicates (same national id, or same phone + name with Arabic folding), ambiguous dates (`03/04/1990`), mojibake, `CONFIRM_FILE_MATCH`, `AMBIGUOUS_FILE` (several candidates), `ORPHAN_FILE`. Names / phones are masked in duplicate lists.'],
+   ['Resolve the queue by hand: map a column, choose a date format, merge or keep-both a duplicate, assign a patient to an ambiguous / orphan file, repair an encoding, skip a row. Ignore one warning WITH a reason; try to ignore without a reason.','Blockers must be resolved; warnings may be ignored but need a mandatory reason (`IGNORE_REASON_REQUIRED`). The file picker lists candidate patients (`GET .../patients?q`).'],
+   ['Open the dry-run.','Counts per entity (patients, appointments, visits, billing, documents), files to attach, merged patients, open warnings, ignored-with-reason, and the sha256 report hash. `BLOCKERS_OPEN` while blockers exist.'],
+   ['Request commit (ops_admin or super admin), then approve as a DIFFERENT super admin with the hash, then commit.','State machine: READY > AWAITING_APPROVAL > APPROVED > COMMITTING > COMMITTED. With `IMPORT_TARGET_MODE=kiorly` (up.sh default) the Clinic receiver creates the patients, appointments, visits, invoices and documents; mock mode commits nowhere.'],
+   ['Open the Clinic as the importing org\'s owner: Patients.','Imported patients with allocated MRNs, de-duplicated against existing ones, tagged with the batch.'],
+   ['Rollback (super admin, with a reason), then purge staging.','Items ROLLED_BACK, imported rows removed from the Clinic, staged blobs and rows deleted. Audit shows counts and task types only, never values or file names.']
+  ],
+  inbox:['Audit entries `onboarding.*` (batch_created, file_staged, task_resolved, commit_requested/approved/started/completed, rollback_*).','API: `GET {kapi}/api/v1/admin/onboarding/imports` (needs an ops token). Contract: `POST /marketplace/v1/imports/{batchId}/records` on the Clinic (HMAC).','Detailed doc: `kiorex-platform/Docs/ORG_ONBOARDING_IMPORT.md`; automated: `e2e/test/19-org-onboarding.e2e.ts`.']},
+ {id:'O7',title:'Providers, bookings, finance, outbox, messaging, moderation, fees, operations',goal:'The operational pages and what each should show.',who:['ops_super'],links:[['Providers','{ops}/providers'],['Bookings','{ops}/bookings'],['Finance','{ops}/finance'],['Outbox','{ops}/outbox'],['Moderation','{ops}/moderation'],['Messaging','{ops}/messaging'],['Orders','{ops}/orders'],['Fees','{ops}/fees'],['Operations','{ops}/operations'],['Liquidity','{ops}/liquidity']],
+  steps:[
+   ['Providers: list, then Sync from Kiorly.','22 provider rows (14 demo LIVE, 3 KX-DEV LIVE, 2 PAUSED, 3 DELISTED).'],
+   ['Bookings: search `demo_bk_mk05`.','Timeline events for the booking.'],
+   ['Finance: payments, refunds, ledger, payouts.','Payouts `demo_po_1..3` (KIORLY_RECORDED / SENT); capture, PSP fee, release, refund rows follow real postings.'],
+   ['Outbox: events with retries; replay a DEAD one.','`flag.changed` DEAD rows (401 / fetch failed) are leftovers from partners being down; they are not touched by the seeds.'],
+   ['Messaging: the log (queued / sent / delivered / read / failed) and the mock-delivery simulation.','Rows for OTP, confirmations, reminders, waitlist offers, refunds, pharmacy / lab statuses.'],
+   ['Orders: pharmacy and lab monitors with Resubmit; Fees: fee statements (VAT is plain config, CSV export); Operations: waitlist scan and partner registrations.','Pages load; resubmit is idempotent.']
+  ]},
+ {id:'O8',title:'Safety console and held deposits',goal:'Home-visit safety alerts with live 60 s delivery SLO timers; held deposits of unsafe-aborted visits.',who:['ops_super','ops_admin'],links:[['Safety','{ops}/safety'],['Held deposits','{ops}/held-deposits']],
+  steps:[
+   ['Safety console.','SOS (resolved), timer expired (acknowledged), unsafe abort raised / escalated (with a 95 s SLO breach) / resolved x2. 41 alerts in the live DB (e2e adds many).'],
+   ['Acknowledge, escalate or resolve one with a note.','State changes; an unacknowledged-too-long marker appears for stale ones.'],
+   ['Held deposits.','Two HOLD_FOR_REVIEW deposits (35 min and 46 h old). Release one to the nurse and refund the other, with a mandatory reason; both audited.']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 8 STAFF APP */
+MODULES.push({id:'staff',ic:'8',title:'Kiorly staff app (Clinic, Nurse, Pharmacy, Lab)',blurb:'One Expo app named Kiorly (final name; the repo folder is still `kiorly-team`) for Pro / Enterprise staff of Kiorly Clinic, Pharmacy and Lab. iOS Simulator, Android emulator and Expo web :8082.',
+ intro:'Bundle / package `com.kiorly.app`, scheme `kiorly`, header `X-Kiorly-Client: kiorly/<version>`. Repo folder is still `kiorly-team`. Sign-in shows four tiles: Clinic, Nurse (uses the Clinic API, lands on home-visit rounds), Pharmacy, Lab; the dev build has demo chips that fill e-mail, password and lab org slug. Sessions are per product. Tab bar: Home, Work, Inbox, Me. The app owns no data: it calls `/mobile/*` on the three APIs (:3010 / :3100 / :3200). BASIC / Lite orgs see an upgrade screen but keep the safety-alert inbox.',
+ flows:[
+ {id:'A1',title:'Run on Expo web (:8082)',goal:'Fastest way to test the staff app at phone width.',links:[['Kiorly Expo web','{staff}'],['Sign in','{staff}/sign-in']],
+  steps:[
+   ['`cd '+W+'/kiorly-team && npm install && npm run web`, open {staff} in a ~390 px wide window (browser device toolbar).','Sign-in screen with the brand lockup, language pills, four product tiles and the "Test users (dev only)" chips under the form.'],
+   ['Pick the Clinic tile, tap the chip "Doctor (Nile Care) - PRO" (or type `nadia.na@demo.kiorex.test` / `Demo@12345`), sign in.','Home with quick actions, Work tab with the doctor tiles, Inbox with a welcome message and safety items.'],
+   ['Optional: on the sign-in screen press "Sign in with Kiorex Passport" (when the build has `PASSPORT_ENABLED`; public PKCE client `kiorly`, legacy `kiorly-team`) and use a linked staff phone, for example `+201000002001` (Clinic owner.na@) or `+201000002004` (Pharmacy pharmacist@), OTP `000000`.','The Passport access token is sent as a Bearer token to the product API; the role comes from the linked staff row; an unlinked phone gets `PASSPORT_NOT_LINKED`.'],
+   ['Me > add Pharmacy (`pharmacist@demo.kiorly.local`).','Chip "Pharmacist - ENTERPRISE"; Home aggregates both products; Work lists Clinic and Pharmacy tiles.'],
+   ['Sign out from Me (confirm sheet) per product or everything.','Device record deleted on the API, secure session cleared, back to /sign-in.']
+  ],
+  note:'On web, biometric lock, camera scan, push tokens and location degrade gracefully. If sign-in hits nothing, check `kiorly-team/.env.local` (git-ignored, overrides `.env.example`; should hold 3010 / 3100 / 3200).'},
+ {id:'A2',title:'iOS Simulator (dev build)',goal:'Native build with RTL first-run reload, push fixtures and deep links.',links:[['Metro','http://localhost:8091/status']],
+  dl:[['Home','kiorly://'],['Inbox','kiorly://inbox'],['Work','kiorly://work'],['Upgrade screen','kiorly://upgrade'],['Dev client link','exp+kiorly://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8091']],
+  steps:[
+   ['One-time tooling (no Homebrew on this Mac): `export GEM_HOME=$HOME/.local/gems PATH=$HOME/.local/gems/bin:$PATH LANG=en_US.UTF-8 RUBYOPT=-rlogger`','CocoaPods available from `~/.local/gems`.'],
+   ['`cd '+W+'/kiorly-team && npx expo run:ios --device "iPhone 18 Pro" --port 8091`','Builds with Xcode, installs `com.kiorly.app`, starts Metro. Later runs: `npx expo start --dev-client --port 8091` then open the dev client link below.'],
+   ['First launch is Arabic. The app reloads once (`reloadAppAsync`) to apply RTL.','RTL layout after the reload; in Expo Go a one-time "close and reopen" banner is shown instead.'],
+   ['Sign in (localhost reaches the Mac, default API URLs work), then open a deep link: `xcrun simctl openurl booted "kiorly://inbox"` (copy buttons below).','The Inbox tab opens (a cold-start deep link goes through sign-in first).'],
+   ['Push fixtures (no APNs credentials): `cd kiorly-team && e2e-push/send.sh lab-critical` (also `sos`, `order-received`, `upgrade-request`).','Banner arrives; tap opens `/lab/critical`, `/clinic/round/<id>` (no id: Inbox), `/pharmacy/orders`, `/upgrade?product=<product>`. Verify foreground, background and cold start (`xcrun simctl terminate booted com.kiorly.app`).'],
+   ['Me > Notifications > "Dev: send test notification (local)" buttons.','A local notification returns through the same router; the dev card shows the (mock) token state.']
+  ],
+  note:'Check on 23 Nov 2026: the booted iPhone 18 Pro simulator still has the OLD bundle `com.kiorly.team` installed and no `com.kiorly.app`; the iPhone 17 has the patient app `com.kiorex.app`. Rebuild with `npx expo run:ios` (after `expo prebuild` with the new id) before testing the renamed app. Face ID and camera need a real device.'},
+ {id:'A3',title:'Android emulator (dev build)',goal:'Native Android build; the emulator reaches the Mac at 10.0.2.2.',links:[],
+  dl:[['Home','kiorly://'],['Inbox','kiorly://inbox'],['Pharmacy orders','kiorly://pharmacy/orders'],['Lab critical','kiorly://lab/critical']],
+  steps:[
+   ['Emulator: AVD `kx_pixel` (Android 15 / API 35). Start: `~/.local/android/sdk/emulator/emulator -avd kx_pixel -no-snapshot-load` (one was already running as `emulator-5554`).','`~/.local/android/sdk/platform-tools/adb devices` lists it.'],
+   ['`export JAVA_HOME=~/.local/jdk17/jdk-17.0.21.1+2/Contents/Home ANDROID_HOME=~/.local/android/sdk PATH=$ANDROID_HOME/platform-tools:$PATH` and `export EXPO_PUBLIC_CLINIC_API=http://10.0.2.2:3010/api/v1 EXPO_PUBLIC_PHARMACY_API=http://10.0.2.2:3100/api/v1 EXPO_PUBLIC_LAB_API=http://10.0.2.2:3200/api/v1`','Inside the emulator `localhost` is the emulator itself; 10.0.2.2 is the Mac.'],
+   ['`cd '+W+'/kiorly-team && npx expo run:android --port 8092`','Installs `com.kiorly.app` and starts Metro on 8092.'],
+   ['Deep link: `adb shell am start -W -a android.intent.action.VIEW -d "kiorly://inbox" com.kiorly.app` (copy buttons below).','Opens the Inbox.'],
+   ['Sign in and walk the flows A5 to A9. Check sign-in fields are not hidden behind the keyboard (edge-to-edge Android 15).','Fields stay visible.']
+  ],
+  note:'Check on 23 Nov 2026: the running emulator only has the old package `com.kiorly.team` and Expo Go (`host.exp.exponent`), not `com.kiorly.app`: run the build above first. Notifications: push is unavailable in Expo Go on Android since SDK 53; use the dev build.'},
+ {id:'A4',title:'Staff roles matrix: what each login should see',goal:'Plan and role gating of the tiles (from `GET /mobile/bootstrap`).',who:['nadia.na','nurse.na','owner.na','accountant.na','frontdesk1.na','mona','agency_owner','ph.pharmacist','ph.cashier','ph.chain','ph.solo','lab.signatory','lab.phleb'],links:[['Kiorly Expo web','{staff}']],
+  steps:[
+   ['Clinic: `nadia.na@` sees schedule, patients, visits, prescriptions, labs, vitals (no revenue, no home visits). `nurse.na@` sees schedule, patients, vitals and home visits (the physician Lab results queue was removed for nurses on 22 Nov). `owner.na@` and `accountant.na@` also see revenue. `frontdesk1.na@` and `callcenter.na@` see schedule and patients only.','Tiles match the matrix in `kiorly-team/DEMO_DATA.md` section 4.'],
+   ['Pharmacy: owner / manager / pharmacist see everything incl. controlled and orders; `cashier@` has Rx, barcode, expiry, shift, customers, search but no receiving / count / controlled / orders; `chain@` has barcode, expiry, customers, orders, search only; solo tenants have no Kiorex orders.','Tiles match.'],
+   ['Lab (`demo-lab`, `chain-lab`): signatory has critical, validation, worklist, QC, TAT, orders; tech adds accession and reagents; phleb has phlebotomy, accession, orders only; reception adds TAT; finance has TAT, orders, reagents.','Tiles match.'],
+   ['Nurse tile: `mona@nurse-demo.kiorly.test` or `nurse1@nurse-demo.kiorly.test`.','Lands on today\'s home-visit rounds. Nurses do NOT get the doctor\'s Lab results queue.']
+  ]},
+ {id:'A5',title:'Clinic module: prescriptions, critical lab, vitals, revenue, devices',goal:'Doctor and nurse day on the phone.',who:['nadia.na','nurse.na','owner.na'],
+  dl:[['Prescriptions','kiorly://clinic/prescriptions'],['Lab results','kiorly://clinic/lab-results'],['Vitals','kiorly://clinic/vitals'],['Schedule','kiorly://clinic/schedule'],['Revenue','kiorly://clinic/revenue'],['Devices','kiorly://devices']],
+  steps:[
+   ['As `nadia.na@` Work > Prescriptions > pending: Cetirizine 10 mg for Hoda Mahmoud (`demo_enc_mobile_rx`). Open, review, Sign.','Moves to signed (last 7 days). Signing is online-only (never queued offline). As `nurse.na@` the Prescriptions tile does not exist.'],
+   ['Work > Lab results > pending: potassium 6.9 mmol/L CRITICAL_HIGH (`demo_co_mobile_crit`, Hoda) next to a normal result. Approve with a note.','Moves to reviewed and is audited; approving again is idempotent.'],
+   ['As `nurse.na@` Work > Vitals: pick a patient, enter systolic 220 or SpO2 80.','Saved; a CRITICAL_VITALS alert is raised in the Inbox and Home alert strip for clinical roles; acknowledge it (first acknowledger wins).'],
+   ['As `owner.na@` Work > Revenue: today / last 7 / last 30 days.','Snapshot matches the web totals.'],
+   ['Me > Devices: the list; the agency owner (`owner@nurse-demo`) sees every device of the org. Remote sign-out one.','That device\'s next call returns 401 `DEVICE_REVOKED` and it wipes its session.']
+  ]},
+ {id:'A6',title:'Nurse module: home-visit round and SOS',goal:'Depart, arrive, finish, SOS, unsafe abort for the solo nurse.',who:['mona','nurse1','agency_owner'],
+  dl:[['Rounds','kiorly://clinic/rounds'],['A round (id)','kiorly://clinic/round/<homeVisitId>'],['Visits','kiorly://clinic/visits']],
+  steps:[
+   ['Sign-in > Nurse tile > chip "Solo nurse Mona" (`mona@nurse-demo.kiorly.test`). It lands on the rounds screen.','Today\'s route.'],
+   ['Open Work > Home visits (round): Depart, Arrive (location stamp; web degrades), Finish.','Visit timeline updates; the patient sees ETA / arrived on Kiorex ({web}/appointments).'],
+   ['Press SOS on a visit.','SOS alert (CRITICAL) in her inbox and in the agency owner\'s inbox; 12 open alerts are already seeded (SOS, missed check-in, unsafe abort). Ops {ops}/safety shows it with the 60 s SLO timer.'],
+   ['Add a nursing note; register a lab sample for a consenting patient.','Saved; sample appears in {clinic}/nurse/lab.']
+  ]},
+ {id:'A7',title:'Pharmacy module: Rx, barcode, receiving, count, expiry, shift, controlled, orders',goal:'Pharmacist and manager flows on the phone.',who:['ph.pharmacist','ph.manager','ph.pharmacist2','ph.cashier'],
+  dl:[['Rx queue','kiorly://pharmacy/rx'],['Barcode','kiorly://pharmacy/barcode'],['Receiving','kiorly://pharmacy/receiving'],['Stock count','kiorly://pharmacy/stockcount'],['Expiry','kiorly://pharmacy/expiry'],['Shift','kiorly://pharmacy/shift'],['Controlled','kiorly://pharmacy/controlled'],['Kiorex orders','kiorly://pharmacy/orders']],
+  steps:[
+   ['As `pharmacist@` Pharmacy > Rx: the queue; open one, see safety checks, an override needs a reason. As `cashier@` the Rx tile exists but override and sign-off are refused.','Pharmacist only can override and sign off.'],
+   ['Barcode: scan or type a lot barcode `DM...` (for example `DM00013`).','Lot sheet shows status; recalled / expired lots are flagged.'],
+   ['As `manager@` Receiving: open a SENT PO and scan lines; Stock count: count lines (queueable offline); Expiry: near-expiry (<= 30 d) and low-stock dashboards.','`cashier@` has no Receiving or Count tile.'],
+   ['Controlled: as `pharmacist@` see the Morphicure discrepancy (expected 40, counted 38); try to countersign yourself, then sign in as `manager@` or `pharmacist2@` and countersign.','Self-countersign refused; the discrepancy closes with the witness name.'],
+   ['Orders (Kiorex orders): accept / ready a patient order placed in module 4.','The patient sees the new status. Push fixture `order-received` opens this screen.']
+  ]},
+ {id:'A8',title:'Lab module: phlebotomy, accessioning, critical, validation, QC, TAT',goal:'Lab staff on the phone (dev-login: org slug + e-mail).',who:['lab.phleb','lab.tech','lab.signatory'],
+  dl:[['Phlebotomy','kiorly://lab/phlebotomy'],['Accession','kiorly://lab/accession'],['Critical','kiorly://lab/critical'],['Validation','kiorly://lab/validation'],['QC','kiorly://lab/qc'],['TAT','kiorly://lab/tat'],['Worklist','kiorly://lab/worklist']],
+  steps:[
+   ['Lab tile: org `demo-lab`, `phleb@demo-lab.test`. Phlebotomy round: collect a specimen (queueable offline).','Specimen COLLECTED.'],
+   ['`tech@demo-lab.test`: Accession: scan `DEMO-NL3-EDTA`.','Received (the nurse-collected sample); Worklist / QC / Reagents tiles visible.'],
+   ['`signatory@demo-lab.test`: Critical: acknowledge the escalated HB 5.9 / K 6.8 / blood-culture alerts; Validation: medically validate and release an order (online-only); QC: the TSH `1_3s` failure; TAT: 3 STAT + 1 URGENT breaches.','`phleb@` has none of these tiles.']
+  ]},
+ {id:'A9',title:'Plan gating: BASIC / Lite across Clinic, Pharmacy and Lab',goal:'Upgrade screen, safety inbox on every plan, FEATURE_DISABLED on gated endpoints.',who:['owner.basic','pharm.basic','lab.basic'],dl:[['Upgrade','kiorly://upgrade']],
+  steps:[
+   ['Sign in as Clinic `owner.basic@demo.kiorex.test`, Pharmacy `owner.basic@demo.kiorly.local`, Lab org `basic-lab` director.','Each lands on the upgrade screen (entitlement `mobile_staff_app` disabled, requires PRO); Home shows an upgrade card; Work shows no tiles.'],
+   ['Open the Inbox / alerts.','Clinic: the open critical-vitals alert; Pharmacy: the controlled-drug discrepancy; Lab: critical HB and STAT breaches. Acknowledge one: works on every plan.'],
+   ['curl the gate: `curl -s -H "X-Kiorly-Client: kiorly/1" -H "Authorization: Bearer <token>" {capi}/api/v1/mobile/schedule` (token from the form-encoded Clinic login).','403 `FEATURE_DISABLED` key `mobile_staff_app`; while `/mobile/bootstrap` and `/mobile/alerts` return 200 (`entitlement.enabled=false`, `safetyAlertsOnly=true`).'],
+   ['Ops: flag `mobile_staff_app` OFF for a PRO org (see O2).','`reason: FLAG_OFF`, same notice; safety alerts still work.']
+  ]},
+ {id:'A10',title:'Offline queue, search, scan, language, theme, lock',goal:'Offline write queue with conflicts; global search; Arabic/English; light/dark.',who:['nurse.na'],dl:[['Search','kiorly://search'],['Scan','kiorly://scan'],['Sync','kiorly://sync']],
+  steps:[
+   ['Signed in as a nurse, set the browser devtools Network to Offline. Save quick vitals and mark an alert read.','"Saved offline"; the sync chip shows "Offline (n waiting)".'],
+   ['Go online.','Queue replays; chip returns to "All synced".'],
+   ['Edit a visit draft offline, change the same draft in the Clinic web, go online.','The op is parked as a CONFLICT and never overwrites. Prescription sign, lab approve, SOS/arrive and money actions are never queued.'],
+   ['Global search (patients by name / phone / MRN, Rx, orders); scan screen with manual entry on web.','Results across the signed-in products.'],
+   ['Switch Arabic (default, RTL) and English; light / dark; on a real device enable the biometric lock.','Layout flips; lock prompts on resume.'],
+   ['Me > send a test push.','It arrives in the Inbox as DELIVERED (mock push).']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 9 PATIENT MOBILE */
+MODULES.push({id:'mobile',ic:'9',title:'Kiorex patient mobile app',blurb:'The patient Expo app (iOS, Android, web :8081): same API, Passport sign-in (client kiorex-mobile) and flags as the web.',
+ intro:'Bundle / package `com.kiorex.app`, scheme `kiorex`. Tabs: Home, Appointments, Records, Account; pushed screens live under a hidden "more" tab so the tab bar stays. Roots verified from `apps/mobile/app`.',
+ flows:[
+ {id:'M1',title:'Run on Expo web, iOS Simulator and Android',goal:'Three targets for the same app.',links:[['Expo web','{expo}']],
+  dl:[['Appointments','kiorex://appointments'],['Records','kiorex://records'],['Account','kiorex://account']],
+  steps:[
+   ['`cd '+W+'/kiorex-platform && npm run mobile:install && npm run mobile:web`, open {expo}. Offline fixtures: `EXPO_PUBLIC_MOCK=1 npx expo start --web --port 8081` then "Continue with Passport" (mock session).','Home, Appointments, Records, Account tabs.'],
+   ['iOS: `npm --prefix apps/mobile run ios` (dev build; Expo Go 58 lacks ExpoCrypto). Simulator `iPhone 17` already has `com.kiorex.app`.','App launches; sign-in goes through Passport (PKCE).'],
+   ['Android: dev build on the `kx_pixel` emulator (use `10.0.2.2` for the API base URL).','Same app.'],
+   ['On /sign-in tap a patient chip (for example Mariam Adel) or "Continue with Kiorex Passport" and type `+201000001001` / `000000`.','The browser opens Passport, the phone and code are filled automatically for a chip, and you return signed in. Same data as the web (bookings, vault, family).']
+  ]},
+ {id:'M2',title:'Screens and deep links (copy buttons)',goal:'Open every patient screen directly.',who:['hoda'],
+  dl:[['Home','kiorex://'],['Appointments','kiorex://appointments'],['Doctor Nadia','kiorex://doctor/demo_l_na_nadia'],['Doctor Jihan (deposit)','kiorex://doctor/demo_l_sp_enta'],['Records','kiorex://records'],['Follow-ups','kiorex://records/follow-ups'],['Sharing consents','kiorex://records/sharing'],['Results','kiorex://results'],['Services','kiorex://services'],['Pharmacy','kiorex://pharmacy'],['Pharmacy cart','kiorex://pharmacy/cart'],['Pharmacy orders','kiorex://pharmacy/orders'],['Lab','kiorex://lab'],['Lab bookings','kiorex://lab/bookings'],['Waitlist','kiorex://waitlist'],['Care plans','kiorex://care-plans'],['Telemedicine','kiorex://telemedicine'],['Addresses','kiorex://settings/addresses'],['Family','kiorex://settings/family'],['Consents','kiorex://settings/consents'],['Sessions','kiorex://settings/sessions'],['Delete account','kiorex://settings/delete'],['Family visit status (public)','kiorex://visit-status/<token>']],
+  steps:[
+   ['Signed in, run `xcrun simctl openurl booted "kiorex://appointments"` (or press a Copy button below and paste).','The Appointments tab opens.'],
+   ['Walk Services: Telemedicine, Pharmacy, Lab, Safety, Reminders cards with Available / Awaiting approval / Temporarily unavailable badges.','Badges come from `GET /flags/effective` (same as the web). Flip a flag in Ops and reload.'],
+   ['Family visit status: `kiorex://visit-status/<token>` with a token from a home-visit share.','Public screen (no login): steps timeline, ETA, provider name, stop-sharing; a malformed or missing token shows the gone state. Address, fee, phone and reason never render.'],
+   ['Account: sign out.','Confirm sheet; push registration removed; Passport end-session called (`kiorex://auth/logout`).']
+  ]},
+ {id:'M3',title:'Patient push fixtures',goal:'Simulate push taps without APNs credentials.',links:[],
+  steps:[
+   ['Dev build installed on the iPhone 17 simulator: `cd '+W+'/kiorex-platform/apps/mobile && e2e-push/send.sh appointment` (also `results`, `pharmacy-order`, `lab-booking`, `telemedicine`).','Banner appears. Tap routes: `bookingId` > /appointment/:id, `resultId` > /results, pharmacy order, lab booking, telemedicine.'],
+   ['Repeat with the app foreground, backgrounded and terminated (`xcrun simctl terminate booted com.kiorex.app`).','Correct screen in all three cases (cold start included).']
+  ],
+  note:'Not verified on a device or simulator in the original change (only Jest + tsc); the real push data keys are assumed. Treat this flow as the first real check.'},
+ {id:'M4',title:'Patient flows on mobile',goal:'Repeat the core patient flows on the phone.',who:['hoda','nourhan','omar'],
+  steps:[
+   ['Search, doctor page, slot, checkout (sandbox PSP page opens in the in-app browser) as in K1/K2.','Booking CONFIRMED, deposit PAID.'],
+   ['Pharmacy cart, delivery or pickup, order status as in X1/X2.','Order timeline matches.'],
+   ['Lab booking and result in Records as in L1/L2.','Result PDF opens.'],
+   ['Settings: addresses, family, consents, sessions, delete (use a throw-away number).','Same data as the web.']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 10 CHAINS */
+MODULES.push({id:'chains',ic:'10',title:'Cross-product chains',blurb:'The end-to-end journeys that touch more than one product: use two browser windows (patient + staff) and watch events arrive.',
+ flows:[
+ {id:'H1',title:'Book, pay, check in, complete, review',goal:'Kiorex booking becomes a Kiorly appointment; completion flows back; deposit released; review invited.',who:['hoda','frontdesk1.na','nadia.na'],links:[['Book','{web}/doctors/demo_l_sp_enta'],['Clinic appointments','{clinic}/appointments']],
+  steps:[
+   ['Patient web: Hoda books Dr Jihan Eissa with the 100 EGP deposit (K2).','CONFIRMED + deposit PAID.'],
+   ['Clinic as `owner.sp@demo.kiorex.test`: Appointments shows source Kiorex marketplace with a deposit badge. Check in, then (as the doctor `enta.sp@`) open the encounter and complete.','Appointment COMPLETED.'],
+   ['Kiorex: My bookings.','Status COMPLETED, deposit RELEASED to the clinic, review invitation message in Ops > Messaging.'],
+   ['Leave the review (K7).','Verified review; the aggregate reaches Kiorly; a commission event is created (Clinic Kiorex tab).']
+  ]},
+ {id:'H2',title:'Prescription to pharmacy order to dispense',goal:'Clinic prescription > patient vault > pharmacy order > dispense.',who:['nadia.na','hoda','ph.pharmacist'],
+  steps:[['Flow C3, then X3.','Prescription visible in the vault, used in the order, dispensed by the pharmacist, patient sees DISPENSED.']]},
+ {id:'H3',title:'Lab booking to result in the vault',goal:'Patient books, lab releases, result returns.',who:['omar','lab.tech','lab.signatory'],steps:[['Flows L1 and L2.','RESULT_RELEASED and the PDF in the vault.']]},
+ {id:'H4',title:'Nurse sample to lab and back',goal:'KNLAB01.',who:['nurse1','lab.tech'],steps:[['Flow L4.','Custody timeline and report link come back to the nurse.']]},
+ {id:'H5',title:'Home visit, SOS, unsafe abort, held deposit',goal:'Patient books a home visit; the nurse runs it; an unsafe abort is not a no-show; ops reviews the held deposit.',who:['hoda','dispatch','mona','ops_super'],links:[['Dispatch','{clinic}/nurse/dispatch'],['Ops safety','{ops}/safety'],['Held deposits','{ops}/held-deposits']],
+  steps:[
+   ['Hoda books Nurse Mona (K11) or the agency; the agency dispatcher assigns an eligible nurse (C6).','Booking shows assignee and ETA.'],
+   ['Nurse (staff app A6) departs, arrives, presses SOS.','SOS in the agency inbox, Clinic /nurse/safety and Ops /safety within 60 s.'],
+   ['Nurse aborts the visit as unsafe.','Not a no-show; deposit HOLD_FOR_REVIEW.'],
+   ['Ops releases it to the nurse or refunds the patient with a reason (O8).','Patient sees the outcome and a message.']
+  ]},
+ {id:'H6',title:'Flag OFF propagation',goal:'One Ops switch reaches every product.',who:['ops_super'],
+  steps:[
+   ['Switch `kiorex.pharmacy_orders` (money-path: two-person rule) or `pharmacy.kiorex_orders` OFF.','Patient Pharmacy returns FEATURE_DISABLED; the Pharmacy Orders list shows 403 within about 2 s; safety alerts still work.'],
+   ['Switch `clinic.kiorex_listing` OFF for `demo_t_ss`.','Clinic Kiorex tab follows within seconds.'],
+   ['Switch them back ON.','Everything works again.']
+  ]},
+ {id:'H7',title:'Cancellation, refund, no-show and waitlist autofill',goal:'Money and slot recycling across Kiorex and Kiorly.',who:['samir','hoda','frontdesk1.na'],
+  steps:[
+   ['Cancel `mk03` as Samir (K4).','Deposit REFUNDED; the Clinic slot is freed.'],
+   ['A waitlisted patient is offered the freed slot (K5).','Offer, accept, confirm.'],
+   ['In the Clinic mark a Kiorex booking as no-show.','Deposit FORFEITED, visible in Ops > Finance.']
+  ]},
+ {id:'H8',title:'Org import to live clinic',goal:'Ops imports an org; the Clinic shows the patients.',who:['ops_admin','ops_super','owner.na'],steps:[['Flow O6 end to end.','Imported patients in Clinic; rollback removes them.']]},
+ {id:'H9',title:'Plan gate everywhere',goal:'Basic / Lite behave consistently on web and mobile.',who:['owner.basic','pharm.basic','lab.basic'],steps:[['Flows C5 and A9.','Web paywall on Clinic, upgrade screen + safety inbox on mobile, FEATURE_DISABLED on gated mobile endpoints.']]}
+ ]});
+
+/* ---------------------------------------------------------------- 11 RTL */
+MODULES.push({id:'rtl',ic:'11',title:'Arabic and RTL checks',blurb:'Arabic is a first-class language everywhere: layout, numerals, names and mixed text.',
+ flows:[
+ {id:'R1',title:'Web apps in Arabic',goal:'Switch each web app to Arabic and check direction and content.',who:['hoda','nourhan'],links:[['Patient web','{web}'],['Clinic','{clinic}/login'],['Pharmacy','{pharm}/login'],['Lab','{lab}/login'],['Ops','{ops}'],['Passport','{pass}/account']],
+  steps:[
+   ['Patient web: switch to Arabic in the header (Passport also accepts `?lang=ar`: {pass}/account?lang=ar).','`<html dir="rtl" lang="ar">`; menus, chevrons and back arrows mirror; the specialty chips and doctor names show Arabic (هدى محمود, د. عادل عزيز, نورهان فتحي).'],
+   ['Phone numbers and e-mails in forms and tables.','Stay left-to-right (`dir="ltr"`) inside RTL text; no reversed `+20...` digits.'],
+   ['Prices and dates.','Currency EGP formatted for the locale; dates localised; no clipped numbers in cards.'],
+   ['Repeat on Clinic (language toggle), Pharmacy, Lab, Ops and Passport.','No overflow or overlapping toggles; tables align right; modals close buttons on the correct side.'],
+   ['Open the Ops onboarding import in Arabic.','Task types and error codes are localised (`TWO_PERSON_RULE`, `BLOCKERS_OPEN`, ...).']
+  ]},
+ {id:'R2',title:'Messages and documents in Arabic',goal:'Mock messages, OTP templates, reports and brand.',
+  steps:[
+   ['Sign in via Passport with the language set to Arabic; open {pass}/dev/inbox.','OTP message with `locale=ar` (template `kx_otp_ar_*`).'],
+   ['Set the patient locale to Arabic and trigger a booking confirmation (K2).','The message in Ops > Messaging has Arabic text.'],
+   ['Lab report PDF / public report `{lab}/r/<token>` in Arabic.','Arabic test names (for example Complete blood count / صورة دم كاملة) and RTL layout.'],
+   ['Brand: Arabic wordmark كيورلي on the staff app.','Coloured per glyph; joining intact.']
+  ]},
+ {id:'R3',title:'Mobile apps in Arabic (first launch)',goal:'The staff app is Arabic by default; the first run reloads once to apply RTL.',who:['nurse.na'],dl:[['Staff Home','kiorly://'],['Patient Home','kiorex://']],
+  steps:[
+   ['Fresh install of Kiorly on the simulator.','Arabic UI; one automatic reload (guarded against loops for 60 s); then RTL layout. Expo Go shows a "close and reopen" banner instead.'],
+   ['Toggle English and back on sign-in and in Me.','Direction flips immediately for text; tab bar order mirrors after reload.'],
+   ['Patient app: same on `kiorex://`.','RTL; phone fields LTR.']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 12 TROUBLESHOOTING */
+MODULES.push({id:'trouble',ic:'12',title:'Troubleshooting',blurb:'Things that actually went wrong while preparing this guide, and the usual suspects.',
+ flows:[
+ {id:'T1',title:'Service not reachable / dots red',goal:'Find and restart one service without disturbing the others.',
+  steps:[
+   ['`lsof -nP -iTCP -sTCP:LISTEN | grep -E ":(3010|3100|3200|4000|4400|5174|5180|5181|5192|5193|8081|8082)"`','Every port you need has a node process.'],
+   ['Restart one: `e2e/scripts/up.sh --restart --only=kiorly` (names: passport, kiorly, kiorex, pharmacy, lab). Logs: `.e2e/logs/<name>.log`.','Only that service restarts. Never use `pkill`/broad kills; never touch 3000 / 5173 / 5175.'],
+   ['Dots stay grey when this page is opened from `file://`.','Browsers may block no-cors pings to localhost (Chrome "Local network access" prompt). Allow it, or serve the page: `cd _docs/test-flow && python3 -m http.server 8099` (pick a free port that is not 3000 / 5173 / 5175).']
+  ]},
+ {id:'T2',title:'Clinic login returns 400 "email must be an email"',goal:'Observed 23 Nov 2026 on the running Clinic API process; fixed in clinics-management commit 997c3304 (global JSON body parsing), which needs a rebuilt + restarted API.',
+  steps:[
+   ['JSON login: `curl -s -X POST {capi}/api/v1/auth/login -H "Content-Type: application/json" -d \'{"email":"owner.na@demo.kiorex.test","password":"Demo@12345"}\'`','Observed 400 with validation messages for email and password (body not parsed).'],
+   ['Form-encoded: `curl -s -X POST {capi}/api/v1/auth/login -d "email=owner.na@demo.kiorex.test&password=Demo@12345"`','Observed 200 with `accessToken` for 24 clinic logins and the 3 legacy accounts.'],
+   ['If the web login also fails, rebuild + restart the Clinic API: `e2e/scripts/up.sh --build --restart --only=kiorly`.','JSON login returns 200. If it still fails after the rebuild, check that the running process is the new build (`ps` start time vs the build log `.e2e/logs/build-kiorly.log`).']
+  ]},
+ {id:'T3',title:'OTP, TOTP and rate limits',goal:'Sign-in problems on Passport.',
+  steps:[
+   ['`429 Too many requests from your network` right after many sign-ins in a row (observed after about 25 quick logins).','Wait a minute, or clear the counters as below; sign in one persona at a time.'],
+   ['"Too many requests" on the Clinic login.','Wait the `retryAfterSec` it reports (the smoke script does).'],
+   ['"Too many codes": 5 sends per phone per hour. `cd kiorex-account && npm run db:reset`.','Counter cleared.'],
+   ['Unseeded phone: the code is in `.e2e/logs/passport.log` (`to=+20... code=......`).','Seeded phones always use `000000`.'],
+   ['TOTP says wrong: a code is accepted once per 30 s step; wait for the next code. Check the Mac clock.','Next code works.'],
+   ['Staff password: `Demo@12345`; legacy `admin@kiorly.com`, `superadmin@kiorly.com`, `admin@drahmedshall.com` use `demo`. Lab has no password (dev-login).','Correct credential works.']
+  ]},
+ {id:'T4',title:'Data looks different from the docs',goal:'Counts drift and time-based states.',
+  steps:[
+   ['Counts (pharmacy orders, safety alerts, booking intents, lots) include e2e leftovers.','The seeded STATES are guaranteed, the totals are not.'],
+   ['Held booking `mk28` is already EXPIRED; live home visits drift away from "now"; the Kiorly safety scheduler prompts on an arrived visit nobody answers after about 40 min.','Run `scripts/seed-all.sh --reset` (only when nobody else uses the stack).'],
+   ['After `cd e2e && npm test`: re-run `scripts/seed-all.sh` (gate evidence restored).','Launch-locked flags effective again.'],
+   ['Dr Jihan\'s deposit missing after a provider re-sync.','Re-apply the SQL in flow K2 data.']
+  ]},
+ {id:'T5',title:'Mobile specifics',goal:'Emulators, bundle ids and URLs.',
+  steps:[
+   ['Android emulator cannot reach APIs: use `10.0.2.2` in `EXPO_PUBLIC_CLINIC_API`, `EXPO_PUBLIC_PHARMACY_API`, `EXPO_PUBLIC_LAB_API`.','Sign-in works. `kiorly-team/.env.local` overrides `.env.example`.'],
+   ['Pharmacy (:3100) and Lab (:3200) APIs bind 127.0.0.1: a physical phone needs them started with a LAN bind and the Mac\'s LAN IP in the three variables.','Phone reaches the APIs.'],
+   ['The installed simulator / emulator apps may still be `com.kiorly.team` (pre-rename). Rebuild: `npx expo run:ios` / `npx expo run:android`.','`com.kiorly.app` installed; scheme `kiorly://` opens it.'],
+   ['Expo Go 58 lacks ExpoCrypto: use the dev build for Passport sign-in on device.','Sign-in redirect returns to the app.'],
+   ['Expo web ports: patient 8081, staff 8082. Do not confuse them.','Right app.']
+  ]},
+ {id:'T6',title:'Feature disabled, LAB_SYSTEM_BUSY and partner errors',goal:'Common API errors.',
+  steps:[
+   ['403 `FEATURE_DISABLED {key, scope}`.','A flag is OFF; check Ops > Flags (or the BASIC plan for mobile).'],
+   ['`LAB_SYSTEM_BUSY` / `CLINIC_SYSTEM_BUSY` (503).','The partner is down or its circuit is open; check `.e2e/logs`, then Ops > Outbox and replay.'],
+   ['A pharmacy / lab order stuck at PAID.','Ops > Orders > Resubmit (idempotent).'],
+   ['DEAD `kiorly.record_share_consent` outbox rows (Kiorly 404).','Stale e2e link: SQL in `TEST_DATA.md` section "Ops outbox".']
+  ]}
+ ]});
+
+/* ===================== reference data ===================== */
+const DEVINBOX = [
+ ['Passport OTP (mock WhatsApp)','{pass}/dev/inbox','Message to the phone, template `kx_otp_en_mock` / `kx_otp_ar_mock`, body "code 000000", state delivered, `providerRef mock_whatsapp_n`.'],
+ ['Kiorex messages (WhatsApp / SMS / e-mail / push, mock)','{ops}/messaging','Booking confirmation, reminder, waitlist offer, refund, review invitation, `PHARMACY_ORDER_*`, lab result. Columns channel, state (queued / sent / delivered / read / failed), `providerRef`, locale. Consent is checked on every send.'],
+ ['Kiorex dev endpoints (no auth, dev only)','{kapi}/api/v1/dev/messaging/outbox','`GET /api/v1/dev/messaging/outbox`, `POST /api/v1/dev/messaging/samples` (booking confirmation, reminder, waitlist offer, refund), `GET /api/v1/dev/payments`, `POST /api/v1/dev/payments/<id>/simulate {"outcome":"captured|failed|refund_settled"}`.'],
+ ['Kiorex Pay sandbox','{kapi}/api/v1/pay/fake-checkout/<paymentId>','Hosted fake checkout (no real money). Pay returns to the app; a PSP fee + capture ledger row appears in Ops > Finance {ops}/finance.'],
+ ['Kiorly Clinic dev inbox','{clinic}/dev/inbox','Clinic WhatsApp / e-mail mocks (appointment reminders, public reschedule / pay links, family summary).'],
+ ['Pharmacy notifications','{pharm}/notifications','New Kiorex order, expiry / low-stock / controlled-discrepancy alerts. Log: `.e2e/logs/pharmacy.log`.'],
+ ['Lab alerts','{lab}/critical','Critical values, QC and TAT alerts; outbound results go to Kiorex via the Lab outbox (Ops > Outbox {ops}/outbox).'],
+ ['Outbox and webhooks','{ops}/outbox','Events with retries (`kiorly.record_share_consent`, `flag.changed`, partner webhooks). Replay a DEAD one.'],
+ ['Staff / patient mobile push (mock)','kiorly://inbox','Kiorly Me > Notifications > dev card; messages arrive in the Inbox as DELIVERED. Remote format: `xcrun simctl push booted com.kiorly.app kiorly-team/e2e-push/<type>.json`. Patient: `kiorex-platform/apps/mobile/e2e-push/send.sh <type>`.'],
+ ['Service logs','.e2e/logs/','`tail -f .e2e/logs/passport.log` (OTP codes for unseeded phones), `kiorex.log`, `kiorly.log`, `pharmacy.log`, `lab.log`, `expo.log`.']
+];
+const DD_DOCTORS = [
+ ['demo_l_na_nadia','Dr Nadia Fouad','Paediatrics','Nile Care; also logs in as nadia.na@; home visits supported'],
+ ['demo_l_na_walid','Dr Walid Samy','Dermatology','Nile Care'],['demo_l_na_tamer','Dr Tamer Shawky','Cardiology','Nile Care; mk09 checked-in (Tarek), mk28 expired hold (Hoda)'],
+ ['demo_l_na_rania','Dr Rania','Ob-gyn','Nile Care (search by code obstetrics_gynecology)'],['demo_l_na_khaled','Dr Khaled','Dentistry','Nile Care'],
+ ['demo_l_na_hossam','Dr Hossam Anwar','Orthopaedics','Nile Care'],['demo_l_na_ingy','Dr Ingy Lashin','ENT','Nile Care'],['demo_l_na_sherif','Dr Sherif Bakr','Internal medicine','Nile Care'],
+ ['demo_l_df_ola','Dr Ola Gamal','Paediatrics','Delta Family Clinics'],['demo_l_df_medhat','Dr Medhat','Family medicine','Delta'],
+ ['demo_l_sp_enta','Dr Jihan Eissa / د. جيهان عيسى','ENT','Specialties Network, DEPOSIT 100 EGP, slug demo-sp-enta, login enta.sp@'],
+ ['demo_l_sp_entb','Dr Fady Maher','ENT','no deposit'],['demo_l_sp_cardiologya / b','Dr Basma Barakat / Dr Eman Habib','Cardiology','a: home visits'],
+ ['demo_l_sp_paediatricsa / b','Dr Shereen Shalaby / Dr Wael Abbas','Paediatrics','a: home visits'],['demo_l_sp_dermatologya / b','Dr Bassem Diab / Dr Emad Kamel','Dermatology','b: video booking'],
+ ['demo_l_sp_psychiatrya / b','Dr Yasmine Eissa / Dr Magdy Maher','Psychiatry','video bookings, TeleSession rows'],
+ ['demo_l_rev23_na_mai','Dr Mai Hassan','Physiotherapy','IN_CLINIC + HOME (maadi, nasr-city, heliopolis)'],['demo_l_rev23_df_hany','Dr Hany Sobhy','Physiotherapy','Delta, mansoura; MoH licence PENDING renewal'],
+ ['demo_l_rev23_nsolo_mona','Nurse Mona Adel','Home nursing (solo)','HOME: nasr-city, heliopolis, new-cairo'],['demo_l_rev23_nagy_nurse1','Demo Care Agency','Home nursing (agency)','HOME: nasr-city, heliopolis, maadi, zamalek; dispatcher assigns a nurse'],
+ ['(PAUSED)','Dr Samah Aref','Ophthalmology','Delta; licence expired, listing PAUSED (must NOT be bookable)'],['(PAUSED)','Dr Lamia Hafez','Dermatology','Smile & Skin; org flag OFF'],
+ ['All 36 specialties','72 doctors, 2 per specialty','see TEST_DATA.md','ids `demo_l_sp_<key>a|b`, logins `<key>a.sp@demo.kiorex.test`, slug `demo-sp-<key>a`; codes at `GET {kapi}/api/v1/specialties`']
+];
+const DD_MEDS = [
+ ['Paracetol 500mg','25','OTC','Analgesic; Febrimol 500mg is a second paracetamol (25 EGP)'],['Cetirex 10mg','32','OTC','Cetirizine 10 mg'],['Aspirex 81mg','30','OTC','Aspirin'],['Brufcare 400mg','45','OTC','Ibuprofen'],
+ ['Losecure 20mg / Omerex 20mg','66 / 60','OTC','Omeprazole'],['Cevirex 1000mg','55','OTC','Vitamin C'],['Pharmocalc 10mg','84','OTC, LOW stock (2 when checked)','Use for the out-of-stock / cap test'],
+ ['Amoxirex 500mg','70','Rx required','Amoxicillin; also Augmacure 1000mg 176 EGP'],['Amlorex 5mg','55','Rx required','Amlodipine'],['Atorex 20mg','120','Rx required','Atorvastatin'],
+ ['Azithrex 500mg','95','Rx required','Azithromycin'],['Glucocure 850mg / Metforex 850mg','52.8 / 48','Rx required','Metformin'],['Aspartcure 100IU/ml','671','Rx required','Insulin aspart; Glargirex 520 EGP'],
+ ['Morphicure 10 mg (DEMO)','-','CONTROLLED (pharmacy only)','Never listed on Kiorex; register expected 40 counted 38 (witness demo)'],
+ ['Lots','-','Stock states','Expired `DMEXP0`, `DMEXP1`, `DMEXP2`, `EXPIRED-DEMO`; quarantined `L00089`, `DM00007`, `DM00008`; recalled `DM00013` (notice `DEMO-RECALL-001`)']
+];
+const DD_LAB = [
+ ['CBC','Complete blood count','120','-'],['CBCD','CBC with differential','170','-'],['CRP','C-reactive protein','90','-'],['HSCRP','hs-CRP','160','-'],['FERR','Ferritin','150','-'],
+ ['GLU','Fasting glucose','40','fasting'],['GLU2','Glucose 2h post-prandial','40','-'],['GLUR','Glucose (random)','35','-'],['HBA1C','Glycated haemoglobin','120','-'],
+ ['LIPID','Lipid profile','220','fasting'],['LIPIDC','Lipid profile with calculated LDL','230','fasting'],['LFT','Liver enzymes','140','-'],['LFTX','Liver profile (extended)','280','-'],
+ ['ACTH / ALB','ACTH 300 EGP, Albumin 40 EGP','(tests of seeded booking kx_lb_demo_4)','-'],['TSH','Thyroid stimulating hormone','(QC FAIL 1_3s demo)','blocked until QC cleared']
+];
+const DD_IDS = [
+ ['Pharmacy orders','`kx_ph_demo_1` Hoda PENDING_PAYMENT, `_2` Samir PAID, `_3` Karim REJECTED (SLA_EXPIRED), `_4` Nourhan READY, `_5` Mahmoud DISPENSED, `_6` Mariam DISPENSED, `_7` Omar REJECTED, `_8` Dalia CANCELLED'],
+ ['Lab bookings','`kx_lb_demo_1` Nourhan PENDING_PAYMENT, `_2` Mahmoud PAID, `_3` Mariam SUBMITTED, `_4` Omar COLLECTED, `_5` Dalia and `_6` Tarek RESULT_RELEASED, `_7` Heba REJECTED, `_8` Youssef CANCELLED'],
+ ['Marketplace bookings','`mk01`,`mk02` Hoda completed; `mk03` Samir confirmed (cancel demo); `mk06` Dalia no-show; `mk09` Tarek checked-in; `mk12` Heba cancelled+refunded; `mk26` Nourhan pending clinic; `mk28` Hoda expired hold. Ids `demo_bk_mkNN`; Kiorly appointment `demo_mk_<key>`. 36-specialty set: `sp01a` ... `sp36c`'],
+ ['Telemedicine','`demo_ts_mk03` Samir WAITING, `demo_ts_mk05` Mariam SCHEDULED, `demo_ts_mk01` Hoda ENDED'],
+ ['Care plans','`kx_cp_demo_1` Nabila CONFIRMED (10 visits, 4 done), `kx_cp_demo_2` Mahmoud REQUESTED, `kx_cp_demo_3` REJECTED/DECLINED'],
+ ['Nurse samples (KNLAB01)','`nl1` released, `nl2` awaiting validation, `nl3` in transit (tube `DEMO-NL3-EDTA`), `nl4` refused `SAMPLE_UNMATCHED`; relay rows `demo_lo_nl1..4`'],
+ ['Prescription / encounter','`demo_enc_mobile_rx` Cetirizine 10 mg for Hoda awaiting signature (Dr Nadia); `demo_co_mobile_crit` critical potassium 6.9 mmol/L'],
+ ['Invitation tokens','`demo-invite-nile-nurse` (Heba +201000001010, Nile Care nurse), `demo-invite-agency-nurse` (Noha +201000003011)'],
+ ['Payouts / lab alerts','`demo_po_1..3`; `DEMO-OPEN-ALERT-001` (K 6.9)'],
+ ['Org / tenant ids','Clinic: `demo_t_na` Nile Care, `demo_t_df` Delta, `demo_t_ss` Smile & Skin, `demo_t_sp` Specialties Network, `demo_t_nsolo` solo nurse, `demo_t_bs` Basic clinic, agency tenant; Pharmacy `org_demo_kiorly`; Lab slugs `demo-lab`, `chain-lab`, `basic-lab`']
+];
+const DD_ADDR = [
+ ['Home (Hoda, default, confirmed)','14 Demo Street (invented), B2, floor 3, flat 7, near the demo bakery','Heliopolis, Cairo','`kx_ad_demo_1001_home`'],
+ ['Mother\'s flat (Hoda, confirmed)','6 Fictional Avenue, A, floor 1, flat 2, opposite the demo pharmacy','Nasr City, Cairo','`kx_ad_demo_1001_mother`'],
+ ['Office (unconfirmed, needs OTP)','2 Invented Office Park, T1, floor 9','Zamalek, Cairo','`kx_ad_demo_1001_new`'],
+ ['Out of coverage test (Mona)','any address in Maadi','Maadi','expect `OUT_OF_COVERAGE`'],
+ ['Pharmacy delivery sample (type this)','12 Syria Street, Mohandessin; area Mohandessin; governorate Giza; phone +201000001006','Giza','free-text form']
+];
+
+/* ===================== helpers ===================== */
+const $ = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sub = s => String(s).replace(/\{(web|ops|expo|kapi|clinic|capi|pass|pharm|papi|lab|lapi|staff)\}/g,(m,k)=>PORTS[k]);
+const URLRE = /https?:\/\/localhost:\d+[^\s`]*/;
+function fmt(raw){
+  raw = sub(raw);
+  const re = /`([^`]+)`|(https?:\/\/localhost:\d+[^\s`]*)|\*\*([^*]+)\*\*/g;
+  let out='', last=0, m;
+  while((m=re.exec(raw))){
+    out += esc(raw.slice(last,m.index)); last = re.lastIndex;
+    if(m[1]!==undefined){ out += '<span class="copy" role="button" tabindex="0" title="Click to copy" data-copy="'+esc(m[1])+'">'+esc(m[1])+'</span>'; }
+    else if(m[2]!==undefined){
+      let u=m[2], tail=''; while(/[.,;:)]$/.test(u)){tail=u.slice(-1)+tail;u=u.slice(0,-1);}
+      if(/[<>]/.test(u)) out += '<span class="copy" role="button" tabindex="0" title="Click to copy" data-copy="'+esc(u)+'">'+esc(u)+'</span>'+esc(tail);
+      else out += '<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u)+'</a>'+esc(tail);
+    } else out += '<b>'+esc(m[3])+'</b>';
+  }
+  return out + esc(raw.slice(last));
+}
+const cp = (t,cls)=>'<span class="copy'+(cls?' '+cls:'')+'" role="button" tabindex="0" title="Click to copy" data-copy="'+esc(t)+'">'+esc(t)+'</span>';
+
+/* ===================== storage (try/catch) ===================== */
+const KEY='kiorex-test-flow-v1';
+let mem={t:{},o:{},n:{}};
+function load(){ try{ const s=localStorage.getItem(KEY); if(s){ const j=JSON.parse(s); mem={t:j.t||{},o:j.o||{},n:j.n||{}}; } }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(mem)); }catch(e){} }
+
+/* ===================== rendering ===================== */
+function userChip(id){
+  const u = UBY[id];
+  if(!u) return '<span class="user">'+esc(id)+'</span>';
+  const [,,name,role,login,kind,secret,where,,seed]=u;
+  let sec='';
+  if(kind==='otp') sec=cp(secret,'otp');
+  else if(kind==='pw') sec=cp(secret,'pw');
+  else if(kind==='dev') sec='<span class="ur">org slug</span> '+cp(secret);
+  else if(kind==='totp') sec=cp(secret,'otp')+' '+cp(seed,'tp');
+  return '<div class="user"><div class="un">'+esc(name)+'</div><div class="ur">'+esc(role)+'</div><div class="uc">'+cp(login)+' '+sec+'</div></div>';
+}
+function dlRow(l){
+  const url=l[1]; const ios = url.startsWith('kiorly://')||url.startsWith('kiorex://');
+  const app = url.startsWith('kiorex://')?'com.kiorex.app':'com.kiorly.app';
+  let h='<div class="dl"><span>'+esc(l[0])+'</span><code>'+esc(url)+'</code><button data-copy="'+esc(url)+'">Copy link</button>';
+  if(ios){
+    h+='<button data-copy="'+esc('xcrun simctl openurl booted "'+url+'"')+'" title="iOS Simulator">Copy simctl</button>';
+    h+='<button data-copy="'+esc('~/.local/android/sdk/platform-tools/adb shell am start -W -a android.intent.action.VIEW -d "'+url+'" '+app)+'" title="Android emulator">Copy adb</button>';
+  }
+  return h+'</div>';
+}
+function flowHTML(m,f){
+  const idp = 'F-'+f.id;
+  let h='<details class="flow" id="'+idp+'" data-flow="'+f.id+'" data-mod="'+m.id+'"><summary><span class="fid">'+esc(f.id)+'</span><span class="fttl">'+esc(f.title)+'</span><span class="fprog" data-fp="'+f.id+'"></span><span class="fcar">&#9656;</span></summary><div class="fbody">';
+  if(f.goal) h+='<p class="goal"><b>Goal.</b> '+fmt(f.goal)+'</p>';
+  if(f.note) h+='<div class="warn">'+fmt(f.note)+'</div>';
+  if(f.who&&f.who.length){ h+='<div class="lbl">Test users</div><div class="users">'+f.who.map(userChip).join('')+'</div>'; }
+  if(f.links&&f.links.length){ h+='<div class="lbl">Open (localhost)</div><div class="links">'+f.links.map(l=>{const u=sub(l[1]);return '<a class="lk" href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(l[0])+' <span class="u">'+esc(u.replace(/^https?:\/\//,''))+'</span></a>';}).join('')+'</div>'; }
+  if(f.dl&&f.dl.length){ h+='<div class="lbl">Mobile deep links (kiorex:// kiorly://)</div><div class="links">'+f.dl.map(dlRow).join('')+'</div>'; }
+  if(f.steps&&f.steps.length){ h+='<div class="lbl">Steps</div><ol class="steps">'+f.steps.map((s,i)=>{const sid=f.id+'.'+(i+1);return '<li data-sid="'+sid+'"><input type="checkbox" id="c-'+sid+'" data-sid="'+sid+'" aria-label="Step '+(i+1)+' done"><label for="c-'+sid+'" class="st">'+fmt(s[0])+'</label>'+(s[1]?'<div class="exp'+(s[2]==='neg'?' neg':'')+'">'+fmt(s[1])+'</div>':'')+'</li>';}).join('')+'</ol>'; }
+  if(f.data&&f.data.length){ h+='<div class="lbl">Dummy data to use</div><ul class="plain">'+f.data.map(d=>'<li>'+fmt(d)+'</li>').join('')+'</ul>'; }
+  if(f.inbox&&f.inbox.length){ h+='<div class="lbl">Dev inbox / logs: what to look at</div><div class="inbox"><ul>'+f.inbox.map(d=>'<li>'+fmt(d)+'</li>').join('')+'</ul></div>'; }
+  h+='<div class="flowact"><button data-act="allflow" data-f="'+f.id+'">Tick all</button><button data-act="clrflow" data-f="'+f.id+'">Clear this flow</button><button data-copy="#'+idp+'" data-link="1">Copy link to flow</button></div>';
+  return h+'</div></details>';
+}
+function moduleHTML(m){
+  let h='<section class="mod" id="M-'+m.id+'" data-mod="'+m.id+'"><div class="mhead"><div class="mic">'+esc(m.ic)+'</div><div><h2>'+esc(m.title)+'</h2><p>'+fmt(m.blurb)+'</p></div><div class="mp"><span data-mp="'+m.id+'"></span><button data-act="clrmod" data-m="'+m.id+'">Reset this module</button></div></div>';
+  if(m.intro) h+='<div class="note">'+fmt(m.intro)+'</div>';
+  h+=m.flows.map(f=>flowHTML(m,f)).join('');
+  return h+'</section>';
+}
+function refUsers(){
+  const groups=Object.keys(GROUPS);
+  let h='<section class="mod" id="R-users"><div class="mhead"><div class="mic">&#128100;</div><div><h2>Test users directory</h2><p>All synthetic DEV values from the seeds, checked against the running stack on 23 Nov 2026 (Clinic 27 logins, Pharmacy 10, Lab dev-login 3 tenants, Passport OTP, ops TOTP). Click any dashed value to copy it. Passport OTP is always <code>000000</code>; staff password <code>Demo@12345</code>.</p></div></div>';
+  h+='<div class="totp" id="totpbox"><b>Ops TOTP generator (DEV seeds)</b><select id="tsel"><option value="REMOVED-OLD-DEMO-TOTP-SECRET">+201000000099 super admin</option><option value="REMOVED-OLD-DEMO-TOTP-SECRET">+201000009001 admin</option><option value="REMOVED-OLD-DEMO-TOTP-SECRET">+201000009002 finance</option></select><span class="code" id="tcode" role="button" tabindex="0" title="Click to copy" data-copy="">------</span><span class="tleft"><i id="tbar"></i></span><span id="tsec" style="font-size:.8rem;color:var(--ink2)"></span></div>';
+  h+='<div class="chips" id="gchips"><button class="chip on" data-g="all">All</button>'+groups.map(g=>'<button class="chip" data-g="'+g+'">'+esc(GROUPS[g].split(':')[0].split('(')[0].trim())+'</button>').join('')+'</div>';
+  h+='<div class="tw"><table id="utable"><thead><tr><th>Name / role</th><th>Login (phone or e-mail)</th><th>OTP / password</th><th>Where / notes</th></tr></thead><tbody>';
+  groups.forEach(g=>{
+    h+='<tr class="grp" data-g="'+g+'"><td colspan="4">'+esc(GROUPS[g])+'</td></tr>';
+    U.filter(u=>u[1]===g).forEach(u=>{
+      const [id,,name,role,login,kind,secret,where,note,seed]=u;
+      let sec = kind==='dev' ? '<span class="ur">org</span> '+cp(secret) : (kind==='totp'? cp(secret,'otp')+'<br>'+cp(seed,'tp') : cp(secret, kind==='pw'?'pw':'otp'));
+      const txt=(name+' '+role+' '+login+' '+where+' '+note+' '+g+' '+secret).toLowerCase();
+      h+='<tr data-g="'+g+'" data-t="'+esc(txt)+'"><td><b>'+esc(name)+'</b><br><span style="color:var(--ink2);font-size:.82rem">'+esc(role)+'</span></td><td>'+cp(login)+'</td><td>'+sec+'</td><td style="font-size:.84rem">'+esc(where)+(note?'<br><span style="color:var(--ink2)">'+esc(note)+'</span>':'')+'</td></tr>';
+    });
+  });
+  h+='</tbody></table></div>';
+  h+='<div class="note">Lab dev-login: <code>POST '+PORTS.lapi+'/api/v1/auth/dev-login {"orgSlug":"demo-lab","email":"signatory@demo-lab.test"}</code> (201 with a token). Orgs: <code>demo-lab</code> PRO, <code>chain-lab</code> CHAIN/ENTERPRISE, <code>basic-lab</code> LITE/BASIC; roles owner, director, signatory, tech, phleb, reception, manager, supervisor, finance at <code>&lt;role&gt;@&lt;slug&gt;.test</code>. Clinic tenants: <code>.na</code> Nile Care (PRO), <code>.df</code> Delta (PRO), <code>.ss</code> Smile &amp; Skin (trial), <code>.sp</code> Specialties Network; for each: <code>owner|manager|frontdesk1|frontdesk2|nurse|accountant|callcenter.&lt;t&gt;@demo.kiorex.test</code>.</div></section>';
+  return h;
+}
+function refPorts(){
+  let h='<section class="mod" id="R-ports"><div class="mhead"><div class="mic">&#9889;</div><div><h2>Ports and URLs, with live status</h2><p>The dot is a browser-side <code>fetch(url,{mode:"no-cors"})</code> ping: green = something answered, red = nothing answered (or the browser blocked a request from this page), grey = not checkable. <button class="tbtn" id="recheck" style="padding:2px 10px">Re-check</button> <span id="pstat" style="font-size:.85rem;color:var(--ink2)"></span></p></div></div><div id="phint" class="warn" style="display:none"></div>';
+  h+='<div class="tw"><table id="ptable"><thead><tr><th></th><th>Service</th><th>Port</th><th>URL</th><th>Type</th><th>Notes</th></tr></thead><tbody>';
+  PORT_ROWS.forEach((r,i)=>{
+    const u=sub(r[2]); const link = /^https?:/.test(u)?'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u)+'</a>':esc(u||'-');
+    h+='<tr data-t="'+esc((r[0]+' '+r[1]+' '+r[3]+' '+r[4]).toLowerCase())+'"><td><span class="dot'+(r[5]?'':' na')+'" data-ping="'+(r[5]?esc(u):'')+'" id="dot'+i+'" title="'+(r[5]?'checking...':'not checked')+'"></span></td><td><b>'+esc(r[0])+'</b></td><td>'+(r[1]??'-')+'</td><td style="font-size:.84rem">'+link+'</td><td>'+esc(r[3])+'</td><td style="font-size:.84rem">'+fmt(r[4])+'</td></tr>';
+  });
+  return h+'</tbody></table></div></section>';
+}
+function refInbox(){
+  let h='<section class="mod" id="R-inbox"><div class="mhead"><div class="mic">&#9993;</div><div><h2>Dev inbox, message log and push (all mocked)</h2><p>Every integration is a mock adapter (<code>MODE=mock</code>): nothing leaves your machine. Use this table to find where each WhatsApp / SMS / e-mail / push shows up.</p></div></div><div class="tw"><table><thead><tr><th>What</th><th>Where</th><th>Look for</th></tr></thead><tbody>';
+  DEVINBOX.forEach(r=>{ const u=sub(r[1]); const l=/^https?:/.test(u)?'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u)+'</a>':(/^kiorly:/.test(u)?cp(u):'<code>'+esc(u)+'</code>');
+    h+='<tr data-t="'+esc((r[0]+' '+r[2]).toLowerCase())+'"><td><b>'+esc(r[0])+'</b></td><td style="font-size:.84rem">'+l+'</td><td style="font-size:.88rem">'+fmt(r[2])+'</td></tr>'; });
+  return h+'</tbody></table></div></section>';
+}
+function tbl(head,rows,fmtcols){
+  return '<div class="tw"><table><thead><tr>'+head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr data-t="'+esc(r.join(' ').toLowerCase())+'">'+r.map((c,i)=>'<td style="font-size:.86rem">'+(i===0&&!fmtcols?'<span class="copy" role="button" tabindex="0" data-copy="'+esc(c)+'">'+esc(c)+'</span>':fmt(String(c)))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+}
+function refData(){
+  return '<section class="mod" id="R-data"><div class="mhead"><div class="mic">&#128230;</div><div><h2>Dummy data directory</h2><p>Real seeded values: doctors, medicines, lab tests, addresses and ids to type or search for. All fictional.</p></div></div>'
+   +'<h3 style="color:var(--indigo)">Doctors and providers (Kiorex ids)</h3>'+tbl(['Kiorex id','Name','Specialty','Notes'],DD_DOCTORS)
+   +'<h3 style="color:var(--indigo)">Medicines (Kiorly Demo Pharmacy - Maadi Branch, prices in EGP)</h3>'+tbl(['Name','Price','Type','Notes'],DD_MEDS)
+   +'<h3 style="color:var(--indigo)">Lab tests (demo-lab catalogue)</h3>'+tbl(['Code','Name','Price EGP','Flag'],DD_LAB)
+   +'<h3 style="color:var(--indigo)">Addresses</h3>'+tbl(['Address','Street / details','District','Id / note'],DD_ADDR,true)
+   +'<h3 style="color:var(--indigo)">Seeded ids and states</h3>'+tbl(['Kind','Ids'],DD_IDS,true)+'</section>';
+}
+
+/* ===================== build page ===================== */
+function build(){
+  $('#gen').textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  // content: setup module first, then reference blocks, then rest
+  const content=$('#content');
+  const setup=MODULES[0], rest=MODULES.slice(1);
+  content.innerHTML = moduleHTML(setup)+refPorts()+refUsers()+refInbox()+refData()+rest.map(moduleHTML).join('');
+  // nav
+  let n='<div class="navsec">Reference</div>'
+   +'<a class="navlink" href="#R-users" data-ref>&#128100; Test users</a><a class="navlink" href="#R-ports" data-ref>&#9889; Ports and live status</a><a class="navlink" href="#R-inbox" data-ref>&#9993; Dev inbox and logs</a><a class="navlink" href="#R-data" data-ref>&#128230; Dummy data</a><div class="navsec">Modules</div>';
+  MODULES.forEach((m,i)=>{
+    n+='<details data-nm="'+m.id+'"'+(mem.o['nav:'+m.id]===undefined? (i===0?' open':''):(mem.o['nav:'+m.id]?' open':''))+'><summary><span class="car">&#9656;</span><span class="mic">'+esc(m.ic)+'</span><span class="mt">'+esc(m.title)+'</span><span class="mc" data-nc="'+m.id+'"></span></summary><ul>'
+     +m.flows.map(f=>'<li data-nf="'+f.id+'"><a href="#F-'+f.id+'" data-f="'+f.id+'"><span class="mono">'+esc(f.id)+'</span> <span>'+esc(f.title.length>46?f.title.slice(0,44)+'...':f.title)+'</span><span class="fc" data-nfc="'+f.id+'"></span></a></li>').join('')+'</ul></details>';
+  });
+  $('#nav').innerHTML=n;
+  // restore state
+  $$('input[data-sid]').forEach(c=>{ if(mem.t[c.dataset.sid]){ c.checked=true; c.closest('li').classList.add('on'); } });
+  $$('details.flow').forEach(d=>{ if(mem.o[d.dataset.flow]) d.open=true; });
+  updateProgress();
+}
+
+/* ===================== progress ===================== */
+function updateProgress(){
+  const all=$$('input[data-sid]'); const done=all.filter(c=>c.checked).length;
+  $('#pnum').textContent=done+' / '+all.length+' steps'; const pct=all.length?Math.round(done*100/all.length):0;
+  $('#ppct').textContent=pct+'%'; $('#pbar').style.width=pct+'%';
+  MODULES.forEach(m=>{
+    let t=0,d=0;
+    m.flows.forEach(f=>{
+      const cs=$$('input[data-sid^="'+f.id+'."]'); const fd=cs.filter(c=>c.checked).length; t+=cs.length; d+=fd;
+      const txt = cs.length? fd+'/'+cs.length : '';
+      const fp=$('[data-fp="'+f.id+'"]'); if(fp){ fp.textContent=txt; fp.classList.toggle('done',cs.length>0&&fd===cs.length); }
+      const nf=$('[data-nfc="'+f.id+'"]'); if(nf){ nf.textContent=txt; }
+      const na=$('a[data-f="'+f.id+'"]'); if(na) na.classList.toggle('done',cs.length>0&&fd===cs.length);
+    });
+    const mc=$('[data-nc="'+m.id+'"]'); if(mc){ mc.textContent=d+'/'+t; mc.classList.toggle('done',t>0&&d===t); }
+    const mp=$('[data-mp="'+m.id+'"]'); if(mp) mp.textContent=d+' / '+t+' steps ticked';
+  });
+}
+function setStep(sid,on){
+  if(on) mem.t[sid]=1; else delete mem.t[sid];
+  const c=$('input[data-sid="'+sid+'"]'); if(c){ c.checked=on; c.closest('li').classList.toggle('on',on); }
+}
+
+/* ===================== copy ===================== */
+let tt; function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),1400); }
+function copyText(text){
+  const fb=()=>{ try{ const a=document.createElement('textarea'); a.value=text; a.style.position='fixed'; a.style.opacity='0'; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a); return true; }catch(e){ return false; } };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ return navigator.clipboard.writeText(text).then(()=>true,()=>fb()); }
+  return Promise.resolve(fb());
+}
+function doCopy(el){
+  let text=el.dataset.copy;
+  if(el.dataset.link){ text=location.href.split('#')[0]+text; }
+  if(!text) return;
+  copyText(text).then(ok=>{ toast(ok?'Copied: '+(text.length>60?text.slice(0,57)+'...':text):'Copy failed - select the text manually'); if(ok){ el.classList.add('ok'); setTimeout(()=>el.classList.remove('ok'),900); } });
+}
+
+/* ===================== TOTP (RFC 6238, SHA-1, 30 s, 6 digits; pure JS) ===================== */
+function sha1(bytes){
+  const rol=(n,b)=>(n<<b)|(n>>>(32-b)); const l=bytes.length; const w=[]; for(let i=0;i<l;i++) w[i>>2]|=bytes[i]<<(24-(i%4)*8);
+  w[l>>2]|=0x80<<(24-(l%4)*8); const n=(((l+8)>>6)+1)*16; while(w.length<n) w.push(0); w[n-1]=l*8; w[n-2]=Math.floor(l*8/4294967296);
+  let h0=0x67452301,h1=0xEFCDAB89,h2=0x98BADCFE,h3=0x10325476,h4=0xC3D2E1F0;
+  for(let i=0;i<n;i+=16){ const x=new Array(80); for(let j=0;j<80;j++){ x[j]=j<16?(w[i+j]|0):rol(x[j-3]^x[j-8]^x[j-14]^x[j-16],1); }
+    let a=h0,b=h1,c=h2,d=h3,e=h4; for(let j=0;j<80;j++){ const f=j<20?(b&c)|(~b&d):j<40?b^c^d:j<60?(b&c)|(b&d)|(c&d):b^c^d; const k=j<20?0x5A827999:j<40?0x6ED9EBA1:j<60?0x8F1BBCDC:0xCA62C1D6; const t=(rol(a,5)+f+e+k+x[j])|0; e=d;d=c;c=rol(b,30);b=a;a=t; }
+    h0=(h0+a)|0;h1=(h1+b)|0;h2=(h2+c)|0;h3=(h3+d)|0;h4=(h4+e)|0; }
+  const out=[]; [h0,h1,h2,h3,h4].forEach(v=>{ out.push((v>>>24)&255,(v>>>16)&255,(v>>>8)&255,v&255); }); return out;
+}
+function hmac(key,msg){ const B=64; if(key.length>B) key=sha1(key); key=key.concat(new Array(B-key.length).fill(0)); return sha1(key.map(b=>b^0x5c).concat(sha1(key.map(b=>b^0x36).concat(msg)))); }
+function b32(s){ const A='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits=''; for(const ch of s.replace(/=+$/,'').toUpperCase()) bits+=A.indexOf(ch).toString(2).padStart(5,'0'); const o=[]; for(let i=0;i+8<=bits.length;i+=8) o.push(parseInt(bits.slice(i,i+8),2)); return o; }
+function totp(secret,at){ const ctr=Math.floor((at||Date.now())/30000); const m=[0,0,0,0,(ctr>>>24)&255,(ctr>>>16)&255,(ctr>>>8)&255,ctr&255]; const h=hmac(b32(secret),m); const o=h[19]&15; const bin=((h[o]&127)<<24)|(h[o+1]<<16)|(h[o+2]<<8)|h[o+3]; return String(bin%1000000).padStart(6,'0'); }
+function tickTotp(){ const sel=$('#tsel'); if(!sel) return; const c=totp(sel.value); const el=$('#tcode'); el.textContent=c; el.dataset.copy=c; const sec=30-Math.floor((Date.now()/1000)%30); $('#tbar').style.width=(sec/30*100)+'%'; $('#tsec').textContent=sec+'s left'; }
+
+/* ===================== ports ping ===================== */
+async function ping(u){
+  const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),3500);
+  try{ await fetch(u,{mode:'no-cors',cache:'no-store',signal:ctl.signal}); clearTimeout(t); return true; }catch(e){ clearTimeout(t); return false; }
+}
+async function checkPorts(){
+  const dots=$$('.dot[data-ping]').filter(d=>d.dataset.ping); let up=0;
+  $('#pstat').textContent='checking...';
+  await Promise.all(dots.map(async d=>{ d.className='dot'; d.title='checking...'; const ok=await ping(d.dataset.ping); d.className='dot '+(ok?'up':'down'); d.title=ok?'Answered':'No answer (service down, or blocked by the browser)'; if(ok) up++; }));
+  $('#pstat').textContent=up+' of '+dots.length+' reachable';
+  const h=$('#phint');
+  if(up===0){ h.style.display='block'; h.innerHTML='Nothing answered. Either the stack is not running (module 1) or your browser blocks requests from this page to localhost'+(location.protocol==='file:'?' (opened from <code>file://</code>: allow the "local network" prompt, or serve the folder with <code>python3 -m http.server 8099</code> and open it from there)':'')+'. The guide itself works without any of this.'; }
+  else h.style.display='none';
+}
+
+/* ===================== search ===================== */
+let preOpen=null;
+function applySearch(){
+  const q=$('#q').value.trim().toLowerCase(); const toks=q.split(/\s+/).filter(Boolean);
+  $('#searchbox').classList.toggle('has',!!q); document.body.classList.toggle('searching',!!q);
+  const match=(txt)=>toks.every(t=>txt.indexOf(t)>-1);
+  let nf=0,nr=0;
+  if(q && preOpen===null){ preOpen={}; $$('details.flow').forEach(d=>preOpen[d.dataset.flow]=d.open); }
+  MODULES.forEach(m=>{
+    let any=false;
+    m.flows.forEach(f=>{
+      const d=$('#F-'+f.id); const li=$('li[data-nf="'+f.id+'"]');
+      if(!d.dataset.txt) d.dataset.txt=(d.textContent+' '+$$('[data-copy]',d).map(x=>x.dataset.copy).join(' ')).toLowerCase();
+      const ok=!q||match(d.dataset.txt);
+      d.classList.toggle('hide',!ok); d.style.display=ok?'':'none'; li.classList.toggle('hide',!ok);
+      if(ok){any=true; if(q){nf++; d.open=true;}}
+    });
+    const sec=$('#M-'+m.id); sec.style.display=(!q||any)?'':'none';
+    const nd=$('details[data-nm="'+m.id+'"]'); nd.classList.toggle('hide',!!q&&!any); if(q&&any) nd.open=true;
+  });
+  // tables
+  $$('#R-users tbody tr:not(.grp), #R-ports tbody tr, #R-inbox tbody tr, #R-data tbody tr').forEach(tr=>{ const ok=!q||match(tr.dataset.t||tr.textContent.toLowerCase()); tr.classList.toggle('hide',!ok); if(q&&ok) nr++; });
+  $$('#R-users tr.grp').forEach(g=>{ const rows=$$('#R-users tr[data-g="'+g.dataset.g+'"]:not(.grp)'); g.classList.toggle('hide',rows.every(r=>r.classList.contains('hide'))); });
+  ['users','ports','inbox','data'].forEach(k=>{ const s=$('#R-'+k); if(!q){ s.style.display=''; return; } const vis=$$('tbody tr:not(.hide):not(.grp)',s).length; s.style.display=vis?'':'none'; });
+  $('#sres').textContent=q? nf+' flow'+(nf===1?'':'s')+' and '+nr+' table row'+(nr===1?'':'s')+' match':'';
+  $('#empty').style.display=(q&&!nf&&!nr)?'block':'none';
+  if(!q&&preOpen){ $$('details.flow').forEach(d=>{ d.open=!!preOpen[d.dataset.flow]; }); preOpen=null; }
+}
+
+/* ===================== events ===================== */
+function openFlow(id,scroll){
+  const d=$('#F-'+id); if(!d) return; d.style.display=''; d.open=true; mem.o[id]=1; save();
+  const nd=$('details[data-nm="'+d.dataset.mod+'"]'); if(nd) nd.open=true;
+  if(scroll) d.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function init(){
+  load(); build(); tickTotp(); setInterval(tickTotp,1000);
+  document.addEventListener('click',e=>{
+    const c=e.target.closest('[data-copy]'); if(c){ e.preventDefault(); doCopy(c); return; }
+    const a=e.target.closest('[data-act]'); if(a){
+      const act=a.dataset.act;
+      if(act==='allflow'){ $$('input[data-sid^="'+a.dataset.f+'."]').forEach(c=>setStep(c.dataset.sid,true)); }
+      if(act==='clrflow'){ $$('input[data-sid^="'+a.dataset.f+'."]').forEach(c=>setStep(c.dataset.sid,false)); }
+      if(act==='clrmod'){ if(confirm('Clear all ticks in this module?')) $$('#M-'+a.dataset.m+' input[data-sid]').forEach(c=>setStep(c.dataset.sid,false)); else return; }
+      save(); updateProgress(); return;
+    }
+    const nl=e.target.closest('a[data-f]'); if(nl){ e.preventDefault(); history.replaceState(null,'','#F-'+nl.dataset.f); openFlow(nl.dataset.f,true); document.body.classList.remove('navopen'); $('#burger').setAttribute('aria-expanded','false'); return; }
+    const rl=e.target.closest('a[data-ref]'); if(rl){ document.body.classList.remove('navopen'); }
+    const ch=e.target.closest('.chip[data-g]'); if(ch){ $$('.chip[data-g]').forEach(x=>x.classList.toggle('on',x===ch)); const g=ch.dataset.g; $$('#utable tbody tr').forEach(r=>{ r.style.display=(g==='all'||r.dataset.g===g)?'':'none'; }); return; }
+  });
+  document.addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.copy[role=button],#tcode')){ e.preventDefault(); doCopy(e.target); }
+    if(e.key==='/'&&!/input|textarea|select/i.test(e.target.tagName)){ e.preventDefault(); $('#q').focus(); }
+    if(e.key==='Escape'&&e.target.id==='q'){ $('#q').value=''; applySearch(); e.target.blur(); }
+  });
+  document.addEventListener('change',e=>{
+    const c=e.target.closest('input[data-sid]'); if(c){ setStep(c.dataset.sid,c.checked); save(); updateProgress(); }
+  });
+  $$('details.flow').forEach(d=>d.addEventListener('toggle',()=>{ if(!$('#q').value){ mem.o[d.dataset.flow]=d.open?1:0; save(); } }));
+  $$('#nav details').forEach(d=>d.addEventListener('toggle',()=>{ mem.o['nav:'+d.dataset.nm]=d.open?1:0; save(); }));
+  $('#q').addEventListener('input',applySearch); $('#qx').addEventListener('click',()=>{ $('#q').value=''; applySearch(); });
+  $('#expand').addEventListener('click',()=>$$('details.flow').forEach(d=>{ if(d.style.display!=='none') d.open=true; }));
+  $('#collapse').addEventListener('click',()=>$$('details.flow').forEach(d=>d.open=false));
+  $('#resetall').addEventListener('click',()=>{ if(confirm('Clear ALL ticks on this page?')){ mem.t={}; $$('input[data-sid]').forEach(c=>{c.checked=false;c.closest('li').classList.remove('on');}); save(); updateProgress(); } });
+  $('#tsel').addEventListener('change',tickTotp);
+  $('#recheck').addEventListener('click',checkPorts);
+  $('#burger').addEventListener('click',()=>{ const o=document.body.classList.toggle('navopen'); $('#burger').setAttribute('aria-expanded',o); });
+  $('#scrim').addEventListener('click',()=>{ document.body.classList.remove('navopen'); });
+  $('#printbtn').addEventListener('click',()=>window.print());
+  let wasOpen=null;
+  window.addEventListener('beforeprint',()=>{ wasOpen=$$('details.flow').map(d=>d.open); $$('details.flow').forEach(d=>d.open=true); });
+  window.addEventListener('afterprint',()=>{ if(wasOpen) $$('details.flow').forEach((d,i)=>d.open=wasOpen[i]); });
+  // scroll spy
+  const links={}; $$('a[data-f]').forEach(a=>links[a.dataset.f]=a);
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver(es=>{ es.forEach(en=>{ if(en.isIntersecting){ const id=en.target.dataset.flow; $$('a[data-f].act').forEach(x=>x.classList.remove('act')); if(links[id]){ links[id].classList.add('act'); const nd=links[id].closest('details'); if(nd&&!nd.open&&!$('#q').value){ /* keep user choice */ } } } }); },{rootMargin:'-70px 0px -70% 0px'});
+    $$('details.flow').forEach(d=>io.observe(d));
+  }
+  if(location.hash.startsWith('#F-')) setTimeout(()=>openFlow(location.hash.slice(3),true),50);
+  checkPorts(); setInterval(()=>{ if(!document.hidden) checkPorts(); },30000);
+}
+document.addEventListener('DOMContentLoaded',init);
+
+</script>
+</body>
+</html>
