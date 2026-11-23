@@ -63,7 +63,7 @@ export function totp(secretB32: string, at = Date.now()): string {
 }
 
 /** Programmatic phone-OTP login: auth code + PKCE (S256) against the dev IdP using the seeded 000000 code. */
-export async function loginWithPhone(phone: string, opts: { clientId?: string; redirectUri?: string; otp?: string } = {}): Promise<Login> {
+export async function loginWithPhone(phone: string, opts: { clientId?: string; redirectUri?: string; otp?: string; totpSecret?: string } = {}): Promise<Login> {
   const clientId = opts.clientId ?? 'kiorex-web';
   const redirectUri = opts.redirectUri ?? (clientId === 'kiorex-ops' ? 'http://localhost:5181/auth/callback' : 'http://localhost:5180/auth/callback');
   const b = new Jar();
@@ -88,7 +88,7 @@ export async function loginWithPhone(phone: string, opts: { clientId?: string; r
     const page = await r.clone().text();
     if (!page.includes(`/interaction/${uid}/totp`)) break;
     if (attempt) await new Promise((res) => setTimeout(res, 30_000 - (Date.now() % 30_000) + 1500));
-    r = await b.req(`${PASSPORT}/interaction/${uid}/totp`, { method: 'POST', form: { totp: totp(DEV_OPS_TOTP_SECRET), lang: 'en' } });
+    r = await b.req(`${PASSPORT}/interaction/${uid}/totp`, { method: 'POST', form: { totp: totp(opts.totpSecret ?? DEV_OPS_TOTP_SECRET), lang: 'en' } });
   }
   if (r.status === 200) r = await b.req(`${PASSPORT}/interaction/${uid}/finish`, { method: 'POST', form: { lang: 'en' } }); // skip passkey enrolment
   const end = await b.follow(r, PASSPORT, redirectUri);
