@@ -131,3 +131,7 @@ Verification: `e2e/test/11-nurse-lab.e2e.ts` against `e2e/scripts/nurse-lab-stac
 
 ## Real providers (22 Nov 2026)
 SMS, Email, WhatsApp, payments, push, storage, consent and AI each have a `mock` default and a `real` HTTP adapter selected by `<KIND>_MODE` plus `<KIND>_API_URL`/`_API_KEY`/`_WEBHOOK_SECRET`; delivery and payment webhooks are HMAC-signed. Env contract, per-repo guides, dev tools and open gaps: `_docs/PROVIDER_GO_LIVE.md`. The consent registry wire format is an assumption pending the real service.
+
+## Connecting a standalone organisation (ADR-040)
+Additive endpoint on Kiorex (not yet in the published OpenAPI): `POST /api/v1/partners/v1/connection-requests` (public, HMAC `X-Kiorly-Signature: sha256=HMAC(secret, "<ts>.<rawBody>")` + `X-Kiorly-Timestamp`) and `GET /api/v1/partners/v1/connection-requests/:id` with header `x-connection-token`. Clinic and Nurse sign with `KIORLY_WEBHOOK_SECRET` (the outbox secret); Pharmacy and Lab sign with the webhook secret they submit together with `baseUrl`, `clientKey`, `clientSecret`, `webhookSecret`. Kiorex to Clinic: `GET|PUT /marketplace/v1/connection/:orgRef` over the existing signed marketplace API (ping with counts, ops decision). Ops console: Partner onboarding (`/partner-onboarding`). The product wizards are at Clinic `/kiorex/connect`, Pharmacy and Lab `/kiorex-connect`. e2e: `e2e/test/22-standalone-connect.e2e.ts`.
+
