@@ -10,7 +10,9 @@ fs.mkdirSync(out("svg"), { recursive: true }); fs.mkdirSync(out("pwa"), { recurs
 require("./gen-svgs.cjs")(out("svg"));
 
 const ACCENT = { kiorex: { light: "#0369A1", dark: "#38BDF8", name: "Kiorex" }, clinic: { light: "#0D9488", dark: "#2DD4BF", name: "Kiorly Clinic" },
-  lab: { light: "#7C3AED", dark: "#A78BFA", name: "Kiorly Lab" }, pharmacy: { light: "#16A34A", dark: "#4ADE80", name: "Kiorly Pharmacy" } };
+  lab: { light: "#7C3AED", dark: "#A78BFA", name: "Kiorly Lab" }, pharmacy: { light: "#16A34A", dark: "#4ADE80", name: "Kiorly Pharmacy" },
+  // The Kiorly staff app (ADR-037, 23 Nov 2026): the Kiorex mark with the Kiorly accent (Ocean), NOT a product colour (the app spans Clinic teal, Lab violet, Pharmacy green).
+  kiorly: { light: "#0369A1", dark: "#38BDF8", name: "Kiorly" } };
 const png = (svg, size, file) => sharp(svg, { density: 384 }).resize(size, size).png().toFile(file);
 
 // One asset set per brand: "kiorex" -> dist/ (unchanged paths); clinic/lab/pharmacy -> dist/products/<p>/ with the product accent on the right chevron + icon gradient.
@@ -31,7 +33,7 @@ async function build(prod, D, vb0) {
     <polyline points="373,237 505,440 373,643" fill="none" stroke="#3730A3" stroke-width="38"/>
     <polyline points="720,237 588,440 720,643" fill="none" stroke="${A.light}" stroke-width="38"/>
     <path d="M222 440 H510 L525 428 L540 466 L557 392 L574 460 L588 441 H877" fill="none" stroke="#E8735E" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/></g></svg>`);
-  fs.copyFileSync(prod === "kiorex" ? path.join(root, "kiorex-mark.svg") : out("svg", `${prod}-mark.svg`), o("favicon.svg"));
+  fs.copyFileSync(prod === "kiorex" || prod === "kiorly" ? path.join(root, "kiorex-mark.svg") : out("svg", `${prod}-mark.svg`), o("favicon.svg"));
   await png(iconSvg, 16, o("favicon-16.png")); await png(iconSvg, 32, o("favicon-32.png")); await png(iconSvg, 48, o("favicon-48.png"));
   await png(iconSvg, 180, o("apple-touch-icon.png"));
   for (const sz of [192, 512]) { await png(iconSvg, sz, o("pwa", `icon-${sz}.png`)); await png(bleed(0.62), sz, o("pwa", `maskable-${sz}.png`)); }
@@ -52,7 +54,7 @@ async function build(prod, D, vb0) {
     <path d="M222 440 H510 L525 428 L540 466 L557 392 L574 460 L588 441 H877" fill="none" stroke="#F08A75" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/></g></svg>`), 1024, o("expo", "splash-icon-dark.png"));
   await png(iconSvg, 48, o("expo", "favicon.png"));
   // OG image 1200x630: Ground background + the product lockup
-  const lockup = fs.readFileSync(out("svg", `${prod}-lockup.svg`), "utf8").trim().replace(/<svg[^>]*>/, (m) => m.replace(/ (width|height)="[^"]*"/g, ""));
+  const lockup = fs.readFileSync(out("svg", `${prod === "kiorly" ? "kiorex" : prod}-lockup.svg`), "utf8").trim().replace(/<svg[^>]*>/, (m) => m.replace(/ (width|height)="[^"]*"/g, ""));
   const vb = lockup.match(/viewBox="([^"]+)"/)[1].split(" ").map(Number);
   const lw = 880, lh = (lw * vb[3]) / vb[2];
   const og = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F6FC"/><stop offset="1" stop-color="#E4E8F7"/></linearGradient></defs>
@@ -65,7 +67,7 @@ async function build(prod, D, vb0) {
 
 (async () => {
   const vb = await build("kiorex", out());
-  for (const p of ["clinic", "lab", "pharmacy"]) await build(p, out("products", p));
+  for (const p of ["clinic", "lab", "pharmacy", "kiorly"]) await build(p, out("products", p));
   const lockup = fs.readFileSync(out("svg", "kiorex-lockup.svg"), "utf8").trim().replace(/<svg[^>]*>/, (m) => m.replace(/ (width|height)="[^"]*"/g, ""));
   // Email / print letterhead
   fs.writeFileSync(out("svg", "letterhead.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 794 1123" width="794" height="1123"><rect width="794" height="1123" fill="#fff"/>
