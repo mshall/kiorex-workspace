@@ -24,6 +24,7 @@ the demo sales/Rx/POs/orders it can, but lots, released reports and QC runs stay
 | Passport phone OTP (all demo phones below + `+201000000001/2/99`) | `000000` |
 | Staff password (Kiorly Clinic demo orgs, Pharmacy base logins) | `Demo@12345` |
 | Legacy Clinic accounts `admin@kiorly.com`, `superadmin@kiorly.com`, `admin@drahmedshall.com` | `demo` (**not** `Demo@12345`; checked against the bcrypt hashes on 21 Nov 2026) |
+| Sign in with Kiorex Passport as staff (Clinic web :5174, Pharmacy web :5192, Lab web :5193, Kiorly staff app) | Clinic `+201000002001` Ahmed Fawzy (owner.na@, GROUP_ADMIN), `+201000002002` (frontdesk1.na@, RECEPTIONIST), `+201000002006` Dr Nadia (PHYSICIAN); Pharmacy `+201000002004` (pharmacist@), `+201000002007` (owner@), `+201000002008` (cashier@) `@demo.kiorly.local`; Lab `demo-lab` `+201000002005` (tech@), `+201000002009` (signatory@), `+201000002010` (owner@) | phone + OTP `000000`; the product role comes from the linked staff row (INTEGRATION.md "Staff sign-in with Kiorex Passport"). Sign-out ends the Passport session too |
 | Ops super admin TOTP seed (`+201000000099`) | `REMOVED-OLD-DEMO-TOTP-SECRET` |
 | Ops admin (`+201000009001`) TOTP seed | `REMOVED-OLD-DEMO-TOTP-SECRET` |
 | Ops finance (`+201000009002`) TOTP seed | `REMOVED-OLD-DEMO-TOTP-SECRET` |
