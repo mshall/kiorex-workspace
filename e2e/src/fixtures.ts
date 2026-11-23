@@ -17,15 +17,21 @@ export async function tokens() {
 /** The three KX-DEV doctors (kiorex-dev.seed.ts) that the scenarios book against; the QA demo dataset adds more LIVE doctors that must not interfere. */
 export const KXDEV_DOCTORS = ['Dr Hesham Nabil', 'Dr Karim Adel', 'Dr Mona Fahmy'];
 export async function providers(token: string): Promise<Provider[]> {
-  const r = await kiorex(token, 'GET', '/search/providers?pageSize=50');
-  if (r.status !== 200) throw new Error(`search ${r.status}`);
-  return r.body.items;
+  // the QA demo dataset adds ~90 LIVE doctors, so page through the whole catalogue (the API caps pageSize)
+  const out: Provider[] = [];
+  for (let page = 1; page <= 20; page++) {
+    const r = await kiorex(token, 'GET', `/search/providers?pageSize=50&page=${page}`);
+    if (r.status !== 200) throw new Error(`search ${r.status}`);
+    out.push(...r.body.items);
+    if (r.body.items.length < 50 || out.length >= (r.body.total ?? Infinity)) break;
+  }
+  return out;
 }
 export async function kxdevProviders(token: string): Promise<Provider[]> {
   return (await providers(token)).filter((p) => KXDEV_DOCTORS.includes(p.nameEn));
 }
 export async function providerBySpecialty(token: string, specialty: string): Promise<Provider> {
-  const r = await kiorex(token, 'GET', `/search/providers?specialty=${specialty}`);
+  const r = await kiorex(token, 'GET', `/search/providers?specialty=${specialty}&pageSize=50`);
   const items: Provider[] = (r.body.items ?? []).filter((p: Provider) => KXDEV_DOCTORS.includes(p.nameEn));
   if (!items.length) throw new Error(`no ${specialty} provider (run provider sync)`);
   return items[0];

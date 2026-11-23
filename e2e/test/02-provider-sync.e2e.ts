@@ -32,7 +32,7 @@ describe('b. Provider sync from Kiorly and catalogue search', () => {
     const all = await kxdevProviders(t.p1);
     expect(all.map((p) => p.nameEn).sort()).toEqual(['Dr Hesham Nabil', 'Dr Karim Adel', 'Dr Mona Fahmy']);
     for (const p of all) expect(p.nextSlots.length).toBe(3);
-  });
+  }, 90_000);
 
   it('the specialty list and a profile (KXM-PR-01) are served', async () => {
     const sp = await kiorex(undefined, 'GET', '/specialties');
