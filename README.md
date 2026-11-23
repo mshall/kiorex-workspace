@@ -204,7 +204,7 @@ cd e2e && npm test                        # cross-service E2E against the real r
 
 All demo data is synthetic (phones `+20100000xxxx`, e-mails `@demo.kiorex.test`) and DEV ONLY; the seeds refuse to run in production. The persona list, Passport phone logins, staff logins, OTP behaviour and ops TOTP setup are in **[TEST_DATA.md](TEST_DATA.md)** (cross-product index); each repo has its own `TEST_DATA.md`. Dev client keys and webhook secrets for local wiring are in [INTEGRATION.md](INTEGRATION.md). Rotate everything for staging and production.
 
-Every demo (what it is for, personas, data, manual test scripts, role checklists, limitations) is indexed in [DEMO_DATA.md](DEMO_DATA.md); each repo has its own `DEMO_DATA.md`.
+**How to test everything, with every user and credential and the expected results: [TEST_GUIDE.md](TEST_GUIDE.md)** (run the stack, seed, URLs and ports, the DEV-only "Test users" sign-in panels, step-by-step flows). Every demo (what it is for, personas, data, manual test scripts, role checklists, limitations) is indexed in [DEMO_DATA.md](DEMO_DATA.md); each repo has its own `DEMO_DATA.md`.
 </details>
 
 ## Standing rules
@@ -243,6 +243,7 @@ Indigo `#3730A3`, Ocean `#0369A1`, Coral pulse `#E8735E`, Ground `#F4F6FC`. The 
 kiorex-v2/
 ├── CLAUDE.md             permanent context for any build agent (read first)
 ├── INTEGRATION.md        local wiring: ports, clients, webhooks, flags, vertical partners
+├── TEST_GUIDE.md         how to run, seed and test every flow with every test user (DEV ONLY)
 ├── TEST_DATA.md          synthetic QA data index (DEV ONLY)
 ├── _brand/               logo SVGs, tokens, Tailwind preset, RN theme, favicons (README inside)
 ├── _docs/                KX-00..KX-23 extracts, rev23/, FOUNDER_DECISIONS.md, UI review, autopilot  (README inside)
@@ -284,6 +285,7 @@ Nothing is deployed; each repo carries `infra/tofu/` for staging and prod. See K
 |---|---|
 | [CLAUDE.md](CLAUDE.md) | Permanent brief: rules, repos, brand, local environment |
 | [INTEGRATION.md](INTEGRATION.md) | Ports, clients, webhooks, flags, Passport, vertical partners, nurse lab flow |
+| [TEST_GUIDE.md](TEST_GUIDE.md) | Step-by-step test guide: run, seed, URLs, users, flows, expected results |
 | [TEST_DATA.md](TEST_DATA.md) | Synthetic personas and logins |
 | [docs/INDEX.md](docs/INDEX.md) | Index of the workspace docs |
 | [_docs/README.md](_docs/README.md) | Map of the 24 reference volumes and reports |
