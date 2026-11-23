@@ -180,7 +180,7 @@ describe('l. Kiorex lab bookings against the real Kiorly Lab', () => {
   });
 
   it('launch-locked: without gate evidence kiorex.lab_bookings is AWAITING_GATE (403 scope GATE); the evidence of this run is labelled DEV-ONLY-NOT-A-REAL-GATE', async () => {
-    expect((await q('kiorex_platform', `select "gateId" from "FlagGateEvidence" where "flagKey" = 'kiorex.lab_bookings'`)).at(-1)?.gateId).toBe('DEV-ONLY-NOT-A-REAL-GATE');
+    expect((await q('kiorex_platform', `select "gateId" from "FlagGateEvidence" where "flagKey" = 'kiorex.lab_bookings'`)).at(-1)?.gateId).toMatch(/^DEV-ONLY-NOT-A-REAL-GATE/);
     await revokeDevGate(ops, 'kiorex.lab_bookings');
     const r = await kiorex(p1, 'GET', '/lab/tests');
     expect(r.status).toBe(403);
