@@ -60,10 +60,11 @@ want kiorex && (
 
 # Kiorly Pharmacy / Lab: real outbox delivery to Kiorex (KIOREX_MODE=real), fast flag polling so a Kiorex flag change reaches them in ~1.5 s,
 # fast outbox sweeps. Per-tenant webhook URL/secret/client key come from the seeded IntegrationClient (dev registration, INTEGRATION.md).
-# Lab AUTH_MODE=dev and pharmacy AUTH_MODE=local (staff login) are local-only.
+# Lab AUTH_MODE=dev and pharmacy AUTH_MODE=local (staff login) are local-only. AUTH_ACCEPT_PASSPORT=true (never in production) ALSO accepts Kiorex Passport sign-in:
+# the staff webs (PKCE, /auth/oidc/exchange) and Kiorly's Passport access tokens; password / dev login keep working.
 PARTNER_ENV="KIOREX_MODE=real KIOREX_BASE_URL=http://localhost:$KIOREX_PORT FLAGS_POLL_ENABLED=true FLAGS_POLL_INTERVAL_MS=1500 KIOREX_FLAGS_URL=http://localhost:$KIOREX_PORT/api/v1/control/v1/flags/snapshot KIOREX_PRODUCT_SECRET=ff_dev_secret_change_me OUTBOX_POLL_INTERVAL_MS=1000"
-want pharmacy && start pharmacy "$ROOT/kiorly-pharmacy/apps/api" env NODE_ENV=development PORT=$PHARMACY_PORT DATABASE_URL="$(DBURL kiorly_pharmacy)" AUTH_MODE=local KIOREX_PRODUCT_KEY=ff_kiorly-pharmacy_dev $PARTNER_ENV node --enable-source-maps dist/main.js
-want lab && start lab "$ROOT/kiorly-lab/apps/api" env NODE_ENV=development PORT=$LAB_PORT DATABASE_URL="$(DBURL kiorly_lab)" AUTH_MODE=dev KIOREX_PRODUCT_KEY=ff_kiorly-lab_dev $PARTNER_ENV node --enable-source-maps dist/main.js
+want pharmacy && start pharmacy "$ROOT/kiorly-pharmacy/apps/api" env NODE_ENV=development PORT=$PHARMACY_PORT DATABASE_URL="$(DBURL kiorly_pharmacy)" AUTH_MODE=local AUTH_ACCEPT_PASSPORT=true OIDC_ISSUER="http://localhost:$PASSPORT_PORT" KIOREX_PRODUCT_KEY=ff_kiorly-pharmacy_dev $PARTNER_ENV node --enable-source-maps dist/main.js
+want lab && start lab "$ROOT/kiorly-lab/apps/api" env NODE_ENV=development PORT=$LAB_PORT PUBLIC_BASE_URL="${LAB_PUBLIC_BASE_URL:-http://localhost:5193}" DATABASE_URL="$(DBURL kiorly_lab)" AUTH_MODE=dev AUTH_ACCEPT_PASSPORT=true KIOREX_OIDC_ISSUER="http://localhost:$PASSPORT_PORT" KIOREX_PRODUCT_KEY=ff_kiorly-lab_dev $PARTNER_ENV node --enable-source-maps dist/main.js
 
 wait_ready() { for i in $(seq 1 90); do curl -fs -m3 "$2" >/dev/null 2>&1 && { echo "$1 ready"; return 0; }; sleep 1; done; echo "$1 NOT ready - see $LOGS/$1.log"; return 1; }
 want passport && wait_ready passport "http://localhost:$PASSPORT_PORT/.well-known/openid-configuration"

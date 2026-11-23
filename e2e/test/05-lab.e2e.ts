@@ -21,7 +21,7 @@ describe('l. Kiorex lab bookings against the real Kiorly Lab', () => {
     await recordDevGate(ops, 'kiorex.lab_bookings');
     await waitPartnerFlags();
     code = `E2E${rnd()}`;
-    const t = await lab(owner, 'POST', '/catalogue/tests', { code, nameEn: `E2E Glucose ${code}`, specimenType: 'blood', price: 120, analyteCodes: ['GLU'] });
+    const t = await lab(owner, 'POST', '/catalogue/tests', { code, nameEn: `E2E Glucose ${code}`, nameAr: `جلوكوز اختبار ${code}`, specimenType: 'blood', price: 120, analyteCodes: ['GLU'] });
     expect(t.status, JSON.stringify(t.body)).toBe(201);
     labId = (await lab(owner, 'GET', '/auth/me')).body?.labs?.[0]?.id ?? (await q('kiorly_lab', `select id from "Lab" order by "createdAt" limit 1`))[0].id;
     bench = (await lab(tech, 'GET', '/instruments')).body.find((i: any) => i.kind === 'MANUAL_BENCH').id;
@@ -55,6 +55,16 @@ describe('l. Kiorex lab bookings against the real Kiorly Lab', () => {
     const t = await kiorex(p1, 'GET', `/lab/tests?q=${code}`);
     expect(t.status, JSON.stringify(t.body)).toBe(200);
     expect(t.body.items.find((i: any) => i.code === code)).toMatchObject({ labId, priceMinor: 12000, homeCollection: true });
+    // 1.8.0 Arabic names: nameAr + Arabic specimen type come from the Lab; Arabic search finds the test; English name is always present; no Arabic => field absent
+    const item = t.body.items.find((i: any) => i.code === code);
+    expect(item).toMatchObject({ name: `E2E Glucose ${code}`, nameAr: `جلوكوز اختبار ${code}`, sampleTypeAr: 'دم' });
+    const ar = await kiorex(p1, 'GET', `/lab/tests?q=${encodeURIComponent(`جلوكوز اختبار ${code}`)}`);
+    expect(ar.body.items.map((i: any) => i.code)).toContain(code);
+    const noAr = t.body.items.find((i: any) => i.code !== code && !('nameAr' in i));
+    if (noAr) expect(noAr.name).toBeTruthy(); // fallback: the apps show the English name
+    const quoted = await kiorex(p1, 'GET', `/lab/tests?q=${code}`);
+    expect(quoted.body.items.length).toBeGreaterThan(0);
+    expect(quoted.body.items.every((i: any) => i.code === code)).toBe(true);
     const q1 = await book();
     expect(q1).toMatchObject({ totalMinor: 12000 });
   });
@@ -66,6 +76,7 @@ describe('l. Kiorex lab bookings against the real Kiorly Lab', () => {
     await waitBooking(b.id, 'SUBMITTED');
     const o = await labOrder(b.id);
     expect(o).toMatchObject({ source: 'KIOREX_BOOKING', status: 'AWAITING_COLLECTION' });
+    expect((await get(b.id)).tests[0]).toMatchObject({ code, nameAr: `جلوكوز اختبار ${code}` }); // the booking snapshot keeps the Arabic name
     expect((await q('kiorly_lab', `select count(*)::int c from "LabOrder" where "sourceRef" = $1`, [b.id]))[0].c).toBe(1);
     // the same intent again is a replay (idempotent on sourceRef), never a second order
     const replay = await partnerCall('http://localhost:3200', LAB_PARTNER, 'POST', '/api/v1/integration/v1/orders', { sourceRef: b.id, labId, patient: { fullName: 'Amira Samy', externalId: 'x' }, testCodes: [code] });
@@ -113,6 +124,8 @@ describe('l. Kiorex lab bookings against the real Kiorly Lab', () => {
     const rel = await lab(reception, 'POST', `/reports/${rep.body.id}/release`, { channels: ['KIOREX_VAULT'] });
     expect(rel.status, JSON.stringify(rel.body)).toBe(201);
     expect(rel.body.secureLink).toMatch(/\/r\//);
+    // PUBLIC_BASE_URL-derived: the Lab web dev port is 5193 (it used to point at 5191, the Clinic docs server).
+    expect(new URL(rel.body.secureLink).origin).toBe(process.env.LAB_PUBLIC_BASE_URL ?? 'http://localhost:5193');
 
     // --- Kiorex: LabResultReleased -> vault (secure link only) + funds released ---
     const done = await waitBooking(b.id, 'RESULT_RELEASED');

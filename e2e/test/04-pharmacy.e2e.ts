@@ -9,7 +9,8 @@ import { purgeE2eConsentPushes } from '../src/db.js';
 /**
  * REAL Kiorex <-> Kiorly Pharmacy over HTTP (no fake partner): Kiorex :4000 (partner registration pr_pharmacy_dev) -> Pharmacy :3100 /marketplace/v1,
  * Pharmacy outbox -> Kiorex /webhooks/pharmacy (per-partner secret + X-Kiorly-Client-Key). Kiorly Clinic's Rx share is a signed /webhooks/kiorly event.
- * Money: Kiorex Pay (fake PSP) captures first; rejection = full refund; partial dispense parks in PARTIAL_REVIEW (NEEDS_HUMAN #22).
+ * Money: Kiorex Pay (fake PSP) captures first; rejection = full refund; a partial dispense is refunded pro-rata for the undispensed lines and the rest is released
+ * (policy pharmacy.partial_fulfilment, PROPOSED_DEFAULT delegated by founder 23 Nov 2026); delivery orders pass through OUT_FOR_DELIVERY.
  * The launch-locked flag gets DEV-ONLY-NOT-A-REAL-GATE evidence for this database only and is revoked afterwards.
  */
 describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
@@ -26,15 +27,15 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
   });
   afterAll(async () => { await releaseDevGate(ops, 'kiorex.pharmacy_orders'); await purgeE2eConsentPushes(); }); // fake pat_e2e_* link must not outlive the suite
 
-  async function makeDrug(o: { rx?: boolean; price?: string; qty?: number; schedule?: string } = {}) {
+  async function makeDrug(o: { rx?: boolean; price?: string; qty?: number; schedule?: string; nameAr?: string } = {}) {
     const tag = rnd();
-    const d = await pharmacy(owner, 'POST', '/catalogue/drugs', { brandName: `E2E-Med-${tag}`, activeIngredient: `e2e-ing-${tag}`, strength: '500 mg', dosageForm: 'tablet', packSize: '20', rxOnly: o.rx ?? false, price: o.price ?? '40.00', ...(o.schedule ? { controlledSchedule: o.schedule } : {}) });
+    const d = await pharmacy(owner, 'POST', '/catalogue/drugs', { brandName: `E2E-Med-${tag}`, ...(o.nameAr ? { brandNameAr: `${o.nameAr}${tag}` } : {}), activeIngredient: `e2e-ing-${tag}`, strength: '500 mg', dosageForm: 'tablet', packSize: '20', rxOnly: o.rx ?? false, price: o.price ?? '40.00', ...(o.schedule ? { controlledSchedule: o.schedule } : {}) });
     expect(d.status, JSON.stringify(d.body)).toBe(201);
-    if (o.qty === 0) return { id: d.body.id as string, name: d.body.brandName as string, price: o.price ?? '40.00', lotId: '' }; // listed and priced, never received
+    if (o.qty === 0) return { id: d.body.id as string, name: d.body.brandName as string, nameAr: d.body.brandNameAr as string | undefined, price: o.price ?? '40.00', lotId: '' }; // listed and priced, never received
     const exp = new Date(Date.now() + 365 * 86400_000).toISOString().slice(0, 10);
     const r = await pharmacy(owner, 'POST', '/inventory/receipts', { branchId, invoiceNo: `E2E-${tag}`, lines: [{ drugId: d.body.id, lotNumber: `L-${tag}`, expiryDate: exp, quantity: o.qty ?? 20, unitCost: '20.00' }] });
     expect(r.status, JSON.stringify(r.body)).toBe(201);
-    return { id: d.body.id as string, name: d.body.brandName as string, price: o.price ?? '40.00', lotId: r.body.lines[0].lotId as string };
+    return { id: d.body.id as string, name: d.body.brandName as string, nameAr: d.body.brandNameAr as string | undefined, price: o.price ?? '40.00', lotId: r.body.lines[0].lotId as string };
   }
   /** Patient: search -> cart -> pickup -> order -> pay. Returns the Kiorex order after the hand-over to the pharmacy. */
   async function order(drug: { id: string; name: string }, qty: number, rxRecordId?: string, delivery?: { line1: string; area?: string; governorate?: string; phone?: string }) {
@@ -125,9 +126,10 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     expect((await pharmacy(pharm, 'GET', `/kiorex-orders/${inbox.id}`)).body.status).toBe('REJECTED');
   });
 
-  it('PARTIAL dispense (pharmacist accepts fewer units): DispenseCompleted partial => Kiorex PARTIAL_REVIEW, funds NOT auto-released (NEEDS_HUMAN #22)', async () => {
-    const drug = await makeDrug({ qty: 10 });
+  it('PARTIAL dispense (pharmacist accepts fewer units): DispenseCompleted carries the lines => pro-rata refund of the undispensed units, fulfilled units released, itemised refund (PROPOSED_DEFAULT policy)', async () => {
+    const drug = await makeDrug({ qty: 10, price: '40.00' });
     const o = await order(drug, 3);
+    expect(o.totalMinor).toBe(12000);
     await waitOrder(o.id, 'SUBMITTED');
     const inbox = await inboxOrder(o.id);
     const acc = await pharmacy(pharm, 'POST', `/kiorex-orders/${inbox.id}/accept`, { lines: [{ lineId: inbox.lines[0].id, qtyAccepted: 1 }] });
@@ -135,11 +137,24 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     await pharmacy(pharm, 'POST', `/dispensings/${acc.body.dispensing.id}/signoff`, {});
     await pharmacy(pharm, 'POST', `/kiorex-orders/${inbox.id}/ready`);
     await pharmacy(pharm, 'POST', `/dispensings/${acc.body.dispensing.id}/complete`, { idempotencyKey: randomUUID() }).then((r) => expect(r.status).toBe(201));
-    const b = await waitOrder(o.id, 'PARTIAL_REVIEW');
-    expect(b.payment.status).toBe('CAPTURED');
-    expect(await balance(`PAYABLE:ph:${branchId}`)).toBeGreaterThanOrEqual(0);
-    expect((await q('kiorex_platform', `select count(*)::int c from "LedgerTx" where "paymentId" = $1 and kind like 'RELEASE_ORDER%'`, [o.payment.paymentId]))[0].c).toBe(0);
-    expect((await q('kiorex_platform', `select count(*)::int c from "AuditLog" where action = 'pharmacy.partial_dispense_review' and "resourceId" = $1`, [o.id]))[0].c).toBe(1);
+    const b = await waitOrder(o.id, 'PARTIALLY_FULFILLED');
+    // the pharmacy event carries the per-line fulfilment (contracts 1.8.0)
+    const ev = (await q('kiorly_pharmacy', `select payload from "OutboxEvent" where "aggregateId" = $1 and type = 'DispenseCompleted'`, [o.id]))[0].payload.data;
+    expect(ev).toMatchObject({ partial: true, lines: [{ sku: drug.id, quantityRequested: 3, quantityDispensed: 1 }] });
+    // itemised refund shown to the patient: 2 of 3 units x 40 EGP
+    expect(b.refund).toMatchObject({ goodsMinor: 8000, deliveryFeeMinor: 0, totalMinor: 8000, fulfilledMinor: 4000, currency: 'EGP', policyNote: 'PROPOSED_DEFAULT delegated by founder 23 Nov 2026' });
+    expect(b.refund.lines.find((l: any) => l.sku === drug.id)).toMatchObject({ qtyOrdered: 3, qtyFulfilled: 1, qtyRefunded: 2, refundMinor: 8000 });
+    expect(b.payment.status).toBe('PARTIALLY_REFUNDED');
+    // money path: Refund row (idempotency key per payment) + ledger release of the NET only + reconciled (nothing left HELD for this payment)
+    expect(await q('kiorex_platform', `select "amountMinor", reason, "idempotencyKey" from "Refund" where "paymentId" = $1`, [o.payment.paymentId])).toEqual([{ amountMinor: 8000, reason: 'PARTIAL_FULFILMENT', idempotencyKey: `refund-partial:${o.payment.paymentId}` }]);
+    const rel = await q('kiorex_platform', `select e."creditMinor"::int c from "LedgerEntry" e join "LedgerTx" t on t.id = e."txId" where t."paymentId" = $1 and t.kind like 'RELEASE_ORDER%' and e.account like 'PAYABLE:%'`, [o.payment.paymentId]);
+    expect(rel.map((r: any) => r.c)).toEqual([4000 - Number(b.platformFeeMinor ?? 0)]);
+    const held = await q('kiorex_platform', `select coalesce(sum(e."creditMinor" - e."debitMinor"),0)::int h from "LedgerEntry" e join "LedgerTx" t on t.id = e."txId" where t."paymentId" = $1 and e.account like 'HELD:%'`, [o.payment.paymentId]);
+    expect(held[0].h).toBe(0);
+    await waitFor('refund settled at the PSP (outbox)', async () => (await get(o.id)).refund?.status === 'SETTLED', 30_000, 500);
+    expect((await q('kiorex_platform', `select count(*)::int c from "AuditLog" where action = 'pharmacy.partial_settled' and "resourceId" = $1`, [o.id]))[0].c).toBe(1);
+    // the patient is told, in-app, with the amount
+    await waitFor('partial-refund notification', async () => (await kiorex(p1, 'GET', '/me/notifications')).body.some((n: any) => n.kind === 'PHARMACY_ORDER_PARTIAL_REFUND'), 15_000, 500);
   });
 
   it('Rx path: vault prescription -> Pharmacy Rx validation request verifies the token with Kiorex -> pharmacist validates -> dispense; a revoked token is INVALID -> rejected + full refund', async () => {
@@ -255,11 +270,60 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     await pharmacy(pharm, 'POST', `/dispensings/${acc.body.dispensing.id}/signoff`, {});
     await pharmacy(pharm, 'POST', `/kiorex-orders/${inbox.id}/ready`);
     expect((await waitOrder(o.id, 'READY')).deliveryMethod).toBe('DELIVERY');
+    // 1.8.0: staff hands the order to the courier => distinct OUT_FOR_DELIVERY state mirrored in Kiorex, patient notified (AR/EN, mock channels)
+    const out = await pharmacy(pharm, 'POST', `/kiorex-orders/${inbox.id}/out-for-delivery`, { estimatedMinutes: 45 });
+    expect(out.status, JSON.stringify(out.body)).toBe(201);
+    expect(out.body.status).toBe('OUT_FOR_DELIVERY');
+    const onTheWay = await waitOrder(o.id, 'OUT_FOR_DELIVERY');
+    expect(onTheWay.outForDeliveryAt).toBeTruthy();
+    expect((await kiorex(p1, 'POST', `/pharmacy/orders/${o.id}/cancel`)).status).toBe(409); // on its way: too late to cancel
     await pharmacy(pharm, 'POST', `/dispensings/${acc.body.dispensing.id}/complete`, { idempotencyKey: randomUUID() });
     expect((await waitOrder(o.id, 'DISPENSED')).dispensedAt).toBeTruthy();
+    expect((await q('kiorly_pharmacy', `select type from "OutboxEvent" where "aggregateId" = $1 order by "occurredAt"`, [o.id])).map((r: any) => r.type)).toEqual(['OrderReady', 'OrderOutForDelivery', 'DispenseCompleted']);
+    expect((await q('kiorex_platform', `select type from "WebhookReceipt" where "aggregateId" = $1 and source = 'pharmacy' order by "receivedAt"`, [o.id])).map((r: any) => r.type)).toEqual(['OrderReady', 'OrderOutForDelivery', 'DispenseCompleted']);
+    const sub0 = (await q('kiorex_platform', `select sub from "PharmacyOrder" where id = $1`, [o.id]))[0].sub;
+    const logs = await waitFor('out-for-delivery notification on the mock channels', async () => { const r = await q('kiorex_platform', `select channel, locale, body from "MessageLog" where sub = $1 and "templateId" = 'TODO_NEEDS_HUMAN_pharmacy_order_out_for_delivery' and "createdAt" > (now() at time zone 'utc') - interval '5 minutes'`, [sub0]); return r.length >= 1 ? r : false; }, 15_000, 500) as { channel: string; locale: string; body: string }[];
+    expect(logs.every((l) => (l.locale === 'ar' ? /في الطريق/ : /out for delivery/i).test(l.body))).toBe(true); // rendered in the patient's language (AR/EN templates), never the raw key
+    expect((await kiorex(p1, 'GET', '/me/notifications')).body.some((n: any) => n.kind === 'PHARMACY_ORDER_OUT_FOR_DELIVERY')).toBe(true);
     // patient was notified at READY and DISPENSED (mock WhatsApp + push go through the same templates and consent checks as real ones)
     const sub = (await q('kiorex_platform', `select sub from "PharmacyOrder" where id = $1`, [o.id]))[0].sub;
     await waitFor('patient notified (ready + dispensed)', async () => (await q('kiorex_platform', `select count(distinct "templateId")::int c from "MessageLog" where sub = $1 and "templateId" in ('TODO_NEEDS_HUMAN_pharmacy_order_ready','TODO_NEEDS_HUMAN_pharmacy_order_dispensed') and "createdAt" > (now() at time zone 'utc') - interval '5 minutes'`, [sub]))[0].c >= 2, 10_000, 500);
+  });
+
+  it('OUT_FOR_DELIVERY is for delivery orders only: a pickup order cannot be sent out (409 NOT_A_DELIVERY_ORDER), and an early request on a delivery order is refused', async () => {
+    const drug = await makeDrug({ qty: 5 });
+    const pick = await order(drug, 1);
+    await waitOrder(pick.id, 'SUBMITTED');
+    const inboxP = await inboxOrder(pick.id);
+    const refused = await pharmacy(pharm, 'POST', `/kiorex-orders/${inboxP.id}/out-for-delivery`, {});
+    expect([refused.status, refused.body.code]).toEqual([409, 'NOT_A_DELIVERY_ORDER']);
+    const del = await order(drug, 1, undefined, { line1: '3 Garden St, Maadi', area: 'Maadi', phone: '+201000001001' });
+    await waitOrder(del.id, 'SUBMITTED');
+    const inboxD = await inboxOrder(del.id);
+    expect((await pharmacy(pharm, 'POST', `/kiorex-orders/${inboxD.id}/out-for-delivery`, {})).status).toBe(409); // not READY yet
+    await pharmacy(pharm, 'POST', `/kiorex-orders/${inboxD.id}/reject`, { reason: 'cleanup', reasonCode: 'DAMAGED' }); // no stray open orders
+    await pharmacy(pharm, 'POST', `/kiorex-orders/${inboxP.id}/reject`, { reason: 'cleanup', reasonCode: 'DAMAGED' });
+  });
+
+  it('Arabic names (contracts 1.8.0): the medicine has nameAr/formAr from the pharmacy; an Arabic query finds it; the order snapshot keeps nameAr; one without Arabic falls back', async () => {
+    const withAr = await makeDrug({ qty: 5, price: '22.00', nameAr: 'دواء-اختبار-' });
+    const plain = await makeDrug({ qty: 5 });
+    const nameAr = withAr.nameAr!;
+    expect(nameAr).toContain('دواء-اختبار-');
+    const ar = await kiorex(p1, 'GET', `/pharmacy/search?q=${encodeURIComponent(nameAr)}&pharmacyId=${branchId}`);
+    expect(ar.status, JSON.stringify(ar.body)).toBe(200);
+    const hit = ar.body.items.find((i: any) => i.sku === withAr.id);
+    expect(hit, 'Arabic query finds the medicine').toBeTruthy();
+    expect(hit).toMatchObject({ name: withAr.name, nameAr, form: 'tablet', formAr: 'أقراص' });
+    const en = await kiorex(p1, 'GET', `/pharmacy/search?q=${encodeURIComponent(withAr.name)}&pharmacyId=${branchId}`);
+    expect(en.body.items.some((i: any) => i.sku === withAr.id)).toBe(true);
+    const fallback = (await kiorex(p1, 'GET', `/pharmacy/search?q=${encodeURIComponent(plain.name)}&pharmacyId=${branchId}`)).body.items.find((i: any) => i.sku === plain.id);
+    expect(fallback.name).toBe(plain.name);
+    expect('nameAr' in fallback).toBe(false); // absent, never blank: the apps show the English name
+    const o = await order(withAr, 1);
+    const placed = await get(o.id);
+    expect(placed.items[0]).toMatchObject({ sku: withAr.id, name: withAr.name, nameAr, formAr: 'أقراص' });
+    await kiorex(p1, 'POST', `/pharmacy/orders/${o.id}/cancel`); // no stray open order
   });
 
   it('controlled medicines are never orderable: not in search, cart refused, a forged order intent is refused by the pharmacy (KPRX05)', async () => {
