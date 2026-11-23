@@ -24,6 +24,11 @@ scripts/seed-all.sh
 
 Rules: never touch ports **3000 / 5173 / 5175** (another checkout). Do not run `scripts/seed-all.sh --reset` while others use the stack. After the e2e suite (`cd e2e && npm test`) re-run `scripts/seed-all.sh` (the suite revokes some dev gate evidence). Dates are relative to the seed day, so re-run with `--reset` every few days. Tests you run yourself change data (a cancel stays cancelled): re-seed to get the starting state back.
 
+### Sign-in methods and theme (founder decisions, 24 Nov 2026)
+
+* **Two sign-in methods, Passport first.** The Kiorly app (mobile and Expo web :8082; pick the Clinic / Nurse / Pharmacy / Lab tile first) and the Clinic, Pharmacy and Lab web logins offer exactly two options on the same screen: **Kiorex Passport** (preselected, primary button "Sign in with Kiorex Passport") and **Password** (toggle next to it; the dev test-user chips switch to it). A device remembers the last method (and, in the Kiorly app, the last tile) that signed in successfully (`kiorly.signin.method`, `kiorly.signin.entry`, per origin) and preselects it next time. When the API does not offer Passport (`/auth/config`, Clinic `/auth/kiorex/config`; app: `EXPO_PUBLIC_PASSPORT=off`) only the password sign-in shows. `?sso=passport` still starts Passport by itself. In e2e, click the Password toggle (`data-testid=signin-method-password`) before filling e-mail and password.
+* **Light is the default theme everywhere** (a dark OS does not change it). An explicit Dark or System choice is stored per origin (`kx-theme`; Kiorly Home `kh.theme`; Clinic `cms-theme`) and restored on the next visit before first paint; in the mobile apps it is kept in AsyncStorage. Use the theme control in each header or the Me / Account screen. To test: open the app with the OS in dark mode (it shows light), choose Dark, reload (it stays dark).
+
 ### Every local URL
 
 | Port | What | URL |
@@ -50,7 +55,7 @@ Every sign-in screen has a clearly labelled panel (a coral **DEV** tag) that sig
 | Kiorly Clinic web | http://localhost:5174/login (below the card) | Signs in directly with the persona's e-mail and dev password |
 | Kiorly Pharmacy web | http://localhost:5192/login | Same, 15 logins |
 | Kiorly Lab web | http://localhost:5193/login | Dev-login (no password), 27 logins |
-| Kiorly staff app | `/sign-in`, below the form (per product tab: Clinic, Nurse, Pharmacy, Lab) | Chip fills e-mail / password / org, then press **Sign in** |
+| Kiorly staff app | `/sign-in`, below the card (per product tile: Clinic, Nurse, Pharmacy, Lab) | Chip switches to the Password method and fills e-mail / password / org, then press **Sign in** |
 
 Dev-only secrets in one place: Passport OTP for every seeded phone **`000000`**; staff password **`Demo@12345`**; the three older Clinic accounts (`admin@kiorly.com`, `superadmin@kiorly.com`, `admin@drahmedshall.com`) use **`demo`**; Lab dev-login has no password; Postgres `postgres` / `postgres`.
 
