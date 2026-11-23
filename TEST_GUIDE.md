@@ -24,6 +24,9 @@ scripts/seed-all.sh
 
 Rules: never touch ports **3000 / 5173 / 5175** (another checkout). Do not run `scripts/seed-all.sh --reset` while others use the stack. After the e2e suite (`cd e2e && npm test`) re-run `scripts/seed-all.sh` (the suite revokes some dev gate evidence). Dates are relative to the seed day, so re-run with `--reset` every few days. Tests you run yourself change data (a cancel stays cancelled): re-seed to get the starting state back.
 
+### Kiorly Home web sign-in (http://localhost:5194/signin, same screen as the Kiorly app)
+Header with the Kiorly lockup, AR/EN toggle and "One sign-in for Clinic, Nurse, Pharmacy and Lab"; card "Sign in" with the tiles Clinic, Nurse, Pharmacy, Lab (last choice remembered; `?to=pharmacy` and `/signin/lab` preselect); two methods: **Kiorex Passport** (default; click a Passport persona in the dev panel, code 000000; the product opens signed in with no second OTP; if the person has exactly one workspace that is not the chosen tile a hint offers both) and **Password** (e-mail + password, Lab: organisation + e-mail). Password uses a single-use handoff: the product API returns a 30-second code, the browser opens `<product>/login?handoff=...`, the product web redeems it once and strips it from the URL; Home never holds a token. Dev panel: pick a tile, then click one of its logins (Clinic 21, Nurse 5, Pharmacy 15, Lab 27) to fill the form. A second-factor account lands on the product login with a notice. Theme control is in the footer. Tests: `cd kiorex-account && npx vitest run apps/kiorly-home`, `npm run test:e2e -w @kiorex/kiorly-home`, `npm run test:e2e:real -w @kiorex/kiorly-home` (Clinic on 5184/3011: see the app README).
+
 ### Sign-in methods and theme (founder decisions, 24 Nov 2026)
 
 * **Two sign-in methods, Passport first.** The Kiorly app (mobile and Expo web :8082; pick the Clinic / Nurse / Pharmacy / Lab tile first) and the Clinic, Pharmacy and Lab web logins offer exactly two options on the same screen: **Kiorex Passport** (preselected, primary button "Sign in with Kiorex Passport") and **Password** (toggle next to it; the dev test-user chips switch to it). A device remembers the last method (and, in the Kiorly app, the last tile) that signed in successfully (`kiorly.signin.method`, `kiorly.signin.entry`, per origin) and preselects it next time. When the API does not offer Passport (`/auth/config`, Clinic `/auth/kiorex/config`; app: `EXPO_PUBLIC_PASSPORT=off`) only the password sign-in shows. `?sso=passport` still starts Passport by itself. In e2e, click the Password toggle (`data-testid=signin-method-password`) before filling e-mail and password.
@@ -38,7 +41,7 @@ Rules: never touch ports **3000 / 5173 / 5175** (another checkout). Do not run `
 | 5180 | Kiorex patient web | http://localhost:5180 |
 | 5181 | Ops console / super admin | http://localhost:5181 |
 | 8081 | Patient Expo app (web build) | http://localhost:8081 |
-| 3010 / 5174 | Kiorly Clinic API / web | http://localhost:5174/login |
+| 3010 / 5174 | Kiorly Clinic API / web (if another checkout owns them: this workspace uses 3011 / 5184) | http://localhost:5174/login |
 | 3100 / 5192 | Kiorly Pharmacy API / web | http://localhost:5192/login |
 | 3200 / 5193 | Kiorly Lab API / web | http://localhost:5193/login |
 | 8082 | Kiorly staff app (Expo web; use phone width) | http://localhost:8082/sign-in |

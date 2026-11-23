@@ -415,8 +415,8 @@ flowchart TB
 | Scale | Multi-market | Second data cell, market packs, per-market adapters |
 | Later | Team or load demands | Extract a bounded context (for example search) behind the existing contract |
 
-### Kiorly Home (ADR-038)
-One web entry for the provider products: `www.kiorly.com/signin` signs the person in with Kiorex Passport, lists the workspaces (Clinic, Nurse, Pharmacy, Lab) and redirects to the product host, which completes its own silent Passport code flow. No enumeration before the code is verified; patients stay on Kiorex. Domain table per environment: `kiorex-account/config/domains.json` (production www / clinic (alias app) / nurse / pharmacy / lab .kiorly.com; Passport account.kiorex.com). Detail: KX-08 §13.
+### Kiorly Home (ADR-038, amended 24 Nov 2026)
+One web entry for the provider products with parity to the Kiorly mobile sign-in: `www.kiorly.com/signin` shows the four tiles (Clinic, Nurse, Pharmacy, Lab) and two methods. **Kiorex Passport** (default): PKCE at Home, then the chosen product's own silent code flow (`?sso=passport&from=kiorly-home[&edition=NURSE]`). **Password**: a single-use handoff, so Home never sees a product token: Home posts the credentials to the product API `POST /auth/handoff/login` (Origin allow-list), gets a 30-second hashed one-time code, the browser goes to `<product>/login?handoff=<code>`, the product web calls `POST /auth/handoff/exchange` and receives the normal session; second factor and similar steps fall back to the product's own login with a flag. No enumeration before the code is verified; patients stay on Kiorex. Domain table per environment: `kiorex-account/config/domains.json` (production www / clinic (alias app) / nurse / pharmacy / lab .kiorly.com, APIs api.clinic / api.pharmacy / api.lab; Passport account.kiorex.com). Detail: KX-08 §13.
 
 ## 17 Status and open items
 | Area | Status | Remains |
@@ -426,7 +426,7 @@ One web entry for the provider products: `www.kiorly.com/signin` signs the perso
 | Notification layer | Done in platform | migrate Passport, Lab, Pharmacy, Clinic |
 | Real vendors (SMS, email, WhatsApp, PSP, push) | Blocked | contracts, templates, credentials (FD-04) |
 | Mobile release builds and devices | Open | store accounts, signing, device test |
-| Kiorly Home (ADR-038) | Done locally | production Passport client, DNS and certificates (NEEDS_HUMAN); products honour `sso=passport` |
+| Kiorly Home (ADR-038) | Done locally (both methods, all four tiles, real-stack tested) | production Passport client, DNS, certificates, `KIORLY_HOME_ORIGINS` per product and CDN rules (NEEDS_HUMAN); Clinic password-expiry and organisation-picker steps do not exist yet |
 | AWS deployment | Blocked | founder instruction: no deploy |
 | Document storage growth (ADR-036) | Proposed | build per KX-25 prompt |
 | Communications control plane | Proposed | KX-24 §10 |

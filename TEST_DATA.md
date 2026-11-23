@@ -43,7 +43,7 @@ Kiorly Home http://localhost:5194/signin · Passport http://localhost:4400/accou
 | Other demo patients: Nourhan `…1004`, Mariam `…1006`, Omar `…1007`, Dalia `…1008`, Tarek `…1009`, Heba `…1010`, Youssef `…1011`, Rana `…1012` | same | same | `+20100000` + last 4 digits, OTP `000000` |
 | Amira (`+201000000001`), Hassan (`+201000000002`) | e2e fixtures (do not edit) | | OTP `000000` |
 | Ahmed Fawzy (org owner, org "Nile Care Medical Center (DEMO)") | Passport orgs | :4400/account/orgs | `+201000002001` |
-| **Kiorly Home (ADR-038)** multi-workspace owner (Clinic + Pharmacy + Lab, picker) | Kiorly Home | http://localhost:5194/signin | `+201000002031`, OTP `000000` |
+| **Kiorly Home (ADR-038)** multi-workspace owner (Passport method; with the Clinic tile a hint shows only for a one-workspace person) | Kiorly Home | http://localhost:5194/signin | `+201000002031`, OTP `000000`. Password method: pick a tile, then any login of that product (Clinic `owner.na@demo.kiorex.test`, Nurse `mona@nurse-demo.kiorly.test`, Pharmacy `owner@demo.kiorly.local`: `Demo@12345`; Lab org `demo-lab` + `tech@demo-lab.test`, no password) |
 | **Kiorly Home** no-workspace newcomer (Create or join) | Kiorly Home | http://localhost:5194/signin | `+201000002032`, OTP `000000` |
 | Sara Lotfy (receptionist member), Dr Amr Salem (doctor member) | Passport orgs | | `+201000002002`, `+201000002003` |
 | Mostafa Reda (pharmacist member), Dina Wagdy (lab technician member) | Passport orgs | | `+201000002004`, `+201000002005` |
