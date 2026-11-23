@@ -40,12 +40,12 @@ Engineering moved further ahead of operations. Everything below is observed in t
 | PSP onboarding (Paymob, Fawry, InstaPay) | Blocked | `sandbox-fake` mock | Merchant accounts; wire-format mapping |
 | SMS sender id and vendor | Blocked | Neutral adapter | Vendor choice (KX24 OD-1), carrier registration |
 | Notification layer | Done in platform; Planned in Passport, Lab, Pharmacy, Clinic | contracts 1.7.0, 60 tests | Engineering, in a fixed order (KX24 §11) |
-| Staff app Kiorly Team | Done (dev) | iOS simulator and Android emulator dev builds; e2e 16/17/18; per-role web specs | Release build, physical device, store submission |
+| Staff app Kiorly | Done (dev) | iOS simulator and Android emulator dev builds; e2e 16/17/18; per-role web specs | Release build, physical device, store submission |
 | Real push delivery | Blocked | Mock token; `simctl push` fixtures; foreground and cold-start taps verified on the iOS simulator | EAS project id (`eas init`), APNs key, FCM v1 service account, `PUSH_MODE=real`; background-state tap and badge count unverified; Android push unexercised |
 | Patient app | Done (dev) | Jest 157, tsc; web and simulator checks | A patient dev build and device check |
 | Demo data | Done | 36 specialties, 72 doctors, 12 patients, nurse and Lite tenants; seeds idempotent (`scripts/seed-all.sh`) | Re-run with `--reset` every few days (relative dates) |
 | AWS | Blocked | Founder: do not deploy; Passport Lambda reads secrets from env; tfvars hold `TODO_NEEDS_HUMAN` | Secret injection route; seed Docker image (`Dockerfile.seed`) not yet built; HB07 egress mode (FD-17) |
-| Store submissions | Blocked | Bundle ids `com.kiorly.team` (renamed from `com.kiorly.work` on 23 Nov 2026 by founder decision; register this one in the stores and Passport) and `com.kiorex.app` are placeholders | Apple and Google organization accounts (KX19); ADR-033 sign-off; app name decision |
+| Store submissions | Blocked | Bundle id `com.kiorly.app` for the Kiorly staff app (final name, ADR-037, 23 Nov 2026; earlier `com.kiorly.work`, `com.kiorly.app`; register this one in the stores and Passport) and `com.kiorex.app` are placeholders | Apple and Google organization accounts (KX19); ADR-033 sign-off; app name decision |
 | Staff-app Jest | Done | 167 of 167 pass on the 23 Nov re-run | Two tests had a fixed date that aged out of the upgrade-request window; fixtures now relative |
 
 > **Warning** The pilot scope above is unchanged: professions, home visits and Kiorly Nurse are post-GA (KX18) even though they are built locally. Flags keep them launch-locked (GHV1, GHV2, GKN1, GKN2).

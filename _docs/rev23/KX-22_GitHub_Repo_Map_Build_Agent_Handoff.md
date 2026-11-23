@@ -69,7 +69,7 @@ Six repositories. Figure 1 — Repository dependency graph: kiorex-contracts (Op
 | kiorex-contracts | OpenAPI specs, event JSON Schemas, generated TS SDKs, contract tests | — (CI; GitHub Packages) | docs.kiorly.com (published specs) | — | KX09 | M1 |
 | kiorly-pharmacy | Kiorly Pharmacy API, POS PWA | kiorly-pharmacy | pharmacy.kiorly.com | `pharmacy.*` | KX06 | M9 |
 | kiorly-lab | Kiorly Lab API, console, phlebotomist app, analyzer bridge | kiorly-lab | lab.kiorly.com | `lab.*` | KX07 | M15 |
-| kiorly-team (renamed from kiorly-work on 23 Nov 2026) | Kiorly Team: one Expo staff app (iOS, Android, web :8082) with Clinic, Nurse, Pharmacy and Lab sign-in entries; owns no data, calls `/mobile/*` in the three product APIs | not in the original plan (ADR-033, Proposed) | bundle ids `com.kiorly.team` (placeholder), scheme `kiorlyteam` | `mobile.*` (Planned); today `mobile_staff_app` | `_docs/mobile/` | built |
+| kiorly-team (repo of the staff app Kiorly; being renamed to `kiorly`; formerly `kiorly-work`) | Kiorly: one Expo staff app (iOS, Android, web :8082) with Clinic, Nurse, Pharmacy and Lab sign-in entries; owns no data, calls `/mobile/*` in the three product APIs | not in the original plan (ADR-033, Proposed) | bundle id `com.kiorly.app` (placeholder), scheme `kiorly`, store title `Kiorly: Clinic, Pharmacy & Lab` | `mobile.*` (Planned); today `mobile_staff_app` | `_docs/mobile/` | built |
 
 ## 07 Legacy module map (M01–M34 → v2 repositories)
 | ID | Module | v2 home |
@@ -209,7 +209,7 @@ Internal facts trace to mshall/clinics-management @ 6b24a79 (19 Nov 2026) or to 
 | clinics-management | `kiorex` (never `main`, no push without approval) | Built; staff `/mobile/*` API; 72-doctor demo tenant | Clinic web lint 0 warnings; golden-flow and RBAC smoke |
 | kiorly-pharmacy | main | In progress, ahead of plan | e2e 17; web spec 19 |
 | kiorly-lab | main | In progress, ahead of plan | e2e 18; web spec 20 |
-| kiorly-team | main | Kiorly Team app, dev builds | Jest 167 (all pass on 23 Nov); web specs clinic 6, pharmacy 19, lab 20; `tsc` clean |
+| kiorly-team | main | Kiorly app, dev builds | Jest 167 (all pass on 23 Nov); web specs clinic 6, pharmacy 19, lab 20; `tsc` clean |
 | workspace | main | Docs, brand, e2e, scripts | `cd e2e && npm test` runs 18 suites against the running stack |
 
 Scripts (workspace `scripts/`, `e2e/scripts/`): `e2e/scripts/up.sh [--build] [--seed] [--restart]` and `down.sh` start and stop Passport, Clinic, Kiorex, Pharmacy and Lab APIs (by port; never :3000); `scripts/seed-all.sh [--reset]` seeds synthetic demo data in dependency order (Passport, Clinic including Nurse tenants, Pharmacy, Lab, provider sync, Kiorex, and the three staff-app `seed:mobile` seeds), idempotent and refusing production; `scripts/seed-staging.sh --dry-run` prints the AWS staging plan (a human deploys first); `scripts/push-all.sh` pushes only with founder authorization and never touches Clinic `main`; `scripts/ops-sync.mjs` triggers a provider sync. Seed credentials are DEV ONLY and live in `TEST_DATA.md` and each repo's `DEMO_DATA.md`.

@@ -9,13 +9,13 @@
 | Demo (product) | Repo doc | App URL (dev) | API | Seed command (idempotent unless noted) |
 |---|---|---|---|---|
 | **Kiorex Passport** (identity: OTP, families, orgs, invitations, ops TOTP) | [kiorex-account/DEMO_DATA.md](kiorex-account/DEMO_DATA.md) | http://localhost:4400/account · dev inbox `/dev/inbox` | :4400 | `cd kiorex-account && npm run db:seed:demo` (`npx tsx scripts/seed-demo.ts --reset` to re-create) |
-| **Kiorly Clinic + Nurse edition** (clinic, 3 orgs, Basic clinic, solo + agency nurses, home visits, physio) | [clinics-management/DEMO_DATA.md](clinics-management/DEMO_DATA.md) | http://localhost:5174 (`npm run dev -w web`) | :3010 | `cd clinics-management/apps/api && npm run db:seed:demo` (`-- --reset`); `npm run db:seed:mobile` for Kiorly Team |
+| **Kiorly Clinic + Nurse edition** (clinic, 3 orgs, Basic clinic, solo + agency nurses, home visits, physio) | [clinics-management/DEMO_DATA.md](clinics-management/DEMO_DATA.md) | http://localhost:5174 (`npm run dev -w web`) | :3010 | `cd clinics-management/apps/api && npm run db:seed:demo` (`-- --reset`); `npm run db:seed:mobile` for Kiorly |
 | **Kiorly Pharmacy** (chain, solo, Lite) | [kiorly-pharmacy/DEMO_DATA.md](kiorly-pharmacy/DEMO_DATA.md) | http://localhost:5192 (was 5190, see section 3) | :3100 | `cd kiorly-pharmacy/apps/api && npm run seed:all` (= seed, seed:demo, seed:suite, seed:mobile); no true reset |
 | **Kiorly Lab** (LIS: PRO, chain, Basic) | [kiorly-lab/DEMO_DATA.md](kiorly-lab/DEMO_DATA.md) | http://localhost:5193 (was 5191, see section 3) | :3200 | `cd kiorly-lab/apps/api && npm run db:seed && npm run db:seed:demo && npm run db:seed:mobile`; no true reset |
 | **Kiorex platform**: patient web, patient Expo app, ops console, marketplace, Kiorex Pay | [kiorex-platform/DEMO_DATA.md](kiorex-platform/DEMO_DATA.md) | patient web http://localhost:5180 · Expo web http://localhost:8081 · ops http://localhost:5181 | :4000 | `cd kiorex-platform/apps/api && npm run db:seed:demo` (needs the Kiorly seed + provider sync first) |
-| **Kiorly Team** (staff mobile app: Clinic + Pharmacy + Lab modules, Basic/Lite gate) | [kiorly-team/DEMO_DATA.md](kiorly-team/DEMO_DATA.md) | Expo web http://localhost:8082 (`npm run web`), iOS / Android via Expo | uses :3010 / :3100 / :3200 | the three `*:mobile` seeds above |
+| **Kiorly** (staff mobile app: Clinic + Pharmacy + Lab modules, Basic/Lite gate) | [kiorly-team/DEMO_DATA.md](kiorly-team/DEMO_DATA.md) | Expo web http://localhost:8082 (`npm run web`), iOS / Android via Expo | uses :3010 / :3100 / :3200 | the three `*:mobile` seeds above |
 | **Kiorex contracts** (fixtures only, no service) | [kiorex-contracts/DEMO_DATA.md](kiorex-contracts/DEMO_DATA.md) | n/a | n/a | none: `npm test` |
-| **All products, in order** | this file + [TEST_DATA.md](TEST_DATA.md) | all of the above | | `scripts/seed-all.sh [--reset]` (see section 2; includes the Kiorly Team seeds) |
+| **All products, in order** | this file + [TEST_DATA.md](TEST_DATA.md) | all of the above | | `scripts/seed-all.sh [--reset]` (see section 2; includes the Kiorly staff-app seeds) |
 
 ## 2. Start the stack and seed everything
 
@@ -24,7 +24,7 @@
 e2e/scripts/up.sh --build --seed        # first time; afterwards just e2e/scripts/up.sh   (stop: e2e/scripts/down.sh)
 # 2) demo data in dependency order: Passport -> Kiorly (incl. Nurse tenants) -> Pharmacy -> Lab -> provider sync -> Kiorex
 scripts/seed-all.sh                     # idempotent; add --reset to remove demo records first (never non-demo data)
-#    seed-all.sh also runs the three Kiorly Team seeds (Clinic and Lab db:seed:mobile, Pharmacy seed:mobile), each right after its base demo seed; they are idempotent
+#    seed-all.sh also runs the three Kiorly staff-app seeds (Clinic and Lab db:seed:mobile, Pharmacy seed:mobile), each right after its base demo seed; they are idempotent
 # 4) the web apps you want to look at (each is a Vite dev server; the APIs are already running)
 (cd clinics-management && npm run dev -w web)     # :5174 (`npm run dev` now frees only this branch's own ports; `KIORLY_FREE_ALL_PORTS=1` restores the old wide sweep)
 (cd kiorex-platform && npm run dev -w apps/web)   # :5180
@@ -52,7 +52,7 @@ Rules that apply to every seed:
 | 4000 / 5180 / 5181 / 8081 | Kiorex API / patient web / ops console / patient Expo app | |
 | 3100 / 5192 | Pharmacy API / web | Web port configurable with `PHARMACY_WEB_PORT`. It was 5190, which is the default web port of the Kiorly Clinic *main* checkout (`scripts/local-dev-ports.sh`: main = API 3020, web 5190, docs 5191), so the default is now 5192. |
 | 3200 / 5193 | Lab API / web | Web port configurable with `LAB_WEB_PORT`. It was 5191 (the Clinic main checkout's docs server), the default is now 5193. |
-| 8082 | Kiorly Team (Expo web) | |
+| 8082 | Kiorly (Expo web) | |
 | 5175 | Clinic docs portal on branch `kiorex` (`npm run dev` at the clinic repo root; `main` uses 3020 / 5190 / 5191, see `clinics-management/scripts/local-dev-ports.sh`) | |
 
 The Vite configs of Pharmacy and Lab honour `PHARMACY_WEB_PORT` / `LAB_WEB_PORT` (defaults 5192 / 5193, start-up of both checked on 21 Nov 2026); the APIs proxy through Vite so no CORS change is needed. Dev scripts in every repo were reviewed: only `clinics-management` had a port-killing script (now limited to its own ports); the others (`kiorly-pharmacy`, `kiorly-lab`, `kiorex-platform`, `kiorex-account`, `kiorly-team`) kill nothing.
@@ -72,19 +72,19 @@ The Vite configs of Pharmacy and Lab honour `PHARMACY_WEB_PORT` / `LAB_WEB_PORT`
 | Lab booking and result in the vault | platform K7 | Lab L7 (receive, validate, release) | [platform](kiorex-platform/DEMO_DATA.md), [lab](kiorly-lab/DEMO_DATA.md) |
 | Nurse sample -> Lab -> result back (KNLAB01) | Clinic C10 | Lab L3 / L6 | [clinic](clinics-management/DEMO_DATA.md), [lab](kiorly-lab/DEMO_DATA.md) |
 | Home visit booking, timeline, SOS, held deposit | platform K11 / K14 | Clinic C7 / C8 (nurse, dispatcher) | [platform](kiorex-platform/DEMO_DATA.md), [clinic](clinics-management/DEMO_DATA.md) |
-| Plan gate: Basic / Lite across the staff app | Kiorly Team W12 | the three Basic tenants | [work](kiorly-team/DEMO_DATA.md) |
+| Plan gate: Basic / Lite across the staff app | Kiorly W12 | the three Basic tenants | [work](kiorly-team/DEMO_DATA.md) |
 | Flag off -> 403 FEATURE_DISABLED | platform K15 | any product | [platform](kiorex-platform/DEMO_DATA.md) |
 | Guardian, organisation, invitation, account-link | Passport P3-P8 | ops queue | [passport](kiorex-account/DEMO_DATA.md) |
 
 ## 5b. Staff app changes (22 Nov 2026)
-The staff app is now **Kiorly Team** (repo and bundle ids unchanged): sign-in tiles Clinic / Nurse / Pharmacy / Lab (Nurse signs in through the Clinic API and lands on home-visit rounds), the bottom tab bar on every screen, a confirmed sign-out (Home header and Me), the brand lockup header, a flat native splash that hands off to the animated one, and nurses no longer get the doctor's Lab results queue (sample collection stays under home visits). The patient app gets the same persistent tab bar and sign-out. Details: [kiorly-team/DEMO_DATA.md](kiorly-team/DEMO_DATA.md), [_docs/mobile/DEVICE_TEST_REPORT_2026-11-20.md](_docs/mobile/DEVICE_TEST_REPORT_2026-11-20.md).
+The staff app is now plain **Kiorly** (final name, ADR-037, 23 Nov 2026; earlier Kiorly Work and Kiorly Team; repo folder `kiorly-team` until the lead renames it; bundle id `com.kiorly.app`): sign-in tiles Clinic / Nurse / Pharmacy / Lab (Nurse signs in through the Clinic API and lands on home-visit rounds), the bottom tab bar on every screen, a confirmed sign-out (Home header and Me), the brand lockup header, a flat native splash that hands off to the animated one, and nurses no longer get the doctor's Lab results queue (sample collection stays under home visits). The patient app gets the same persistent tab bar and sign-out. Details: [kiorly-team/DEMO_DATA.md](kiorly-team/DEMO_DATA.md), [_docs/mobile/DEVICE_TEST_REPORT_2026-11-20.md](_docs/mobile/DEVICE_TEST_REPORT_2026-11-20.md).
 
 ## All 36 specialties (added 22 Nov 2026)
 Every Kiorex specialty (36 codes) now has 2 LIVE verified doctors, with bookable slots, 3 demo bookings in varied states, 14 home-visit doctors and 11 video bookings: new Kiorly tenant `demo_t_sp` (72 doctors, staff logins `<key>.sp@demo.kiorex.test` / `Demo@12345`, owner `owner.sp@`), provider-synced into Kiorex, bookings for the demo patients `+201000001001`..`1012` (OTP `000000`). The full specialty -> doctor -> login/slug -> booking table is in [TEST_DATA.md](TEST_DATA.md) (section "All 36 specialties"). Seed order is unchanged (`scripts/seed-all.sh`).
 
 ## 6. Verification log (21 Nov 2026)
 
-Logins actually exercised against the running stack: **Passport/Kiorex** Hoda `+201000001001` through the full OIDC code + PKCE flow (token accepted by `GET :4000/api/v1/me/profile`, name and sub match), ops super admin `+201000000099` with OTP + computed TOTP (`GET :4000/api/v1/admin/flags` -> 200); **Clinic** about 25 logins (all clinic staff roles of `na` / `ss` / `df` / Basic / Nurse tenants) + the three legacy `demo` accounts; **Pharmacy** all 15 logins (base, solo, Lite); **Lab** all 27 dev-logins (3 tenants x 9 roles); **Kiorly Team** `/mobile/bootstrap` for every login above (the matrices come from it), BASIC gate re-checked (403 `FEATURE_DISABLED` on `/mobile/schedule`, `/mobile/pharmacy/controlled/pending-witness`, `/mobile/summary`; 200 on bootstrap and alerts); **Contracts** `npm test` (116 passed) and a signed `GET :3010/marketplace/v1/providers` -> 200. Not exercised: the web UIs (not running at the time), `+201000009001/2` TOTP logins (secrets confirmed in the DB only), `+201000009003` enrolment, native iOS / Android runs.
+Logins actually exercised against the running stack: **Passport/Kiorex** Hoda `+201000001001` through the full OIDC code + PKCE flow (token accepted by `GET :4000/api/v1/me/profile`, name and sub match), ops super admin `+201000000099` with OTP + computed TOTP (`GET :4000/api/v1/admin/flags` -> 200); **Clinic** about 25 logins (all clinic staff roles of `na` / `ss` / `df` / Basic / Nurse tenants) + the three legacy `demo` accounts; **Pharmacy** all 15 logins (base, solo, Lite); **Lab** all 27 dev-logins (3 tenants x 9 roles); **Kiorly** `/mobile/bootstrap` for every login above (the matrices come from it), BASIC gate re-checked (403 `FEATURE_DISABLED` on `/mobile/schedule`, `/mobile/pharmacy/controlled/pending-witness`, `/mobile/summary`; 200 on bootstrap and alerts); **Contracts** `npm test` (116 passed) and a signed `GET :3010/marketplace/v1/providers` -> 200. Not exercised: the web UIs (not running at the time), `+201000009001/2` TOTP logins (secrets confirmed in the DB only), `+201000009003` enrolment, native iOS / Android runs.
 
 ## 7. Inconsistencies found (status 2026-11-21)
 
@@ -100,7 +100,7 @@ Logins actually exercised against the running stack: **Passport/Kiorex** Hoda `+
 8. `demo_t_nsolo` home visits: 10 seeded + 56 extra test rows = 66 (22 cancelled, 9 arrived); agency tenant 45 (22 seeded + 23 extra). The extras come from e2e runs and keep growing.
 9. `kiorex-contracts/fixtures/demo-personas.json` now holds all 35 Passport personas (phones and subs match `seed-users.json`); `npm test` 116 passed.
 10. `kiorex-contracts/docs/USAGE.md`: the signed path is `/marketplace/v1/...` (verified live: 200; the `/api/v1/marketplace/...` form is 404).
-11. `scripts/seed-all.sh` now runs the Clinic, Pharmacy and Lab Kiorly Team seeds (`db:seed:mobile` / `seed:mobile`) in dependency order; ran twice without errors (idempotent).
+11. `scripts/seed-all.sh` now runs the Clinic, Pharmacy and Lab Kiorly staff-app seeds (`db:seed:mobile` / `seed:mobile`) in dependency order; ran twice without errors (idempotent).
 12. Lab: one critical alert is now deliberately OPEN (`DEMO-OPEN-ALERT-001`, K 6.9, deadline a year ahead); the other alerts stay ESCALATED / ACKNOWLEDGED.
 13. `admin@kiorly.com`, `superadmin@kiorly.com`, `admin@drahmedshall.com` use the password `demo` (bcrypt-checked), now stated in the Test data tables; all other staff use `Demo@12345`.
 14. `kiorly-team`: `README.md` now exists; `.env.local` (git-ignored override) now equals `.env.example` (3010 / 3100 / 3200) and the doc explains that `.env.local` wins.

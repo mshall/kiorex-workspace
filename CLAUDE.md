@@ -17,6 +17,12 @@
 Read this before working in any repo under this folder. It is the condensed brief of the 23 Kiorex v2
 reference documents (KX-00…KX-22, Drive folder "Kiorex v2"), extracted to `_docs/`.
 
+> ## 📱 Staff app name is FINAL: **Kiorly** (founder, 23 Nov 2026, App Store checked; ADR-037 supersedes the naming in ADR-033)
+> Earlier names Kiorly Work, Kiorly Team and `kiorly-app` are retired. Display name **Kiorly**; store title **Kiorly: Clinic, Pharmacy & Lab**; "by Kiorex" only on the splash and About, never in the icon label or the store name; icon = Kiorex mark with the Kiorly accent (not a product colour); modules inside: Clinic, Nurse, Pharmacy, Lab. Web products keep their `Kiorly Clinic by Kiorex` lockups. Identifiers: bundle id `com.kiorly.app`, scheme `kiorly`, header `X-Kiorly-Client: kiorly/<version>` (legacy `kiorly-team/*` and `kiorly-work/*` still accepted), Arabic **كيورلي**. The repo folder is still `kiorly-team` until the lead renames it to `kiorly`. Apple/Google registration and the Passport client are NEEDS_HUMAN.
+
+> ## 🌍 Country/market selectors are HIDDEN while one market is live (founder, 23 Nov 2026)
+> Egypt is the only launch market. Every country/market selector (Kiorex patient web header, ops flag market filter, Passport org-create country, Kiorly Clinic sign-up, rep console and platform tenant-create) renders nothing unless MORE THAN ONE market is live (`market.<cc>.live`; Passport uses `VITE_MARKETS`, default `EG`). One market fixes the value to EG, phone `+20`, EGP. The API stays multi-market. Rule helpers: `marketVisibility.ts` (platform web/ops), `market-selector-policy.ts` (Clinic), `util.ts` (Passport).
+
 ## What we are building
 One ecosystem, two brands, four products (KX-00, ADR-001/002):
 - **Kiorex** (patients, company) — patient marketplace: discovery, booking against Kiorly's live slots,
@@ -35,7 +41,7 @@ One ecosystem, two brands, four products (KX-00, ADR-001/002):
 | kiorex-account | mshall/kiorex-account | main | IdP config-as-code (managed IdP in AWS), dev OIDC provider for local, OTP sender, back-channel logout |
 | kiorly-pharmacy | mshall/kiorly-pharmacy | main | Scaffold only until M9 (KX-06) |
 | kiorly-lab | mshall/kiorly-lab | main | Scaffold only until M15 (KX-07) |
-| kiorly-team | mshall/kiorly-team (private) | main | **Kiorly Team**: one Expo staff app (Clinic, Pharmacy, Lab modules) for Pro/Enterprise plans; safety alerts reach every plan (ADR-025). Expo web :8082. Backends: `/mobile/*` in the three product APIs |
+| kiorly-team | mshall/kiorly-team (private) | main | **Kiorly** (the staff app; repo `kiorly-team`, being renamed to `kiorly`): one Expo staff app (Clinic, Nurse, Pharmacy, Lab modules) for Pro/Enterprise plans; safety alerts reach every plan (ADR-025). Expo web :8082. Backends: `/mobile/*` in the three product APIs |
 | _legacy/* | 2025 kiorex-* repos | — | READ-ONLY references (ADR-026). Harvest UI from kiorex-web-app only; never copy kiorex-backend code |
 | _docs/ | — | — | Extracted KX docs (some numeric cells lost in extraction — check the PDF in Drive when exact numbers matter) |
 | _brand/ | — | — | Kiorex logo concept, mark SVG, tokens.css |

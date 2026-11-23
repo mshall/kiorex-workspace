@@ -38,7 +38,7 @@ Tiles: BRANDS 2 (Kiorex (patients) · Kiorly (providers)); PRODUCTS 5 (Marketpla
 
 **What we ask of the reader.** Treat this set as the single reference. Where it disagrees with the 2025 PRD/BRD, the 2025 roadmap or the Kiorex v2 draft volumes of 19 Nov 2026, this set wins. Where it disagrees with the Kiorly repository, the repository wins for what is already built and this set wins for what is planned.
 
-> **Note** Current status, 23 Nov 2026. All five backends, the patient app and the staff app run locally against mock providers and seeded demo data; nothing is deployed, no real vendor has been contacted and no launch gate is recorded by code. The staff mobile app is now one app, "Kiorly Team", covering Clinic, Nurse, Pharmacy and Lab sign-in entries (ADR-033, Proposed). Every outbound provider (SMS, email, WhatsApp, payments, push, storage, consent, AI) is ready for real URLs and credentials, and a shared notification layer (contracts 1.7.0) sits above the channel adapters (KX24). What remains is human: credentials, template approvals, PSP onboarding, push keys, store accounts, counsel and clinical sign-offs.
+> **Note** Current status, 23 Nov 2026. All five backends, the patient app and the staff app run locally against mock providers and seeded demo data; nothing is deployed, no real vendor has been contacted and no launch gate is recorded by code. The staff mobile app is now one app, "Kiorly" (final name, ADR-037), covering Clinic, Nurse, Pharmacy and Lab sign-in entries (ADR-033, Proposed). Every outbound provider (SMS, email, WhatsApp, payments, push, storage, consent, AI) is ready for real URLs and credentials, and a shared notification layer (contracts 1.7.0) sits above the channel adapters (KX24). What remains is human: credentials, template approvals, PSP onboarding, push keys, store accounts, counsel and clinical sign-offs.
 
 **DECISION** Strategic thesis: win the provider's daily workflow first (Kiorly Clinic, free to start), then route patient demand to those providers through Kiorex, and charge only when a new patient actually attends. Each new vertical (nursing, pharmacy, lab) repeats the pattern: software first, marketplace second.
 
@@ -124,7 +124,7 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 | Area | Status | Evidence / what remains |
 |---|---|---|
 | Kiorly Clinic and Nurse edition | Done | Built and running locally; demo tenants, home visits, care plans, nurse role |
-| Kiorly Team staff app (Clinic, Nurse, Pharmacy, Lab entries) | Done (dev) | Dev builds on iOS simulator and Android emulator; e2e 16/17/18; release build and physical device Open |
+| Kiorly staff app (Clinic, Nurse, Pharmacy, Lab entries) | Done (dev) | Dev builds on iOS simulator and Android emulator; e2e 16/17/18; release build and physical device Open |
 | Patient app (Expo) | Done (dev) | Services, family visit status, push-tap routing, sign-out; Jest and tsc only, device check Open |
 | Provider adapters (mock and real, all backends) | Done | Tested against a local fake server only |
 | Notification layer (`@kiorex/contracts/notify` 1.7.0) | Done in platform; Planned in Passport, Lab, Pharmacy, Clinic | KX-24 §11 |

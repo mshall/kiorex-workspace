@@ -340,3 +340,6 @@ Dependency order: docs/decisions -> contracts -> clinics-management foundations 
 6. **kiorly-pharmacy**: no change (KX-06 unchanged). Scaffold only until M9; note only that Nurse GA may precede Pharmacy GA if capacity binds.
 7. **infra/tofu** [S-M]: DNS/ACM/CloudFront alias for nurse.kiorly.com in the Clinic stack; Amazon Location IAM/resource (behind mock-default adapter); alarms for safety-alert delivery (<=60 s) and on-call rota; geostamp-retention job; `tofu validate`/`fmt` only, no deploy.
 8. **Ops/legal go-live (humans)**: counsel memos (GHV1, GKN2), CMO/nursing-advisor sign-offs (GHV2, GKN1, GPR2), WTP interviews, real-provider "Provider go-live" tasks in Docs/NEEDS_HUMAN.md.
+
+## Addendum, 23 Nov 2026: staff app name
+The staff app is finally named plain **Kiorly** (ADR-037). Earlier names: Kiorly Work, Kiorly Team, `kiorly-app`. Display name `Kiorly`, store title `Kiorly: Clinic, Pharmacy & Lab`, bundle id `com.kiorly.app`, scheme `kiorly`, header `X-Kiorly-Client: kiorly/<version>` (legacy `kiorly-team/*` and `kiorly-work/*` accepted), Arabic كيورلي; repo `kiorly-team` is being renamed to `kiorly`. Where this file says "the Kiorly app" it already meant this app.

@@ -442,7 +442,7 @@ The matrix above was generated on 20 Nov 2026 and was not re-run. Items that app
 |---|---|---|
 | Notification layer `@kiorex/contracts/notify` (KX-24, ADR-034) | DONE+TESTED (platform adopted; four products PLANNED) | `kiorex-contracts/test/notify/` 60 tests, 100 % coverage; `docs/NOTIFICATION_LAYER.md` |
 | Provider adapters, all kinds (KX-24, ADR-035) | DONE-UNTESTED against real vendors (tested against local fake servers) | `_docs/PROVIDER_GO_LIVE.md`; BLOCKED-HUMAN for credentials (FD-04) |
-| Staff app Kiorly Team: Clinic, Nurse, Pharmacy, Lab entries (ADR-033, Proposed) | DONE+TESTED in dev (e2e 16/17/18, per-role web specs); PARTIAL for tiered entitlements and device hardening (Planned) | `_docs/mobile/STAFF_ROLES_E2E_REPORT_2026-11-21.md`, `DEVICE_TEST_REPORT_2026-11-20.md` |
+| Staff app Kiorly: Clinic, Nurse, Pharmacy, Lab entries (ADR-033, Proposed) | DONE+TESTED in dev (e2e 16/17/18, per-role web specs); PARTIAL for tiered entitlements and device hardening (Planned) | `_docs/mobile/STAFF_ROLES_E2E_REPORT_2026-11-21.md`, `DEVICE_TEST_REPORT_2026-11-20.md` |
 | Nurse sees no Lab results (server-enforced) | DONE+TESTED | e2e 16 |
 | Patient app Services, family visit status, push taps | DONE+TESTED (Jest 157, tsc); device check MISSING | `kiorex-platform/apps/mobile/README.md` |
 | Real push delivery (APNs, FCM) | BLOCKED-HUMAN | keys and EAS project id |

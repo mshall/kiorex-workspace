@@ -39,6 +39,9 @@ Tokens: `--kx-product-{clinic,lab,pharmacy}` (graphic use: logo, chevrons, large
 
 In an app, the one product-specific line is `KIORLY_PRODUCT` in `src/brand/ui-kit.tsx` (`KiorlyBrand` / `KiorlyMark` read it); the web logo is `<KiorexLogo product="clinic|lab|pharmacy" lang={i18n.language} />`.
 
+## Kiorly staff app identity (founder, 23 Nov 2026, ADR-037)
+The staff app is plain **Kiorly** (modules Clinic, Nurse, Pharmacy, Lab). Store title `Kiorly: Clinic, Pharmacy & Lab`; home-screen label `Kiorly`; Arabic `كيورلي`. "by Kiorex" appears only on the splash screen and in About, never in the icon label or the store name. The icon is the Kiorex mark (two chevrons and the coral pulse) with the **Kiorly accent**, not a product colour (no Clinic teal, Lab violet or Pharmacy green). The web products keep their `Kiorly Clinic by Kiorex` / `Kiorly Lab by Kiorex` / `Kiorly Pharmacy by Kiorex` lockups. Artwork for the app icon is made from the existing SVG assets, never redrawn.
+
 ## Arabic lockups (founder, 20 Nov 2026)
 The ARTWORK (chevrons + coral pulse + rule) is identical; every WORD is Arabic in the Arabic UI. Spelling of Kiorex is **كيوريكس** everywhere (the founder's form; it matches the Passport name «كيوريكس باسبورت» and the Latin letters; older strings used كيوركس and were normalised in the three Kiorly web apps' `ar.json`; the Kiorex platform apps still use كيوركس: align them separately).
 | Product | Arabic lockup |

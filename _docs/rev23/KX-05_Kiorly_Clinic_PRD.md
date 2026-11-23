@@ -233,7 +233,7 @@ ACTIVATION IN 30 DAYS ≥ 60% (20 visits checked-in) · FOUNDING TRIAL → PAID 
 ## 13 Build status and changes since 19 Nov 2026 (23 Nov 2026)
 Observed in `clinics-management` (branch `kiorex`, never `main`; 322 commits since 19 Nov, including merges from main), `kiorly-team` and the workspace e2e suites. Local development only; nothing deployed or pushed.
 
-### 13.1 Staff mobile app: Kiorly Team (Clinic and Nurse entries)
+### 13.1 Staff mobile app: Kiorly (Clinic and Nurse entries)
 | Capability | Status | Evidence and caveat |
 |---|---|---|
 | `/mobile/*` API in the Clinic backend: bootstrap, schedule and queue, check-in, vitals, prescriptions, lab results, search, alerts, devices, upgrade request | Done | e2e suite 16 (46 tests on 21 Nov) compares app routes with the web API per role |
@@ -260,7 +260,7 @@ SMS, email, WhatsApp and payment adapters follow the provider contract (ADR-035)
 Today patient documents have a 15 MB per-file cap and client-side image shrinking, but no total storage limit, no lifecycle rule and no retention rule (KX-25 §02). Proposed: per-plan storage limits with 80 percent warning and a grace band, original quality kept up to 4 MB with automatic, quality-floored reduction above it, and thumbnails, soft delete with a reason, legal hold, and retention periods per market and class (NEEDS_HUMAN: DPO). Documents list views show thumbnails; originals open on click. Detail and build prompt: KX-25. Decision: ADR-036 (Proposed).
 
 ## What changed in this revision (23 Nov 2026)
-- Added §13: Kiorly Team staff app (Clinic and Nurse entries), nurse Lab-results restriction, dispatcher rights, providers, demo data and web changes, each tagged Done, Planned or Blocked.
+- Added §13: Kiorly staff app (Clinic and Nurse entries), nurse Lab-results restriction, dispatcher rights, providers, demo data and web changes, each tagged Done, Planned or Blocked.
 - Plans, money engine, Kiorex connector and professions sections are unchanged.
 - Not verified: the 2 failing staff-app Jest tests (`lite-request.test.tsx`, 23 Nov re-run), real push delivery, a release build, a physical device.
 - Added §14: document storage growth, quotas and retention (Proposed, KX-25).

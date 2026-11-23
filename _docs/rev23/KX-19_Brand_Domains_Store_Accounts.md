@@ -71,7 +71,7 @@ WHY: Separate registrable domains for patient and provider surfaces isolate sess
 | Google Play | One organization Play Console account; complete Health apps declaration |
 | Seller name | The IP-holding entity — ideally 'Kiorex …' so listings read consistently |
 | Kiorex app | Patients & families; category Medical; account deletion in-app |
-| Kiorly app | Doctors, physiotherapists, nurses & clinic staff; context switch across organizations; shows Kiorly Nurse branding for Nurse-edition organizations; screenshots include a nurse set; PWA remains primary at launch |
+| Kiorly app | Final name **Kiorly** (ADR-037, 23 Nov 2026); store title `Kiorly: Clinic, Pharmacy & Lab`; "by Kiorex" only on splash and About, never in the icon label or store name; icon = Kiorex mark with the Kiorly accent; bundle id `com.kiorly.app`; Arabic كيورلي; store registration NEEDS_HUMAN. Audience: doctors, physiotherapists, nurses, pharmacy and lab staff; context switch across organizations; shows Kiorly Nurse branding for Nurse-edition organizations; screenshots include a nurse set; PWA remains primary at launch |
 | Field apps (later) | Kiorly Lab Collect (phlebotomists), Kiorly Pharmacy Rider — only when a mobile workflow exists. No separate Kiorly Nurse app (avoids duplicate-app review risk; ADR018) |
 | Review readiness | Demo accounts or demonstration mode (incl. a demo Nurse agency); regulatory documentation attached in App Review Information |
 

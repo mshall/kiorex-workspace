@@ -9,7 +9,7 @@
 ## Run / reset
 ```bash
 e2e/scripts/up.sh            # stack running (first time: --build --seed)
-scripts/seed-all.sh          # idempotent, dependency order: Passport -> Kiorly Clinic (incl. the Nurse edition tenants, Rev 2.3 home visits) -> Clinic Kiorly Team seed -> Pharmacy (+ its Kiorly Team seed) -> Lab -> Lab Kiorly Team seed -> provider sync -> Kiorex (incl. home bookings)
+scripts/seed-all.sh          # idempotent, dependency order: Passport -> Kiorly Clinic (incl. the Nurse edition tenants, Rev 2.3 home visits) -> Clinic Kiorly staff-app seed -> Pharmacy (+ its Kiorly staff-app seed) -> Lab -> Lab Kiorly staff-app seed -> provider sync -> Kiorex (incl. home bookings)
 scripts/seed-all.sh --reset  # first removes the demo records only (non-demo data and the e2e fixtures are never touched)
 scripts/seed-staging.sh --dry-run   # AWS staging (non-production only, after a human deployed it): prints the plan; see "Seeding staging on AWS" below
 ```
@@ -93,7 +93,7 @@ Everything below exists after `scripts/seed-all.sh` (same people/phones/ids in e
 | Dispatch + unassigned agency queue + dispatch guard | Dina `dispatch@nurse-demo.kiorly.test` | :5174 | `Demo@12345` / Passport `…3003` | Dispatch: assign a nurse (nurses 3-5 and the aide are refused: rejected / expired / unverified) |
 | Care-plan requests inbox | Agency owner `owner@nurse-demo.kiorly.test` | :5174 -> Requests | `Demo@12345` / `…3002` | Accept `kx_cp_demo_2`; see the accepted `kx_cp_demo_1` and the declined `kx_cp_demo_3`; Kiorex side: Nabila's care plan |
 | **Nurse sample -> Lab -> result back (KNLAB01)** | Heba / Mona | :5174 -> Lab samples; Lab :5193 | `nurse1@…`; Lab dev-login `demo-lab` (reception / technologist / signatory) | Nurse: Lab samples -> nl1 (released, custody timeline, report link), nl2 (awaiting validation), nl3 (in transit), nl4 (rejected by the lab). Lab: Accessioning -> receive `DEMO-NL3-EDTA`; Validation -> nl2; Release -> nl2. Record a new one for Hoda/Nabila (consent granted); Rana (consent revoked) and Nourhan (none) show the named refusals |
-| Professions / registrations in all states | Agency owner / Ops | Kiorly Team; Ops console :5181 -> Providers | `owner@…`; `+201000000099` + OTP + TOTP | Verified / pending / rejected / expired / unverified nurses and physios; Dr Samah's paused listing |
+| Professions / registrations in all states | Agency owner / Ops | Kiorly; Ops console :5181 -> Providers | `owner@…`; `+201000000099` + OTP + TOTP | Verified / pending / rejected / expired / unverified nurses and physios; Dr Samah's paused listing |
 | Physio pack | Dr Mai `mai.na@demo.kiorex.test` | :5174 | `Demo@12345` / Passport `…3010` | Mahmoud: assessment, plan, progress notes, outcome trends, HEP link, 10-session series |
 | Safety console, held deposits, flags (launch-locked gates DEV-ONLY) | Ops super admin / admin | Ops console :5181 | `+201000000099` (TOTP `REMOVED-OLD-DEMO-TOTP-SECRET`) | Safety console (SOS, timer, unsafe abort + SLO breach), held-deposit review queue (35 min / 46 h), Flags: gates labelled `DEV-ONLY-NOT-A-REAL-GATE:G…` |
 | Passport: guardian / org / linking / security states | Hoda, Karim, Tarek, Omar, Dalia; Ahmed Fawzy; ops | Passport :4400/account | phone + OTP | `/account/family` (active, ended, expired, pending guardian links), `/account/orgs` (invitations pending / consumed / expired / revoked, ended membership), `/account/security` (passkeys, sessions), `/account/ops/links` (pending_review) |
@@ -211,7 +211,7 @@ Limits: steps 5-6 need the egress path HB07; Passport families/orgs/invitations 
 - Lab: new onboarding creates STANDALONE tenants; existing demo tenants stay INTEGRATED (see `kiorly-lab/Docs/TEST_DATA.md`).
 - Feature coverage: `kiorly-pharmacy/Docs/FEATURE_MATRIX.md`, `kiorly-lab/Docs/FEATURE_MATRIX.md`.
 
-## Kiorly Team (mobile staff app, added 20 Nov 2026)
+## Kiorly (mobile staff app, added 20 Nov 2026)
 App `kiorly-team` (Expo web :8082). Entitlement `mobile_staff_app` is ON for PRO/ENTERPRISE; Basic orgs see the upgrade screen but keep the safety-alert inbox. Staff password `Demo@12345` (legacy `admin@kiorly.com`: `demo`); seeds: clinic `npm run db:seed:mobile -w api`, pharmacy `npm run seed:mobile -w api`, lab `npm run db:seed:mobile -w api` (all idempotent, guarded; run by `scripts/seed-all.sh` and by `seed:all` in pharmacy). Details: `kiorly-team/Docs/TEST_DATA.md`.
 | Product | Plan | Logins |
 |---|---|---|

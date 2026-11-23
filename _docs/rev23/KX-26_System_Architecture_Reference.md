@@ -19,7 +19,7 @@ Tags: C4 context and containers · Components · Data and storage · Identity ·
 
 ## Key numbers (verified 23 Nov 2026)
 - **5** deployable backends: Kiorex platform API, Kiorly Clinic API (also serves the Nurse edition), Kiorly Pharmacy API, Kiorly Lab API, Kiorex Passport (identity).
-- **2** mobile apps: Kiorex patient app and **Kiorly Team** staff app (Clinic, Nurse, Pharmacy and Lab entries).
+- **2** mobile apps: Kiorex patient app and **Kiorly** staff app (Clinic, Nurse, Pharmacy and Lab entries).
 - **1** shared contracts package `@kiorex/contracts` **1.7.0** (events, flags, HMAC, notify) plus two kernel packages (commerce kernel, field-visit).
 - **1** database per product, **0** shared databases. **0** synchronous Kiorex dependencies in Kiorly critical paths.
 - **8** provider kinds behind ports with mock and real adapters: SMS, Email, WhatsApp, Payment, Push, Storage, Consent, AI.
@@ -43,7 +43,7 @@ Figure 1 — Who and what talks to the system.
 ```mermaid
 flowchart TB
   PAT["Patients<br/>web, iOS, Android"]
-  STF["Clinic, pharmacy and lab staff<br/>web and Kiorly Team app"]
+  STF["Clinic, pharmacy and lab staff<br/>web and Kiorly app"]
   OPS["Kiorex operations<br/>and super admins"]
   SYS["Kiorex and Kiorly system<br/>marketplace, clinic, pharmacy, lab, identity"]
   V1["Payment providers<br/>Paymob, Fawry, InstaPay"]
@@ -66,7 +66,7 @@ flowchart TB
     direction LR
     E1["Kiorex patient app<br/>Kiorex web, Ops console"]
     E2["Kiorly web or PWA<br/>Pharmacy POS, Lab console"]
-    E3["Kiorly Team<br/>staff app"]
+    E3["Kiorly<br/>staff app"]
   end
   subgraph KX["Kiorex and Passport"]
     direction LR
@@ -101,7 +101,7 @@ flowchart TB
 | Kiorly Pharmacy API and web | `kiorly-pharmacy/apps/api`, `apps/web` | 3100, 5192 | `kiorly_pharmacy` | Done |
 | Kiorly Lab API and web | `kiorly-lab/apps/api`, `apps/web` | 3200, 5193 | `kiorly_lab` | Done |
 | Kiorex Passport (dev IdP) | `kiorex-account/apps/dev-idp` | 4400 | `kiorex_account` | Done (dev); production on Cognito Planned |
-| Kiorly Team staff app | `kiorly-team` | Expo web 8082 | none | Done (dev) |
+| Kiorly staff app | `kiorly-team` | Expo web 8082 | none | Done (dev) |
 
 ## 04 Repositories and shared packages
 Figure 3 — Eight repositories, one workspace, and who depends on whom.
@@ -192,7 +192,7 @@ flowchart TB
 | ai-gateway, analytics, ops, outbox, webhooks | AI with PHI redaction, analytics, admin console, event dispatch | ops notes, outbox |
 
 ### 05.3 Pharmacy and Lab APIs
-Each has `auth`, `tenancy`, `audit`, `feature-flags`, `kernel-adapter`, `outbox`, `providers` (adapter ports) and domain `modules`. Pharmacy exposes the Kiorex machine API at `/marketplace/v1`; Lab at `/api/v1/integration/v1`. Both serve `/mobile/*` for the Kiorly Team app and keep working when Kiorex is down.
+Each has `auth`, `tenancy`, `audit`, `feature-flags`, `kernel-adapter`, `outbox`, `providers` (adapter ports) and domain `modules`. Pharmacy exposes the Kiorex machine API at `/marketplace/v1`; Lab at `/api/v1/integration/v1`. Both serve `/mobile/*` for the Kiorly app and keep working when Kiorex is down.
 
 ## 06 Identity and sign-in
 Figure 5 — Patient sign-in with phone OTP and PKCE through Kiorex Passport.
@@ -219,9 +219,9 @@ sequenceDiagram
 | Rule | Detail |
 |---|---|
 | Token | JWT RS256 with `sub`, phone, `locale`, `kx_roles`; no clinical data |
-| Clients | `kiorex-web`, `kiorex-ops`, `kiorex-mobile` (public, PKCE), `kiorly-clinic` (confidential), `kiorly-team` (public, PKCE, dev only) |
+| Clients | `kiorex-web`, `kiorex-ops`, `kiorex-mobile` (public, PKCE), `kiorly-clinic` (confidential), `kiorly-team` (public, PKCE, dev only; client for the Kiorly app is NEEDS_HUMAN) |
 | Logout | Back-channel logout posted to registered URLs |
-| Staff apps | Kiorly Team uses its own staff login today; Passport sign-in is Planned |
+| Staff apps | Kiorly uses its own staff login today; Passport sign-in is Planned |
 | Production | Cognito registration of every client is NEEDS_HUMAN |
 
 ## 07 Integration: commands, events and webhooks
@@ -362,7 +362,7 @@ flowchart LR
     P2["Family visit status"]
     P3["Push-tap routing"]
   end
-  subgraph STAFF["Kiorly Team"]
+  subgraph STAFF["Kiorly"]
     T1["Clinic and Nurse entry"]
     T2["Pharmacy entry"]
     T3["Lab entry"]
@@ -375,7 +375,7 @@ flowchart LR
   T4 --> CAPI
 ```
 
-Kiorly Team is the final name of the staff app (bundle id `com.kiorly.team`, scheme `kiorlyteam`). All three backends accept only the header `X-Kiorly-Client: kiorly-team/<version>` on mobile routes. Status: dev builds verified on the iOS simulator and an Android emulator; release builds, physical devices and real push delivery are Open.
+Kiorly is the final name of the staff app (ADR-037; repo `kiorly-team`, being renamed to `kiorly`; bundle id `com.kiorly.app`, scheme `kiorly`, store title `Kiorly: Clinic, Pharmacy & Lab`, Arabic كيورلي). All three backends accept the header `X-Kiorly-Client: kiorly/<version>` on mobile routes; legacy `kiorly-team/*` and `kiorly-work/*` are still accepted. Status: dev builds verified on the iOS simulator and an Android emulator; release builds, physical devices and real push delivery are Open.
 
 ## 14 Security architecture
 Figure 13 — Trust zones and the controls on each boundary.

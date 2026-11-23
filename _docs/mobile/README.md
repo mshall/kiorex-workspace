@@ -1,5 +1,7 @@
 # Kiorly mobile app: design pack (20 Nov 2026)
 
+> **Name (final, 23 Nov 2026, ADR-037):** the staff app is plain **Kiorly** (store title `Kiorly: Clinic, Pharmacy & Lab`, bundle id `com.kiorly.app`, scheme `kiorly`, header `X-Kiorly-Client: kiorly/<version>`, Arabic كيورلي; repo `kiorly-team`, being renamed to `kiorly`). Earlier names Kiorly Work and Kiorly Team, and the `kiorly-app` proposal, are retired; some dated reports below use the name of their day.
+
 Design only. No feature code, no pushes, no deploys. One Expo app named **Kiorly** with **Clinic** (incl. Nurse edition), **Pharmacy** and **Lab** modules, tiered per organization, safety never paywalled.
 
 | Doc | What it answers |
@@ -8,7 +10,7 @@ Design only. No feature code, no pushes, no deploys. One Expo app named **Kiorly
 | [ADR-033_One_Kiorly_App_Tiered_Mobile.md](./ADR-033_One_Kiorly_App_Tiered_Mobile.md) | The decision record: amends ADR-018's consequence, extends ADR-025 (safety never paywalled). Proposed until the founder signs. |
 | [FEATURE_TIER_MATRIX.md](./FEATURE_TIER_MATRIX.md) | Every capability x product x tier, with audited backend status, effort and file/route evidence; gaps listed, not invented. |
 | [RISKS_AND_OPEN_QUESTIONS.md](./RISKS_AND_OPEN_QUESTIONS.md) | Risks with mitigations, 20 numbered founder questions, NH-* legal sign-offs that apply to mobile. |
-| [DEVICE_TEST_REPORT_2026-11-20.md](./DEVICE_TEST_REPORT_2026-11-20.md) | Both Expo apps on Android and iOS simulators (light/dark, ar/en), dev builds, push fixtures, navigation bars, sign-out, splash and the Kiorly Team rename (22 Nov): bugs found and fixed, open findings, how to reproduce. Patient and staff apps also run on an iPhone simulator. |
+| [DEVICE_TEST_REPORT_2026-11-20.md](./DEVICE_TEST_REPORT_2026-11-20.md) | Both Expo apps on Android and iOS simulators (light/dark, ar/en), dev builds, push fixtures, navigation bars, sign-out, splash and the Kiorly rename (22 Nov): bugs found and fixed, open findings, how to reproduce. Patient and staff apps also run on an iPhone simulator. |
 | [STAFF_ROLES_E2E_REPORT_2026-11-21.md](./STAFF_ROLES_E2E_REPORT_2026-11-21.md) | Every Clinic/Pharmacy/Lab role end to end (app routes vs web, Expo web), Lite slice, bugs fixed, open findings. |
 | [STORE_POLICY_NOTE.md](./STORE_POLICY_NOTE.md) | Apple/Google policy note (written separately). |
 

@@ -98,7 +98,7 @@ Do not hand-write identity. Choose a managed or proven open-source IdP using thi
 | Passport on the shared notification layer | Planned (step 2 of 5) | One SECURITY template, adapters over `provider.ts`; OTP bodies sent but never audited (KX24 §11) |
 | Secret injection for the Cognito Lambda | Open | The Lambda reads secrets from environment variables; no deploy-time injection mechanism and no AWS route for status webhooks to `DeliveryStatus.handleWebhook` exist |
 | Patient client `kiorex-mobile` (PKCE) | Done (dev) | Used by the Expo app |
-| Staff app sign-in | Done (product login) / Planned (Passport) | Kiorly Team signs in per product with that product's own login; Passport sign-in for the staff app is not registered (public client `kiorly-app` is part of ADR-033, Proposed) |
+| Staff app sign-in | Done (product login) / Planned (Passport) | Kiorly (the staff app) signs in per product with that product's own login; Passport sign-in for the staff app is not registered (the public client for the Kiorly app is part of ADR-033, Proposed, and NEEDS_HUMAN) |
 | Dev demo logins | Done (DEV ONLY) | Phone OTP, staff and ops TOTP values live in `TEST_DATA.md`, never in this volume |
 
 > **Risk** A Clinic user is linked to one Clinic tenant per Passport subject today; multi-organization staff switching in the app needs a schema change first (mobile risk R9, ADR-033).

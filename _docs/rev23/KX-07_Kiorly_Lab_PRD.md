@@ -157,7 +157,7 @@ Observed in `kiorly-lab` (69 commits since 19 Nov), contracts 1.6.0 and the e2e 
 
 | Capability | Status | Evidence and caveat |
 |---|---|---|
-| Lab module in the Kiorly Team staff app: reception creates STAT orders, phlebotomist collects by scan (wrong tube refused), technician receives and runs QC, critical value entry with dual control, read-back acknowledgement, validation, sign-off, release, TAT breach alert (once) | Done (dev) | e2e suite 18: 34 tests on 21 Nov; Expo web per-role spec 20 tests; lab modules not run on simulators |
+| Lab module in the Kiorly staff app: reception creates STAT orders, phlebotomist collects by scan (wrong tube refused), technician receives and runs QC, critical value entry with dual control, read-back acknowledgement, validation, sign-off, release, TAT breach alert (once) | Done (dev) | e2e suite 18: 34 tests on 21 Nov; Expo web per-role spec 20 tests; lab modules not run on simulators |
 | Critical-value alert reaches director, signatory, technician and owner only; read-back note stored on web and app acknowledgements (500 chars, first acknowledger wins, never in notifications or audit text) | Done | Founder decision 21 Nov |
 | Sign-off only for a signatory with a licence (owner refused); screen driven by the server `sign-off` response | Done | Fixed 21 Nov |
 | Release queue returns `readyToSign`, `readyToRelease`, `signedNotReleased`; "today" counters use Cairo local midnight (`LAB_TIMEZONE`); QC failure blocks release | Done | |

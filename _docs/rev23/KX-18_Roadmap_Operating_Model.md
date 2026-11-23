@@ -98,7 +98,7 @@ The roadmap dates (month 1 = January 2027) are the founder's gates and were not 
 | Professions, home visits, Kiorly Nurse | Q3 2027 to Q6 2028 | Built locally behind launch-locked flags; Nurse entry in the staff app | Done (dev); gates Open |
 | Kiorly Pharmacy | Build Q4 2027, pilot M13 | Built locally incl. mobile module and provider adapters | Done (dev); pilot Planned |
 | Kiorly Lab | Build Q7 2028, pilot M19 | Built locally incl. mobile module and nurse hand-off | Done (dev); pilot Planned |
-| Staff mobile app | not in the roadmap | Kiorly Team, one app for four entries (ADR-033, Proposed) | Done (dev); store submission Blocked |
+| Staff mobile app | not in the roadmap | Kiorly, one app for four entries (ADR-033, Proposed) | Done (dev); store submission Blocked |
 | Notification layer | not in the roadmap | Platform done; four migrations Planned | Planned |
 | Communications control plane | not in the roadmap | Proposed in KX24 §10 | Planned (Proposed) |
 | Real providers and push | before pilot | Adapters ready | Blocked (human) |

@@ -59,7 +59,7 @@ Loop: Identify hazard (design · incident · feedback) -> Assess (severity x lik
 - Kiorex marketplace: Verified-only listings, badge naming the profession; Emergency routing; Medical content approved by CMO; No symptom data or addresses in analytics; Patient complaint SLA (home visits 1 h); safety console.
 
 Additions of 23 Nov 2026 (Proposed until the CMO signs; none is a flag):
-- Kiorly Team: safety capabilities (critical lab value, controlled-drug discrepancy, nurse SOS, missed safety check, unsafe abort, interaction and allergy warnings, recalls, cold chain) reach **every plan including Lite**; a Basic organization's app is a safety-alert slice (ADR-033, ADR-025).
+- Kiorly: safety capabilities (critical lab value, controlled-drug discrepancy, nurse SOS, missed safety check, unsafe abort, interaction and allergy warnings, recalls, cold chain) reach **every plan including Lite**; a Basic organization's app is a safety-alert slice (ADR-033, ADR-025).
 - Nurses and aides have **no access to the physician's Lab results review queue**, enforced by the server (403); sample collection stays under home visits. This follows the scope-of-practice rule (H17).
 - Lab critical-value read-back: the acknowledger's note is stored (500 characters), never copied into notifications or audit text; acknowledgement is idempotent.
 - Home-visit arrival distance is recorded and shown to dispatchers and owners; it never blocks the nurse.

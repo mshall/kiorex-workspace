@@ -1,6 +1,6 @@
 # Staff app: role-by-role end-to-end report (21 Nov 2026)
 
-> **Scope.** Kiorly Team (repo `kiorly-team`, renamed from `kiorly-work` on 23 Nov 2026) for every Clinic, Pharmacy and Lab demo role, on the app routes (`/mobile/*`) **and** on the web (each product's web API, plus the staff app's Expo web build driven by Playwright). Seeded demo data only. Persona and login tables: [`DEMO_DATA.md`](../../DEMO_DATA.md) and `kiorly-team/DEMO_DATA.md`.
+> **Scope.** Kiorly, the staff app (named Kiorly Team when this report was written; repo `kiorly-team`, being renamed to `kiorly`; formerly `kiorly-work`) for every Clinic, Pharmacy and Lab demo role, on the app routes (`/mobile/*`) **and** on the web (each product's web API, plus the staff app's Expo web build driven by Playwright). Seeded demo data only. Persona and login tables: [`DEMO_DATA.md`](../../DEMO_DATA.md) and `kiorly-team/DEMO_DATA.md`.
 
 ## Result
 | Layer | Suite | Result |
@@ -57,7 +57,7 @@ Resolved since 21 Nov: automatic RTL reload verified on real iOS and Android dev
 2. A release (production) build and the language switch in Me were not run on a dev build.
 3. The seed Docker image has not been built (`docker build -f apps/api/Dockerfile.seed .` before the next deploy).
 4. Kiorex-side mirror of pharmacy orders and live lab bookings needs `KIOREX_MODE=real` flag polling (already on in `e2e/scripts/up.sh`; not exercised on a deployed stack).
-5. The app is still titled "Kiorly Team" until the mobile design pack is approved.
+5. The app is still titled "Kiorly" until the mobile design pack is approved.
 6. Real vendors for SMS/Email/WhatsApp/payments/consent/AI/storage: URLs and credentials only (see the provider guide).
 
 ## Not covered
