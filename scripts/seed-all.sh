@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Seeds the synthetic Egyptian demo dataset into the RUNNING local Kiorex v2 stack, in dependency order (DEV ONLY, see ../TEST_DATA.md):
-#   1 Passport accounts -> 2 Kiorly Clinic (+ Rev 2.3: Nurse edition tenants, physio, home visits, care plans, MAR) -> 3 Clinic Kiorly Team seed (Basic clinic, critical alerts) -> 4 Pharmacy (+ its seed:mobile) -> 5 Lab -> 6 Lab Kiorly Team seed (chain-lab / basic-lab, critical-lab order) -> 7 Kiorex provider sync -> 8 Kiorex platform (+ home bookings, safety feed)
-# Idempotent. The Kiorly Team seeds (db:seed:mobile; seed:mobile in Pharmacy) run right after their base demo seed and are idempotent (deterministic ids); `--reset` does not apply to them. `--reset` first removes the demo records only (never non-demo data; Pharmacy/Lab ledgers are append-only, see TEST_DATA.md).
+#   1 Passport accounts -> 2 Kiorly Clinic (+ Rev 2.3: Nurse edition tenants, physio, home visits, care plans, MAR) -> 3 Clinic Kiorly app seed (Basic clinic, critical alerts) -> 4 Pharmacy (+ its seed:mobile) -> 5 Lab -> 6 Lab Kiorly app seed (chain-lab / basic-lab, critical-lab order) -> 7 Kiorex provider sync -> 8 Kiorex platform (+ home bookings, safety feed)
+# Idempotent. The Kiorly app seeds (db:seed:mobile; seed:mobile in Pharmacy) run right after their base demo seed and are idempotent (deterministic ids); `--reset` does not apply to them. `--reset` first removes the demo records only (never non-demo data; Pharmacy/Lab ledgers are append-only, see TEST_DATA.md).
 # Prereq: stack up (e2e/scripts/up.sh [--build] [--seed]) so the base seeds + migrations exist.  Usage: scripts/seed-all.sh [--reset]
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -30,14 +30,14 @@ fi
 
 step "2/8 Kiorly Clinic: 3 organisations + Nurse-edition solo/agency tenants (db:seed:nurse is folded in), physio, home visits, care plans, MAR (clinics-management)"
 (cd "$ROOT/clinics-management" && DATABASE_URL="$(DBURL kiorly)" npm run db:seed:demo -w api -- $RESET)
-step "3/8 Kiorly Team seed, Clinic side: Basic (Lite) clinic, critical-vitals alert, critical lab result waiting for the doctor (clinics-management db:seed:mobile)"
+step "3/8 Kiorly app seed, Clinic side: Basic (Lite) clinic, critical-vitals alert, critical lab result waiting for the doctor (clinics-management db:seed:mobile)"
 (cd "$ROOT/clinics-management" && DATABASE_URL="$(DBURL kiorly)" npm run db:seed:mobile -w api)
-step "4/8 Kiorly Pharmacy (kiorly-pharmacy) + its Kiorly Team seed (Solo and Lite tenants, controlled-drug alerts)"
+step "4/8 Kiorly Pharmacy (kiorly-pharmacy) + its Kiorly app seed (Solo and Lite tenants, controlled-drug alerts)"
 (cd "$ROOT/kiorly-pharmacy" && DATABASE_URL="$(DBURL kiorly_pharmacy)" npm run seed:demo -w api -- $RESET)
 (cd "$ROOT/kiorly-pharmacy" && DATABASE_URL="$(DBURL kiorly_pharmacy)" npm run seed:mobile -w api)
 step "5/8 Kiorly Lab (kiorly-lab)"
 (cd "$ROOT/kiorly-lab" && DATABASE_URL="$(DBURL kiorly_lab)" npm run db:seed:demo -w api -- $RESET)
-step "6/8 Kiorly Team seed, Lab side: chain-lab (CHAIN) + basic-lab (LITE) tenants, critical-lab order (kiorly-lab db:seed:mobile)"
+step "6/8 Kiorly app seed, Lab side: chain-lab (CHAIN) + basic-lab (LITE) tenants, critical-lab order (kiorly-lab db:seed:mobile)"
 (cd "$ROOT/kiorly-lab" && DATABASE_URL="$(DBURL kiorly_lab)" npm run db:seed:mobile -w api)
 step "7/8 Kiorex provider sync from Kiorly (HMAC, via ops login)"
 node "$ROOT/scripts/ops-sync.mjs"

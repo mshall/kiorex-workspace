@@ -18,7 +18,7 @@ async function http(token: string | undefined, method: string, path: string, bod
   const text = await res.text(); let json: any; try { json = text ? JSON.parse(text) : null; } catch { json = text; }
   return { status: res.status, body: json };
 }
-/** What the Kiorly Team app sends. */
+/** What the Kiorly app sends. */
 const mob = (t: string, m: string, p: string, b?: unknown) => http(t, m, p, b, MOBILE);
 /** What the web app (:5192) sends: no client header. */
 const web = (t: string, m: string, p: string, b?: unknown) => http(t, m, p, b);
@@ -83,7 +83,7 @@ async function receive(drugId: string, lot: string, qty: number, expDays: number
 }
 const lotQty = async (lotId: string) => Number((await dbq(`select coalesce(sum("qtyDelta"),0)::int n from "StockMovement" where "lotId"=$1 and type not in ('RESERVE','RELEASE_RESERVATION')`, [lotId]))[0].n);
 
-describe('q. Kiorly Team pharmacy: role matrix (bootstrap per role, entitlement, scoping)', () => {
+describe('q. Kiorly app pharmacy: role matrix (bootstrap per role, entitlement, scoping)', () => {
   it('records modules / plan / entitlement for every demo login', () => {
     const rows = ALL_USERS.map((u) => `${u.padEnd(17)} ${boot[u].user.role.padEnd(15)} ${boot[u].org.plan.padEnd(10)} ent=${boot[u].entitlement.enabled} alertsOnly=${boot[u].safetyAlertsOnly} | ${mods(boot[u]).join(',')}`);
     console.log('\nROLE MATRIX\n' + rows.join('\n'));
