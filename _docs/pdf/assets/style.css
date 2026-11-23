@@ -294,3 +294,5 @@ figure.code pre{ color:#232852 }
 .hljs-title,.hljs-section,.hljs-function .hljs-title{ color:#0369A1 } .hljs-attr,.hljs-attribute,.hljs-name,.hljs-variable,.hljs-property{ color:#B45309 } .hljs-type,.hljs-class .hljs-title{ color:#0F766E }
 code.ic-code{ background:var(--acc-soft); color:var(--ink) }
 .lede:has(.callout){ border:0; background:none; padding:0; margin:0 0 4mm }
+
+.figcap{ break-after:avoid }

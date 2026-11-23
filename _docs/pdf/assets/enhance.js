@@ -191,7 +191,7 @@ window.kxEnhance = async function kxEnhance(cfg) {
         p.replaceWith(f); continue;
       }
     }
-    if (/^(Figure|Chart)\s*[—–:-]/i.test(t)) { p.classList.add('figcap'); const lab = /^Chart/i.test(t) ? 'Chart' : 'Figure'; p.innerHTML = `<span class="tag">${lab}</span>` + p.innerHTML.replace(/^(Figure|Chart)\s*[—–:-]\s*/i, ''); continue; }
+    if (/^(Figure|Chart)(\s*\d+)?\s*[—–:-]/i.test(t)) { p.classList.add('figcap'); const mm = /^(Figure|Chart)(\s*\d+)?/i.exec(t); const lab = (/^Chart/i.test(t) ? 'Chart' : 'Figure') + (mm[2] ? ' ' + mm[2].trim() : ''); p.innerHTML = `<span class="tag">${lab}</span>` + p.innerHTML.replace(/^(Figure|Chart)(\s*\d+)?\s*[—–:-]\s*/i, ''); continue; }
     // short "Label. Sentence" lead-ins (Problem. Solution. Why now.)
     const lead = /^([A-Z][A-Za-z']*(?: [A-Za-z']+){0,2})\.\s+(?=[A-Z])/.exec(t);
     if (lead && lead[1].length <= 22 && p.firstChild && p.firstChild.nodeType === 3 && p.firstChild.nodeValue.startsWith(lead[1] + '.')) {
@@ -271,7 +271,7 @@ window.kxEnhance = async function kxEnhance(cfg) {
   if (mer.length && window.mermaid) {
     window.mermaid.initialize({
       startOnLoad: false, securityLevel: 'loose', theme: 'base', fontFamily: 'Inter, "IBM Plex Sans Arabic", sans-serif',
-      themeVariables: { primaryColor: '#F1F1F9', primaryTextColor: '#1A1D36', primaryBorderColor: '#3730A3', lineColor: '#535B7B', secondaryColor: '#EDF5F8', tertiaryColor: '#FDF5F4', noteBkgColor: '#FEF3C7', noteBorderColor: '#B45309', actorBkg: '#3730A3', actorTextColor: '#FFFFFF', actorBorder: '#221E62', signalColor: '#3F4663', activationBkgColor: '#CFE2ED', fontSize: '13px' },
+      themeVariables: { primaryColor: '#F1F1F9', primaryTextColor: '#1A1D36', primaryBorderColor: '#3730A3', lineColor: '#535B7B', secondaryColor: '#EDF5F8', tertiaryColor: '#FDF5F4', noteBkgColor: '#FEF3C7', noteBorderColor: '#B45309', actorBkg: '#3730A3', actorTextColor: '#FFFFFF', actorBorder: '#221E62', signalColor: '#3F4663', activationBkgColor: '#CFE2ED', fontSize: '16px' },
       flowchart: { htmlLabels: false, curve: 'basis', padding: 12 }, sequence: { useMaxWidth: true, mirrorActors: false },
     });
     let n = 0;
@@ -281,7 +281,7 @@ window.kxEnhance = async function kxEnhance(cfg) {
     }
     for (const s of $$('.mermaid-out svg')) {
       const vb = (s.getAttribute('viewBox') || '').split(/\s+/).map(Number); const w = vb[2] || 600;
-      s.removeAttribute('height'); s.removeAttribute('width'); s.style.maxWidth = 'none'; s.style.width = Math.min(w * 0.8, 640) + 'px'; s.style.height = 'auto'; s.style.maxHeight = '215mm';
+      s.removeAttribute('height'); s.removeAttribute('width'); s.style.maxWidth = 'none'; s.style.width = Math.min(w * 0.72, 640) + 'px'; s.style.height = 'auto'; s.style.maxHeight = '215mm';
     }
   }
 

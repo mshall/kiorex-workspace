@@ -373,6 +373,18 @@
         "_docs/rev23/KX-25_Document_Storage_Growth_and_Retention.md",
         "_docs/KX-25_Document_Storage_Growth_and_Retention.md"
       ]
+    },
+    {
+      "code": "KX-26",
+      "file": "KX-26_System_Architecture_Reference",
+      "title": "System Architecture Reference",
+      "subtitle": "The whole Kiorex and Kiorly system on one set of diagrams: context, containers, components, data, identity, integration, hosting, security and resilience.",
+      "family": "platform",
+      "group": "Architecture and platform",
+      "sources": [
+        "_docs/rev23/KX-26_System_Architecture_Reference.md",
+        "_docs/KX-26_System_Architecture_Reference.md"
+      ]
     }
   ]
 }
