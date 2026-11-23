@@ -1,17 +1,17 @@
 # KX01 — Decision Log & Architecture Decision Records
 Source: 1tQ5iEGdC3nQkK9TULztjRptMjb2KS9P4
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; supersedes KX01 Rev 2.2, 19 Nov 2026; this update adds ADR-033 to ADR-035)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; supersedes KX01 Rev 2.2, 19 Nov 2026; this update adds ADR-033 to ADR-036)
 
 > Cleaned from Drive text extraction; symbols restored where obvious; headers/footers removed. Owner: Chief Software Architect. Audience: Founders, engineering leads, Cursor sessions.
 
-Subtitle: The decisions that shape Kiorex v2 — what was decided, why, what it costs, and how to change it. Tags: 35 ADRs · Rationale & consequences · Supersession map · Open questions.
+Subtitle: The decisions that shape Kiorex v2 — what was decided, why, what it costs, and how to change it. Tags: 36 ADRs · Rationale & consequences · Supersession map · Open questions.
 
 ## WHAT CHANGED IN REV 2.3
 New ADR-029 (profession model), ADR-030 (service location / home visits), ADR-031 (Kiorly Nurse edition), ADR-032 (individual nurses and agencies) — all Accepted 20 Nov 2026. ADR-002 consequence extended to Kiorly Nurse; ADR-024 launch-locked list extended. Open questions Q7–Q13 added.
 
 ## 01 How decisions are recorded
 Short, numbered, immutable. Superseding a decision means a new ADR that references the old one. Process: Context (problem + evidence) → Options (2 real alternatives) → Decision (one sentence) → Consequences (cost · risk · rollback) → Status (Proposed → Accepted → Superseded). Accepted decisions are binding for all volumes and code. Proposed are validated in pilot. A volume that contradicts an Accepted ADR is wrong; raise a revision. ADR IDs are referenced in commit messages and Docs/.
-Counters: ACCEPTED 31 (binding) · PROPOSED 4 (ADR-033 and ADR-035 added 23 Nov; validate in pilot) · V2-DRAFT ITEMS SUPERSEDED 9 (see §04) · OPEN QUESTIONS 17 (owners named).
+Counters: ACCEPTED 31 (binding) · PROPOSED 5 (ADR-033, ADR-035 and ADR-036 added 23 Nov; validate in pilot) · V2-DRAFT ITEMS SUPERSEDED 9 (see §04) · OPEN QUESTIONS 17 (owners named).
 
 ## 02 Decision register
 | ID | Decision | Status | Area |
@@ -51,6 +51,7 @@ Counters: ACCEPTED 31 (binding) · PROPOSED 4 (ADR-033 and ADR-035 added 23 Nov;
 | ADR033 | One Kiorly staff app with Clinic, Nurse, Pharmacy and Lab entries; tiered mobile entitlements; safety never paywalled | Proposed | Distribution / Clinical safety |
 | ADR034 | The notification layer is a shared package inside each product, not a central service | Accepted | Architecture / Platform |
 | ADR035 | Every outbound provider follows one adapter contract: port, mock, real, env, retries, idempotency, HMAC webhooks, fail-fast | Proposed | Platform / Security |
+| ADR036 | Document storage: lifecycle rules, per-plan quotas, server-side processing, retention with legal hold, presigned direct upload (KX-25) | Proposed | Infrastructure |
 
 ## 03 Decisions in detail
 **ADR001** Accepted · Strategy. Why: Decouples failure domains and lets each product be sold alone. Replaces the 34-module all-in-one model. Consequence: Separate repos, deployables and databases per product.
@@ -135,3 +136,4 @@ Counters: ACCEPTED 31 (binding) · PROPOSED 4 (ADR-033 and ADR-035 added 23 Nov;
 - Supersession map additions: ADR-033 clarifies ADR-018 and extends ADR-025; ADR-034 sits under the ADR-004 shared-package principle and the "no service" row of §04; ADR-035 implements founder decision FD-04.
 - §04 gains two rows; §05 gains Q14 to Q17.
 - Not verified: founder sign-off of ADR-033 and ADR-035 (no record found); the Drive KX24 draft's numbering.
+- Added ADR-036 (Proposed): document storage growth, retention and quotas (KX-25). Not verified: founder sign-off, DPO confirmation of retention periods.

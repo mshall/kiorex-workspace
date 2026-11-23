@@ -256,7 +256,11 @@ SMS, email, WhatsApp and payment adapters follow the provider contract (ADR-035)
 
 > **Warning** Do not push branch `kiorex`: a push there used to trigger a deploy workflow (FD-18).
 
+## 14 Document storage, retention and quotas (Proposed, 23 Nov 2026)
+Today patient documents have a 15 MB per-file cap and client-side image shrinking, but no total storage limit, no lifecycle rule and no retention rule (KX-25 §02). Proposed: per-plan storage limits with 80 percent warning and a grace band, server-side compression and thumbnails, soft delete with a reason, legal hold, and retention periods per market and class (NEEDS_HUMAN: DPO). Documents list views show thumbnails; originals open on click. Detail and build prompt: KX-25. Decision: ADR-036 (Proposed).
+
 ## What changed in this revision (23 Nov 2026)
 - Added §13: Kiorly Team staff app (Clinic and Nurse entries), nurse Lab-results restriction, dispatcher rights, providers, demo data and web changes, each tagged Done, Planned or Blocked.
 - Plans, money engine, Kiorex connector and professions sections are unchanged.
 - Not verified: the 2 failing staff-app Jest tests (`lite-request.test.tsx`, 23 Nov re-run), real push delivery, a release build, a physical device.
+- Added §14: document storage growth, quotas and retention (Proposed, KX-25).

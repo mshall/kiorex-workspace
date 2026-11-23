@@ -361,6 +361,18 @@
         "_docs/rev23/KX-24_Notifications_and_Messaging_Architecture.md",
         "_docs/KX-24_Notifications_and_Messaging_Architecture.md"
       ]
+    },
+    {
+      "code": "KX-25",
+      "file": "KX-25_Document_Storage_Growth_and_Retention",
+      "title": "Document Storage Growth and Retention",
+      "subtitle": "How patient documents stay affordable and lawful as they grow: lifecycle rules, quotas, compression, retention and direct uploads.",
+      "family": "clinic",
+      "group": "Architecture and platform",
+      "sources": [
+        "_docs/rev23/KX-25_Document_Storage_Growth_and_Retention.md",
+        "_docs/KX-25_Document_Storage_Growth_and_Retention.md"
+      ]
     }
   ]
 }

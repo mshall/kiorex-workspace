@@ -448,4 +448,4 @@ The matrix above was generated on 20 Nov 2026 and was not re-run. Items that app
 | Real push delivery (APNs, FCM) | BLOCKED-HUMAN | keys and EAS project id |
 | Staff-app Jest | 165 of 167 pass on the 23 Nov re-run (2 failing in `lite-request.test.tsx`) | re-run 23 Nov |
 | Communications control plane (KX-24 §10) | MISSING (Proposed) | not built |
-
+| Document storage growth: lifecycle, quotas, compression, retention (KX-25, ADR-036) | MISSING (Proposed); build prompt written | `_docs/prompts/CURSOR_PROMPT_document_storage_growth.md` |

@@ -106,3 +106,6 @@ Heatmap (L × I, axes 1–5): I5: R5 R9 R15 at L2, R1 R14 at L3; I4: R6 R8 at L2
 - Consent and audit exports demonstrable per tenant.
 - Gate evidence recorded for every launch-locked flag that is effective (GHV1, GHV2, GPR1, GKN1, GKN2 and earlier gates).
 - Provider verification sample audit: 20 random LIVE providers per profession per quarter.
+
+## 07 Medical document retention and legal hold (Proposed, 23 Nov 2026)
+Deleting a medical document currently hard-deletes it. Proposed control: soft delete with a mandatory reason, retention floor per market and document class (proposal: clinical 10 years from last clinical activity, financial proofs 7 years; NEEDS_HUMAN: DPO to confirm), legal hold that blocks purge, a nightly purge job that keeps only an anonymous audit record (ids, size, hash, actor, reason), and erasure requests that create a DPO task and never delete inside the retention period. EXIF and GPS data are stripped from uploaded photos. Detail: KX-25 §07.

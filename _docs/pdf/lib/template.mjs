@@ -30,7 +30,7 @@ function mix(a, b, t) {
 export function buildHtml({ doc, fam, parsed, brandDir, fontsDir, css, js, built, srcRel }) {
   const m = parsed.meta;
   const read = (f) => fs.readFileSync(path.join(brandDir, 'dist/svg', f), 'utf8').replace(/<\?xml[^>]*\?>/, '');
-  const lockup = read(`${fam.logo}-lockup-inverse.svg`);
+  const lockup = read(`${fam.logo}-lockup.svg`);
   const mark = read('kiorex-mark-inverse.svg');
   const rev = m.revisionLabel || doc.revision || 'Rev 2.3';
   const status = m.status || 'Reference';
@@ -59,8 +59,8 @@ export function buildHtml({ doc, fam, parsed, brandDir, fontsDir, css, js, built
 <style>${fontFaces(fontsDir)}</style><style>${css}</style></head>
 <body style="${familyVars(fam)};--mark:url('data:image/svg+xml;base64,${Buffer.from(mark).toString('base64')}')">
 <section class="cover" id="cover">
-  <div class="glow"></div><div class="glow2"></div><div class="grid"></div>
-  <div class="chev">${mark}</div>
+  <div class="orb"></div><div class="band"></div>
+  <div class="chev">${mark}</div><div class="bandtxt">KIOREX</div>
   <div class="top"><div class="lockup">${lockup}</div><div class="fam">${esc(fam.label)}</div></div>
   <div class="mid">
     <div class="eyebrow">${esc(eyebrow)}</div>

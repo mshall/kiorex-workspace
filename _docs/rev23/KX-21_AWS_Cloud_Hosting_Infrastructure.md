@@ -557,3 +557,14 @@ Every external figure in this document traces to one of these sources; internal 
 
 - mshall/clinics-management: `infra/src/kiorly-clinics-management-stack.ts`, `infra/src/data-cells.ts`, `platform/data-cells.json`, `platform/waf-rules.json`, `scripts/backup-restore-drill.sh`, `Docs/AWS_Cloud_Deployment_Guide.md` (commit 6b24a79).
 - Cost ranges are planning estimates by the author; validate with the AWS Pricing Calculator (eu-central-1) before budgeting.
+
+## 20 Storage lifecycle and cost model (Proposed, 23 Nov 2026)
+| Rule on the uploads bucket | Default |
+|---|---|
+| Abort incomplete multipart uploads | 7 days |
+| Expire non-current versions (keep newest 3) | 90 days |
+| Tier medical prefixes to Intelligent-Tiering (objects of 128 KB or more) | 30 days |
+| Expire `imports/` staging objects | 30 days |
+| Current medical documents | never expired by lifecycle |
+
+Also: CORS driven by an allowed-origins variable (needed for presigned uploads), a CloudWatch alarm when stored bytes grow more than 30 percent in 7 days, optional S3 inventory. Cost example: 1,000 clinics at 5 GB each is 5 TB; Standard storage is roughly USD 115 a month, and with tiering plus image compression the estate trends toward USD 40 to 60 a month. Assumptions and prices must be re-checked against the current AWS price list. Detail: KX-25 §04 and §09.

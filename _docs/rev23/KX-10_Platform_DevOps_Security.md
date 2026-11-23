@@ -155,7 +155,11 @@ Flags are production controls. They are tested, audited and owned like code.
 
 STRIDE additions: spoofed vendor receipt (HMAC plus timestamp), replayed receipt (event id de-duplication), information disclosure through a message body (declared params plus PHI guard), repudiation (one audit record per attempt).
 
+## 09 Document processing pipeline and job queue (Proposed, 23 Nov 2026)
+New worker inside the existing API process, no new infrastructure: a database table `StorageJob` read with `FOR UPDATE SKIP LOCKED` (kinds PROCESS_DOCUMENT, PURGE, RECONCILE, BACKFILL), `sharp` for images, `qpdf` for lossless PDF optimisation in a sandboxed child process with a 60 s timeout and memory limit, magic-byte validation, EXIF and GPS removal, and a malware-scan extension point (GuardDuty for S3). Observability: queue depth, oldest job age, savings percent, quota rejections, presign issues. Flags default to off in production. Detail: KX-25 §06.
+
 ## What changed in this revision (23 Nov 2026)
 - Revision header moved from Rev 2.2 (not re-issued on 20 Nov) to the 23 Nov 2026 update; added §08 provider security, secrets and mobile.
 - Platform baseline, delivery pipeline, observability, resilience and the pen-test and restore-drill items (NH017, NH018) are unchanged and still open.
 - Not verified: AWS secret injection, real-vendor webhook signature formats, device hardening.
+- Added §09: document processing pipeline and job queue (Proposed, KX-25).

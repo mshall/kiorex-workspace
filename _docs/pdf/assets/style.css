@@ -39,29 +39,6 @@ body{ margin:0; font-family:var(--f-body); font-size:9.5pt; line-height:1.55; co
 .str-sec{ string-set:sec content(text) }
 .hidden-strings{ height:0; overflow:hidden; font-size:0; line-height:0 }
 
-/* ---------- cover ---------- */
-.cover{ position:relative; width:210mm; height:296.5mm; overflow:hidden; color:#fff; background:linear-gradient(158deg,var(--deep) 0%,var(--base) 58%,var(--acc) 135%); break-after:page }
-.cover .glow{ position:absolute; right:-55mm; top:-45mm; width:190mm; height:190mm; border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,.20),rgba(255,255,255,0) 66%) }
-.cover .glow2{ position:absolute; left:-70mm; bottom:-60mm; width:200mm; height:200mm; border-radius:50%; background:radial-gradient(circle,var(--acc2),rgba(255,255,255,0) 68%); opacity:.28 }
-.cover .grid{ position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px); background-size:11mm 11mm; -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,0) 78%); mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,0) 78%) }
-.cover .chev{ position:absolute; right:-24mm; bottom:34mm; width:130mm; opacity:.13 }
-.cover .top{ position:absolute; left:18mm; right:18mm; top:17mm; display:flex; align-items:center; justify-content:space-between }
-.cover .top .lockup{ width:70mm } .cover .top .lockup svg{ width:100%; height:auto; display:block }
-.cover .fam{ font:600 7.6pt/1 var(--f-body); letter-spacing:.16em; text-transform:uppercase; padding:2.2mm 3.6mm; border-radius:20mm; border:.7pt solid rgba(255,255,255,.45); background:rgba(255,255,255,.1) }
-.cover .mid{ position:absolute; left:18mm; right:26mm; top:76mm }
-.cover .eyebrow{ font:600 9pt/1.2 var(--f-body); letter-spacing:.2em; text-transform:uppercase; color:var(--acc2); margin-bottom:6mm }
-.cover .code{ display:inline-block; font:700 62pt/0.95 var(--f-head); letter-spacing:-.01em; color:#fff; margin:0 0 5mm -1mm }
-.cover .code b{ color:var(--pulse); font-weight:700 }
-.cover h1{ font:600 31pt/1.08 var(--f-head); margin:0 0 6mm; letter-spacing:-.012em; max-width:160mm; color:#fff;  }
-.cover .rule{ width:26mm; height:1.6mm; border-radius:1mm; background:var(--pulse); margin:0 0 6mm }
-.cover .sub{ font:400 12.2pt/1.5 var(--f-body); color:rgba(255,255,255,.86); max-width:150mm }
-.cover .meta{ position:absolute; left:18mm; right:18mm; bottom:26mm; display:grid; grid-template-columns:1fr 1.25fr 1fr 1.2fr; gap:0; border:.7pt solid rgba(255,255,255,.28); border-radius:4mm; background:rgba(10,10,40,.32); overflow:hidden }
-.cover .meta>div{ padding:4.2mm 5mm; border-left:.7pt solid rgba(255,255,255,.2) } .cover .meta>div:first-child{ border-left:0 }
-.cover .meta .k{ font:600 6.4pt/1 var(--f-body); letter-spacing:.16em; text-transform:uppercase; color:var(--acc2); margin-bottom:2.2mm }
-.cover .meta .v{ font:500 9.6pt/1.25 var(--f-body); color:#fff }
-.cover .chip{ display:inline-flex; align-items:center; gap:1.6mm; font:700 7.6pt/1 var(--f-body); letter-spacing:.06em; text-transform:uppercase; padding:1.5mm 3mm; border-radius:20mm; background:#fff; color:var(--deep) }
-.cover .chip i{ width:2mm; height:2mm; border-radius:50%; background:#22C55E; display:inline-block }
-.cover .foot{ position:absolute; left:18mm; right:18mm; bottom:11mm; display:flex; justify-content:space-between; font:400 7pt/1 var(--f-body); color:rgba(255,255,255,.62); letter-spacing:.03em }
 
 /* ---------- control page ---------- */
 .control{ break-before:page; break-after:page }
@@ -92,19 +69,6 @@ body{ margin:0; font-family:var(--f-body); font-size:9.5pt; line-height:1.55; co
 .toc li.l2 .tn{ font-size:11pt }
 .toc li.l3{ padding-left:10mm } .toc li.l3 .tt{ font:400 8.6pt/1.55 var(--f-body); color:var(--n700) } .toc li.l3 .tn,.toc li.l3 a::after{ font-weight:400; font-size:8.2pt } .toc li.l3 .tl{ border-bottom-color:var(--n200) }
 
-/* ---------- divider ---------- */
-.divider{ position:relative; width:210mm; height:296.5mm; overflow:hidden; color:#fff; background:linear-gradient(162deg,var(--deep) 0%,var(--base) 62%,var(--acc) 150%); break-before:page; break-after:page }
-.divider::before{ content:""; position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px); background-size:11mm 11mm; -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.8),rgba(0,0,0,0) 70%); mask-image:linear-gradient(180deg,rgba(0,0,0,.8),rgba(0,0,0,0) 70%) }
-.divider::after{ content:""; position:absolute; left:0; right:0; bottom:44mm; height:1.4mm; background:linear-gradient(90deg,var(--pulse),rgba(255,255,255,0)) }
-.divider .d-top{ position:absolute; left:20mm; top:18mm } .divider .d-eyebrow{ font:600 8pt/1 var(--f-body); letter-spacing:.2em; text-transform:uppercase; color:var(--acc2) }
-.divider .d-num{ position:absolute; left:14mm; top:34mm; font:700 230pt/1 var(--f-head); color:rgba(255,255,255,.1); letter-spacing:-.04em }
-.divider .d-main{ position:absolute; left:20mm; right:26mm; top:158mm }
-.divider h2{ font:600 31pt/1.1 var(--f-head); color:#fff; margin:0 0 7mm; letter-spacing:-.012em; border:0; padding:0; display:block }
-.divider h2::before{ content:none !important }
-.divider .d-list{ list-style:none; margin:0 0 7mm; padding:0; columns:2; column-gap:10mm; counter-reset:d }
-.divider .d-list li{ counter-increment:d; font:400 9.6pt/1.35 var(--f-body); color:rgba(255,255,255,.88); padding:1.6mm 0 1.6mm 8mm; position:relative; break-inside:avoid; border-top:.5pt solid rgba(255,255,255,.2) }
-.divider .d-list li::before{ content:counter(d,decimal-leading-zero); position:absolute; left:0; top:1.9mm; font:700 7.6pt/1.4 var(--f-head); color:var(--pulse) }
-.divider .d-stats{ font:600 7.6pt/1 var(--f-body); letter-spacing:.14em; text-transform:uppercase; color:var(--acc2) }
 
 /* ---------- chapters and headings ---------- */
 .chapter-body{ }
@@ -236,3 +200,97 @@ thead{ break-after:avoid } tbody tr:first-child{ break-before:avoid } tbody tr:n
 .adrcard .lbl{ font:700 6.8pt/1 var(--f-body); letter-spacing:.1em; text-transform:uppercase; color:var(--acc-text); margin-right:.5mm }
 
 .swatch{ display:inline-block; width:3.2mm; height:3.2mm; border-radius:.9mm; border:.5pt solid rgba(0,0,0,.2); margin-right:1.6mm; vertical-align:-.5mm }
+
+/* =====================================================================
+   LIGHT THEME v2 "Indigo Daylight" (Rev 2.4 pipeline)
+   White paper, dark-indigo ink, family accent for structure, coral pulse for emphasis.
+   ===================================================================== */
+:root{ --paper:#FFFFFF; --ink:#11102E; --shadow:0 .6mm 2.2mm rgba(34,30,98,.10), 0 .2mm .6mm rgba(34,30,98,.08) }
+
+/* ---------- cover ---------- */
+.cover{ position:relative; width:210mm; height:296.5mm; overflow:hidden; color:var(--ink); background:linear-gradient(180deg,#FFFFFF 0%,#F4F6FC 100%); break-after:page }
+.cover .band{ position:absolute; top:0; right:0; bottom:0; width:58mm; background:linear-gradient(172deg,#11102E 0%,#221E62 58%,#3730A3 135%) }
+.cover .band::before{ content:""; position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.22) 1px,transparent 1.4px); background-size:5mm 5mm; -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,0) 70%); mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,0) 70%) }
+.cover .chev{ position:absolute; right:-44mm; top:92mm; width:150mm; opacity:.16; clip-path:inset(0 0 0 48mm) }
+.cover .chev svg{ width:100%; height:auto; display:block }
+.cover .pulse{ display:none }
+.cover .orb{ position:absolute; left:-40mm; bottom:-52mm; width:150mm; height:150mm; border-radius:50%; background:radial-gradient(circle,var(--acc-soft),rgba(255,255,255,0) 68%) }
+.cover .top{ position:absolute; left:20mm; right:78mm; top:18mm; display:flex; align-items:center; justify-content:space-between }
+.cover .top .lockup{ width:66mm } .cover .top .lockup svg{ width:100%; height:auto; display:block }
+.cover .fam{ font:600 7.4pt/1 var(--f-body); letter-spacing:.16em; text-transform:uppercase; padding:2.2mm 3.6mm; border-radius:20mm; border:.8pt solid var(--acc); color:var(--acc-text); background:#fff }
+.cover .mid{ position:absolute; left:20mm; right:80mm; top:74mm }
+.cover .eyebrow{ display:inline-flex; align-items:center; gap:2.4mm; font:700 8.4pt/1.2 var(--f-body); letter-spacing:.2em; text-transform:uppercase; color:var(--acc-text); margin-bottom:6mm }
+.cover .eyebrow::before{ content:""; width:9mm; height:.9mm; background:var(--pulse); border-radius:1mm }
+.cover .code{ display:block; font:700 64pt/0.95 var(--f-head); letter-spacing:-.015em; color:var(--ink); margin:0 0 6mm -1mm }
+.cover .code b{ color:var(--pulse); font-weight:700 }
+.cover h1{ font:600 29pt/1.1 var(--f-head); margin:0 0 6mm; letter-spacing:-.012em; color:var(--ink) }
+.cover .rule{ width:26mm; height:1.6mm; border-radius:1mm; background:linear-gradient(90deg,var(--acc),var(--pulse)); margin:0 0 6mm }
+.cover .sub{ font:400 11.6pt/1.55 var(--f-body); color:var(--n600); max-width:112mm }
+.cover .meta{ position:absolute; left:20mm; right:78mm; bottom:30mm; display:grid; grid-template-columns:1fr 1.25fr; gap:3mm }
+.cover .meta>div{ background:#fff; border:.7pt solid var(--n200); border-top:1.2mm solid var(--acc); border-radius:2.6mm; padding:3.2mm 4mm; box-shadow:var(--shadow) }
+.cover .meta .k{ font:700 6.2pt/1 var(--f-body); letter-spacing:.16em; text-transform:uppercase; color:var(--acc-text); margin-bottom:1.8mm }
+.cover .meta .v{ font:600 9.4pt/1.25 var(--f-body); color:var(--ink) }
+.cover .chip{ display:inline-flex; align-items:center; gap:1.6mm; font:700 7.4pt/1 var(--f-body); letter-spacing:.06em; text-transform:uppercase; padding:1.5mm 3mm; border-radius:20mm; background:#E7F6EC; color:#15803D }
+.cover .chip i{ width:2mm; height:2mm; border-radius:50%; background:#16A34A; display:inline-block }
+.cover .foot{ position:absolute; left:20mm; right:78mm; bottom:13mm; display:flex; justify-content:space-between; font:500 7pt/1 var(--f-body); color:var(--n500); letter-spacing:.03em; padding-top:3mm; border-top:.6pt solid var(--n200) }
+.cover .bandtxt{ position:absolute; right:0; bottom:16mm; width:58mm; text-align:center; font:700 6.6pt/1 var(--f-body); letter-spacing:.3em; text-transform:uppercase; color:rgba(255,255,255,.7) }
+
+/* ---------- chapter divider ---------- */
+.divider{ position:relative; width:210mm; height:296.5mm; overflow:hidden; color:var(--ink); background:linear-gradient(180deg,#FFFFFF 0%,#F4F6FC 100%); break-before:page; break-after:page }
+.divider::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:16mm; background:linear-gradient(180deg,#11102E,#221E62 62%,#3730A3) }
+.divider::after{ content:""; position:absolute; left:16mm; right:0; bottom:44mm; height:1.2mm; background:linear-gradient(90deg,var(--pulse),rgba(255,255,255,0)) }
+.divider .d-top{ position:absolute; left:32mm; top:20mm } .divider .d-eyebrow{ font:700 8pt/1 var(--f-body); letter-spacing:.22em; text-transform:uppercase; color:var(--acc-text) }
+.divider .d-num{ position:absolute; left:26mm; top:36mm; font:700 220pt/1 var(--f-head); letter-spacing:-.04em; color:var(--acc); opacity:.13 }
+.divider .d-main{ position:absolute; left:32mm; right:24mm; top:156mm }
+.divider h2{ font:600 30pt/1.1 var(--f-head); color:var(--ink); margin:0 0 7mm; letter-spacing:-.012em; border:0; padding:0; display:block }
+.divider h2::before{ content:none !important }
+.divider .d-list{ list-style:none; margin:0 0 7mm; padding:0; columns:2; column-gap:8mm; counter-reset:d }
+.divider .d-list li{ counter-increment:d; font:500 9.4pt/1.35 var(--f-body); color:var(--n800); padding:2mm 0 2mm 9mm; position:relative; break-inside:avoid; border-top:.6pt solid var(--n200) }
+.divider .d-list li::before{ content:counter(d,decimal-leading-zero); position:absolute; left:0; top:2.3mm; font:700 8pt/1.4 var(--f-head); color:var(--acc-text) }
+.divider .d-stats{ font:700 7.4pt/1 var(--f-body); letter-spacing:.14em; text-transform:uppercase; color:var(--n500) }
+.divider .d-mark{ position:absolute; right:-16mm; bottom:30mm; width:120mm; height:80mm; background:var(--mark) no-repeat center/contain; opacity:.0 }
+
+/* ---------- running header and footer ---------- */
+@page body{
+  @top-left{ color:var(--ink) !important; font-weight:700 !important; border-bottom:1.2pt solid var(--acc) !important }
+  @top-right{ border-bottom:1.2pt solid var(--n200) !important }
+  @bottom-right{ color:var(--ink) !important }
+}
+
+/* ---------- headings and text ---------- */
+.page-title{ color:var(--ink) }
+.banner{ border-image:linear-gradient(90deg,var(--acc),var(--n200) 70%) 1 }
+.banner .b-num{ background:linear-gradient(145deg,#11102E,#3730A3); box-shadow:var(--shadow) }
+.banner h2,.chapter.nonum>h2,h3,.cap-name,.adrcard .atitle{ color:var(--ink) }
+h3{ border-left:1.4mm solid var(--acc); background:linear-gradient(90deg,var(--acc-soft),rgba(255,255,255,0) 70%); padding:1.2mm 0 1.2mm 3.2mm; border-radius:0 1.4mm 1.4mm 0 }
+h4{ color:var(--acc-text) }
+.lede{ background:linear-gradient(90deg,var(--acc-soft),#fff 85%); border-left:1.4mm solid var(--pulse); padding:3mm 4mm 2mm 5mm; border-radius:0 2.6mm 2.6mm 0; color:var(--n800) }
+
+/* ---------- tables: light header, indigo rule ---------- */
+table{ border:.7pt solid var(--n200); border-radius:2.6mm; box-shadow:var(--shadow); background:#fff }
+th{ background:var(--acc-soft); color:var(--ink); border-bottom:1.5pt solid var(--acc); font-weight:700 }
+tbody tr:nth-child(even) td{ background:#F8F9FE }
+td{ border-top:.5pt solid var(--n100) }
+td.first{ color:var(--ink) }
+
+/* ---------- KPI cards ---------- */
+.kpi{ box-shadow:var(--shadow); border:.7pt solid var(--n200); background:#fff }
+.kpi::before{ height:1.6mm; background:linear-gradient(90deg,#221E62,var(--acc),var(--pulse)) }
+.kpi .kv{ color:var(--ink) }
+
+/* ---------- callouts, cards ---------- */
+.callout{ box-shadow:var(--shadow); border:.6pt solid rgba(17,16,46,.06); border-left:1.4mm solid var(--c) }
+.caprow,.adrcard,.edges,ol.timeline>li,.diagram{ box-shadow:var(--shadow) }
+.pullquote{ box-shadow:var(--shadow); background:linear-gradient(90deg,var(--acc-soft),#fff 90%) }
+
+/* ---------- code: light editor look ---------- */
+figure.code{ background:#F7F8FD; border:.7pt solid var(--n200); border-left:1.4mm solid var(--acc); border-radius:0 3mm 3mm 0; box-shadow:var(--shadow) }
+figure.code figcaption{ background:var(--n100); border-bottom:.6pt solid var(--n200) }
+.dots i{ opacity:.9 }
+.lang{ color:var(--acc-text) }
+figure.code pre{ color:#232852 }
+.hljs-comment,.hljs-quote{ color:#7B83A8 } .hljs-keyword,.hljs-selector-tag,.hljs-literal,.hljs-built_in{ color:#4338CA }
+.hljs-string,.hljs-doctag,.hljs-regexp{ color:#15803D } .hljs-number,.hljs-symbol,.hljs-bullet{ color:#C2410C }
+.hljs-title,.hljs-section,.hljs-function .hljs-title{ color:#0369A1 } .hljs-attr,.hljs-attribute,.hljs-name,.hljs-variable,.hljs-property{ color:#B45309 } .hljs-type,.hljs-class .hljs-title{ color:#0F766E }
+code.ic-code{ background:var(--acc-soft); color:var(--ink) }
+.lede:has(.callout){ border:0; background:none; padding:0; margin:0 0 4mm }

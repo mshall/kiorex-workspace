@@ -101,3 +101,6 @@ Flat fee per attended new patient for clinics (ADR007).
 - Annual indexation review each January against Egyptian inflation and FX; founding locks honoured.
 - Market 2 pricing set from local willingness to pay, not FX conversion; GCC test point ~3x Egypt in EGP-equivalent.
 - Every quote and invoice shows currency, VAT and terms; VAT rates from market pack (SaaS 14% pending NH001).
+
+## 08 Storage limits and storage packs (Proposed, 23 Nov 2026)
+Storage becomes a metered plan limit (a gauge, not a monthly counter). Proposed defaults: Lite 2 GB, Pro 20 GB, Clinic 100 GB, Enterprise 1 TB, each overridable per tenant. Extra storage is sold as packs (price to be set by the CRO; NEEDS_HUMAN). The 80 percent warning and the grace band follow the existing usage-warning pattern; downloads, exports and deletes are never blocked. Cost rationale and phases: KX-25 §05 and §09.

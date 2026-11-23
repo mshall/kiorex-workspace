@@ -10,7 +10,7 @@ Subtitle: One ecosystem, two brands, five products — how Kiorex and Kiorly dec
 Kiorly suite adds Kiorly Nurse (an edition of Kiorly Clinic, ADR-031; providers now include physiotherapists and nurses, ADR-029). Home visits by doctors, physiotherapists and nurses become part of the ecosystem (ADR-030); new principle P12. Document map adds KX-23 Kiorly Nurse PRD (24 volumes).
 
 ## Key numbers (verified 23 Nov 2026)
-- Reference set: **25 volumes** (KX-00 to KX-24); decision log ADR-001 to ADR-035 (31 Accepted, 4 Proposed, see KX-01).
+- Reference set: **26 volumes** (KX-00 to KX-25); decision log ADR-001 to ADR-036 (31 Accepted, 5 Proposed, see KX-01).
 - Code: **7 repositories** plus the workspace (contracts, platform, account, clinic, pharmacy, lab, kiorly-team). Commits since 19 Nov 2026 (git log of the local clones): contracts 23, platform 112, account 48, clinics-management 322 (branch kiorex, includes merges from main), pharmacy 60, lab 69, kiorly-team 19, workspace 34.
 - Contracts `@kiorex/contracts` **1.7.0**; notification layer tests 60, 100 % coverage of `src/notify`.
 - Provider adapters: **8 kinds** (SMS, Email, WhatsApp, Payment, Push, Storage, Consent, AI), mock by default, real by configuration; **0** real vendors contacted.
@@ -129,6 +129,7 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 | Provider adapters (mock and real, all backends) | Done | Tested against a local fake server only |
 | Notification layer (`@kiorex/contracts/notify` 1.7.0) | Done in platform; Planned in Passport, Lab, Pharmacy, Clinic | KX-24 §11 |
 | Communications control plane (runtime templates and routing) | Planned (Proposed) | KX-24 §10 |
+| Document storage growth: lifecycle, quotas, compression, retention | Planned (Proposed, ADR-036) | KX-25 |
 | Real vendor URLs and credentials (SMS, email, WhatsApp, PSP, consent, AI, storage) | Blocked | Human: contracts, templates, sender ids, PSP onboarding |
 | Real push delivery (APNs, FCM, EAS project id) | Blocked | Human: keys and accounts; never observed |
 | Store submissions (Apple, Google) | Blocked | Store accounts (KX-19); ADR-033 still Proposed |
