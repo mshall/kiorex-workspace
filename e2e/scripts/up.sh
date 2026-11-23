@@ -54,7 +54,7 @@ want kiorly && start kiorly "$ROOT/clinics-management/apps/api" env NODE_ENV=dev
 # Kiorex API: env from .env.example (INTEGRATION.md values)
 want kiorex && (
   set -a; . "$ROOT/kiorex-platform/apps/api/.env.example"; set +a
-  export NODE_ENV=development PORT=$KIOREX_PORT DATABASE_URL="$(DBURL kiorex_platform)" JOBS_ENABLED=true PSP_MODE=sandbox-fake MESSAGING_MODE=log AI_PROVIDER=fake
+  export NODE_ENV=development PORT=$KIOREX_PORT DATABASE_URL="$(DBURL kiorex_platform)" JOBS_ENABLED=true PSP_MODE=sandbox-fake MESSAGING_MODE=log AI_PROVIDER=fake IMPORT_TARGET_MODE=kiorly
   start kiorex "$ROOT/kiorex-platform/apps/api" node dist/main.js
 )
 
