@@ -44,7 +44,7 @@ flowchart TB
     KC[Kiorly Clinic :3010 / :5174<br/>Clinic and Nurse editions]
     KPH[Kiorly Pharmacy :3100 / :5192]
     KLB[Kiorly Lab :3200 / :5193]
-    KW[Kiorly staff app<br/>repo kiorly-team, being renamed to kiorly<br/>Expo]
+    KW[Kiorly staff app<br/>repo kiorly<br/>Expo]
   end
   KXW --> KXA
   KXM --> KXA
@@ -92,7 +92,7 @@ flowchart TB
 | **kiorly-clinic** (dir `clinics-management`) | Kiorly Clinic and Nurse edition; owns appointments; marketplace API + outbox | [mshall/clinics-management](https://github.com/mshall/clinics-management) | **`kiorex`** (never `main`) | :white_check_mark: built | [GitHub](https://github.com/mshall/clinics-management/tree/kiorex#readme) |
 | **kiorly-pharmacy** | Pharmacy SaaS, Kiorex machine API | [mshall/kiorly-pharmacy](https://github.com/mshall/kiorly-pharmacy) | `main` | :construction: in progress | [GitHub](https://github.com/mshall/kiorly-pharmacy#readme) |
 | **kiorly-lab** | Lab SaaS, Kiorex machine API, nurse sample custody | [mshall/kiorly-lab](https://github.com/mshall/kiorly-lab) | `main` | :construction: in progress | [GitHub](https://github.com/mshall/kiorly-lab#readme) |
-| **kiorly-team** (app name **Kiorly**; repo being renamed to `kiorly`) | Mobile + web staff app (clinic, nurse, pharmacy, lab modules; role-scoped; Lite upgrade slice) | `mshall/kiorly-team` (private) | n/a | :white_check_mark: running, e2e per role | Expo web :8082 |
+| **kiorly** (app name **Kiorly**; repo being renamed to `kiorly`) | Mobile + web staff app (clinic, nurse, pharmacy, lab modules; role-scoped; Lite upgrade slice) | `mshall/kiorly` (private) | n/a | :white_check_mark: running, e2e per role | Expo web :8082 |
 | **kiorex-workspace** (this folder) | Coordination: docs, brand, e2e, scripts | [mshall/kiorex-workspace](https://github.com/mshall/kiorex-workspace) | `main` | :white_check_mark: | you are here |
 
 Kiorly Nurse is an **edition of Kiorly Clinic** (`Organization.edition = CLINIC | NURSE`, ADR-031), not a separate repo. `_legacy/*` holds the 2025 repos as read-only references (ADR-026). The product repos are separate nested git repos and are git-ignored by this workspace repo.

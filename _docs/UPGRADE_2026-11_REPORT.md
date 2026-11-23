@@ -12,7 +12,7 @@ Scope: every repo of the workspace moved to Node 26 LTS, NestJS 12, Prisma 7 (pg
 | kiorly-lab (`main`) | 26 | 12.5 | 7.10 | 19.3 | 8.3 | 4.3 | 6.0 | zod 4 |
 | kiorex-account (`main`, dev IdP) | 26 | (Express, oidc-provider 9) | (raw `pg`) | account UI 19 | n/a | n/a | 6.0 | zod 4 |
 | kiorex-contracts (`main`) | engines >=26.13 | n/a | n/a | n/a | 8.3 (vitest 5) | n/a | 5.9 | |
-| kiorly-team (`main`) | n/a | n/a | n/a | Expo 58, React 19.3 | n/a | n/a | 5.9 | jest 29 |
+| kiorly (`main`) | n/a | n/a | n/a | Expo 58, React 19.3 | n/a | n/a | 5.9 | jest 29 |
 
 Local toolchain: Node 26.13.1 (darwin-arm64, SHA-256 verified against nodejs.org) installed in `~/.local/node-26/`, put first on `PATH` for every command. Docker Desktop 29.9 is running.
 
@@ -64,7 +64,7 @@ Environmental findings (not code bugs, written into `e2e/STACK.md`): stale dev s
 2. **Seed Docker images.** All four `Dockerfile.seed` build, but kiorex-platform, kiorly-pharmacy and kiorly-lab use `lambda/nodejs:26` while clinics and the Lambda runtime (`nodejs24.x`) use 24; align them (or all move to 26 once Lambda GA). Run the image handlers against a scratch RDS-like DB before the first deploy.
 3. **Lambda runtime** `nodejs24.x` vs Node 26 (preview-only on AWS): bump `jobs.tf`, the CDK stack, `Dockerfile.seed`, `db-backup` at GA.
 4. **react-hooks lint**: about 140 React Compiler findings in clinics `apps/web` are warnings; burn down and promote to errors. Check the other web apps for the same rules.
-5. **TypeScript 7 blockers**: typescript-eslint 8.73 supports `<6.1`, openapi-typescript peers `^5`, Nest CLI and Prisma use the JS compiler API; kiorex-contracts and kiorly-team are still on TS 5.9.
+5. **TypeScript 7 blockers**: typescript-eslint 8.73 supports `<6.1`, openapi-typescript peers `^5`, Nest CLI and Prisma use the JS compiler API; kiorex-contracts and kiorly are still on TS 5.9.
 6. Prisma generator: clinics/pharmacy/lab stay on `prisma-client-js` (kiorex-platform already on `prisma-client`).
 7. Kiorly API on :3010 dying unexplained during this session: find the process that sends SIGKILL (`scripts/free-dev-ports.sh` of the founder checkout and Playwright web servers also use :3010/:5174 area).
 8. Vite dev warnings: `__dirname` in the kiorex ops/web `vite.config.ts` (use `import.meta.dirname`); occasional 504 for `maplibre-gl-worker.mjs` right after dependency re-optimisation (dev only).

@@ -101,7 +101,7 @@ flowchart TB
 | Kiorly Pharmacy API and web | `kiorly-pharmacy/apps/api`, `apps/web` | 3100, 5192 | `kiorly_pharmacy` | Done |
 | Kiorly Lab API and web | `kiorly-lab/apps/api`, `apps/web` | 3200, 5193 | `kiorly_lab` | Done |
 | Kiorex Passport (dev IdP) | `kiorex-account/apps/dev-idp` | 4400 | `kiorex_account` | Done (dev); production on Cognito Planned |
-| Kiorly staff app | `kiorly-team` | Expo web 8082 | none | Done (dev) |
+| Kiorly staff app | `kiorly` | Expo web 8082 | none | Done (dev) |
 
 ## 04 Repositories and shared packages
 Figure 3 — Eight repositories, one workspace, and who depends on whom.
@@ -117,7 +117,7 @@ flowchart TB
     PH["kiorly-pharmacy"]
     LB["kiorly-lab"]
   end
-  TM["kiorly-team staff app"]
+  TM["kiorly staff app"]
   WS["kiorex-workspace<br/>docs, e2e, brand"]
   CT --> BE
   TM -->|"mobile API"| CL
@@ -219,7 +219,7 @@ sequenceDiagram
 | Rule | Detail |
 |---|---|
 | Token | JWT RS256 with `sub`, phone, `locale`, `kx_roles`; no clinical data |
-| Clients | `kiorex-web`, `kiorex-ops`, `kiorex-mobile` (public, PKCE), `kiorly-clinic` (confidential), `kiorly-team` (public, PKCE, dev only; client for the Kiorly app is NEEDS_HUMAN) |
+| Clients | `kiorex-web`, `kiorex-ops`, `kiorex-mobile` (public, PKCE), `kiorly-clinic` (confidential), `kiorly` (public, PKCE, dev only; client for the Kiorly app is NEEDS_HUMAN) |
 | Logout | Back-channel logout posted to registered URLs |
 | Staff apps | Kiorly uses its own staff login today; Passport sign-in is Planned |
 | Production | Cognito registration of every client is NEEDS_HUMAN |
@@ -375,7 +375,7 @@ flowchart LR
   T4 --> CAPI
 ```
 
-Kiorly is the final name of the staff app (ADR-037; repo `kiorly-team`, being renamed to `kiorly`; bundle id `com.kiorly.app`, scheme `kiorly`, store title `Kiorly: Clinic, Pharmacy & Lab`, Arabic كيورلي). All three backends accept the header `X-Kiorly-Client: kiorly/<version>` on mobile routes; legacy `kiorly-team/*` and `kiorly-work/*` are still accepted. Status: dev builds verified on the iOS simulator and an Android emulator; release builds, physical devices and real push delivery are Open.
+Kiorly is the final name of the staff app (ADR-037; repo `kiorly`; bundle id `com.kiorly.app`, scheme `kiorly`, store title `Kiorly: Clinic, Pharmacy & Lab`, Arabic كيورلي). All three backends accept the header `X-Kiorly-Client: kiorly/<version>` on mobile routes; legacy `kiorly-team/*` and `kiorly-work/*` are still accepted. Status: dev builds verified on the iOS simulator and an Android emulator; release builds, physical devices and real push delivery are Open.
 
 ## 14 Security architecture
 Figure 13 — Trust zones and the controls on each boundary.

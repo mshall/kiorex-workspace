@@ -1,6 +1,6 @@
 # Kiorly mobile app: design (one app, three product modules, tiered)
 
-> Status: **DESIGN ONLY, 20 Nov 2026** (no feature code written). Supersedes the `kiorly-team` design (single `mobile_staff_app` entitlement, product-login, upgrade screen).
+> Status: **DESIGN ONLY, 20 Nov 2026** (no feature code written). Supersedes the `kiorly` design (single `mobile_staff_app` entitlement, product-login, upgrade screen).
 > Companion docs: [ADR-033](./ADR-033_One_Kiorly_App_Tiered_Mobile.md) · [FEATURE_TIER_MATRIX.md](./FEATURE_TIER_MATRIX.md) · [RISKS_AND_OPEN_QUESTIONS.md](./RISKS_AND_OPEN_QUESTIONS.md) · [STORE_POLICY_NOTE.md](./STORE_POLICY_NOTE.md) (Apple/Google policy, written separately).
 > Everything marked **[verified]** was read in code on this date (paths relative to the workspace root `kiorex-v2/`). Everything marked **[gap]** does not exist yet. Where this design disagrees with an earlier document, the disagreement is flagged in section 0, not silently resolved.
 
@@ -10,7 +10,7 @@
 |---|---|---|---|
 | C1 | The founder summary of ADR-018 is close but not exact: ADR-018 says "Kiorex app + Kiorly app (edition-aware for Kiorly Nurse); field apps only on demand". The words "no separate Nurse app" are in `_docs/CHANGES_2.2_to_2.3.md` item 294 and KX-19 §04. | `_docs/rev23/KX-01` ADR018; KX-19 §04 | ADR-033 **amends the consequence** of ADR-018 (Kiorly app hosts Clinic, Pharmacy and Lab modules). Note `_docs/KX-01_Decision_Log_ADRs.md` (workspace root of `_docs`) is the stale Rev 2.2 copy (28 ADRs); `_docs/rev23/KX-01` is current (32 ADRs). |
 | C2 | KX-19 says "PWA remains primary at launch" for the Kiorly app and lists the Kiorly app audience as "doctors, physiotherapists, nurses & clinic staff" (no pharmacy or lab staff). | KX-19 §04 | Needs a founder ruling (Q1). This design assumes the native app ships beside the PWA, not instead. |
-| C3 | `CLAUDE.md`, `INTEGRATION.md` and all `kiorly-team/Docs/*` and `*/Docs/MOBILE.md` describe "Kiorly, for Pro/Enterprise plans". | workspace root | Stale after this design. Not edited by this task (design only); update list in section 14. |
+| C3 | `CLAUDE.md`, `INTEGRATION.md` and all `kiorly/Docs/*` and `*/Docs/MOBILE.md` describe "Kiorly, for Pro/Enterprise plans". | workspace root | Stale after this design. Not edited by this task (design only); update list in section 14. |
 | C4 | Clinic rejects plan-gated calls with **402 `PLAN_UPGRADE_REQUIRED`** (`apps/api/src/entitlements/plan-upgrade-required.exception.ts`) and flags with 403 `FEATURE_DISABLED {key,scope}`; the brief asks for **403 `ENTITLEMENT_REQUIRED`**. | clinics-management | New code applies only to the mobile surface; web keeps 402. Both documented in section 5.6. |
 | C5 | **One Passport subject cannot be linked to two Clinic orgs today**: `KiorexIdentityLink` has `userId @unique` and `@@unique([issuer, subject])`, and Clinic `User` rows are per tenant (`tenantId`). Pharmacy and Lab are fine (`@@unique([orgId, subject])`). Passport memberships (KA09/KA14) exist in the dev IdP (`kiorex-account/apps/dev-idp/src/orgs.ts`, `GET /api/orgs`) but are priority P2 in KX-04. | clinics-management `prisma/schema.prisma:4414`; kiorex-account | Multi-org is a real backend change (section 3.3), not just app work. |
 | C6 | Pharmacy `transfers` capability exists only on `CHAIN`/`ENTERPRISE` (`kiorly-pharmacy/apps/api/src/kernel-adapter/local/local-kernel.ts:13-15`), and `purchasing` (PO receiving) on `PRO`+. The brief puts branch transfers in **Pharmacy Pro**. | kiorly-pharmacy | Matrix marks transfers Chain/Enterprise-only unless the web plan changes (Q9). |
@@ -19,7 +19,7 @@
 | C9 | Clinic OpenAPI (`apps/api/openapi/openapi.json`) contains **no `/mobile/*` routes**; Pharmacy and Lab `Docs/openapi.json` do (16 and 15 matches). | clinics-management | Generated API client needs Clinic to export mobile routes (S). |
 | C10 | `mobile_staff_app` was never registered in `kiorex-contracts/flags/catalogue.json` (a TODO in each repo's MOBILE.md), so the Kiorex-side kill switch for it **has never worked**; only plan gating is live. | all three repos | New flag keys go through a contracts release (section 5.3). |
 | C11 | Web audit (`audit.service.ts` `shouldAuditGet`) logs `GET /patients/:id` but **not** `/patients/:id/summary` and not `/mobile/schedule|search`. Mobile patient reads are therefore currently unaudited. | clinics-management | New audit events required (section 9.4). |
-| C12 | Existing app derived `NURSE_AGENCY` as "ENTERPRISE"; Lab has no Enterprise edition (`LITE/PRO/CHAIN`). | kiorly-team, kiorly-lab | Mapping proposed in section 5.2, flagged Q10. |
+| C12 | Existing app derived `NURSE_AGENCY` as "ENTERPRISE"; Lab has no Enterprise edition (`LITE/PRO/CHAIN`). | kiorly, kiorly-lab | Mapping proposed in section 5.2, flagged Q10. |
 
 ## 1. Fixed decisions (from the founder brief, not reopened)
 
@@ -44,7 +44,7 @@ flowchart LR
     Shell --> Reg --> MC & MP & ML
     MC & MP & ML --> OQ
   end
-  Passport["Kiorex Passport (OIDC)\nPKCE public client 'kiorly-team'\nmemberships GET /api/orgs"]
+  Passport["Kiorex Passport (OIDC)\nPKCE public client 'kiorly'\nmemberships GET /api/orgs"]
   subgraph APIs["Product APIs (system of record each)"]
     CA["Clinic API :3010\n/api/v1/mobile/*"]
     PA["Pharmacy API :3100\n/api/v1/mobile/*"]
@@ -323,7 +323,7 @@ CI runs it in `clinics-management`, `kiorly-pharmacy`, `kiorly-lab` and (registr
 ## 8. Offline design
 
 ### 8.1 What the queue is
-Per `(org, user)` namespace, in an **encrypted** store (SQLite via a SecureStore-held AES key; replaces the AsyncStorage queue in `kiorly-team/src/offline/queue.ts`, a documented backlog item). Every queued action carries:
+Per `(org, user)` namespace, in an **encrypted** store (SQLite via a SecureStore-held AES key; replaces the AsyncStorage queue in `kiorly/src/offline/queue.ts`, a documented backlog item). Every queued action carries:
 
 ```json
 {
@@ -367,7 +367,7 @@ Sent as `Idempotency-Key`, `X-Kiorly-Queued: 1`, `X-Kiorly-Client-Time`, `X-Kior
 | Control | Design |
 |---|---|
 | Sessions | device-bound (3.2); refresh tokens in Keychain (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`) / Keystore; rotation on use; access tokens short-lived and memory-only |
-| App lock | biometric (Face ID / fingerprint) with **device-passcode fallback** after idle timeout; default 5 min idle and on cold start; Enterprise can enforce on, set min/max, and `maxSessionHours` (existing code: `expo-local-authentication`, grace 0/30 s/5 min **[verified in kiorly-team]**). A custom app PIN is not in v1 (Q15) |
+| App lock | biometric (Face ID / fingerprint) with **device-passcode fallback** after idle timeout; default 5 min idle and on cold start; Enterprise can enforce on, set min/max, and `maxSessionHours` (existing code: `expo-local-authentication`, grace 0/30 s/5 min **[verified in kiorly]**). A custom app PIN is not in v1 (Q15) |
 | Remote sign-out | per device or per user from web admin (product web) and super admin (ops). Existing `DELETE /mobile/devices/:id` **[verified]** covers the API; **admin UIs [gap, M]** and cross-product super-admin revoke by Passport `sub` **[gap, M-L]** (needs Passport back-channel logout to the three products **[verified: mechanism exists]**) |
 | Local data | minimal encrypted cache (SQLCipher or per-record AES with a Keychain key), org-namespaced; wiped on sign-out, org removal, remote wipe, account deletion, and when `policy.allowOfflineCache` is false |
 | Screens | `expo-screen-capture` prevent-capture on clinical/patient screens (Android `FLAG_SECURE`; iOS blur on capture + secure overlay), **blurred app switcher snapshot** on every screen |
@@ -404,7 +404,7 @@ Single codebase, `app.config.ts` selects a **variant** from `APP_VARIANT` (defau
 
 | Variant | Name | Bundle id (placeholder) | Modules compiled in |
 |---|---|---|---|
-| `kiorly-team` (launch; repo being renamed to `kiorly`) | Kiorly (store title `Kiorly: Clinic, Pharmacy & Lab`) | `com.kiorly.app` (founder decision 23 Nov 2026, ADR-037) | clinic, nurse, pharmacy, lab |
+| `kiorly` (launch; repo being renamed to `kiorly`) | Kiorly (store title `Kiorly: Clinic, Pharmacy & Lab`) | `com.kiorly.app` (founder decision 23 Nov 2026, ADR-037) | clinic, nurse, pharmacy, lab |
 | `kiorly-clinic` | Kiorly Clinic | `com.kiorly.clinic` | clinic |
 | `kiorly-pharmacy` | Kiorly Pharmacy | `com.kiorly.pharmacy` | pharmacy |
 | `kiorly-lab` | Kiorly Lab | `com.kiorly.lab` | lab |
@@ -424,16 +424,16 @@ A variant changes only: name, icon/splash (product lockup), bundle id/package, U
 ## 12. Shared packages (workspaces in the app repo first; publish via GitHub Packages later, ADR-027)
 | Package | Responsibility | Reuse of existing |
 |---|---|---|
-| `@kiorly/mobile-auth` | Passport PKCE, org-scoped session vault, device registration, refresh, lock | replaces `kiorly-team/src/auth`, `src/api/auth.ts` |
+| `@kiorly/mobile-auth` | Passport PKCE, org-scoped session vault, device registration, refresh, lock | replaces `kiorly/src/auth`, `src/api/auth.ts` |
 | `@kiorly/api-client` | clients generated from the three OpenAPI specs (`openapi-typescript` + thin fetch wrapper), error mapping per 5.6, headers | replaces `src/api/client.ts` (hand-written); needs Clinic mobile routes in OpenAPI (C9) |
 | `@kiorly/entitlements-client` | fetch/cache/refresh rules of 5.5, `useCapability(key)`, capability registry parity check | new |
-| `@kiorly/design-system` | RN components from `_brand` tokens (`theme.ts`), product accents, RTL, Jost + IBM Plex Sans Arabic | from `kiorly-team/src/brand`, `components/ui|kit|states` |
+| `@kiorly/design-system` | RN components from `_brand` tokens (`theme.ts`), product accents, RTL, Jost + IBM Plex Sans Arabic | from `kiorly/src/brand`, `components/ui|kit|states` |
 | `@kiorly/push` | token registration, silent-push handlers, deep-link router with unlock | from `src/lib/push.ts`, `NotificationDriver` |
 | `@kiorly/offline-queue` | encrypted queue, idempotency envelope, replay, conflict cards, sync chip | from `src/offline/*` |
 | `@kiorly/analytics` | PHI-free events, locked-feature taps, batching | new |
 | `@kiorly/field-visit` | already exists (v0.1.0, vendored tgz) | keep; replace the vendored tgz by a registry dependency |
 
-Repo: `mshall/kiorly-work` became `mshall/kiorly-team` and is being renamed to `mshall/kiorly` (founder decisions 23 Nov 2026; GitHub keeps redirects; local folder `kiorly-team/` until the lead renames it). Store accounts and the Passport client must use bundle id `com.kiorly.app` / scheme `kiorly` (NEEDS_HUMAN); uninstall old simulator installs of `com.kiorly.work` and `com.kiorly.app`.
+Repo: `mshall/kiorly-work` became `mshall/kiorly-team` and was renamed `mshall/kiorly` on 24 Nov 2026 (founder decisions 23 Nov 2026; GitHub keeps redirects from the old name; local folder `kiorly/`). Store accounts and the Passport client must use bundle id `com.kiorly.app` / scheme `kiorly` (NEEDS_HUMAN); uninstall old simulator installs of `com.kiorly.work` and `com.kiorly.app`.
 
 ## 13. Prerequisites, CI and EAS
 
@@ -458,7 +458,7 @@ flowchart LR
 * EAS profiles `development` / `preview` / `production` already exist; add per-variant profiles (section 11). `appVersionSource: remote` stays. OTA updates: JS-only via EAS Update on a staged channel; **never** for a change touching safety flows without a store build review (Q17).
 * Backends CI additions: capability contract tests, entitlement endpoint contract tests, safety never-paid test (6.3).
 
-## 14. Migration from `kiorly-team` (mshall/kiorly-team, 6 commits, ~4.7k lines under `src/`)
+## 14. Migration from `kiorly` (mshall/kiorly, 6 commits, ~4.7k lines under `src/`)
 
 | Area | Decision |
 |---|---|

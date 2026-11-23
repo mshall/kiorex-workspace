@@ -11,7 +11,7 @@ Kiorly suite adds Kiorly Nurse (an edition of Kiorly Clinic, ADR-031; providers 
 
 ## Key numbers (verified 23 Nov 2026)
 - Reference set: **27 volumes** (KX-00 to KX-26); decision log ADR-001 to ADR-036 (31 Accepted, 5 Proposed, see KX-01).
-- Code: **7 repositories** plus the workspace (contracts, platform, account, clinic, pharmacy, lab, kiorly-team). Commits since 19 Nov 2026 (git log of the local clones): contracts 23, platform 112, account 48, clinics-management 322 (branch kiorex, includes merges from main), pharmacy 60, lab 69, kiorly-team 19, workspace 34.
+- Code: **7 repositories** plus the workspace (contracts, platform, account, clinic, pharmacy, lab, kiorly). Commits since 19 Nov 2026 (git log of the local clones): contracts 23, platform 112, account 48, clinics-management 322 (branch kiorex, includes merges from main), pharmacy 60, lab 69, kiorly 19, workspace 34.
 - Contracts `@kiorex/contracts` **1.7.0**; notification layer tests 60, 100 % coverage of `src/notify`.
 - Provider adapters: **8 kinds** (SMS, Email, WhatsApp, Payment, Push, Storage, Consent, AI), mock by default, real by configuration; **0** real vendors contacted.
 - Demo data: **36** medical specialties, **2** LIVE doctors each (72), **12** demo patients, 108 demo bookings, home visits and nurse tenants.

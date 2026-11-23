@@ -19,7 +19,7 @@ scripts/seed-all.sh
 (cd kiorex-platform && npm run mobile:web)         # Patient Expo app   :8081
 (cd kiorly-pharmacy && npm run dev -w web)         # Kiorly Pharmacy    :5192
 (cd kiorly-lab && npm run dev -w web)              # Kiorly Lab         :5193
-(cd kiorly-team && npm run web)                    # Kiorly staff app   :8082
+(cd kiorly && npm run web)                    # Kiorly staff app   :8082
 ```
 
 Rules: never touch ports **3000 / 5173 / 5175** (another checkout). Do not run `scripts/seed-all.sh --reset` while others use the stack. After the e2e suite (`cd e2e && npm test`) re-run `scripts/seed-all.sh` (the suite revokes some dev gate evidence). Dates are relative to the seed day, so re-run with `--reset` every few days. Tests you run yourself change data (a cancel stays cancelled): re-seed to get the starting state back.
@@ -212,7 +212,7 @@ http://localhost:5193/login.
 
 ### 4.8 Kiorly staff app (W1-W15)
 
-Run `cd kiorly-team && npm run web` and open http://localhost:8082 at phone width.
+Run `cd kiorly && npm run web` and open http://localhost:8082 at phone width.
 
 1. **Bootstrap.** Clinic tile, chip **Doctor (Nile Care)**, Sign in. *Expected:* Home with quick actions and the Work tab tiles.
 2. **Sign a prescription (Dr Nadia).** Work -> Prescriptions -> pending Cetirizine 10 mg for Hoda -> Sign: moves to signed; signing is online-only; `nurse.na@` sees no sign action.

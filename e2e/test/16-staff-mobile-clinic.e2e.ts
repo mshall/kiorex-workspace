@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorly, q } from '../src/clients.js';
 
 /**
- * Kiorly (staff app) x Kiorly Clinic, REAL stack and the seeded demo data (TEST_DATA.md / kiorly-team/Docs/TEST_DATA.md). Every flow is driven the way the app
+ * Kiorly (staff app) x Kiorly Clinic, REAL stack and the seeded demo data (TEST_DATA.md / kiorly/Docs/TEST_DATA.md). Every flow is driven the way the app
  * drives it (`X-Kiorly-Client: kiorly/*`, the /mobile/* routes plus the existing clinic routes the app calls, see Docs/MOBILE.md section 5) and every result is
  * read back through the endpoints the CLINIC WEB APP uses (appointments, front-desk board, encounters, nurse vitals trend, /revenue/totals, /home-visits,
  * /home-visits/safety-alerts, /admin/audit-logs) so a mobile write is proven visible on the web.

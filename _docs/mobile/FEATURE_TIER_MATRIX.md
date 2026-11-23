@@ -12,7 +12,7 @@
 * **Small backend change**: additive change in an existing module (new field, ungating a read, a hook, a header). Effort S (under 1 day) or M (1-3 days).
 * **New backend work**: no suitable route, model or workflow. Effort L (over 3 days) unless marked.
 
-**App UI**: `Built` = a screen already exists in `kiorly-team/app/**` (salvageable, needs re-gating and rename); `New` = nothing yet. App effort is not in the Effort column; see design §14 for phasing.
+**App UI**: `Built` = a screen already exists in `kiorly/app/**` (salvageable, needs re-gating and rename); `New` = nothing yet. App effort is not in the Effort column; see design §14 for phasing.
 
 Roles/scope still apply to every row (server decides; e.g. nurses and assistants can never sign prescriptions, `NON_PRESCRIBING_PROFESSIONS`).
 
@@ -104,7 +104,7 @@ Roles/scope still apply to every row (server decides; e.g. nurses and assistants
 | X4 | New flag keys `mobile.clinic|pharmacy|lab` (Module, ON, not launch-locked) | Small | S | Contracts `flags/catalogue.json` (57 keys) is pinned by tests in Clinic and Lab; also `kiorex-platform` catalogue. `mobile_staff_app` was never registered (C10) |
 | X5 | Per-market plan-to-mobile policy + per-org override in super admin | New | L | Clinic has `TenantEntitlementOverride`; no per-market entitlements anywhere; Pharmacy/Lab none |
 | X6 | Org discovery `GET /mobile/me/orgs` + Clinic multi-org identity link | New / Small | M (Clinic), S (Pharmacy, Lab) | C5; Passport `GET /api/orgs` exists (`kiorex-account/apps/dev-idp/src/routes.ts:167`) |
-| X7 | Passport public client for the Kiorly app (id `kiorly`, redirect `kiorly://auth/callback`; supersedes the `kiorly-app` and `kiorly-team` proposals); Clinic Passport-token exchange | Config (NEEDS_HUMAN) + New | S + M | `kiorex-account/config/idp.json` has `kiorex-web/ops/mobile/passport-web` public, `kiorly-clinic` confidential; Pharmacy/Lab already accept Passport tokens |
+| X7 | Passport public client for the Kiorly app (id `kiorly`, redirect `kiorly://auth/callback`; supersedes the `kiorly-app` and `kiorly` proposals); Clinic Passport-token exchange | Config (NEEDS_HUMAN) + New | S + M | `kiorex-account/config/idp.json` has `kiorex-web/ops/mobile/passport-web` public, `kiorly-clinic` confidential; Pharmacy/Lab already accept Passport tokens |
 | X8 | Device register / list / revoke / push token | **Available today** x3 | - | `POST|GET|DELETE /mobile/devices`, `PUT /mobile/devices/:id/push-token` in all three; Clinic revokes the refresh session too |
 | X9 | Admin UIs for remote sign-out (web admin per product + super admin, per user across products) | New | M (per product) + L (super admin) | API exists (X8); no web UI found; cross-product by Passport `sub` needs back-channel logout fan-out (`kiorex-account/apps/dev-idp/src/logout.ts` exists) |
 | X10 | Real push (Expo / APNs / FCM), silent `entitlements.changed` and `session.revoked` events | New (mock only) | M x3 | `MOBILE_PUSH_MODE=mock`; `real` throws by design (`mobile-push.service.ts`); provider keys NEEDS_HUMAN |
@@ -124,4 +124,4 @@ Roles/scope still apply to every row (server decides; e.g. nurses and assistants
 | Lab | L2, L3, L6, L8, L9, X2 | - | Manifest/offline round design |
 | Shared | X1, X3, X4, X10, X12, X13, X15, X16 | X5 | Control-plane policy vs product-local policy (Q11) |
 
-Rough size: about 25 small items (S-M) across three backends and contracts, 2-3 new-work items (per-market policy, cross-product remote sign-out, docs signing if defined). The existing `/mobile/*` layer and `kiorly-team` screens cover most of the *surface*; the work is re-keying entitlements, multi-org identity, offline correctness, audit, and real push.
+Rough size: about 25 small items (S-M) across three backends and contracts, 2-3 new-work items (per-market policy, cross-product remote sign-out, docs signing if defined). The existing `/mobile/*` layer and `kiorly` screens cover most of the *surface*; the work is re-keying entitlements, multi-org identity, offline correctness, audit, and real push.

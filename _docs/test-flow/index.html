@@ -309,7 +309,7 @@ const PORT_ROWS = [
   ['Kiorly Pharmacy web',5192,'{pharm}/login','Web','PHARMACY_WEB_PORT overrides (was 5190 = founder checkout clash)',true],
   ['Kiorly Lab API',3200,'{lapi}/api/v1/auth/dev/orgs','API','Binds 127.0.0.1 only. Dev-login orgs listing',true],
   ['Kiorly Lab web',5193,'{lab}/login','Web','LAB_WEB_PORT overrides (was 5191)',true],
-  ['Kiorly staff app (Expo web)',8082,'{staff}','Web (mobile)','cd kiorly-team && npm run web. Open at ~390 px width',true],
+  ['Kiorly staff app (Expo web)',8082,'{staff}','Web (mobile)','cd kiorly && npm run web. Open at ~390 px width',true],
   ['Passport second fake upstream',4401,'http://localhost:4401','Identity','Only used by account-linking tests (usually not running)',true],
   ['Metro for native dev builds',8091,'http://localhost:8091/status','Mobile','iOS: npx expo start --dev-client --port 8091. Android uses 8092',true],
   ['Metro (Android)',8092,'http://localhost:8092/status','Mobile','Android dev build Metro port',true],
@@ -434,7 +434,7 @@ MODULES.push({id:'setup',ic:'1',title:'Setup and stack',blurb:'Start Postgres an
  flows:[
  {id:'S1',title:'Start Postgres and the five APIs',goal:'Get Passport :4400, Kiorly Clinic :3010, Kiorex :4000, Pharmacy :3100 and Lab :3200 running against Postgres :5433.',
   steps:[
-   ['`cd '+W+'`','You are in the workspace parent folder (it holds clinics-management, kiorex-platform, kiorly-pharmacy, kiorly-lab, kiorly-team, e2e ...).'],
+   ['`cd '+W+'`','You are in the workspace parent folder (it holds clinics-management, kiorex-platform, kiorly-pharmacy, kiorly-lab, kiorly, e2e ...).'],
    ['If Postgres is not running: `PATH=/Users/postgres/bin:$PATH pg_ctl -D .pgdata -l .pgdata/server.log -o "-p 5433" start`','`pg_isready -h 127.0.0.1 -p 5433` says accepting connections. (up.sh also starts it when needed.)'],
    ['First time only: `e2e/scripts/up.sh --build --seed`. Afterwards just `e2e/scripts/up.sh` (add `--restart --only=pharmacy` to bounce one service).','All five services listen; logs go to `.e2e/logs/<service>.log`, pids to `.e2e/pids`.'],
    ['Open the Ports table below (or module "Reference > Ports") and look at the live dots.','Passport 4400, Kiorex API 4000, Clinic API 3010, Pharmacy API 3100, Lab API 3200 are green.']
@@ -456,7 +456,7 @@ MODULES.push({id:'setup',ic:'1',title:'Setup and stack',blurb:'Start Postgres an
    ['`(cd kiorex-platform && npm run mobile:install && npm run mobile:web)` then open {expo}','Patient Expo web app on :8081. `EXPO_PUBLIC_MOCK=1` runs offline fixtures with no API or IdP.'],
    ['`(cd kiorly-pharmacy && npm run dev -w web)` then open {pharm}/login','Pharmacy web on :5192.'],
    ['`(cd kiorly-lab && npm run dev -w web)` then open {lab}/login','Lab web on :5193.'],
-   ['`(cd kiorly-team && npm install && npm run web)` then open {staff}','Kiorly staff app (Expo web) on :8082. Use a ~390 px wide window.']
+   ['`(cd kiorly && npm install && npm run web)` then open {staff}','Kiorly staff app (Expo web) on :8082. Use a ~390 px wide window.']
   ],
   links:[['Clinic','{clinic}/login'],['Patient web','{web}'],['Ops','{ops}'],['Patient Expo web','{expo}'],['Pharmacy','{pharm}/login'],['Lab','{lab}/login'],['Kiorly Expo web','{staff}']]},
  {id:'S4',title:'Verify the stack responds (login smoke test)',goal:'Five quick checks that prove the logins in this guide work on your machine.',
@@ -919,26 +919,26 @@ MODULES.push({id:'ops',ic:'7',title:'Ops console',blurb:'Feature-flag control pl
  ]});
 
 /* ---------------------------------------------------------------- 8 STAFF APP */
-MODULES.push({id:'staff',ic:'8',title:'Kiorly staff app (Clinic, Nurse, Pharmacy, Lab)',blurb:'One Expo app named Kiorly (final name; the repo folder is still `kiorly-team`) for Pro / Enterprise staff of Kiorly Clinic, Pharmacy and Lab. iOS Simulator, Android emulator and Expo web :8082.',
- intro:'Bundle / package `com.kiorly.app`, scheme `kiorly`, header `X-Kiorly-Client: kiorly/<version>`. Repo folder is still `kiorly-team`. Sign-in shows four tiles: Clinic, Nurse (uses the Clinic API, lands on home-visit rounds), Pharmacy, Lab; the dev build has demo chips that fill e-mail, password and lab org slug. Sessions are per product. Tab bar: Home, Work, Inbox, Me. The app owns no data: it calls `/mobile/*` on the three APIs (:3010 / :3100 / :3200). BASIC / Lite orgs see an upgrade screen but keep the safety-alert inbox.',
+MODULES.push({id:'staff',ic:'8',title:'Kiorly staff app (Clinic, Nurse, Pharmacy, Lab)',blurb:'One Expo app named Kiorly (final name; the repo folder is still `kiorly`) for Pro / Enterprise staff of Kiorly Clinic, Pharmacy and Lab. iOS Simulator, Android emulator and Expo web :8082.',
+ intro:'Bundle / package `com.kiorly.app`, scheme `kiorly`, header `X-Kiorly-Client: kiorly/<version>`. Repo folder is still `kiorly`. Sign-in shows four tiles: Clinic, Nurse (uses the Clinic API, lands on home-visit rounds), Pharmacy, Lab; the dev build has demo chips that fill e-mail, password and lab org slug. Sessions are per product. Tab bar: Home, Work, Inbox, Me. The app owns no data: it calls `/mobile/*` on the three APIs (:3010 / :3100 / :3200). BASIC / Lite orgs see an upgrade screen but keep the safety-alert inbox.',
  flows:[
  {id:'A1',title:'Run on Expo web (:8082)',goal:'Fastest way to test the staff app at phone width.',links:[['Kiorly Expo web','{staff}'],['Sign in','{staff}/sign-in']],
   steps:[
-   ['`cd '+W+'/kiorly-team && npm install && npm run web`, open {staff} in a ~390 px wide window (browser device toolbar).','Sign-in screen with the brand lockup, language pills, four product tiles and the "Test users (dev only)" chips under the form.'],
+   ['`cd '+W+'/kiorly && npm install && npm run web`, open {staff} in a ~390 px wide window (browser device toolbar).','Sign-in screen with the brand lockup, language pills, four product tiles and the "Test users (dev only)" chips under the form.'],
    ['Pick the Clinic tile, tap the chip "Doctor (Nile Care) - PRO" (or type `nadia.na@demo.kiorex.test` / `Demo@12345`), sign in.','Home with quick actions, Work tab with the doctor tiles, Inbox with a welcome message and safety items.'],
    ['Optional: on the sign-in screen pick the product tile (Clinic, Nurse, Pharmacy or Lab); Kiorex Passport is the preselected method and Password the second one (the last tile and method used are remembered). Press "Sign in with Kiorex Passport" (when the build has `PASSPORT_ENABLED`; public PKCE client `kiorly`, legacy `kiorly-team`) and use a linked staff phone, for example `+201000002001` (Clinic owner.na@) or `+201000002004` (Pharmacy pharmacist@), OTP `000000`.','The Passport access token is sent as a Bearer token to the product API; the role comes from the linked staff row; an unlinked phone gets `PASSPORT_NOT_LINKED`.'],
    ['Me > add Pharmacy (`pharmacist@demo.kiorly.local`).','Chip "Pharmacist - ENTERPRISE"; Home aggregates both products; Work lists Clinic and Pharmacy tiles.'],
    ['Sign out from Me (confirm sheet) per product or everything.','Device record deleted on the API, secure session cleared, back to /sign-in.']
   ],
-  note:'On web, biometric lock, camera scan, push tokens and location degrade gracefully. If sign-in hits nothing, check `kiorly-team/.env.local` (git-ignored, overrides `.env.example`; should hold 3010 / 3100 / 3200).'},
+  note:'On web, biometric lock, camera scan, push tokens and location degrade gracefully. If sign-in hits nothing, check `kiorly/.env.local` (git-ignored, overrides `.env.example`; should hold 3010 / 3100 / 3200).'},
  {id:'A2',title:'iOS Simulator (dev build)',goal:'Native build with RTL first-run reload, push fixtures and deep links.',links:[['Metro','http://localhost:8091/status']],
   dl:[['Home','kiorly://'],['Inbox','kiorly://inbox'],['Work','kiorly://work'],['Upgrade screen','kiorly://upgrade'],['Dev client link','exp+kiorly://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8091']],
   steps:[
    ['One-time tooling (no Homebrew on this Mac): `export GEM_HOME=$HOME/.local/gems PATH=$HOME/.local/gems/bin:$PATH LANG=en_US.UTF-8 RUBYOPT=-rlogger`','CocoaPods available from `~/.local/gems`.'],
-   ['`cd '+W+'/kiorly-team && npx expo run:ios --device "iPhone 18 Pro" --port 8091`','Builds with Xcode, installs `com.kiorly.app`, starts Metro. Later runs: `npx expo start --dev-client --port 8091` then open the dev client link below.'],
+   ['`cd '+W+'/kiorly && npx expo run:ios --device "iPhone 18 Pro" --port 8091`','Builds with Xcode, installs `com.kiorly.app`, starts Metro. Later runs: `npx expo start --dev-client --port 8091` then open the dev client link below.'],
    ['First launch is Arabic. The app reloads once (`reloadAppAsync`) to apply RTL.','RTL layout after the reload; in Expo Go a one-time "close and reopen" banner is shown instead.'],
    ['Sign in (localhost reaches the Mac, default API URLs work), then open a deep link: `xcrun simctl openurl booted "kiorly://inbox"` (copy buttons below).','The Inbox tab opens (a cold-start deep link goes through sign-in first).'],
-   ['Push fixtures (no APNs credentials): `cd kiorly-team && e2e-push/send.sh lab-critical` (also `sos`, `order-received`, `upgrade-request`).','Banner arrives; tap opens `/lab/critical`, `/clinic/round/<id>` (no id: Inbox), `/pharmacy/orders`, `/upgrade?product=<product>`. Verify foreground, background and cold start (`xcrun simctl terminate booted com.kiorly.app`).'],
+   ['Push fixtures (no APNs credentials): `cd kiorly && e2e-push/send.sh lab-critical` (also `sos`, `order-received`, `upgrade-request`).','Banner arrives; tap opens `/lab/critical`, `/clinic/round/<id>` (no id: Inbox), `/pharmacy/orders`, `/upgrade?product=<product>`. Verify foreground, background and cold start (`xcrun simctl terminate booted com.kiorly.app`).'],
    ['Me > Notifications > "Dev: send test notification (local)" buttons.','A local notification returns through the same router; the dev card shows the (mock) token state.']
   ],
   note:'Check on 23 Nov 2026: the booted iPhone 18 Pro simulator still has the OLD bundle `com.kiorly.team` installed and no `com.kiorly.app`; the iPhone 17 has the patient app `com.kiorex.app`. Rebuild with `npx expo run:ios` (after `expo prebuild` with the new id) before testing the renamed app. Face ID and camera need a real device.'},
@@ -947,14 +947,14 @@ MODULES.push({id:'staff',ic:'8',title:'Kiorly staff app (Clinic, Nurse, Pharmacy
   steps:[
    ['Emulator: AVD `kx_pixel` (Android 15 / API 35). Start: `~/.local/android/sdk/emulator/emulator -avd kx_pixel -no-snapshot-load` (one was already running as `emulator-5554`).','`~/.local/android/sdk/platform-tools/adb devices` lists it.'],
    ['`export JAVA_HOME=~/.local/jdk17/jdk-17.0.21.1+2/Contents/Home ANDROID_HOME=~/.local/android/sdk PATH=$ANDROID_HOME/platform-tools:$PATH` and `export EXPO_PUBLIC_CLINIC_API=http://10.0.2.2:3010/api/v1 EXPO_PUBLIC_PHARMACY_API=http://10.0.2.2:3100/api/v1 EXPO_PUBLIC_LAB_API=http://10.0.2.2:3200/api/v1`','Inside the emulator `localhost` is the emulator itself; 10.0.2.2 is the Mac.'],
-   ['`cd '+W+'/kiorly-team && npx expo run:android --port 8092`','Installs `com.kiorly.app` and starts Metro on 8092.'],
+   ['`cd '+W+'/kiorly && npx expo run:android --port 8092`','Installs `com.kiorly.app` and starts Metro on 8092.'],
    ['Deep link: `adb shell am start -W -a android.intent.action.VIEW -d "kiorly://inbox" com.kiorly.app` (copy buttons below).','Opens the Inbox.'],
    ['Sign in and walk the flows A5 to A9. Check sign-in fields are not hidden behind the keyboard (edge-to-edge Android 15).','Fields stay visible.']
   ],
   note:'Check on 23 Nov 2026: the running emulator only has the old package `com.kiorly.team` and Expo Go (`host.exp.exponent`), not `com.kiorly.app`: run the build above first. Notifications: push is unavailable in Expo Go on Android since SDK 53; use the dev build.'},
  {id:'A4',title:'Staff roles matrix: what each login should see',goal:'Plan and role gating of the tiles (from `GET /mobile/bootstrap`).',who:['nadia.na','nurse.na','owner.na','accountant.na','frontdesk1.na','mona','agency_owner','ph.pharmacist','ph.cashier','ph.chain','ph.solo','lab.signatory','lab.phleb'],links:[['Kiorly Expo web','{staff}']],
   steps:[
-   ['Clinic: `nadia.na@` sees schedule, patients, visits, prescriptions, labs, vitals (no revenue, no home visits). `nurse.na@` sees schedule, patients, vitals and home visits (the physician Lab results queue was removed for nurses on 22 Nov). `owner.na@` and `accountant.na@` also see revenue. `frontdesk1.na@` and `callcenter.na@` see schedule and patients only.','Tiles match the matrix in `kiorly-team/DEMO_DATA.md` section 4.'],
+   ['Clinic: `nadia.na@` sees schedule, patients, visits, prescriptions, labs, vitals (no revenue, no home visits). `nurse.na@` sees schedule, patients, vitals and home visits (the physician Lab results queue was removed for nurses on 22 Nov). `owner.na@` and `accountant.na@` also see revenue. `frontdesk1.na@` and `callcenter.na@` see schedule and patients only.','Tiles match the matrix in `kiorly/DEMO_DATA.md` section 4.'],
    ['Pharmacy: owner / manager / pharmacist see everything incl. controlled and orders; `cashier@` has Rx, barcode, expiry, shift, customers, search but no receiving / count / controlled / orders; `chain@` has barcode, expiry, customers, orders, search only; solo tenants have no Kiorex orders.','Tiles match.'],
    ['Lab (`demo-lab`, `chain-lab`): signatory has critical, validation, worklist, QC, TAT, orders; tech adds accession and reagents; phleb has phlebotomy, accession, orders only; reception adds TAT; finance has TAT, orders, reagents.','Tiles match.'],
    ['Nurse tile: `mona@nurse-demo.kiorly.test` or `nurse1@nurse-demo.kiorly.test`.','Lands on today\'s home-visit rounds. Nurses do NOT get the doctor\'s Lab results queue.']
@@ -1168,7 +1168,7 @@ MODULES.push({id:'trouble',ic:'12',title:'Troubleshooting',blurb:'Things that ac
   ]},
  {id:'T5',title:'Mobile specifics',goal:'Emulators, bundle ids and URLs.',
   steps:[
-   ['Android emulator cannot reach APIs: use `10.0.2.2` in `EXPO_PUBLIC_CLINIC_API`, `EXPO_PUBLIC_PHARMACY_API`, `EXPO_PUBLIC_LAB_API`.','Sign-in works. `kiorly-team/.env.local` overrides `.env.example`.'],
+   ['Android emulator cannot reach APIs: use `10.0.2.2` in `EXPO_PUBLIC_CLINIC_API`, `EXPO_PUBLIC_PHARMACY_API`, `EXPO_PUBLIC_LAB_API`.','Sign-in works. `kiorly/.env.local` overrides `.env.example`.'],
    ['Pharmacy (:3100) and Lab (:3200) APIs bind 127.0.0.1: a physical phone needs them started with a LAN bind and the Mac\'s LAN IP in the three variables.','Phone reaches the APIs.'],
    ['The installed simulator / emulator apps may still be `com.kiorly.team` (pre-rename). Rebuild: `npx expo run:ios` / `npx expo run:android`.','`com.kiorly.app` installed; scheme `kiorly://` opens it.'],
    ['Expo Go 58 lacks ExpoCrypto: use the dev build for Passport sign-in on device.','Sign-in redirect returns to the app.'],
@@ -1193,7 +1193,7 @@ const DEVINBOX = [
  ['Pharmacy notifications','{pharm}/notifications','New Kiorex order, expiry / low-stock / controlled-discrepancy alerts. Log: `.e2e/logs/pharmacy.log`.'],
  ['Lab alerts','{lab}/critical','Critical values, QC and TAT alerts; outbound results go to Kiorex via the Lab outbox (Ops > Outbox {ops}/outbox).'],
  ['Outbox and webhooks','{ops}/outbox','Events with retries (`kiorly.record_share_consent`, `flag.changed`, partner webhooks). Replay a DEAD one.'],
- ['Staff / patient mobile push (mock)','kiorly://inbox','Kiorly Me > Notifications > dev card; messages arrive in the Inbox as DELIVERED. Remote format: `xcrun simctl push booted com.kiorly.app kiorly-team/e2e-push/<type>.json`. Patient: `kiorex-platform/apps/mobile/e2e-push/send.sh <type>`.'],
+ ['Staff / patient mobile push (mock)','kiorly://inbox','Kiorly Me > Notifications > dev card; messages arrive in the Inbox as DELIVERED. Remote format: `xcrun simctl push booted com.kiorly.app kiorly/e2e-push/<type>.json`. Patient: `kiorex-platform/apps/mobile/e2e-push/send.sh <type>`.'],
  ['Service logs','.e2e/logs/','`tail -f .e2e/logs/passport.log` (OTP codes for unseeded phones), `kiorex.log`, `kiorly.log`, `pharmacy.log`, `lab.log`, `expo.log`.']
 ];
 const DD_DOCTORS = [

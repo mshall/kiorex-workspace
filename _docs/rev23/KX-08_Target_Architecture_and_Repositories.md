@@ -77,7 +77,7 @@ Six repositories. One per product plus identity and contracts; the kernel and fi
 | kiorex-account (new) | IdP configuration-as-code, themes, OTP sender lambdas, back-channel logout | Planned M1 | Managed IdP; no custom crypto |
 | kiorex-contracts (new) | OpenAPI specs, JSON Schemas for events, generated TS SDKs, contract tests | Extract | Move marketplace.openapi.json + consumer contract here; both CIs pin versions (NH019) |
 
-> **Note** State on 23 Nov 2026. All repositories below now exist locally under one workspace (private GitHub remotes under the founder's account) and run together on one Postgres cluster; the "Planned" and "Create new" states in the table are historical. Plus one repository that this plan did not list: **kiorly-team**, the staff app **Kiorly** (Expo, iOS, Android, web; repo `kiorly-team`, being renamed to `kiorly`). Pushes of `clinics-management` branch `kiorex` need founder approval; nothing is deployed.
+> **Note** State on 23 Nov 2026. All repositories below now exist locally under one workspace (private GitHub remotes under the founder's account) and run together on one Postgres cluster; the "Planned" and "Create new" states in the table are historical. Plus one repository that this plan did not list: **kiorly**, the staff app **Kiorly** (Expo, iOS, Android, web; repo `kiorly`). Pushes of `clinics-management` branch `kiorex` need founder approval; nothing is deployed.
 
 | Repository | Role | State (23 Nov 2026) |
 |---|---|---|
@@ -87,7 +87,7 @@ Six repositories. One per product plus identity and contracts; the kernel and fi
 | clinics-management (branch `kiorex`) | Kiorly Clinic and Nurse edition, `/mobile/*` staff API | Done (dev) |
 | kiorly-pharmacy | Pharmacy API and web, Kiorex machine API, `/mobile/*` | In progress; built ahead of the M9 plan |
 | kiorly-lab | Lab API and web, Kiorex machine API, nurse custody, `/mobile/*` | In progress; built ahead of the M15 plan |
-| kiorly-team (repo of the staff app Kiorly; being renamed to `kiorly`; formerly `kiorly-work`) | Kiorly staff app; owns no data, calls the three product APIs | Done (dev builds) |
+| kiorly (repo of the staff app Kiorly; renamed from `kiorly-team` on 24 Nov 2026; formerly `kiorly-work`) | Kiorly staff app; owns no data, calls the three product APIs | Done (dev builds) |
 | kiorex-workspace | Docs, brand kit, cross-service e2e (18 suites), seed scripts | Done |
 
 NOTE: The 2025 repositories kiorex-backend, kiorex-web-app, kiorex-ai-services and kiorex-backend-documentation were assessed on 19 Nov 2026 as prototypes and references only. Keep / harvest / archive decisions, the full repo map and the build-agent brief are in KX22. There is no kiorly-nurse repository (ADR-031).
@@ -354,7 +354,7 @@ The app owns no data; each backend decides, per role and plan, which modules exi
 Ports 3000, 5173 and 5175 belong to the founder's other checkout and are never touched.
 
 ## What changed in this revision (23 Nov 2026)
-- §04 gains the repository states table (including kiorly-team); new §12 on the notification layer, the provider adapter contract, the staff app and local ports.
+- §04 gains the repository states table (including kiorly); new §12 on the notification layer, the provider adapter contract, the staff app and local ports.
 - Containers, data model, deployment topology, flag control plane, flag catalogue and scaling path are unchanged. Nothing was deployed.
 - Not verified: any AWS deployment; Pharmacy and Lab schedules (M9, M15) were not re-planned though the code is ahead of them.
 
