@@ -2,6 +2,7 @@
 # Start the local Kiorex v2 stack as background processes:
 #   Passport dev IdP :4400, Kiorly Clinic API :3010 (branch kiorex; :3000 belongs to a different checkout), Kiorex API :4000,
 #   Kiorly Pharmacy API :3100, Kiorly Lab API :3200 (real partner services; they talk to Kiorex over real HTTP, KIOREX_MODE=real).
+# SIGNIN_DEFAULT_METHOD=PASSPORT: this local stack stands for a Kiorex-hosted deployment (ADR-038 amendment); standalone deployments default to PASSWORD.
 # Logs: ../.e2e/logs   pids: ../.e2e/pids
 # Usage: scripts/up.sh [--build] [--seed] [--restart]
 #   --build    rebuild the Nest APIs first (clinic, kiorex, pharmacy, lab)
@@ -46,7 +47,7 @@ start() { local name=$1 cwd=$2; shift 2; (cd "$cwd" && nohup "$@" > "$LOGS/$name
 [ "$START_PASSPORT" = 1 ] && start passport "$ROOT/kiorex-account/apps/dev-idp" env NODE_ENV=development npx tsx src/index.ts
 
 # Kiorly Clinic API: env from apps/api/.env (KIOREX_* -> :4000/:4400); topology pinned here.
-want kiorly && start kiorly "$ROOT/clinics-management/apps/api" env NODE_ENV=development PORT=$KIORLY_PORT APP_WEB_URL=http://localhost:5174 DATABASE_URL="$(DBURL kiorly)" \
+want kiorly && start kiorly "$ROOT/clinics-management/apps/api" env NODE_ENV=development SIGNIN_DEFAULT_METHOD=PASSPORT PORT=$KIORLY_PORT APP_WEB_URL=http://localhost:5174 DATABASE_URL="$(DBURL kiorly)" \
   KIOREX_OUTBOX_WEBHOOK_URL="http://localhost:$KIOREX_PORT/api/v1/webhooks/kiorly" KIOREX_OUTBOX_WEBHOOK_SECRET=kx_dev_webhook_secret \
   KIOREX_CONTROL_PLANE_URL="http://localhost:$KIOREX_PORT" KIOREX_FLAGS_PRODUCT_KEY=ff_kiorly-clinic_dev KIOREX_FLAGS_SECRET=ff_dev_secret_change_me \
   KIOREX_OIDC_ISSUER="http://localhost:$PASSPORT_PORT" node --enable-source-maps dist/src/main.js
@@ -62,7 +63,7 @@ want kiorex && (
 # fast outbox sweeps. Per-tenant webhook URL/secret/client key come from the seeded IntegrationClient (dev registration, INTEGRATION.md).
 # Lab AUTH_MODE=dev and pharmacy AUTH_MODE=local (staff login) are local-only. AUTH_ACCEPT_PASSPORT=true (never in production) ALSO accepts Kiorex Passport sign-in:
 # the staff webs (PKCE, /auth/oidc/exchange) and Kiorly's Passport access tokens; password / dev login keep working.
-PARTNER_ENV="KIOREX_MODE=real KIOREX_BASE_URL=http://localhost:$KIOREX_PORT FLAGS_POLL_ENABLED=true FLAGS_POLL_INTERVAL_MS=1500 KIOREX_FLAGS_URL=http://localhost:$KIOREX_PORT/api/v1/control/v1/flags/snapshot KIOREX_PRODUCT_SECRET=ff_dev_secret_change_me OUTBOX_POLL_INTERVAL_MS=1000"
+PARTNER_ENV="KIOREX_MODE=real KIOREX_BASE_URL=http://localhost:$KIOREX_PORT FLAGS_POLL_ENABLED=true FLAGS_POLL_INTERVAL_MS=1500 KIOREX_FLAGS_URL=http://localhost:$KIOREX_PORT/api/v1/control/v1/flags/snapshot KIOREX_PRODUCT_SECRET=ff_dev_secret_change_me OUTBOX_POLL_INTERVAL_MS=1000 SIGNIN_DEFAULT_METHOD=PASSPORT"
 want pharmacy && start pharmacy "$ROOT/kiorly-pharmacy/apps/api" env NODE_ENV=development PORT=$PHARMACY_PORT DATABASE_URL="$(DBURL kiorly_pharmacy)" AUTH_MODE=local AUTH_ACCEPT_PASSPORT=true OIDC_ISSUER="http://localhost:$PASSPORT_PORT" KIOREX_PRODUCT_KEY=ff_kiorly-pharmacy_dev $PARTNER_ENV node --enable-source-maps dist/main.js
 want lab && start lab "$ROOT/kiorly-lab/apps/api" env NODE_ENV=development PORT=$LAB_PORT PUBLIC_BASE_URL="${LAB_PUBLIC_BASE_URL:-http://localhost:5193}" DATABASE_URL="$(DBURL kiorly_lab)" AUTH_MODE=dev AUTH_ACCEPT_PASSPORT=true KIOREX_OIDC_ISSUER="http://localhost:$PASSPORT_PORT" KIOREX_PRODUCT_KEY=ff_kiorly-lab_dev $PARTNER_ENV node --enable-source-maps dist/main.js
 

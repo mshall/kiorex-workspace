@@ -535,6 +535,18 @@ MODULES.push({id:'passport',ic:'2',title:'Passport sign-in / sign-out',blurb:'Ki
    ['Open {pass}/account/ops/links.','Exactly one `pending_review` request (secondary phone `+201000001009`). DO NOT approve unless you want two demo accounts merged.'],
    ['Repeat as `+201000009001` with its own seed.','Same queue.'],
    ['Sign in as `+201000009003` (support).','You are asked to ENROL a TOTP (scan the QR, confirm) because no secret is seeded.']
+  ]},
+ {id:'P8',title:'Default sign-in method per organisation (Clinic, Nurse, Pharmacy, Lab)',goal:'Each product web login is a one-product Kiorly Home-style screen, and the organisation decides whether Kiorex Passport or Password is preselected. Both methods are always there when Passport is available.',
+  note:'ADR-038 amendment, 24 Nov 2026. Order on the login page: last method used on this browser > org default from `GET /auth/config?org=` (Clinic `/auth/kiorex/config?org=`) > deployment default `SIGNIN_DEFAULT_METHOD` (PASSPORT on this local stack, PASSWORD when unset). Automatic org default = Passport when the org is linked to Kiorex, else Password. Unknown orgs answer exactly like no org.',
+  links:[['Lab login','{lab}/login?org=demo-lab'],['Pharmacy login','{pharm}/login'],['Clinic login','{clinic}/login'],['Kiorly Home','http://localhost:5194/signin?switch=1']],
+  steps:[
+   ['Open {clinic}/login in a fresh private window. Look at the page at phone width and on a wide screen.','Wide: split screen, indigo panel "Kiorly Clinic by Kiorex" (Nurse host: Kiorly Nurse) with headline and three highlights, centred card with the Passport / Password tabs; phone: card only. Sun/Moon/Monitor theme button and globe language control top right, light by default; EN/AR switches direction. Link "Switch product" below the card opens Kiorly Home with the tile picker.'],
+   ['Sign in to {lab}/login with the dev panel as `director@demo-lab.test` (Lab), open Settings > General, find "Default sign-in method".','Three options: Automatic, Kiorex Passport, Password, the line "Preselected now: ..." and whether the org is linked to Kiorex.'],
+   ['Choose Password, Save. Open {lab}/login?org=demo-lab in a private window.','The Password tab is selected (the Passport tab is still there). Choose Kiorex Passport, Save, reload: the Passport tab is selected.'],
+   ['Switch to the other method on the login, sign in, sign out, return to the login.','The last method used on this browser wins over the org default. Clearing site data restores the org default.'],
+   ['Open {lab}/login?org=no-such-org and {lab}/login.','Both preselect the deployment default (Passport here); the API answers the same shape for a known and an unknown org: `curl -s "{lapi}/api/v1/auth/config?org=nope"`.'],
+   ['Repeat in Pharmacy (owner@demo.kiorly.local: Settings > Pharmacy) and Clinic (owner.na@demo.kiorex.test: Admin > Organization & settings). A cashier / front-desk user has no such card, and the API refuses with 403.','Same behaviour; Clinic and Pharmacy identify the org by the id remembered after the last sign-in or `?org=<id>`.'],
+   ['Set `SIGNIN_DEFAULT_METHOD=PASSWORD` for one API (restart only that service) and open its login without `?org=` in a private window.','Password preselected: a standalone deployment. The Switch product link is hidden when `VITE_KIORLY_HOME_URL` is empty in a production build.']
   ]}
  ]});
 
@@ -1034,6 +1046,46 @@ MODULES.push({id:'home',ic:'8b',title:'Kiorly Home web sign-in',blurb:'One web s
    ['Keep Passport selected, tile Pharmacy, chip Mostafa Reda (+201000002004), code 000000.','Pharmacy opens signed in; no second code.'],
    ['Sign out of Home, tile Clinic, press "Sign in with Kiorex Passport", sign in as Mostafa.','A hint: your account has a Kiorly Pharmacy workspace; buttons "Open Kiorly Pharmacy" and "Continue to Kiorly Clinic".'],
    ['Sign out on Home.','The Passport session ends: the next sign-in asks for the phone again.']
+  ]}
+ ]});
+
+/* ---------------------------------------------------------------- 8c CONNECT TO KIOREX (ADR-040) */
+MODULES.push({id:'connect',ic:'8c',title:'Connect a standalone organisation to Kiorex',blurb:'A clinic, nurse, pharmacy or lab that started standalone joins the marketplace later: a guided "Connect to Kiorex" checklist in the product, automated checks plus highlighted human steps in the ops console, two-person approval and Go live. ADR-040.',
+ intro:'Product side: Clinic and Nurse `{clinic}/kiorex/connect`, Pharmacy `{pharm}/kiorex-connect`, Lab `{lab}/kiorex-connect`. Ops side: {ops}/partner-onboarding. The request is signed and PHI-free; the launch gate for pharmacy orders and lab bookings is only ever recorded by a human super admin on the Feature flags page. Automated e2e: `e2e/test/22-standalone-connect.e2e.ts`. Everything here is mock/dev data.',
+ flows:[
+ {id:'C1',title:'Clinic: from standalone to live on Kiorex',goal:'A new clinic is never listed by itself; it asks, Kiorex approves, then the doctor appears in search.',who:['owner.na','ops_admin','ops_super'],links:[['Clinic signup','{clinic}/signup'],['Connect to Kiorex','{clinic}/kiorex/connect'],['Partner onboarding','{ops}/partner-onboarding']],
+  steps:[
+   ['Sign up a new clinic at {clinic}/signup (phone OTP `424242`), then open Kiorex and the Connect to Kiorex banner.','Checklist with a status per step (Done, Action needed, Waiting on Kiorex, Blocked), a Fix it link per open step, per-doctor progress and Request to go live disabled.'],
+   ['Fix the open steps: verified credential, a bookable visit type with a fee, availability, profile (bio in AR and EN, photo, specialty, address, map pin).','Each step turns Done on the next load. The Profile step lists exactly what is missing.'],
+   ['Tick the marketplace terms and the fee acknowledgement, Accept.','The fee sentence shows the amount published for the market (nothing is invented; if no fee schedule is published the button stays disabled).'],
+   ['Check Kiorex > doctor listings.','Status DRAFT with blocker `connection` even though every other gate is green: a standalone clinic does not list on its own.'],
+   ['Press Request to go live.','Listing PENDING_VERIFICATION, the page says Waiting for Kiorex, search does not show the doctor.'],
+   ['Do flow C3 in the ops console, then reopen the page.','Approved, progress 100 %, listing LIVE, the doctor appears in Kiorex search after the provider sync; the page offers Kiorex Passport as the default sign-in and inviting staff.']
+  ]},
+ {id:'C2',title:'Pharmacy and lab: request registration',goal:'A standalone pharmacy or lab opts in, completes its checklist and requests partner registration; credentials are issued once and never shown again.',who:['pharm.basic','lab.basic','ops_admin'],links:[['Pharmacy','{pharm}/kiorex-connect'],['Lab','{lab}/kiorex-connect']],
+  steps:[
+   ['Pharmacy: sign up, open Connect to Kiorex. Opt the branch in, add hours and a map pin, enter the licence number, add one priced item with stock.','Steps turn Done; the branch editor works even though the normal Kiorex orders settings are blocked while standalone.'],
+   ['Upload a licence, type 1234567890123 as the payout label.','The label is refused (no bank or card numbers are ever stored); a plain label such as "Main settlement account" is accepted.'],
+   ['Accept the terms and press Request registration.','Status Waiting for Kiorex. No secret appears anywhere on the page.'],
+   ['Lab: onboard a lab with the starter catalogue (dev), complete the same checklist (price list completeness counts unpriced tests), request registration.','Same behaviour; home collection is an optional step.'],
+   ['After approval press Rotate credentials.','The new key and secrets are shown once. Reloading never shows them again; Kiorex applies them only after a passing handshake (flow C3).']
+  ]},
+ {id:'C3',title:'Ops: Partner onboarding wizard with highlighted human steps',goal:'Automated checks run themselves, the human steps are the highlighted items, Go live opens only when every gate is green.',who:['ops_admin','ops_super'],links:[['Partner onboarding','{ops}/partner-onboarding'],['Feature flags','{ops}/flags']],
+  steps:[
+   ['Sign in at {ops} as Ops admin (`+201000009001`) and open Partner onboarding.','The queue lists each request with a progress percentage and a highlighted "Needs a person" column.'],
+   ['Open a request.','Automated section: credentials, signed handshake, catalogue/provider dry run counts, flags and launch gates, market/pack, duplicates, documents. Human section: Review documents, Verify licence, Confirm fees, (pharmacy and lab) Record launch-gate evidence, Approval, Go live. Open human steps carry an Action needed badge and a banner counts them.'],
+   ['Press Run automated checks again.','Results refresh; nothing else changes (idempotent). A failing check shows a plain reason such as "The partner rejected our signature".'],
+   ['Pharmacy or lab: look at Record launch-gate evidence.','It only links to Feature flags. As Ops admin you cannot record it; as Ops super admin record it on the Flags page (dev evidence on this stack), run the checks again: the step turns Done.'],
+   ['Do Review documents, Verify licence (a reference is required) and Confirm fees (standard policy, or an organisation override already set on the Policy page).','Each turns Done and the progress bar moves.'],
+   ['Request approval, then try to Approve as the same person.','Approve is disabled with "A different super admin must approve". Switch to Ops super admin (`+201000000099`): Approve works.'],
+   ['Press Go live.','Status Live, progress 100 %. Pharmacy/lab: the registry entry is active and the request no longer holds secrets. Clinic: listings become LIVE. The partner gets a mock e-mail (Messaging page, template partner.onboarding.live). The Audit tab lists every action without personal data.'],
+   ['Switch the console to Arabic.','Labels, status chips and failure reasons render right to left.']
+  ]},
+ {id:'C4',title:'Request changes, reject, pause and resume',goal:'Every decision needs a reason and is visible to the partner.',who:['ops_admin'],links:[['Partner onboarding','{ops}/partner-onboarding']],
+  steps:[
+   ['On an in-review request type a reason and press Request changes.','Status Changes requested; the product shows the status after Refresh status and the checklist reopens the request step.'],
+   ['Press Reject with a reason on another request.','Status Rejected; a pharmacy or lab returns to standalone.'],
+   ['On a live partner press Pause with a reason, then Resume.','A clinic\'s listings show PAUSED (reason Kiorex) then LIVE again; pharmacy/lab registry entries are deactivated and reactivated. Repeating the action changes nothing.']
   ]}
  ]});
 
