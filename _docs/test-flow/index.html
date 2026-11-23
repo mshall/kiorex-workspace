@@ -635,7 +635,7 @@ MODULES.push({id:'patient',ic:'3',title:'Kiorex patient web',blurb:'The marketpl
  {id:'K13',title:'Telemedicine (mock video room)',goal:'Waiting, scheduled and ended sessions; join the mock room.',who:['samir','mariam','hoda'],links:[['Telemedicine','{web}/telemedicine']],
   steps:[
    ['As Samir open {web}/telemedicine.','Session `demo_ts_mk03` WAITING.'],
-   ['Open the session and Join.','Mock video room at {web}/telemedicine/<id>/room; no media leaves the machine.'],
+   ['Open the session and Join.','Mock video room at {web}/telemedicine/<id>/room; no media leaves the machine. (Real visits are Clinic-owned peer-to-peer: a booking with a telehealth block shows Join video visit and opens the Clinic /v/&lt;token&gt; page.)'],
    ['Mariam: `demo_ts_mk05` SCHEDULED. Hoda: `demo_ts_mk01` ENDED.','Status matches.'],
    ['Specialty network: 11 confirmed bookings are flagged "(video)" (psychiatry, nutrition, family medicine, dermatology, ...).','Flag `kiorex.telemedicine` is ON with a DEV-ONLY gate.']
   ]}
