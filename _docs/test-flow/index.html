@@ -1011,14 +1011,15 @@ MODULES.push({id:'staff',ic:'8',title:'Kiorly staff app (Clinic, Nurse, Pharmacy
  ]});
 
 /* ---------------------------------------------------------------- 8b KIORLY HOME */
-MODULES.push({id:'home',ic:'8b',title:'Kiorly Home web sign-in',blurb:'One web sign-in (http://localhost:5194/signin) with the same screen as the Kiorly app: four tiles, then Kiorex Passport (default) or Password through a single-use handoff code. Dev only: needs the stack, the three product webs and `cd kiorex-account && npm run dev -w @kiorex/kiorly-home`.',
+MODULES.push({id:'home',ic:'8b',title:'Kiorly Home web sign-in',blurb:'One web sign-in (http://localhost:5194/signin), responsive (phone = the Kiorly app screen, tablet one column, desktop split screen): four tiles, then Kiorex Passport (default) or Password through a single-use handoff code. Dev only: needs the stack, the three product webs and `cd kiorex-account && npm run dev -w @kiorex/kiorly-home`.',
  intro:'Password sign-in never exposes a product token to Home: the product API (`POST /auth/handoff/login`) returns a 30-second one-time code, the browser opens `<product>/login?handoff=...`, the product web redeems it once (`POST /auth/handoff/exchange`) and strips it from the URL. If the Clinic API on :3010 or web on :5174 belongs to another checkout, run this workspace Clinic on :3011 / :5184.',
  flows:[
  {id:'H1',title:'Screen parity with the mobile app',goal:'Same header, tiles and methods as the Kiorly app.',links:[['Kiorly Home','http://localhost:5194/signin'],['Kiorly Expo web','{staff}/sign-in']],
   steps:[
-   ['Open Home at ~390 px next to the Expo app.','Lockup, AR/EN pills, "One sign-in for Clinic, Nurse, Pharmacy and Lab", card "Sign in" / "Choose your workplace product", tiles Clinic, Nurse, Pharmacy, Lab with the same icons and accents, method toggle with Kiorex Passport selected.'],
+   ['Open Home at ~390 px next to the Expo app.','Lockup, globe AR/EN toggle, "One sign-in for Clinic, Nurse, Pharmacy and Lab", card "Sign in" / "Choose your workplace product", tiles Clinic, Nurse, Pharmacy, Lab with the same icons and accents, method toggle with Kiorex Passport selected.'],
    ['Open `/signin?to=pharmacy` and `/signin/lab`.','That tile is preselected. Pick another tile, sign in, return: the last tile and method are remembered.'],
-   ['Choose Arabic, then Dark in the footer Theme control, reload.','RTL, Arabic strings; dark stays; a first visit with a dark OS is light.']
+   ['Open Home at 768 px and at 1440 px.','768: one centred column under the gradient band, tiles in one row, language and theme icons in the top bar. 1440: split screen, branded panel on the left (headline "One sign-in for your whole workplace", Clinic / Nurse / Pharmacy / Lab highlights, Secure sign-in with Kiorex Passport), card centred on the right with tiles 2x2; the dev "Test users" panel is a collapsed drawer at the bottom corner (Show). No horizontal scroll at 125-200% zoom.'],
+   ['Choose Arabic, then the Moon (Dark) icon in the Theme control, reload.','RTL, Arabic strings, layout mirrored; dark stays; a first visit with a dark OS is light. Theme icons Sun / Moon / Monitor move with the arrow keys.']
   ]},
  {id:'H2',title:'Password method for all four tiles',goal:'Handoff opens each product signed in.',links:[['Kiorly Home','http://localhost:5194/signin']],
   steps:[
