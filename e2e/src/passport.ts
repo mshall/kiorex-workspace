@@ -29,7 +29,7 @@ class Jar {
   }
 }
 
-export interface Login { accessToken: string; idToken: string; refreshToken?: string; sub: string; sid?: string; claims: Record<string, any> }
+export interface Login { accessToken: string; idToken: string; refreshToken?: string; sub: string; sid?: string; claims: Record<string, any>; /** codeOnly: the authorization code and PKCE verifier, NOT redeemed (a product API redeems it, e.g. POST /auth/oidc/exchange) */ code?: string; verifier?: string; redirectUri?: string }
 
 export function decodeJwt(t: string): Record<string, any> {
   return JSON.parse(Buffer.from(t.split('.')[1], 'base64url').toString());
@@ -63,7 +63,7 @@ export function totp(secretB32: string, at = Date.now()): string {
 }
 
 /** Programmatic phone-OTP login: auth code + PKCE (S256) against the dev IdP using the seeded 000000 code. */
-export async function loginWithPhone(phone: string, opts: { clientId?: string; redirectUri?: string; otp?: string; totpSecret?: string } = {}): Promise<Login> {
+export async function loginWithPhone(phone: string, opts: { clientId?: string; redirectUri?: string; otp?: string; totpSecret?: string; scope?: string; nonce?: string; codeOnly?: boolean } = {}): Promise<Login> {
   const clientId = opts.clientId ?? 'kiorex-web';
   const redirectUri = opts.redirectUri ?? (clientId === 'kiorex-ops' ? 'http://localhost:5181/auth/callback' : 'http://localhost:5180/auth/callback');
   const b = new Jar();
@@ -71,8 +71,8 @@ export async function loginWithPhone(phone: string, opts: { clientId?: string; r
   const challenge = createHash('sha256').update(verifier).digest('base64url');
   const state = randomBytes(8).toString('hex');
   const q = new URLSearchParams({
-    client_id: clientId, redirect_uri: redirectUri, response_type: 'code', scope: 'openid profile phone kx offline_access',
-    state, code_challenge: challenge, code_challenge_method: 'S256', ui_locales: 'en', prompt: 'login',
+    client_id: clientId, redirect_uri: redirectUri, response_type: 'code', scope: opts.scope ?? 'openid profile phone kx offline_access',
+    state, ...(opts.nonce ? { nonce: opts.nonce } : {}), code_challenge: challenge, code_challenge_method: 'S256', ui_locales: 'en', prompt: 'login',
   });
   let r = await b.req(`${PASSPORT}/auth?${q}`);
   const { url } = await b.follow(r, PASSPORT, redirectUri);
@@ -97,6 +97,7 @@ export async function loginWithPhone(phone: string, opts: { clientId?: string; r
   if (cb.searchParams.get('state') !== state) throw new Error('state mismatch');
   const code = cb.searchParams.get('code');
   if (!code) throw new Error(`no code ${end.url}`);
+  if (opts.codeOnly) return { accessToken: '', idToken: '', sub: '', claims: {}, code, verifier, redirectUri };
   const tr = await fetch(`${PASSPORT}/token`, {
     method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: redirectUri, code_verifier: verifier, client_id: clientId }),
