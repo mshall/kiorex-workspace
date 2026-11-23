@@ -32,7 +32,7 @@ Add the secret to any authenticator app (or compute RFC 6238, SHA-1, 30 s, 6 dig
 
 ## URLs
 Kiorly Clinic web http://localhost:5174 (API :3010) · Kiorex patient web http://localhost:5180 · Ops console http://localhost:5181 · Expo web http://localhost:8081 ·
-Passport http://localhost:4400/account (dev inbox `/dev/inbox`) · Pharmacy web http://localhost:5192 (API :3100) · Lab web http://localhost:5193 (API :3200) · Kiorex API :4000 · Postgres :5433.
+Kiorly Home http://localhost:5194/signin · Passport http://localhost:4400/account (dev inbox `/dev/inbox`) · Pharmacy web http://localhost:5192 (API :3100) · Lab web http://localhost:5193 (API :3200) · Kiorex API :4000 · Postgres :5433.
 
 ## Persona -> app -> login
 | Persona | App | URL | Login |
@@ -43,6 +43,8 @@ Passport http://localhost:4400/account (dev inbox `/dev/inbox`) · Pharmacy web 
 | Other demo patients: Nourhan `…1004`, Mariam `…1006`, Omar `…1007`, Dalia `…1008`, Tarek `…1009`, Heba `…1010`, Youssef `…1011`, Rana `…1012` | same | same | `+20100000` + last 4 digits, OTP `000000` |
 | Amira (`+201000000001`), Hassan (`+201000000002`) | e2e fixtures (do not edit) | | OTP `000000` |
 | Ahmed Fawzy (org owner, org "Nile Care Medical Center (DEMO)") | Passport orgs | :4400/account/orgs | `+201000002001` |
+| **Kiorly Home (ADR-038)** multi-workspace owner (Clinic + Pharmacy + Lab, picker) | Kiorly Home | http://localhost:5194/signin | `+201000002031`, OTP `000000` |
+| **Kiorly Home** no-workspace newcomer (Create or join) | Kiorly Home | http://localhost:5194/signin | `+201000002032`, OTP `000000` |
 | Sara Lotfy (receptionist member), Dr Amr Salem (doctor member) | Passport orgs | | `+201000002002`, `+201000002003` |
 | Mostafa Reda (pharmacist member), Dina Wagdy (lab technician member) | Passport orgs | | `+201000002004`, `+201000002005` |
 | Kiorly Nurse: solo nurse Mona Adel (owner of "Demo Home Nursing (Mona)", also a member of the agency) | Passport orgs (edition NURSE) / Kiorly web Nurse view | :4400/account/orgs / :5174 | `+201000003001` OTP `000000` -> "Sign in with Kiorex Passport", or `mona@nurse-demo.kiorly.test` / `Demo@12345` |

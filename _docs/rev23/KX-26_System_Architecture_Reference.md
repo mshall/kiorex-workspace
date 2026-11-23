@@ -415,6 +415,9 @@ flowchart TB
 | Scale | Multi-market | Second data cell, market packs, per-market adapters |
 | Later | Team or load demands | Extract a bounded context (for example search) behind the existing contract |
 
+### Kiorly Home (ADR-038)
+One web entry for the provider products: `www.kiorly.com/signin` signs the person in with Kiorex Passport, lists the workspaces (Clinic, Nurse, Pharmacy, Lab) and redirects to the product host, which completes its own silent Passport code flow. No enumeration before the code is verified; patients stay on Kiorex. Domain table per environment: `kiorex-account/config/domains.json` (production www / clinic (alias app) / nurse / pharmacy / lab .kiorly.com; Passport account.kiorex.com). Detail: KX-08 §13.
+
 ## 17 Status and open items
 | Area | Status | Remains |
 |---|---|---|
@@ -423,6 +426,7 @@ flowchart TB
 | Notification layer | Done in platform | migrate Passport, Lab, Pharmacy, Clinic |
 | Real vendors (SMS, email, WhatsApp, PSP, push) | Blocked | contracts, templates, credentials (FD-04) |
 | Mobile release builds and devices | Open | store accounts, signing, device test |
+| Kiorly Home (ADR-038) | Done locally | production Passport client, DNS and certificates (NEEDS_HUMAN); products honour `sso=passport` |
 | AWS deployment | Blocked | founder instruction: no deploy |
 | Document storage growth (ADR-036) | Proposed | build per KX-25 prompt |
 | Communications control plane | Proposed | KX-24 §10 |

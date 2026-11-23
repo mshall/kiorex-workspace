@@ -357,3 +357,23 @@ Ports 3000, 5173 and 5175 belong to the founder's other checkout and are never t
 - §04 gains the repository states table (including kiorly-team); new §12 on the notification layer, the provider adapter contract, the staff app and local ports.
 - Containers, data model, deployment topology, flag control plane, flag catalogue and scaling path are unchanged. Nothing was deployed.
 - Not verified: any AWS deployment; Pharmacy and Lab schedules (M9, M15) were not re-planned though the code is ahead of them.
+
+## 13 Kiorly Home and the domain table (ADR-038, 23 Nov 2026)
+Kiorly Home is a static SPA in `kiorex-account/apps/kiorly-home` (Passport client `kiorly-home`, dev port 5194, route `/signin`). It is not a product: no database, no API of its own. It calls `GET /api/workspaces` on Passport (Bearer, audience `kiorex-api`) and redirects to a product, which completes its own silent Passport code flow.
+
+| Host (production) | What | Local | Notes |
+|---|---|---|---|
+| www.kiorly.com (kiorly.com redirects) | Kiorly Home, `/signin` | http://localhost:5194 | static site + CDN behaviour `/idp/*` to Passport (token + workspaces calls stay same-origin) |
+| clinic.kiorly.com (alias app.kiorly.com) | Kiorly Clinic web | :5174 | API api.clinic.kiorly.com |
+| nurse.kiorly.com | Clinic web, Nurse edition | :5174 | same stack as Clinic (ADR-031) |
+| pharmacy.kiorly.com | Kiorly Pharmacy web | :5192 | API api.pharmacy.kiorly.com |
+| lab.kiorly.com | Kiorly Lab web | :5193 | API api.lab.kiorly.com |
+| account.kiorex.com | Kiorex Passport | :4400 | managed IdP in production |
+
+Staging uses `www.staging.kiorly.com`, `clinic.staging.kiorly.com` and so on (placeholders until confirmed). Everything is derived from `kiorex-account/config/domains.json`; the API host names are proposals to confirm (NEEDS_HUMAN).
+
+**Workspace seam.** `GET /api/workspaces` returns `{workspaces:[{id, product, edition, org_id, org_name, role, product_url, product_ref, source}]}`. Today `source = passport_membership`: the product comes from the organisation's `product_refs` (`kiorly_clinic_tenant_id`, `kiorly_pharmacy_tenant_id`, `kiorly_lab_tenant_id`), default Clinic; edition from the organisation (CLINIC or NURSE). When the Passport-to-staff links in the product APIs are authoritative, the endpoint reads them (or the products push them as membership hints) and the response shape does not change.
+
+**Product contract.** A product honours `GET /login?sso=passport&from=kiorly-home[&edition=NURSE]` by starting its normal Passport authorization request at once (the Passport session exists, so no code is asked), keeps its own organisation picker, and may offer a "Switch workspace" link to `<home>/signin?switch=1`. Sign-out: RP-initiated logout with `id_token_hint`; the post-logout URI may be the product root or `<home>/signin` (both registered).
+
+**Hosting and cookies.** Session cookies are host-only (no `Domain=.kiorly.com`), Secure, HttpOnly, SameSite=Lax; the only cross-product session is the Passport SSO session. Every host sends HSTS (`max-age=31536000; includeSubDomains`) and `frame-ancestors 'none'`. Universal Links and Android App Links for the Kiorly app (`com.kiorly.app`) are served from `https://www.kiorly.com/.well-known/` (templates in `kiorex-account/config/app-links/`, Apple team id and signing fingerprint are placeholders).

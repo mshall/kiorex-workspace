@@ -16,6 +16,7 @@ Authoritative shapes live in `kiorex-contracts`; this file pins the local wiring
 | Kiorly Lab API | kiorly-lab/apps/api | http://localhost:3200 (prefix `/api/v1`; Kiorex machine API at `/api/v1/integration/v1`) | kiorly_lab |
 | Kiorly Lab web | kiorly-lab/apps/web | http://localhost:5193 (proxy `/api` → 3200) | — |
 | Kiorly staff app (Expo; repo `kiorly-team`, being renamed to `kiorly`; bundle id `com.kiorly.app`, header `X-Kiorly-Client: kiorly/<version>`) | kiorly-team | Expo web http://localhost:8082 (APIs: clinic 3010, pharmacy 3100, lab 3200; `/mobile/*`) | - |
+| Kiorly Home (one web sign-in, ADR-038) | kiorex-account/apps/kiorly-home | http://localhost:5194/signin (proxy `/idp` → 4400) | — |
 | Kiorex Passport (dev OIDC) | kiorex-account/apps/dev-idp | http://localhost:4400 (issuer) | kiorex_account |
 
 DATABASE_URL pattern: `postgresql://postgres:postgres@127.0.0.1:5433/<db>?schema=public`
@@ -25,6 +26,7 @@ DATABASE_URL pattern: `postgresql://postgres:postgres@127.0.0.1:5433/<db>?schema
 - Clients (dev): `kiorex-web` (public, PKCE, redirect `http://localhost:5180/auth/callback`),
   `kiorex-ops` (public, PKCE, redirect `http://localhost:5181/auth/callback`),
   `kiorex-mobile` (public, PKCE, redirect `kiorex://auth/callback` and `http://localhost:8081/auth/callback`),
+  `kiorly-home` (public, PKCE, redirect `http://localhost:5194/signin/callback`, post-logout `http://localhost:5194/signin`; calls `GET /api/workspaces` on Passport),
   `kiorly-clinic` (confidential, secret `dev-kiorly-clinic-secret`, redirect `http://localhost:5174/auth/kiorex/callback`) — KCV-201 seam.
 - Login: phone OTP. Dev OTP sender logs the code to the console AND, only when `NODE_ENV!=production`, accepts `000000` for numbers in the seeded test list.
 - Access token = JWT (RS256), audience `kiorex-api`, claims: `sub`, `phone_number`, `phone_number_verified`, `name`, `locale`, `kx_roles` (e.g. `["patient"]`, `["ops_admin","super_admin"]`). **No clinical data in identity.**

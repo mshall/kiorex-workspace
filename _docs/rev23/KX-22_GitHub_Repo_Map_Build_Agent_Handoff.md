@@ -220,3 +220,7 @@ Build-agent additions: read `_docs/PROVIDER_GO_LIVE.md`, `kiorex-contracts/docs/
 - Added kiorly-team to the repository map and §13 with repository states, scripts and seeds.
 - Legacy module map, harvest map, conventions, migration sequence and build-agent brief are unchanged apart from the reading additions in §13.
 - Not verified: GitHub remotes and visibility (the Drive KX24 draft could not see five of them); the 2 failing Jest tests in kiorly-team.
+
+## Domain table and Kiorly Home (ADR-038, 23 Nov 2026)
+Hosts per environment are one table, `kiorex-account/config/domains.json`. Production: www.kiorly.com (Kiorly Home sign-in, `/signin`; kiorly.com redirects), clinic.kiorly.com (alias app.kiorly.com), nurse.kiorly.com, pharmacy.kiorly.com, lab.kiorly.com, account.kiorex.com (Passport); staging uses `*.staging.kiorly.com` placeholders. Build agents never hard-code a host: read it from env (CORS, OIDC redirect and post-logout, `PUBLIC_BASE_URL`) set from that table. Kiorly Home lives in `kiorex-account/apps/kiorly-home`.
+
