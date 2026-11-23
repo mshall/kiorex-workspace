@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorly, q } from '../src/clients.js';
 
 /**
- * Kiorly Team (staff app) x Kiorly Clinic, REAL stack and the seeded demo data (TEST_DATA.md / kiorly-team/docs/TEST_DATA.md). Every flow is driven the way the app
- * drives it (`X-Kiorly-Client: kiorly-team/*`, the /mobile/* routes plus the existing clinic routes the app calls, see Docs/MOBILE.md section 5) and every result is
+ * Kiorly (staff app) x Kiorly Clinic, REAL stack and the seeded demo data (TEST_DATA.md / kiorly-team/Docs/TEST_DATA.md). Every flow is driven the way the app
+ * drives it (`X-Kiorly-Client: kiorly/*`, the /mobile/* routes plus the existing clinic routes the app calls, see Docs/MOBILE.md section 5) and every result is
  * read back through the endpoints the CLINIC WEB APP uses (appointments, front-desk board, encounters, nurse vitals trend, /revenue/totals, /home-visits,
  * /home-visits/safety-alerts, /admin/audit-logs) so a mobile write is proven visible on the web.
  *
@@ -18,7 +18,7 @@ import { kiorly, q } from '../src/clients.js';
  * Dev-only fictional data; passwords are the documented demo ones.
  */
 const PW = 'Demo@12345';
-const APP = { 'x-kiorly-client': 'kiorly-team/1.0-e2e' };
+const APP = { 'x-kiorly-client': 'kiorly/1.0-e2e' };
 const app = (t: string | undefined, m: string, p: string, b?: unknown, h: Record<string, string> = {}) => kiorly(t, m, p, b, { ...APP, ...h });
 const web = (t: string, m: string, p: string, b?: unknown, h: Record<string, string> = {}) => kiorly(t, m, p, b, h);
 
