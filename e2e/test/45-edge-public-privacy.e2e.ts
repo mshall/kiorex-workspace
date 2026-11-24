@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { randomInt } from 'node:crypto';
 import { KIOREX, KIOREX_API } from '../src/env.js';
 import { tokens } from '../src/fixtures.js';
-import { kiorex, q } from '../src/clients.js';
+import { kiorex, q, waitFor } from '../src/clients.js';
 import { loginWithPhone } from '../src/passport.js';
 import { resetOtpLimits } from '../src/db.js';
 
@@ -100,8 +100,8 @@ describe('C. Consent, preferences and suppression edges', () => {
     const del = await fetch(`http://localhost:4400/api/account`, { method: 'DELETE', headers: { authorization: `Bearer ${l.accessToken}`, 'content-type': 'application/json' }, body: JSON.stringify({}) });
     expect([200, 202, 204, 400, 401, 403]).toContain(del.status);
     if (![200, 202, 204].includes(del.status)) return; // the dev Passport may require step-up for deletion: covered by 28's erasure journey
-    await new Promise((r) => setTimeout(r, 4000));
-    const prof = await q('kiorex_platform', `select "nameEn", phone from "PatientProfile" where sub = $1`, [l.sub]);
+    // erasure runs through the outbox worker (seconds, longer under load): wait for it instead of a fixed pause
+    const prof = await waitFor('profile anonymised', async () => { const rows = await q('kiorex_platform', `select "nameEn", phone from "PatientProfile" where sub = $1`, [l.sub]); return rows.every((r: any) => !(r.nameEn ?? '').includes('Erase Me')) ? rows : undefined; }, 60_000, 1000).catch(() => q('kiorex_platform', `select "nameEn", phone from "PatientProfile" where sub = $1`, [l.sub]));
     for (const row of prof) { expect(row.nameEn ?? '').not.toContain('Erase Me'); expect(row.phone ?? '').not.toContain(phone.slice(-8)); }
     expect((await kiorex(l.accessToken, 'GET', '/me/profile')).status).toBeGreaterThanOrEqual(400);
   });
