@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorly, q } from '../src/clients.js';
+import { daySlots, uniqueFutureDay, ymdIn } from '../src/slots.js';
 
 /**
  * Kiorly (staff app) x Kiorly Clinic, REAL stack and the seeded demo data (TEST_DATA.md / kiorly/Docs/TEST_DATA.md). Every flow is driven the way the app
@@ -41,6 +42,7 @@ const dayOf = (iso: string) => iso.slice(0, 10);
 /** YYYY-MM-DD +- n days (pure calendar arithmetic, no timezone involved). */
 const addDays = (ymd: string, n: number) => { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const resetReason = 'e2e16 reset';
+const CLINIC_TZ = 'Africa/Cairo';
 
 // ============================================================================================================================================================
 describe('a. Role matrix: bootstrap modules, plan, safetyAlertsOnly and endpoint scoping for every clinic demo role', () => {
@@ -176,8 +178,19 @@ describe('b. BASIC org (Corner Family Clinic): upgrade screen, safety alerts sti
 describe('c. Clinic day (Nile Care, PRO): front desk -> nurse -> doctor -> lab approval -> revenue', () => {
   const CLINIC = 'demo_c_na_maadi'; const NADIA = 'demo_u_na_nadia';
   const ctx: Record<string, any> = {};
-  const startsAt = new Date(Date.now() + (5 + Math.floor(Math.random() * 3000)) * 60_000).toISOString(); // random slot: re-runs never collide on the doctor's agenda
-  const date = dayOf(startsAt);
+  // The clinic day needs a slot on the clinic's own "today" (queue, check-in and the revenue snapshot are all about today) that is free on Nadia's agenda: the demo seed
+  // books now-relative appointments and earlier runs leave theirs behind, so the slot is chosen by trying every 5-minute start of today in random order until the
+  // server accepts one (409 = taken). Nothing depends on the hour the suite runs at.
+  let startsAt = ''; let date = '';
+  const bookToday = async (token: string, body: Record<string, unknown>) => {
+    const now = Date.now();
+    for (const slot of daySlots(CLINIC_TZ, now).slice(0, 60)) {
+      const r = await web(token, 'POST', '/appointments', { ...body, startsAt: slot });
+      if (r.status === 201) { startsAt = slot; date = ymdIn(CLINIC_TZ, Date.parse(slot)); return r; }
+      expect(r.status, `only a taken slot (409) may be retried: ${JSON.stringify(r.body)}`).toBe(409);
+    }
+    throw new Error('no free slot found on the clinic day');
+  };
 
   beforeAll(async () => {
     // the critical lab order is part of the mobile demo seed; re-open it (and its alert) so the approve flow is repeatable
@@ -219,7 +232,7 @@ describe('c. Clinic day (Nile Care, PRO): front desk -> nurse -> doctor -> lab a
 
   it('front desk books and checks in the appointment (ticket + queue), visible on the web board and appointment', async () => {
     const fd = await tok(NA('frontdesk1'));
-    const b = await web(fd, 'POST', '/appointments', { clinicId: CLINIC, patientId: ctx.patient.id, clinicianId: NADIA, startsAt, feeAmount: 25, notes: 'e2e16 staff flow' });
+    const b = await bookToday(fd, { clinicId: CLINIC, patientId: ctx.patient.id, clinicianId: NADIA, feeAmount: 25, notes: 'e2e16 staff flow' });
     expect(b.status, JSON.stringify(b.body)).toBe(201);
     ctx.appt = b.body.id;
     // the staff app schedule of the front desk and of the doctor shows it (SCHEDULED/CONFIRMED)
@@ -374,23 +387,32 @@ describe('c. Clinic day (Nile Care, PRO): front desk -> nurse -> doctor -> lab a
 // ============================================================================================================================================================
 describe('d. Home-visit rounds: solo nurse Mona and an agency nurse (start, en route, arrive, SOS, unsafe abort, nursing note -> finished)', () => {
   const GEO = { lat: 30.09, lng: 31.32 };
+  // Every visit of a run goes on its own far-future calendar day (2 to 28 days ahead, the product refuses more than 30; a different one per booking), so the per-nurse DAILY cap and the travel-time rule can
+  // only ever see this run's own visits, whatever earlier runs, the seed or the shared demo DB hold. All visits are cleaned up in afterAll.
   const book = async (who: string, body: Record<string, unknown>) => {
     const t = await tok(who);
     for (let i = 0; i < 25; i++) {
-      const d = new Date(Date.now() + (2 + Math.floor(Math.random() * 26)) * 86_400_000); d.setUTCHours(6 + Math.floor(Math.random() * 8), 0, 0, 0);
+      const d = uniqueFutureDay(Date.now(), 2, 27); d.setUTCHours(6 + Math.floor(Math.random() * 6), 0, 0, 0);
       const r = await web(t, 'POST', '/home-visits/bookings', { ...body, startsAt: d.toISOString(), addressConfirmed: true });
-      if (r.status === 201) return r.body;
-      // slot taken, or too close to another visit of the same nurse (the shared demo DB accumulates visits across runs): try another slot
-      expect([[409, 'SLOT_TAKEN'], [422, 'HOME_VISIT_TRAVEL_INFEASIBLE']], JSON.stringify(r.body)).toContainEqual([r.status, r.body.code]);
+      if (r.status === 201) { created.push(r.body.appointmentId); return r.body; }
+      // a collision with an earlier leftover on the drawn day: draw another day (only these two refusals are retried; the daily cap on a fresh day cannot be hit)
+      // (a plain appointment overlap answers 409 without a code, a nurse's own visit answers 409 SLOT_TAKEN)
+      expect(r.status === 409 || (r.status === 422 && r.body.code === 'HOME_VISIT_TRAVEL_INFEASIBLE'), JSON.stringify(r.body)).toBe(true);
     }
     throw new Error('no free home slot found');
   };
+  beforeAll(async () => {
+    // release what crashed or older runs left behind: future (2+ days) live visits of the two nurse demo orgs that the seed did not create (seed ids start with demo_)
+    await q('kiorly', `update "HomeVisit" set state = 'CANCELLED' where state in ('REQUESTED','CONFIRMED','ON_MY_WAY','ARRIVED') and "tenantId" in ('demo_t_nsolo','demo_t_nagy') and id not like 'demo\\_%' and "plannedStartsAt" > now() + interval '2 days'`);
+  });
   const created: string[] = []; const alertsToResolve: { tenant: string; who: string; id: string }[] = [];
 
   afterAll(async () => {
     // keep the demo inbox tidy: resolve the SOS / unsafe-abort alerts this suite raised (web: POST /home-visits/safety-alerts/:id/resolve)
     for (const a of alertsToResolve) await web(await tok(a.who), 'POST', `/home-visits/safety-alerts/${a.id}/resolve`).catch(() => undefined);
-    for (const id of created) await q('kiorly', `update "Appointment" set status = 'CANCELLED' where id = $1 and status in ('SCHEDULED','CONFIRMED')`, [id]);
+    // release what the suite booked: the HomeVisit row (that is what the daily cap and the travel rule count) AND its appointment, whatever state the test left it in
+    await q('kiorly', `update "HomeVisit" set state = 'CANCELLED' where "appointmentId" = any($1::text[]) and state in ('REQUESTED','CONFIRMED','ON_MY_WAY','ARRIVED')`, [created]);
+    await q('kiorly', `update "Appointment" set status = 'CANCELLED' where id = any($1::text[]) and status in ('SCHEDULED','CONFIRMED','CHECKED_IN')`, [created]);
   });
 
   it('solo nurse Mona: dispatch books, route shows it, depart -> arrive -> SOS (alert on the app + web) -> nursing note signed -> visit FINISHED (appointment COMPLETED)', async () => {
@@ -576,9 +598,13 @@ describe('e. Offline queue replay: the same Idempotency-Key twice has exactly on
 
   it('draft save (queued PATCH /encounters/:id) is idempotent; check-in replay does not issue a second ticket; Rx sign / approve / ack replays are no-ops', async () => {
     const fd = await tok(NA('frontdesk2')), doc = await tok(NA('nadia'));
-    const startsAt = new Date(Date.now() + (3100 + Math.floor(Math.random() * 3000)) * 60_000).toISOString();
-    const ap = await web(fd, 'POST', '/appointments', { clinicId: 'demo_c_na_maadi', patientId: 'demo_p_na_10', clinicianId: NADIA, startsAt, notes: 'e2e16 replay' });
-    expect(ap.status, JSON.stringify(ap.body)).toBe(201);
+    let ap: Awaited<ReturnType<typeof web>> | undefined;
+    for (const startsAt of daySlots(CLINIC_TZ, Date.now() + 2 * 86_400_000).slice(0, 60)) { // a day nobody checks in on: free slot found by trying, never a fixed minute
+      ap = await web(fd, 'POST', '/appointments', { clinicId: 'demo_c_na_maadi', patientId: 'demo_p_na_10', clinicianId: NADIA, startsAt, notes: 'e2e16 replay' });
+      if (ap.status === 201) break;
+      expect(ap.status, JSON.stringify(ap.body)).toBe(409);
+    }
+    expect(ap?.status, JSON.stringify(ap?.body)).toBe(201); if (!ap) throw new Error('unreachable');
     const ci = await app(fd, 'POST', `/front-desk/appointments/${ap.body.id}/check-in`, {}, { 'Idempotency-Key': 'e2e16-ci' });
     expect(ci.status).toBe(201);
     const ci2 = await app(fd, 'POST', `/front-desk/appointments/${ap.body.id}/check-in`, {}, { 'Idempotency-Key': 'e2e16-ci' });

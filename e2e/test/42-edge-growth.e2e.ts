@@ -108,12 +108,14 @@ describe('C. Consent withdrawn mid-journey, late consent, provider-led patient w
     const pt = await freshPatient('Edge consent');
     await seedTouch({ sub: pt.sub, kind: 'PROVIDER_LINK', ageMs: 3600_000, linkCode: L.code, org });
     // withdraw measurement consent AFTER the touch
-    expect((await kiorex(pt.token, 'PUT', '/me/consents/ANALYTICS_MEASUREMENT', { granted: false })).status).toBeLessThan(500);
+    const withdrawal = await kiorex(pt.token, 'PUT', '/me/consents/ANALYTICS_MEASUREMENT', { granted: false });
+    expect(withdrawal.status, `consent withdrawal must be accepted: ${JSON.stringify(withdrawal.body)}`).toBe(200);
     const withdrawn = await bookWith(pt.token, p); const d1 = await decisionOf(withdrawn.id);
     await kiorex(pt.token, 'POST', `/bookings/${withdrawn.id}/cancel`, {});
-    // only meaningful when the consent endpoint recorded the withdrawal; otherwise this scenario is reported as unsupported by the API surface
+    // unconditional: the withdrawal is recorded as the latest ConsentRecord, and the touch that predates it no longer counts
     const rec = await q('kiorex_platform', `select granted from "ConsentRecord" where sub = $1 and purpose = 'ANALYTICS_MEASUREMENT' order by "createdAt" desc limit 1`, [pt.sub]);
-    if (rec[0] && rec[0].granted === false) expect(d1[0].origin).not.toBe('PROVIDER_LED');
+    expect(rec).toHaveLength(1); expect(rec[0].granted).toBe(false);
+    expect(d1[0].origin).not.toBe('PROVIDER_LED');
     // re-consent, then a NEW touch: counts
     await q('kiorex_platform', `insert into "ConsentRecord" (id, sub, purpose, granted, source, "textVersion", "createdAt") select 'cr_edge_' || substr(md5(random()::text), 1, 10), $1, 'ANALYTICS_MEASUREMENT', true, 'e2e', coalesce((select "textVersion" from "ConsentRecord" where sub = $1 order by "createdAt" desc limit 1), 'v1'), (now() at time zone 'utc') - interval '30 minutes'`, [pt.sub]).catch(() => undefined);
     await seedTouch({ sub: pt.sub, kind: 'PROVIDER_LINK', ageMs: 600_000, linkCode: L.code, org });
