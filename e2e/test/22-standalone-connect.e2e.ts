@@ -4,6 +4,7 @@ import { kiorex, kiorly, opsLogin, q, waitFor, syncProviders } from '../src/clie
 import { loginWithPhone } from '../src/passport.js';
 import { resetOtpLimits } from '../src/db.js';
 import { lab, pharmacy, recordDevGate, releaseDevGate, rnd, setFlag } from '../src/verticals.js';
+import { generateEnrolmentCode, newIntakeNonce, signIntakeRequest } from '../src/intake.js';
 
 /**
  * s. Connect a STANDALONE organisation to Kiorex (ADR-040). The product side computes a checklist from real state; "Request to go live" sends a signed,
@@ -20,6 +21,13 @@ const createdConnections: string[] = [];
 const clinicTenants: string[] = [];
 
 const ops = (t: string, method: string, path: string, body?: unknown) => kiorex(t, method, `${P}${path}`, body);
+/** Kiorex ops creates the one-time enrolment code the partner product asks for in its "Request to go live" step (contracts 1.9.0). */
+async function enrol(kind: string, extra: Record<string, unknown> = {}) {
+  const r = await kiorex(prep, 'POST', '/admin/onboarding/enrolments', { kind, label: `e2e-connect ${tag}`, ...extra });
+  expect(r.status, JSON.stringify(r.body)).toBe(201); createdEnrolments.push(r.body.id); return r.body.code as string;
+}
+const createdEnrolments: string[] = [];
+const intake = (body: string, secret: string, enrolmentCode?: string, ts?: number) => fetch(`${KIOREX_API}/partners/v1/connection-requests`, { method: 'POST', headers: signIntakeRequest({ secret, body, timestamp: ts, enrolmentCode }), body });
 const stepOf = (view: any, key: string) => view.steps.find((s: any) => s.key === key);
 async function connectionId(kind: string, orgRef: string) {
   const id = await waitFor(`connection ${kind}`, async () => (await q('kiorex_platform', `select id from "PartnerConnection" where kind = $1 and "orgRef" = $2`, [kind, orgRef]))[0]?.id, 20_000, 400);
@@ -72,6 +80,8 @@ describe('s. Connect a standalone organisation to Kiorex (ADR-040)', () => {
     catch { await new Promise((r) => setTimeout(r, 31_000)); prep = (await loginWithPhone('+201000009001', { clientId: 'kiorex-ops', otp: '000000', totpSecret: OPS_ADMIN_TOTP })).accessToken; } // TOTP step already used by another file
   });
   afterAll(async () => {
+    await q('kiorex_platform', `delete from "AuditLog" where resource = 'PartnerEnrolment' and "resourceId" = any($1)`, [createdEnrolments]);
+    await q('kiorex_platform', `delete from "PartnerEnrolment" where id = any($1)`, [createdEnrolments]);
     for (const id of createdConnections) {
       const [c] = await q('kiorex_platform', `select kind, "orgRef", "clientKey", "registrationId" from "PartnerConnection" where id = $1`, [id]);
       if (c?.registrationId) await q('kiorex_platform', `delete from "PartnerRegistration" where id = $1`, [c.registrationId]);
@@ -84,11 +94,25 @@ describe('s. Connect a standalone organisation to Kiorex (ADR-040)', () => {
     await q('kiorex_platform', `delete from "MessageLog" where "templateId" like 'partner.onboarding.%' and recipient like 'e2e-connect-%'`);
   });
 
-  it('the intake is signed: unsigned or tampered requests are rejected and nothing is created', async () => {
-    const body = JSON.stringify({ kind: 'LAB', orgRef: `e2e_bad_${tag}`, name: 'Bad', baseUrl: 'http://localhost:3200', clientKey: 'k', clientSecret: 's', webhookSecret: 'w' });
-    const r = await fetch(`${KIOREX_API}/partners/v1/connection-requests`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-kiorly-timestamp': '1', 'x-kiorly-signature': 'sha256=00' }, body });
-    expect(r.status).toBe(401);
-    expect((await q('kiorex_platform', `select count(*)::int c from "PartnerConnection" where "orgRef" = $1`, [`e2e_bad_${tag}`]))[0].c).toBe(0);
+  it('the intake is authenticated: unsigned, wrongly signed, old shared-secret, replayed, revoked and expired requests are all refused with the SAME 401 and create nothing', async () => {
+    const mk = (orgRef: string) => JSON.stringify({ nonce: newIntakeNonce(), kind: 'LAB', orgRef, name: 'Bad', baseUrl: 'http://localhost:3200', clientKey: 'k', clientSecret: 's', webhookSecret: 'w' });
+    const ghost = generateEnrolmentCode(); const revoked = await enrol('LAB'); const expired = await enrol('LAB'); const good = await enrol('LAB');
+    expect((await kiorex(prep, 'DELETE', `/admin/onboarding/enrolments/${revoked.split('.')[0]}`)).status).toBe(200);
+    await q('kiorex_platform', `update "PartnerEnrolment" set "expiresAt" = (now() at time zone 'utc') - interval '1 minute' where id = $1`, [expired.split('.')[0]]);
+    const answers: string[] = []; const refs: string[] = [];
+    const attempt = async (secret: string, code?: string, ts?: number) => { const ref = `e2e_bad_${tag}_${refs.length}`; refs.push(ref); const r = await intake(mk(ref), secret, code, ts); expect(r.status).toBe(401); answers.push(await r.text()); };
+    await attempt('x');                                   // unsigned-ish: no credential
+    await attempt(ghost.code, ghost.code);                // unknown code
+    await attempt(revoked, revoked);                      // revoked
+    await attempt(expired, expired);                      // expired
+    await attempt('kx_dev_webhook_secret');               // the old shared Kiorly secret no longer works
+    await attempt(good, good, Math.floor(Date.now() / 1000) - 3600); // stale timestamp
+    expect(new Set(answers).size).toBe(1); expect(JSON.parse(answers[0]!).code).toBe('INTAKE_UNAUTHORIZED');
+    expect((await q('kiorex_platform', `select count(*)::int c from "PartnerConnection" where "orgRef" like $1`, [`e2e_bad_${tag}%`]))[0].c).toBe(0);
+    // strict shape (400) and size (413) answers come before authentication and reveal nothing about codes
+    expect((await intake(JSON.stringify({ ...JSON.parse(mk('e2e_strict')), surprise: 1 }), good, good)).status).toBe(400);
+    const huge = JSON.stringify({ ...JSON.parse(mk('e2e_big')), readiness: { pad: 'x'.repeat(70_000) } });
+    expect((await intake(huge, good, good)).status).toBe(413);
     expect((await ops('', 'GET', '')).status).toBe(401);
   });
 
@@ -126,7 +150,10 @@ describe('s. Connect a standalone organisation to Kiorex (ADR-040)', () => {
         // storage adapter may refuse a placeholder PDF: the licence document is then recorded through the dev storage fixture
         expect(c0.body.steps.find((x: any) => x.key === 'licence').detail.document).toBe(false);
       }
-      const r = await pharmacy(tok, 'POST', '/kiorex-connect/request', { contactEmail: `e2e-connect-ph-${tag}@example.com` });
+      expect((await pharmacy(tok, 'POST', '/kiorex-connect/request', {})).status).toBe(409); // no enrolment code yet
+      const wrong = await pharmacy(tok, 'POST', '/kiorex-connect/request', { enrolmentCode: generateEnrolmentCode().code }); expect(wrong.status).toBe(409); expect(wrong.body.code).toBe('ENROLMENT_CODE_REJECTED');
+      expect((await pharmacy(tok, 'GET', '/kiorex-connect')).body.enrolmentCodeRequired).toBe(true);
+      const r = await pharmacy(tok, 'POST', '/kiorex-connect/request', { contactEmail: `e2e-connect-ph-${tag}@example.com`, enrolmentCode: await enrol('PHARMACY') });
       expect(r.status, JSON.stringify(r.body)).toBe(200);
       expect(r.body.status).toBe('REQUESTED'); expect(JSON.stringify(r.body)).not.toMatch(/clientSecret|webhookSecret/);
       id = await connectionId('PHARMACY', tenantId);
@@ -175,7 +202,7 @@ describe('s. Connect a standalone organisation to Kiorex (ADR-040)', () => {
       expect((await lab(tok, 'PUT', '/kiorex-connect/payout', { label: 'Main settlement account' })).status).toBe(200);
       expect((await lab(tok, 'PUT', '/kiorex-connect/terms', { version: '2026-11' })).status).toBe(200);
       const ready = await lab(tok, 'GET', '/kiorex-connect'); expect(ready.body.canRequest, JSON.stringify(ready.body.steps)).toBe(true);
-      const r = await lab(tok, 'POST', '/kiorex-connect/request', { contactEmail: email }); expect(r.status, JSON.stringify(r.body)).toBe(200);
+      const r = await lab(tok, 'POST', '/kiorex-connect/request', { contactEmail: email, enrolmentCode: await enrol('LAB') }); expect(r.status, JSON.stringify(r.body)).toBe(200);
       expect(r.body.status).toBe('REQUESTED'); expect(JSON.stringify(r.body)).not.toMatch(/clientSecret|webhookSecret/);
       id = await connectionId('LAB', tenantId);
     });
@@ -194,7 +221,7 @@ describe('s. Connect a standalone organisation to Kiorex (ADR-040)', () => {
       await lab(t2, 'PUT', `/labs/${o.body.labId}`, { licenceNo: `LAB-LIC-B-${tag}` });
       await lab(t2, 'POST', '/kiorex-connect/licence', { name: 'licence.pdf', contentBase64: Buffer.from('%PDF-1.4\n%E2E\n%%EOF').toString('base64') });
       await lab(t2, 'PUT', '/kiorex-connect/payout', { label: 'Settlement' }); await lab(t2, 'PUT', '/kiorex-connect/terms', { version: '2026-11' });
-      expect((await lab(t2, 'POST', '/kiorex-connect/request', { contactEmail: email2 })).status).toBe(200);
+      expect((await lab(t2, 'POST', '/kiorex-connect/request', { contactEmail: email2, enrolmentCode: await enrol('LAB') })).status).toBe(200);
       const idB = await connectionId('LAB', o.body.tenantId);
       expect((await ops(prep, 'POST', `/${idB}/request-changes`, { reason: '' })).status).toBe(400);
       expect((await ops(prep, 'POST', `/${idB}/request-changes`, { reason: 'Please upload a clearer licence scan' })).body.status).toBe('CHANGES_REQUESTED');
@@ -245,7 +272,8 @@ describe('s. Connect a standalone organisation to Kiorex (ADR-040)', () => {
       expect(rows[0].status).toBe('DRAFT'); expect(rows[0].blockers).toContain('connection'); // everything else is green but the clinic never asked: not live
     });
     it('request to go live: listings move DRAFT -> PENDING_VERIFICATION and are still not searchable on Kiorex', async () => {
-      const r = await kiorly(tok, 'POST', '/kiorex/connect/request', { clinicId }); expect(r.status, JSON.stringify(r.body)).toBe(200);
+      expect((await kiorly(tok, 'POST', '/kiorex/connect/request', { clinicId })).status).toBe(409); // enrolment code required
+      const r = await kiorly(tok, 'POST', '/kiorex/connect/request', { clinicId, enrolmentCode: await enrol('CLINIC') }); expect(r.status, JSON.stringify(r.body)).toBe(200);
       expect(r.body.status).toBe('REQUESTED');
       expect((await kiorly(tok, 'POST', '/kiorex/connect/request', { clinicId })).status).toBe(200); // idempotent re-send
       id = await connectionId('CLINIC', tenantId);
@@ -277,4 +305,13 @@ describe('s. Connect a standalone organisation to Kiorex (ADR-040)', () => {
     const [t] = await q('kiorly', `select "providerSettings"->'kiorexConnect' as c from "Tenant" where name like 'Kiorly Demo%' or name like '%KX-DEV%' limit 1`);
     expect(t?.c ?? null).toBeNull();
   });
+
+  it('rate limit: a burst from one address answers 429 RATE_LIMITED with Retry-After, then recovers (runs last: it fills the per-minute window)', async () => {
+    const url = `${KIOREX_API}/partners/v1/connection-requests`; let hit: Response | undefined;
+    for (let i = 0; i < 45 && !hit; i++) { const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' }); if (r.status === 429) hit = r; else expect(r.status).toBe(400); }
+    expect(hit, 'expected 429 within 45 requests').toBeTruthy();
+    expect((await hit!.json()).code).toBe('RATE_LIMITED'); const wait = Number(hit!.headers.get('retry-after')); expect(wait).toBeGreaterThan(0); expect(wait).toBeLessThanOrEqual(60);
+    await new Promise((r) => setTimeout(r, (wait + 1) * 1000));
+    expect((await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })).status).toBe(400);
+  }, 120_000);
 });

@@ -14,7 +14,7 @@ scripts/svc.sh kiorly stop|start                # single service (used by 10-res
 | File | Scenario | Requirement IDs |
 |---|---|---|
 | 01-passport | a. phone-OTP login, auth code + PKCE, Kiorex accepts the token | KA-01, KA-03, KXM-AC-01 |
-| 02-provider-sync | b. pull the 3 LIVE doctors; search by specialty with 3 inline slots | KXM-DS-01..04/06/07, KX-09 §03 |
+| 02-provider-sync | b. pull the 3 LIVE KX-DEV doctors (the catalogue is paged: `pageSize` caps at 30 and the default `earliest` sort only ranks the 60 best-rated rows, so the fixtures page with `sort=rating`); search by specialty with 3 inline slots | KXM-DS-01..04/06/07, KX-09 §03 |
 | 03-booking-golden | c. hold -> confirm (Idempotency-Key) -> Kiorly appointment (KIOREX_MARKETPLACE) -> webhook CONFIRMED; d. slot race | KXM-BK-02/03/04, KX-09 §05 |
 | 04-pharmacy, 05-lab | vertical partners (see INTEGRATION.md) | |
 | 06-lifecycle-review | e. check-in -> COMPLETED -> review invitation -> verified review -> aggregate in Kiorly; commission event | KXM-LC, KXM-RV-01/03, CR-03 |
@@ -32,6 +32,9 @@ scripts/svc.sh kiorly stop|start                # single service (used by 10-res
 | 17-staff-mobile-pharmacy | q. Kiorly (staff app) pharmacy roles on the real :3100 API and demo tenants: role matrix (owner/pharmacist/manager/cashier/assistant/chain, PRO solo, BASIC FEATURE_DISABLED), Rx validate + interaction override + FEFO dispense, barcode/customer lookup, shift open/close reconciliation, PO receiving partial then full, stock count variance + approval, expiry/quarantine/recall + recalled-lot alert, controlled dispense + discrepancy + witness countersign (same user refused), Kiorex order progression; every flow re-read through the web path (no client header). Idempotent replays assert one effect. Needs the demo seeds; Kiorex-side order mirroring is asserted only when pharmacy->Kiorex delivery is live | KXM-PH, KX-06, ADR-025 |
 
 | 16-staff-mobile-clinic | q. Kiorly (staff app) x Kiorly Clinic: role matrix for every clinic demo login (modules/plan/safetyAlertsOnly + endpoint scoping), BASIC org (alerts only, FEATURE_DISABLED), clinic day (front desk check-in -> nurse vitals incl. critical alert -> doctor SOAP + sign Rx -> critical lab approval -> revenue = web totals), home-visit rounds (solo nurse + agency: depart/arrive/SOS/unsafe abort/nursing note), offline replay idempotency, device registration + remote sign-out; each result re-read through the clinic web endpoints. UI parity: `kiorly/e2e-web` (Playwright, `-c clinic.config.ts`) | KWORK, MOBILE.md |
+
+| 22-standalone-connect | s. Connect a standalone clinic / pharmacy / lab (ADR-040): enrolment code from ops, signed request (code, then issued key), automated checks, two-person approval, Go live; uniform 401, replay, 413, 429 | ADR-040, contracts 1.9.0 |
+| 23-multi-partner-routing | t. Second live pharmacy and second live lab (wizard + ops walk, multi-tenant :3100 / :3200): each order and booking reaches only its own partner's database, carries its `partnerId`, and its webhooks move only its own orders | ADR-040, per-registration routing |
 
 `11-nurse-lab` is skipped in the default run (it needs its own outbox workers): `npm run test:nurse` starts the isolated stack, runs it and stops the stack.
 Prerequisites for 13/14: the demo data (`scripts/seed-all.sh`) with the dev-only gate rows GHV1/GHV2/GKN1 (the tests never record a gate).

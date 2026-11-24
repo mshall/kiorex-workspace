@@ -17,7 +17,7 @@ describe('b. Provider sync from Kiorly and catalogue search', () => {
   });
 
   it('search by specialty (paediatrics) returns the paediatrician with 3 inline slots (DS-01/02/07)', async () => {
-    const r = await kiorex(t.p1, 'GET', '/search/providers?specialty=paediatrics');
+    const r = await kiorex(t.p1, 'GET', '/search/providers?specialty=paediatrics&pageSize=30&sort=rating');
     expect(r.status).toBe(200);
     const p = r.body.items.find((x: any) => x.nameEn === 'Dr Mona Fahmy');
     expect(p).toBeTruthy();

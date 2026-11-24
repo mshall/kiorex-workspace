@@ -38,7 +38,7 @@ describe('i. Resilience: Kiorly Clinic API down', () => {
     expect(blocked.status).toBe(503);
     expect(blocked.body.code).toBe('CLINIC_SYSTEM_BUSY');
     // the catalogue keeps serving from Kiorex's own projection
-    expect((await kiorex(t.p1, 'GET', '/search/providers?specialty=paediatrics')).status).toBe(200);
+    expect((await kiorex(t.p1, 'GET', '/search/providers?specialty=paediatrics&pageSize=30&sort=rating')).status).toBe(200);
   });
 
   it('after restart: reconciliation adopts a booking Kiorly created but whose reply was lost; the never-created intent expires; a new booking works once the circuit closes', async () => {
