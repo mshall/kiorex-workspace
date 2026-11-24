@@ -14,7 +14,7 @@ scripts/svc.sh kiorly stop|start                # single service (used by 10-res
 | File | Scenario | Requirement IDs |
 |---|---|---|
 | 01-passport | a. phone-OTP login, auth code + PKCE, Kiorex accepts the token | KA-01, KA-03, KXM-AC-01 |
-| 02-provider-sync | b. pull the 3 LIVE KX-DEV doctors (the catalogue is paged: `pageSize` caps at 30 and the default `earliest` sort only ranks the 60 best-rated rows, so the fixtures page with `sort=rating`); search by specialty with 3 inline slots | KXM-DS-01..04/06/07, KX-09 §03 |
+| 02-provider-sync | b. pull the 3 LIVE KX-DEV doctors (the catalogue is paged: `pageSize` caps at 30 and the default `earliest` sort now covers the whole catalogue; the fixtures still page with `sort=rating`); search by specialty with 3 inline slots | KXM-DS-01..04/06/07, KX-09 §03 |
 | 03-booking-golden | c. hold -> confirm (Idempotency-Key) -> Kiorly appointment (KIOREX_MARKETPLACE) -> webhook CONFIRMED; d. slot race | KXM-BK-02/03/04, KX-09 §05 |
 | 04-pharmacy, 05-lab | vertical partners (see INTEGRATION.md) | |
 | 06-lifecycle-review | e. check-in -> COMPLETED -> review invitation -> verified review -> aggregate in Kiorly; commission event | KXM-LC, KXM-RV-01/03, CR-03 |
@@ -44,3 +44,5 @@ Notes
 - The ops super admin needs TOTP; the login is cached in `.cache/ops-login.json` (gitignored).
 - DB assertions read Postgres directly (`src/db.ts`); `timestamp without time zone` columns are parsed as UTC (Prisma writes UTC).
 - Test-only fixtures that are NEEDS_HUMAN product values (a 1 EGP commission rate, a 150 EGP deposit on the KX-DEV visit types) are inserted by the test that needs them and removed afterwards.
+
+**Fixtures clean up after themselves.** 22 and 23 remove every tenant they signed up in the Pharmacy / Lab / Clinic databases (`purgeTenant` in `src/db.ts`: FK checks and append-only triggers are off for ONE transaction; dev databases only), their partner connections, registrations, enrolment codes and the Nurse relay rows. **Quiet hours** never depend on the time of day: 04 sets the patient's own 0-0 window for WhatsApp/push, and `test/pharmacy.int.spec.ts` asserts the quiet window itself with an explicit preference. **Intake rate limits** live in Postgres (`RateLimitBucket`): 22 and 23 call `resetRateLimits()` before (and 22 after) the burst test.

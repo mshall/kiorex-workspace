@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorex, opsLogin, q, waitFor } from '../src/clients.js';
 import { loginWithPhone } from '../src/passport.js';
-import { resetOtpLimits } from '../src/db.js';
+import { resetOtpLimits, resetRateLimits } from '../src/db.js';
 import { pharmacy, pharmacyStaff, lab, labStaff, patientToken, payFake, recordDevGate, releaseDevGate, rnd, waitPartnerFlags } from '../src/verticals.js';
 import { cleanupConnected, connectLab, connectPharmacy, type ConnectedPartner } from '../src/connect.js';
 import { randomUUID } from 'node:crypto';
+import { kiorexWebhook } from '../src/hmac.js';
+import { LAB, WEBHOOK_SECRET } from '../src/env.js';
 
 /**
  * t. Second live pharmacy and second live lab on the REAL stack: the demo tenants (registrations pr_pharmacy_dev / pr_lab_dev) plus one freshly connected tenant of each kind
@@ -16,9 +18,10 @@ const OPS_ADMIN_TOTP = 'REMOVED-OLD-DEMO-TOTP-SECRET';
 describe('t. Several live pharmacies and labs: each receives only its own traffic', () => {
   let sup: string, prep: string, p1: string, ownerA: string, pharmA: string, branchA: string, regA: string;
   let phB: ConnectedPartner, labB: ConnectedPartner, labIdA: string, labRegA: string;
+  const nurseRegs: string[] = [];
 
   beforeAll(async () => {
-    await resetOtpLimits();
+    await resetOtpLimits(); await resetRateLimits();
     sup = (await opsLogin()).accessToken; p1 = await patientToken();
     try { prep = (await loginWithPhone('+201000009001', { clientId: 'kiorex-ops', otp: '000000', totpSecret: OPS_ADMIN_TOTP })).accessToken; }
     catch { await new Promise((r) => setTimeout(r, 31_000)); prep = (await loginWithPhone('+201000009001', { clientId: 'kiorex-ops', otp: '000000', totpSecret: OPS_ADMIN_TOTP })).accessToken; }
@@ -31,7 +34,7 @@ describe('t. Several live pharmacies and labs: each receives only its own traffi
     phB = await connectPharmacy(prep, sup, 'B'); labB = await connectLab(prep, sup, 'B');
     await waitPartnerFlags();
   }, 180_000);
-  afterAll(async () => { await cleanupConnected(); await releaseDevGate(sup, 'kiorex.pharmacy_orders'); await releaseDevGate(sup, 'kiorex.lab_bookings'); });
+  afterAll(async () => { for (const r of nurseRegs) { await q('kiorex_platform', `delete from "NurseLabRelay" where "registrationId" = $1`, [r]); await q('kiorex_platform', `delete from "PartnerRegistration" where id = $1`, [r]); } await q('kiorex_platform', `delete from "NurseLabRelay" where id like 'e2e_nrs_%'`); await q('kiorex_platform', `delete from "WebhookReceipt" where "aggregateId" like 'e2e_nrs_%'`); await cleanupConnected(); await releaseDevGate(sup, 'kiorex.pharmacy_orders'); await releaseDevGate(sup, 'kiorex.lab_bookings'); });
 
   it('the registry holds several live registrations of each kind', async () => {
     const regs = (await kiorex(sup, 'GET', '/admin/partners')).body as { id: string; kind: string; active: boolean }[];
@@ -119,5 +122,42 @@ describe('t. Several live pharmacies and labs: each receives only its own traffi
       }
       void lab; void labStaff;
     }, 90_000);
+  });
+
+  describe('Nurse lab relay (LAB_NURSE)', () => {
+    const placed = (orderId: string, preferredLabId: string, tag: string, testCode: string) => ({
+      eventId: `e2e-${orderId}`, type: 'LabOrderPlaced', aggregateType: 'LabOrder', aggregateId: orderId, target: 'KIOREX', occurredAt: new Date().toISOString(),
+      data: {
+        orderId, clinicId: 'cl_e2e_nurse', patientRef: `pat_e2e_${tag}`, orderingClinicianId: 'usr_e2e_nurse', preferredLabId, consentToken: `rsc_${'0123456789abcdef'.repeat(2)}`, orderedAt: new Date().toISOString(),
+        items: [{ code: testCode, nameEn: 'Fasting glucose' }], originEdition: 'NURSE', prescriberName: 'Dr E2E', identifiersChecked: ['fullName', 'dateOfBirth'],
+        patient: { fullName: `Nora Routing ${tag}`, dateOfBirth: '1990-04-12', sex: 'F', phone: '+201000000042' },
+        nurseCollection: { visitRef: `apt_e2e_${tag}`, collectorRef: 'usr_e2e_nurse', collectedAt: new Date(Date.now() - 20 * 60_000).toISOString(), handedOverAt: new Date(Date.now() - 5 * 60_000).toISOString(), temperatureC: 5, samples: [{ label: `NRS-${tag}`, specimenType: 'blood' }] },
+      },
+    });
+    it('a nurse order for lab B reaches ONLY lab B (its own KIORLY_NURSE client), one for the demo lab only the demo lab; the relay row remembers the nurse registration', async () => {
+      // lab B's owner creates its own KIORLY_NURSE integration client; Kiorex ops register it, paired with lab B's booking registration
+      const c = await lab(labB.token, 'POST', '/integration-clients', { source: 'KIORLY_NURSE' });
+      expect(c.status, JSON.stringify(c.body)).toBe(201);
+      const reg = await kiorex(sup, 'POST', '/admin/partners/lab_nurse', { name: 'E2E nurse client lab B', baseUrl: LAB, clientKey: c.body.key, clientSecret: c.body.secret, labRegistrationId: labB.registrationId });
+      expect(reg.status, JSON.stringify(reg.body)).toBe(201); nurseRegs.push(reg.body.id);
+      const demoNurse = (await q('kiorex_platform', `select id, "labRegistrationId" from "PartnerRegistration" where "clientKey" = 'kl_dev_nurse'`))[0];
+      expect(demoNurse.labRegistrationId).toBe(labRegA); // the dev nurse client belongs to the demo lab
+      const tag = rnd().toLowerCase(); const idB = `e2e_nrs_b_${tag}`, idA = `e2e_nrs_a_${tag}`; const code = `NR${rnd()}`; // each lab needs the test and the sample must match its specimen type
+      for (const t of [labB.token, await labStaff('owner')]) expect((await lab(t, 'POST', '/catalogue/tests', { code, nameEn: `Nurse routing glucose ${code}`, specimenType: 'blood', price: 120, analyteCodes: ['GLU'] })).status).toBe(201);
+      const rb = await kiorexWebhook(WEBHOOK_SECRET, '/webhooks/kiorly', placed(idB, labB.locationId, `b${tag}`, code)); expect(rb.status, JSON.stringify(rb.body)).toBe(200); expect(rb.body.status).toBe('APPLIED');
+      const ra = await kiorexWebhook(WEBHOOK_SECRET, '/webhooks/kiorly', placed(idA, labIdA, `a${tag}`, code)); expect(ra.status, JSON.stringify(ra.body)).toBe(200); expect(ra.body.status).toBe('APPLIED');
+      const relay = (id: string) => q('kiorex_platform', `select status, "registrationId", "refusalCode" from "NurseLabRelay" where id = $1`, [id]).then((r) => r[0]);
+      expect(await relay(idB), JSON.stringify(await relay(idB))).toMatchObject({ status: 'SUBMITTED', registrationId: reg.body.id });
+      expect(await relay(idA), JSON.stringify(await relay(idA))).toMatchObject({ status: 'SUBMITTED', registrationId: demoNurse.id });
+      const at = (id: string) => q('kiorly_lab', `select "orgId", source from "LabOrder" where "sourceRef" = $1`, [id]);
+      const onB = await at(idB), onA = await at(idA);
+      expect(onB).toHaveLength(1); expect(onB[0].orgId).toBe(labB.tenantId); expect(onB[0].source).toBe('KIORLY_NURSE');
+      expect(onA).toHaveLength(1); expect(onA[0].orgId).not.toBe(labB.tenantId); expect(onA[0].source).toBe('KIORLY_NURSE');
+      // an unknown lab is a definitive refusal relayed to the clinic, never a guess at the first registration
+      const bad = `e2e_nrs_x_${tag}`;
+      expect((await kiorexWebhook(WEBHOOK_SECRET, '/webhooks/kiorly', placed(bad, 'lab_does_not_exist', `x${tag}`, code))).body.status).toBe('APPLIED');
+      expect(await relay(bad)).toMatchObject({ status: 'REFUSED', refusalCode: 'LAB_NOT_FOUND' });
+      expect(await at(bad)).toHaveLength(0);
+    }, 60_000);
   });
 });

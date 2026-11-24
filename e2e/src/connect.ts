@@ -1,6 +1,7 @@
 import { expect } from 'vitest';
 import { kiorex, q, waitFor } from './clients.js';
 import { lab, pharmacy, recordDevGate, rnd } from './verticals.js';
+import { purgeTenant } from './db.js';
 
 /**
  * Connect a SECOND standalone pharmacy / lab to Kiorex through the real wizard API and the real ops walk-through (enrolment code -> signed request -> automated checks ->
@@ -82,4 +83,8 @@ export async function cleanupConnected() {
   await q('kiorex_platform', `delete from "AuditLog" where resource = 'PartnerEnrolment' and "resourceId" = any($1)`, [created.enrolments]);
   await q('kiorex_platform', `delete from "PartnerEnrolment" where id = any($1)`, [created.enrolments]);
   await q('kiorex_platform', `delete from "MessageLog" where "templateId" like 'partner.onboarding.%' and recipient like 'e2e-routing-%'`);
+  // the partner-side tenants (own databases) go too: a fixture never outlives the run
+  for (const t of created.tenants.pharmacy) await purgeTenant('kiorly_pharmacy', t).catch(() => undefined);
+  for (const t of created.tenants.lab) await purgeTenant('kiorly_lab', t).catch(() => undefined);
+  created.connections.length = 0; created.enrolments.length = 0; created.tenants.pharmacy.length = 0; created.tenants.lab.length = 0;
 }

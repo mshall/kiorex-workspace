@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { KIOREX_API, KIORLY_API, PHARMACY_API, PHARMACY, LAB_API } from '../src/env.js';
 import { kiorex, kiorly, opsLogin, q, waitFor, syncProviders } from '../src/clients.js';
 import { loginWithPhone } from '../src/passport.js';
-import { resetOtpLimits } from '../src/db.js';
+import { purgeTenant, resetOtpLimits, resetRateLimits } from '../src/db.js';
 import { lab, pharmacy, recordDevGate, releaseDevGate, rnd, setFlag } from '../src/verticals.js';
 import { generateEnrolmentCode, newIntakeNonce, signIntakeRequest } from '../src/intake.js';
 
@@ -75,11 +75,13 @@ async function walkOps(id: string, opts: { gateFlag?: string; expectNotification
 describe('s. Connect a standalone organisation to Kiorex (ADR-040)', () => {
   beforeAll(async () => {
     await resetOtpLimits();
+    await resetRateLimits();
     sup = (await opsLogin()).accessToken;
     try { prep = (await loginWithPhone('+201000009001', { clientId: 'kiorex-ops', otp: '000000', totpSecret: OPS_ADMIN_TOTP })).accessToken; }
     catch { await new Promise((r) => setTimeout(r, 31_000)); prep = (await loginWithPhone('+201000009001', { clientId: 'kiorex-ops', otp: '000000', totpSecret: OPS_ADMIN_TOTP })).accessToken; } // TOTP step already used by another file
   });
   afterAll(async () => {
+    await resetRateLimits(); // the burst test fills the per-minute window: do not leave the next suite blocked
     await q('kiorex_platform', `delete from "AuditLog" where resource = 'PartnerEnrolment' and "resourceId" = any($1)`, [createdEnrolments]);
     await q('kiorex_platform', `delete from "PartnerEnrolment" where id = any($1)`, [createdEnrolments]);
     for (const id of createdConnections) {
@@ -90,7 +92,9 @@ describe('s. Connect a standalone organisation to Kiorex (ADR-040)', () => {
       await q('kiorex_platform', `delete from "PartnerConnection" where id = $1`, [id]);
     }
     // the self-serve clinic tenant (and its Kiorex provider projection) must not outlive the suite: it would stay LIVE in search
-    for (const t of clinicTenants) { await q('kiorex_platform', `delete from "Provider" where "tenantId" = $1`, [t]); await q('kiorly', `delete from "Tenant" where id = $1`, [t]).catch(() => undefined); }
+    for (const t of clinicTenants) { await q('kiorex_platform', `delete from "Provider" where "tenantId" = $1`, [t]); await purgeTenant('kiorly', t); }
+    // the partner-side tenants this run signed up (own databases, RESTRICT foreign keys): found by this run's unique tag so a failed run cleans up too
+    for (const [db, table] of [['kiorly_pharmacy', 'Tenant'], ['kiorly_lab', 'Tenant']] as const) for (const t of await q(db, `select id from "${table}" where name like $1`, [`E2E Connect %${tag}`])) await purgeTenant(db, t.id);
     await q('kiorex_platform', `delete from "MessageLog" where "templateId" like 'partner.onboarding.%' and recipient like 'e2e-connect-%'`);
   });
 

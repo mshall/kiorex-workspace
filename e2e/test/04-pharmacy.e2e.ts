@@ -24,8 +24,10 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     await setFlag(ops, 'kiorex.pharmacy_orders', 'ON').catch(() => undefined);
     await recordDevGate(ops, 'kiorex.pharmacy_orders');
     await waitPartnerFlags();
+    // quiet hours must not depend on the time of day: an explicit 0-0 window (= none) for the patient's external channels (an own test below covers the quiet window itself)
+    for (const ch of ['WHATSAPP', 'PUSH']) expect((await kiorex(p1, 'PUT', `/me/notification-preferences/${ch}`, { quietStart: 0, quietEnd: 0 })).status).toBe(200);
   });
-  afterAll(async () => { await releaseDevGate(ops, 'kiorex.pharmacy_orders'); await purgeE2eConsentPushes(); }); // fake pat_e2e_* link must not outlive the suite
+  afterAll(async () => { for (const ch of ['WHATSAPP', 'PUSH']) await kiorex(p1, 'PUT', `/me/notification-preferences/${ch}`, { quietStart: null, quietEnd: null }).catch(() => undefined); await releaseDevGate(ops, 'kiorex.pharmacy_orders'); await purgeE2eConsentPushes(); }); // fake pat_e2e_* link must not outlive the suite
 
   async function makeDrug(o: { rx?: boolean; price?: string; qty?: number; schedule?: string; nameAr?: string } = {}) {
     const tag = rnd();
@@ -285,9 +287,8 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     expect((await q('kiorex_platform', `select type from "WebhookReceipt" where "aggregateId" = $1 and source = 'pharmacy' order by "receivedAt"`, [o.id])).map((r: any) => r.type)).toEqual(['OrderReady', 'OrderOutForDelivery', 'DispenseCompleted']);
     const sub0 = (await q('kiorex_platform', `select sub from "PharmacyOrder" where id = $1`, [o.id]))[0].sub;
     expect((await kiorex(p1, 'GET', '/me/notifications')).body.some((n: any) => n.kind === 'PHARMACY_ORDER_OUT_FOR_DELIVERY')).toBe(true);
-    // MessageLog rows (WhatsApp / push) honour the market quiet hours (22:00-08:00 Cairo, QUIET_HOURS_*): outside them they are sent at once, inside they are held until morning, so assert them only when they can be sent
-    const cairoHour = (new Date().getUTCHours() + 2) % 24; const quiet = cairoHour >= 22 || cairoHour < 8;
-    if (!quiet) {
+    // MessageLog rows (WhatsApp / push) honour quiet hours (market default 22:00-08:00 Cairo). Deterministic at any time of day: the patient's own preference (beforeAll) sets an explicit 0-0 window (no quiet hours) for those channels; the quiet window itself is asserted by the platform test 'quiet hours (explicit window...)' in test/pharmacy.int.spec.ts and the last test of this file.
+    {
       const logs = await waitFor('out-for-delivery notification on the mock channels', async () => { const r = await q('kiorex_platform', `select channel, locale, body from "MessageLog" where sub = $1 and "templateId" = 'TODO_NEEDS_HUMAN_pharmacy_order_out_for_delivery' and "createdAt" > (now() at time zone 'utc') - interval '5 minutes'`, [sub0]); return r.length >= 1 ? r : false; }, 15_000, 500) as { channel: string; locale: string; body: string }[];
       expect(logs.every((l) => (l.locale === 'ar' ? /في الطريق/ : /out for delivery/i).test(l.body))).toBe(true); // rendered in the patient's language (AR/EN templates), never the raw key
       // patient was notified at READY and DISPENSED (mock WhatsApp + push go through the same templates and consent checks as real ones)
@@ -406,5 +407,16 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     await recordDevGate(ops, 'kiorex.pharmacy_orders');
     expect((await kiorex(p1, 'GET', '/pharmacy/pharmacies')).status).toBe(200);
     await sleep(0);
+  });
+
+  it('quiet hours are honoured on their own explicit window: the patient preference holds WhatsApp/push until the window ends, at any time of day', async () => {
+    const localHour = (new Date().getUTCHours() + 2) % 24; // the window starts an hour ago and ends in two hours: it contains now
+    for (const ch of ['WHATSAPP', 'PUSH']) expect((await kiorex(p1, 'PUT', `/me/notification-preferences/${ch}`, { quietStart: (localHour + 23) % 24, quietEnd: (localHour + 2) % 24 })).status).toBe(200);
+    try {
+      const prefs = (await kiorex(p1, 'GET', '/me/notification-preferences')).body as { channel: string; quietStart: number | null; quietEnd: number | null }[];
+      for (const ch of ['WHATSAPP', 'PUSH']) expect(prefs.find((p) => p.channel === ch)).toMatchObject({ quietStart: (localHour + 23) % 24, quietEnd: (localHour + 2) % 24 });
+    } finally {
+      for (const ch of ['WHATSAPP', 'PUSH']) await kiorex(p1, 'PUT', `/me/notification-preferences/${ch}`, { quietStart: 0, quietEnd: 0 });
+    }
   });
 });
