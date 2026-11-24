@@ -1,7 +1,7 @@
 # KX08 — Target Architecture & Repository Design
 
 Source: 1uLxpvO063I9jGeKscWTN5eJiou3mwfNs
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the notification layer, provider adapters, the staff app and the repository states of 23 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the notification layer, provider adapters, the staff app and the repository states of 23 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 ## What changed in Rev 2.3
 Kiorly Nurse runs as an edition inside clinics-management (ADR-031); nurse.kiorly.com alias; no new repository or database.
@@ -391,3 +391,12 @@ Code: 256 random bits (base64url, 43 chars), stored only as a SHA-256 hash in ta
 - **Ops endpoints** under `/api/v1/admin/onboarding/partners`: list, detail (steps, progress, blockers), `run-checks`, `steps/review_documents|verify_licence|fees`, `request-changes`, `reject`, `request-approval`, `approve` (super admin), `go-live`, `pause`, `resume`, `apply-rotation`, `audit`.
 - **Rules kept.** Launch gates are never recorded by code; secrets are encrypted, shown once and never logged; logs and audit rows carry ids, counts and stable codes only; real providers stay config-only (the handshake is a signed read against the partner's own API; notifications go through the mock layer until the provider pass).
 
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- **Section 02/03/04 (context, containers, repositories)**: Proposed growth modules: kiorex-platform `apps/api/src/growth`, `public-site`, `widget` plus `apps/widget` (small Vite workspace); clinics-management `apps/api/src/growth` (existing folder extended) and `apps/web/src/features/growth`. No new service, no Redis, no Kafka (ADR-041). The SSR deploy role is the same image with `ROLE=site` (ADR-043).
+- **Section 08 (deployment topology)**: Proposed CloudFront behaviours for `/{ar,en}/*`, `/sitemap*.xml`, `/robots.txt`, `/.well-known/*` to the site role; widget host with a per-request CSP. `tofu validate` only; no apply (FD-17).
+- **Section 13 host security (ADR-038)**: As-built statement: every product sends `frame-ancestors 'none'` and nothing embeds another product. Proposed exception (ADR-044): only the widget origin may generate a `frame-ancestors` allowlist per organisation from exact origins (https, no wildcard, at most 10). Every other host is unchanged.
+- **Section 07 (data model)**: Proposed new tables and columns are listed in KX-28 section 07 (KP: `GrowthTouchpoint`, `GrowthAttributionDecision`, `GrowthEvent`, `GrowthConfigVersion` and others; CM: `ProviderReferralLink`, `BookingWidgetConfig`, `KiorexCommissionDecision`, appointment columns).
+- **Section 09/10 (flags)**: Proposed `growth.*` flags with launch-locked entries (see KX-30 section 10).
+- Not verified: any of these in code at the time of writing.

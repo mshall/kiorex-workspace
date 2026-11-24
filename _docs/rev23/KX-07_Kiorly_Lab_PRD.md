@@ -1,7 +1,7 @@
 # KX07 — Kiorly Lab PRD
 
 Source: 1sPyClcmk-Yxo3TgKsYq7kE-Pzxv490Al
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds build status of 19-23 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds build status of 19-23 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 ## What changed in Rev 2.3
 Home collection (KLORD04) is built on the shared @kiorly/field-visit package (ADR-030): coverage zones, travel buffers, on-my-way/arrived geostamps, safety timer and SOS for phlebotomists.
@@ -173,3 +173,9 @@ Observed in `kiorly-lab` (69 commits since 19 Nov), contracts 1.6.0 and the e2e 
 - Added §07 build status: mobile lab module, critical-value read-back note, nurse sample hand-off, provider adapters and notification-layer migration step.
 - Workflow, QC rules and rollout gates are unchanged.
 - Not verified: lab modules on a device, real push, any real vendor.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- Lab has no growth surface today (scaffold until M15). Proposed Phase 4: lab public pages with `MedicalLaboratory` structured data and booking links, only when `kiorex.lab_bookings` is effective (launch-locked). Roadmap, GRW-P4-2.
+- Lab and result data never enter acquisition segments, event properties or ad payloads (Proposed rule, `no-health-targeting` test).

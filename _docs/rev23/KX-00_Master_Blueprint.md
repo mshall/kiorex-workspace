@@ -1,6 +1,6 @@
 # KX00 — Master Blueprint & Reading Guide
 Source: 1PCtr6eLZsin2wRXCw6MiC0YikOBrvSFV
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; supersedes the 20 Nov 2026 text of this volume)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; supersedes the 20 Nov 2026 text of this volume; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 > Cleaned from Drive text extraction; symbols dropped by extractor (≥ ≤ × → bullets) restored where obvious; headers/footers removed. Owner role: CEO. Supersedes: KX00 Rev 2.2 (19 Nov 2026). Audience: Founders, investors, engineering & operations leads.
 
@@ -209,3 +209,14 @@ Reading paths: Messaging and providers (1 h) KX24 · KX09 · KX10 §08 · _docs/
 - Decision log now runs to ADR-035: ADR-033 (one staff app, tiered mobile entitlements, Proposed), ADR-034 (notification layer is a package, Accepted), ADR-035 (provider adapter contract, Proposed). Details in KX01.
 - Unchanged: strategy, brands, business model, governance. Figures in KX12, KX13 and KX14 are the founder's and were not touched.
 - Not verified: anything running on real vendors, real devices or AWS.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- **New volumes (Proposed, Rev 2.4 draft 1):** KX-27 Growth and Patient Acquisition Engine PRD · KX-28 Growth Engine System Architecture · KX-29 Patient Acquisition and Go-to-Market Strategy for Egypt · KX-30 Attribution, Referrals, Rewards and Commission Architecture · KX-31 SEO, ASO and Organic Growth Strategy · KX-32 Growth Analytics and Unit Economics Reference · KX-33 Growth Engine Implementation Roadmap and Agent Handoff. The document count in section 08 therefore becomes 34 volumes (KX00 to KX33).
+- **Document map additions:** all seven sit in folder "10 Growth Engine" (Drive upload deferred until implementation status is final). Written as: Head of Product (KX27), Chief Software Architect (KX28, KX30, KX33), CMO (KX29), Head of Growth and SEO (KX31), Head of Finance (KX32).
+- **Reading path, Growth (1.5 h):** KX27 section 01 to 04 → KX30 sections 02 and 06 → KX28 sections 02 to 06 → KX33 sections 04 and 06 → KX29 sections 03 and 09 → KX32 section 04.
+- **Decision log:** ADR-041 to ADR-047 are Proposed (KX-01). ADR-039 does not appear in the repository set; verify in Drive before assuming it is free.
+- **Critical path note:** the growth engine does not change the launch critical path; it adds Phase 1 work (84 engineer-days) that must land before marketing spend and before provider-led protection is promised in marketing copy.
+- **Glossary additions:** Provider-led (a booking credited to a provider's own link, QR or widget; no Kiorex fee). Origin (`PROVIDER_LED`, `MARKETPLACE`, `UNATTRIBUTED`). Touchpoint, attribution decision, `lt` token, thin-page guard (see KX-30, KX-31).
+- Not verified: founder sign-off of any growth ADR; any growth code running (wave 1 was in progress when this update was written).

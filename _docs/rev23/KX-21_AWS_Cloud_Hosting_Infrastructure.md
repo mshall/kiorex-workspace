@@ -1,6 +1,6 @@
 # KX21 · AWS Cloud Hosting & Infrastructure Reference
 Source: 1CzIULGNBy-wQ5jVikoHy7JqHHv4K7QKW
-Revision: Rev 2.2 · Reference Edition (19 November 2026) — cover NOT bumped; Drive file (created 13:21 19 Nov, not in Superseded) is the same Rev 2.2 PDF. Body below is the previously cleaned extract, verified against the re-read PDF text (structure, HB01-HB12, T1-T5, numbers match).
+Revision: Rev 2.2 · Reference Edition (19 November 2026) — cover NOT bumped; Drive file (created 13:21 19 Nov, not in Superseded) is the same Rev 2.2 PDF. Body below is the previously cleaned extract, verified against the re-read PDF text (structure, HB01-HB12, T1-T5, numbers match). · Growth update 24 Nov 2026 (addendum, status-labelled)
 
 
 > Extraction note: symbols (≥, ≤, ≈, →, ×, ·) and some chart values lost in the PDF text layer were restored by inference where obvious. Page headers/footers removed.
@@ -568,3 +568,12 @@ Every external figure in this document traces to one of these sources; internal 
 | Current medical documents | never expired by lifecycle |
 
 Also: CORS driven by an allowed-origins variable (needed for presigned uploads), a CloudWatch alarm when stored bytes grow more than 30 percent in 7 days, optional S3 inventory. Cost example: 1,000 clinics at 5 GB each is 5 TB; Standard storage is roughly USD 115 a month, and with tiering plus image compression the estate trends toward USD 40 to 60 a month. Assumptions and prices must be re-checked against the current AWS price list. Detail: KX-25 §04 and §09.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- **Request path and component reference (sections 06, 07)**: Proposed CloudFront behaviours for the public site role (`/{ar,en}/*`, sitemaps, `robots.txt`, `/.well-known/*`) with HTML `s-maxage=300` and stale-while-revalidate 3600, path-only cache key and purge on `LISTING_STATUS_CHANGED` and `PROVIDER_PROFILE_UPDATED`; module `modules/aws/cdn-edge` and `product-stack` get a role variable. A widget host with a per-request CSP. Validate only; nothing applied (FD-17).
+- **Sizing (section 09 and 16)**: SSR runs as a role of the Kiorex API image; whether it is a separate App Runner service from day one is an Open decision (cost and sizing).
+- **Data cells (section 04)**: growth data lives in the Kiorex cell (`frankfurt`); no cross-cell routing until a second cell exists.
+- **Observability (section 13)**: growth alarms: decision replay mismatch, public 5xx, sitemap freshness, outbox lag p95 over 60 s (KX-28 section 11).
+- **Storage**: no new storage tier; touch and event tables use the product database and its backups (section 14).

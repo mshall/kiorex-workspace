@@ -1,6 +1,6 @@
 # KX03 — Kiorex Marketplace PRD
 Source: 1jyq4wTn3bBW4xEahE3-crbpZwrJB18o7
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update records the patient app and notification changes of 22-23 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update records the patient app and notification changes of 22-23 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 > Cleaned from Drive text extraction; symbols restored where obvious; headers/footers removed. Owner: Chief Product Officer. Audience: Founders, investors, engineering & operations leads. Tags: Egypt MVP · Requirement IDs · Booking state machine · Kiorly contract consumer · Home visits · Phase-2 verticals. (Cover requirement-count figure not recoverable from this extraction; Rev 2.2 printed "120".)
 
@@ -229,3 +229,14 @@ Demo data (DEV ONLY, synthetic): every one of the 36 specialties has 2 LIVE veri
 - KXMNT notification requirements now run through the shared layer (KX24); channel list unchanged.
 - Product scope, booking state machine and fee design are unchanged.
 - Not verified: patient app on a device, real push, real vendors, the backend's real push `data` keys.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- **KXMBK10 (clinic booking link, "embedded widget on kiorly.link/<slug>")**: As-built is a page `/b/:slug` whose Book button points to `KIOREX_BOOKING_WIDGET_URL`, which does not exist yet (NH-008); the Kiorex web does not read `channel=CLINIC_LINK&slug=` (only the type exists). Proposed (ADR-044): the widget runs on its own origin (proposed `book.kiorex.com`, Open decision) with an exact-origin `frame-ancestors` allowlist; widget bookings are `CLINIC_LINK` with a signed `lt` token and are commission-free.
+- **Public pages**: the patient web remains a SPA for signed-in flows. Proposed (ADR-043): public routes (home, specialty and district pages, doctor, clinic, help) are server rendered under `/{locale}/{cc}/...` with slugs, canonical, hreflang, JSON-LD and a sitemap; legacy `/doctors/:id` 301s to the slug URL. As-built today: none of this exists.
+- **Analytics (section 07)**: the existing anonymous ingest (13 events, 7 properties) is unchanged. Proposed (ADR-045): a consent-gated pseudonymous visitor key and canonical funnel events in a separate table; specialty never joins the visitor stream; k at least 10 (KX-32).
+- **Booking**: Proposed additive `acquisition` block on the signed booking call (contracts 1.10.0). A missing block behaves as today.
+- **Deep links**: Proposed Universal and App Links for `kiorex.com` doctor and clinic URLs; Android install referrer and iOS claim code; bootstrap endpoint with no market selector while one market is live (As-built rule).
+- **WhatsApp**: KXM-BK-11 deterministic machine is As-built. A tool-based assistant is Roadmap (Phase 2, flag `kiorex.whatsapp_ai_assistant`, launch-locked until the safety review).
+- Not verified: any of the above running; store accounts and Team ID (NEEDS_HUMAN).

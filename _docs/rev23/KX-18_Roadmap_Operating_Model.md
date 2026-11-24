@@ -1,6 +1,6 @@
 # KX18 · 36-Month Roadmap & Operating Model
 Source: 1agB72kMlqgTC4JTaiu3UhEanK_YF792e
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds progress against the roadmap)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds progress against the roadmap; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 > Extraction note: Gantt chart text is scrambled; quarter table rows reconstructed from text order (PDF text layer places some cells after the next row header). Symbols restored by inference.
 
@@ -108,3 +108,12 @@ The roadmap dates (month 1 = January 2027) are the founder's gates and were not 
 ## What changed in this revision (23 Nov 2026)
 - Added §08 progress table. Quarter plan, team plan, topology, cadence and scorecard are unchanged.
 - Not verified: team capacity and spend; no change to dates was made.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- **Roadmap placement (Proposed)**: Growth Phase 1 (84 engineer-days, 8 to 9 weeks critical path) runs before and during the pilot; Phase 2 starts about month 6 (campaigns, lifecycle under consent, provider workspace v2) and completes about month 12 (WhatsApp assistant; referral and rewards if legal clears); Phase 3 follows; Phase 4 aligns with M9 (pharmacy), M15 (lab, corporate programmes) and GKN2 (nurse listing). Detail and packages: KX-33.
+- **Operating cadence (section 05)**: weekly growth review of provider-led share, link activation, indexed pages and disputes; monthly finance review of MER against KX-13 guardrails.
+- **Company scorecard (section 06)**: proposed additions: provider-led share, organic share, indexed pages passing the guard, decision determinism, consent send correctness (definitions in KX-32).
+- **Team**: no new roles assumed; marketing and SEO lead, DPO and counsel owners for gates (Open decision on staffing).
+- Not verified: progress against any of these.

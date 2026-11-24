@@ -1,6 +1,6 @@
 # KX19 · Brand Architecture, Domains & Store Accounts
 Source: 1aTb7g8qsYtcLMTS1muWTRHCXfQKTluxs
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference). Supersedes: KX19 Rev 2.1 19 Nov 2026
+Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference). Supersedes: KX19 Rev 2.1 19 Nov 2026 · Growth update 24 Nov 2026 (addendum, status-labelled)
 
 > Extraction note: symbols restored by inference; Arabic names for Kiorly Nurse came out as scrambled presentation-form glyphs (text layer reversed); the PDF shows the Arabic product name "كيورلي نرس" (Proposed; alternative "كيورلي للتمريض" — per scrambled glyphs; confirm in PDF).
 
@@ -86,3 +86,22 @@ Social handles: @kiorex and @kiorly on Instagram, Facebook, TikTok, LinkedIn, X 
 
 ## 06 Sources & evidence
 Every external figure traces to these sources; internal facts trace to mshall/clinics-management (commit 6b24a79, 19 Nov 2026) or founder decisions in KX01. Apple App Review Guidelines 5.1.1(ix): apps in highly regulated fields such as healthcare should be submitted by a legal entity providing the services; regulated apps must provide documentation of authorization.
+
+## Growth Engine update (24 Nov 2026): domain reconciliation
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+The domain table of section 03 is stale against the as-built `kiorex-account/config/domains.json` (ADR-038). The reconciliation below is Proposed until the founder approves; `domains.json` remains the single per-environment table.
+
+| Hostname | KX-19 section 03 says | As-built `domains.json` | Growth proposal | Label |
+|---|---|---|---|---|
+| `kiorex.com` | Patient marketplace and company pages, AR/EN via `/ar`, `/en` | Not listed | Add `patient` host; canonical SEO host; URLs `https://kiorex.com/{locale}/{cc}/...`; staging `www.staging.kiorex.com` is a placeholder | Proposed, Open decision |
+| `account.kiorex.com` | Passport | `passport` | unchanged | As-built |
+| `api.kiorex.com` | Kiorex API | Not listed | Add `api.kiorex` | Proposed |
+| `www.kiorly.com` | Not listed (marketing site `kiorly.com`) | Kiorly Home sign-in `home`; apex `kiorly.com` redirects to `www` | Home stays; marketing pages for providers remain a separate Open question (no marketing site code found in the workspace) | As-built, NOT VERIFIED for marketing |
+| `app.kiorly.com` | Clinic web app | Alias of `clinic.kiorly.com` | `clinic.kiorly.com` is canonical | As-built |
+| `nurse.kiorly.com`, `pharmacy.`, `lab.` | as listed | as listed | unchanged | As-built |
+| `api.kiorly.com` | Provider APIs | `api.clinic.kiorly.com`, `api.pharmacy.`, `api.lab.` | Per-product API hosts are canonical | As-built |
+| `kiorly.link` | Short provider booking links, commission-free | Not listed; code serves `/b/<slug>` on the clinic web (`BOOKING_LINK_BASE_URL`, NH-008) | Add `link` host; it resolves slug or code to an entity and redirects only to hosts in the table; never to a caller URL. Whether it serves the page or redirects is an Open decision | Proposed, Open decision |
+| Book host | Not listed | Not listed | Add `widget` host (proposed `book.kiorex.com`) for embeddable booking with a per-request `frame-ancestors` allowlist | Proposed, Open decision |
+
+Other rules kept: host-only cookies, never `Domain=.kiorex.com` or `.kiorly.com`; HSTS on every host. App-link files for the patient app move to the `kiorex.com` host (Team ID and SHA-256 are NEEDS_HUMAN). Section 04 store accounts: none created; growth ASO depends on them (KX-31 section 10).

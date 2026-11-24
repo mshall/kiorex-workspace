@@ -1,7 +1,7 @@
 # KX-15 Risk & Compliance Framework
 
 Source: 189VvrWvsSTnBwRpDHdGVuXSYkjx7YXZU
-Revision: Rev 2.3 · Reference Edition (20 November 2026; supersedes KX15 Rev 2.1, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition (20 November 2026; supersedes KX15 Rev 2.1, 19 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; multi-column obligations table partly scrambled — rows reconstructed best-effort.
 
@@ -109,3 +109,25 @@ Heatmap (L × I, axes 1–5): I5: R5 R9 R15 at L2, R1 R14 at L3; I4: R6 R8 at L2
 
 ## 07 Medical document retention and legal hold (Proposed, 23 Nov 2026)
 Deleting a medical document currently hard-deletes it. Proposed control: soft delete with a mandatory reason, retention floor per market and document class (proposal: clinical 10 years from last clinical activity, financial proofs 7 years; NEEDS_HUMAN: DPO to confirm), legal hold that blocks purge, a nightly purge job that keeps only an anonymous audit record (ids, size, hash, actor, reason), and erasure requests that create a DPO task and never delete inside the retention period. EXIF and GPS data are stripped from uploaded photos. Detail: KX-25 §07.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+**Regulatory facts checked (secondary sources only; counsel must confirm).** Egypt PDPL Law 151 of 2020: direct electronic marketing needs the data subject's consent and sender identity; a registry of approvals must be kept; commentary reports a licence for direct electronic marketing (reported as Article 28); executive regulations were reported issued in 2025 with a one-year compliance period (the decision number differs between sources). All of this is a Regulatory dependency.
+
+| # | Obligation or risk | Treatment (Proposed) | Owner |
+|---|---|---|---|
+| 1 | Analytics cookies and visitor keys | Consent-gated; no visitor key before consent; `growth.analytics_visitor` launch-locked | Counsel, DPO |
+| 2 | Direct electronic marketing consent and licence | `growth.marketing_messaging` launch-locked OFF in production; mock mode until counsel signs | Counsel |
+| 3 | Consent wording AR and EN, versioned (`TODO_NEEDS_HUMAN_v0` today) | Placeholder keys; no marketing send until approved | Counsel, CMO |
+| 4 | Advertising rules: no health-condition targeting, no patient-list audiences, no remarketing, no patient identifiers to ad platforms | Company policy; `no-health-targeting` guard test; `AnonymizedConversion` only | Counsel, CMO |
+| 5 | Children and dependants | Excluded from growth tables and marketing | DPO |
+| 6 | Cross-border and processors | Growth data stays in the Frankfurt cell; only aggregates to external platforms | DPO |
+| 7 | Reward credits (stored value, e-money, vouchers, consumer protection, tax and accounting) | Not built until assessed; coupon fallback | Counsel, finance |
+| 8 | Provider content licence for public SEO pages; provider terms for attribution and evidence | Terms update before go-live | Counsel, CEO |
+| 9 | Retention, subject rights and the decision-anonymisation approach | DPO to confirm defaults (13 and 25 months for touches, 12 for fraud signals) | DPO |
+| 10 | Review markup eligibility | Omit `aggregateRating` until verified | SEO lead |
+| 11 | WhatsApp templates, quality rating, assistant safety review | Gate before `kiorex.whatsapp_ai_assistant` | CMO, clinical safety |
+| 12 | Complete record of processing and formal PIA | DPO deliverable; summary in KX-28 section 10 | DPO |
+
+Risk register additions: GR1 to GR10 in KX-27 section 09. The full list of 26 NEEDS_HUMAN items is in `_docs/growth/GROWTH_PHASE1_WORK_PACKAGES.md` section 7. No gate is recorded as satisfied here.

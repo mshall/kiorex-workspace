@@ -1,6 +1,6 @@
 # KX02 — Ecosystem Business Requirements (BRD)
 Source: 1YCnxmSbm-JIp0pu8iEm_F2XAINqyXAEr
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference; supersedes KX02 Rev 2.1, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference; supersedes KX02 Rev 2.1, 19 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 > Cleaned from Drive text extraction; comparison symbols (≥ ≤) restored by inference; headers/footers removed. Owner: Chief Business Analyst. Audience: Founders, investors, engineering & operations leads. Tags: Objectives & KPIs · Stakeholders · 61 business rules · End-to-end journeys · Traceability.
 
@@ -183,3 +183,18 @@ Internal facts trace to repository mshall/clinics-management (commit 6b24a79, 19
 - Launch Base Africa 24 Apr 2026: Vezeeta stake marked 78.6% below cost; implied valuation ≈ USD 22.4M (Mar 2026); pivot to operating a medical building.
 - NEW: Law 3 of 1985 regulating the practice of physiotherapy; Nursing Professions Syndicate law (membership required to practise); Law 51 of 1981 on medical establishments — see KX15. Enterprise 2025 home-nursing operators such as 7keema and Tabibi 24/7 have institutionalised home nursing in Egypt.
 - Kiorly repository Docs: BOOKING_ATTRIBUTION, KIOREX_COMMISSION_CHARGES, MONTHLY_SETTLEMENT, KIOREX_MARKETPLACE, PLANS_AND_ENTITLEMENTS, TRIAL_ENGINE, kiorly-cursor-build-sequence §24.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+| Item | Status | Detail |
+|---|---|---|
+| New business objective G-ACQ: acquire patients through provider-owned and organic channels at a cost below what Kiorex earns | Proposed | Measured by provider-led share, organic share and MER (KX-32) |
+| BR (existing) 12, referral reward | As-built | One free month for both sides is the provider-to-provider programme only (CR-09); it is not a patient programme |
+| New BR (proposed number to assign): patient referral | Open decision | Reward only after the referee's first attended visit and refund window; closed-loop discount credit or coupon; counsel-gated (KX-30 section 09) |
+| New BR: provider-led protection | Proposed | A booking credited to a provider's own link, QR or widget never carries a Kiorex fee; evidence is stored and visible to the provider (KX-30) |
+| New BR: marketing consent | Proposed, Regulatory dependency | No marketing message without recorded, versioned consent per channel; STOP and إلغاء honoured (KX-24, KX-27 GR-5xx) |
+| Stakeholders added | Proposed | Marketing and SEO lead, DPO and counsel as owners of growth gates |
+| Traceability | Proposed | KX-27 requirement ids GR-101 to GR-602 map to work packages GRW-P1-A to M in KX-33 |
+
+Not verified: counsel opinion on consent and marketing licensing.

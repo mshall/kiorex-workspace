@@ -1,7 +1,7 @@
 # KX09 — Integration Contracts, Events & Money Flows
 
 Source: 1p5Hwgw5gCg7L3A6gsIVxYcN2p6WZKUl7
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds contracts 1.7.0 and the provider webhook convention)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds contracts 1.7.0 and the provider webhook convention; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 ## What changed in Rev 2.3
 Additive (minor) contract version: provider sync adds profession, edition, service locations and coverage districts; slots accept serviceLocation=HOME; holds carry visitAddress. New events HOME_VISIT_ASSIGNED / _EN_ROUTE / _ABORTED_UNSAFE, SAFETY_ALERT_RAISED, CARE_PLAN_*, ReferralIssued, MedicationOrderShared. Money flows: home surcharge, cash at home, agency nurse pay, deposit hold on unsafe abort.
@@ -193,3 +193,21 @@ The notify entry is a library contract, not a wire contract: products do not cal
 - Added §08: contracts 1.5.0 to 1.7.0 history, the notify entry, the vendor webhook convention and open contract items.
 - Command and event catalogues, booking consistency, money flows and governance rules are unchanged; all changes were additive minors.
 - Not verified: the Pharmacy and Lab pin state beyond what FD-20 says.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+**Contracts 1.10.0 (Proposed, additive minor; As-built is 1.9.0).** No event is renamed or removed; consumers that ignore unknown fields keep validating.
+
+| Change | Status |
+|---|---|
+| Optional `acquisition { origin, decisionId, policyVersion, reason, evidenceHash, touch }` on `POST /marketplace/v1/bookings`; response unchanged | Proposed |
+| `COMMISSION_CHARGE_CREATED`: additive `decisionRef`, `origin`, `policyVersion` | Proposed |
+| `PROVIDER_PROFILE_UPDATED`: additive `widgetOrigins[]` | Proposed |
+| New events `CommissionAdjusted`, `PatientConsentUpdated` | Proposed |
+| New OpenAPI `kiorex-growth.v1`: `POST /growth/v1/touch`, `POST /growth/v1/events`, `GET /api/v1/bootstrap` | Proposed |
+| Flag catalogue: `growth.*` keys; config JSON Schemas shared with the ops UI | Proposed |
+| Naming rule: growth events are PascalCase; `ReferralIssued` stays clinical; patient referral uses `PatientReferral*` | Proposed |
+| Internal Kiorex outbox events (not published): `AttributionAssigned`, `PatientAcquisitionRecorded`, `PatientRegistered`; Phase 2 reward and campaign events | Proposed, Roadmap |
+
+Money flows (section 06): the reward ledger would be a **fourth** ledger, never commingled with Kiorex Pay, held deposits or the clinic SaaS credit ledger (Roadmap, counsel-gated). Fee amount and charge lifecycle are unchanged. Detail: KX-28 section 08 and KX-30.

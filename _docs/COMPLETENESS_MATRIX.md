@@ -449,3 +449,22 @@ The matrix above was generated on 20 Nov 2026 and was not re-run. Items that app
 | Staff-app Jest | 165 of 167 pass on the 23 Nov re-run (2 failing in `lite-request.test.tsx`) | re-run 23 Nov |
 | Communications control plane (KX-24 §10) | MISSING (Proposed) | not built |
 | Document storage growth: lifecycle, quotas, compression, retention (KX-25, ADR-036) | MISSING (Proposed); build prompt written | `_docs/prompts/CURSOR_PROMPT_document_storage_growth.md` |
+
+## Growth Engine (24 Nov 2026, Proposed; added by the documentation update)
+Status values as above. Growth requirement ids are those of KX-27 (GR-xxx) and work packages of KX-33 (GRW-P1-A to M). Verified by reading the repositories on 24 Nov 2026 before Phase 1 wave 1 landed; wave 1 was being implemented by other agents, so a verifying agent must re-run this section.
+
+| Item | Status | Evidence or blocker |
+|---|---|---|
+| Booking source stamp, new-patient freeze, chargeability (`CLINIC_LINK` never chargeable), charge engine, disputes | DONE+TESTED (existing) | `cr02-booking-attribution.node.test.ts`, `cr03-commission-charge.*`, `cr04-kiorex-commission.node.test.ts` |
+| Supply-side doctor-to-doctor referral (CR-09) | DONE+TESTED (existing, not growth scope) | `cr09-referral.*` |
+| GR-1xx provider links, QR, widget settings (GRW-P1-D0, D1) | MISSING | Not in code at verification time |
+| GR-2xx attribution engine, commission decision, `acquisition` block (GRW-P1-A, B0, B, C, D2) | MISSING | Not in code at verification time |
+| GR-3xx SSR public pages, sitemap, robots, hreflang, JSON-LD, slugs (GRW-P1-E, F) | MISSING | Patient web is a client-only SPA |
+| GR-4xx widget and SDK, deep links, bootstrap (GRW-P1-G, H) | MISSING | `frame-ancestors 'none'` decision to be amended (ADR-044) |
+| GR-5xx consent purposes, preference centre, suppression, growth analytics (GRW-P1-I, J) | MISSING | Existing anonymous analytics only |
+| GR-6xx growth configuration versions and ops Growth pages (GRW-P1-K) | MISSING | Flags and `PolicySetting` only |
+| Staff app Growth tab (GRW-P1-L), end-to-end scenarios (GRW-P1-M) | MISSING | |
+| Contracts 1.10.0 | MISSING | Published contracts are 1.9.0 |
+| Phase 2 to 4 (campaigns, referral, rewards, assistant, lifecycle, experiments, ads, ecosystem) | MISSING (Roadmap) | |
+| PDPL consent, marketing licence, reward-credit legal assessment, provider terms, store accounts, hosts and DNS | BLOCKED-HUMAN | See KX-33 section 06 and `LAUNCH_PREPARATION_GUIDE.md` section 11 |
+

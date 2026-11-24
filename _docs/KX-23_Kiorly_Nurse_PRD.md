@@ -1,5 +1,5 @@
 Source: 1KmhUM-11TEpgqAQfD-loqUbv0s3YUnCm
-Revision: Rev 2.3 · Reference Edition · first issued 20 November 2026, updated 23 November 2026 for the unified Kiorly staff app · Status: Approved reference · Document KX-23 (new volume; owner: Head of Home Care Product; supersedes: none, introduced in Rev 2.3 with ADR-029..032)
+Revision: Rev 2.3 · Reference Edition · first issued 20 November 2026, updated 23 November 2026 for the unified Kiorly staff app · Status: Approved reference · Document KX-23 (new volume; owner: Head of Home Care Product; supersedes: none, introduced in Rev 2.3 with ADR-029..032; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 # KX-23 Kiorly Nurse PRD
 
@@ -157,3 +157,11 @@ The nurse edition runs on the phone in the single staff app **Kiorly** (ADR-033,
 - Added §11 describing the nurse experience inside the unified Kiorly app, the Lab-results restriction for nurses, dispatcher rights and arrival distance. Requirements KN*, plans and gates are unchanged.
 - This volume previously existed only under `rev23/`; a copy now also sits next to the other volumes in `_docs/`.
 - Not verified: nurse flows on a physical device, real push.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- Nurse pages and links (Proposed, Phase 4): `/{locale}/{cc}/home-nursing/{city}/{district}` is indexable only when `nurse.individual_kiorex_listing` is effective (launch-locked, GKN2) and the district has live agency providers; home addresses never appear, districts only.
+- Nurse agencies and solo nurses get provider links and QR through Kiorly Clinic's Nurse edition (same Phase 1 package, standalone-capable).
+- Home-nursing and care-plan commission rules are unchanged: only the first attended visit of a new patient is commissionable (As-built), and provider-led origin removes the fee.
+- Nurse listing is not a growth launch dependency (Open, KX-01 Q7).

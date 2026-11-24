@@ -1,7 +1,7 @@
 # KX-13 36-Month Financial Model & Unit Economics
 
 Source: 1FBBBnCWZ4RlIY71XahyLPRwTTbvFVHdf
-Revision: Rev 2.3 · Reference Edition (20 November 2026; supersedes KX13 Rev 2.1, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition (20 November 2026; supersedes KX13 Rev 2.1, 19 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; several symbols (>=, <=, +/-, arrows) lost; table numeric cells in this read ARE present (the older extract lost them).
 
@@ -165,3 +165,60 @@ DECISION: Raise a Series A of USD 8–10M in the M15–M20 window against these 
 - Monthly close: PSP statements ↔ Kiorly invoices ↔ settlement summaries; Kiorex Pay ledger ↔ PSP; payouts ↔ provider deposits; per-clinician cash-at-home drawers ↔ shift close.
 - Revenue recognition: subscriptions over service period; commissions on CONFIRMED attendance (home: arrival); marketplace order fees on fulfilment (agent treatment — confirm with auditor). Every model input tagged Observed / Validated / Estimated with owner and date; model versioned alongside this document.
 - Board pack monthly: cohort table, higher-of share, burn, runway, gate status.
+
+## 13 Growth Engine inputs, bottom-up check and scenarios (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+> **Warning** These are modelling inputs and arithmetic on stated assumptions, not a forecast. The founder's financials in sections 01 to 12 are untouched. Every input below is an ASSUMPTION until pilot data (month 3 and 6).
+
+### 13.1 New inputs
+| Input | Symbol | Starting value | Source of truth later |
+|---|---|---|---|
+| Active clinic tenants | T | KX-14 section 07: M6 341, M12 857 | KX-13 |
+| Share of tenants with a LIVE listing | L | M6 20%, M12 45% | ops providers page |
+| Listed providers per listing tenant | d | 1.5 | provider sync |
+| Attended new patients per listed provider per month | a | M6 4, M12 8 (cluster gate is 12) | charges plus decisions |
+| Provider-led share of attended new patients | p | 35% to 50% | decisions |
+| Fee per attended new patient | f | EGP 40 indexed | rate table |
+| Dispute and reversal rate | r | 4% | disputes |
+| Unattributed share treated as marketplace | u | 10% of bookings | decisions |
+| Search to booking, booking to attended | c1, c2 | at least 8% (gate), 75% | funnel, charges |
+| Patient marketing spend, content and SEO spend | S_p, S_c | KX-14 section 09: 30% and 12% of S&M | finance |
+| WhatsApp message price and volume | w, m | Meta rate card by category (not yet modelled) | Meta pricing page |
+| Reward cost per qualified referral, breakage | q, b | open (founder, counsel), 30% | ledger |
+
+### 13.2 Bottom-up check against KX-14 section 07
+| Month | Listed providers | Attended new patients | Fee-bearing | Fee revenue per month | KX-14 attended Kiorex visits | Share |
+|---|---|---|---|---|---|---|
+| 6 | 102 | 409 | 205 (p 50%) | EGP 7,872 | 2,900 | about 14% |
+| 12 | 578 | 4,628 | 2,777 (p 40%) | EGP 106,637 | 13,667 | about 34% |
+
+Finding: the bottom-up lands near 14 percent (month 6) and 34 percent (month 12) of KX-14's attended-visit targets. The series reconcile only if KX-14 counts repeat visits and provider-led visits, or if listing rates and patients per provider are far higher. At the 12-per-provider gate, month 12 needs about 1,140 listed providers to reach 13,667, above the 857 tenants. **Action:** split "attended Kiorex visits" into new, returning and provider-led, and re-base fee revenue on fee-bearing attended new patients. This is not a statement that the target is wrong.
+
+### 13.3 Scenarios (EGP, monthly fee revenue from attended new patients only)
+| Scenario | L at M6 / M12 | a at M6 / M12 | p at M6 / M12 | r | Fee revenue M6 | Fee revenue M12 |
+|---|---|---|---|---|---|---|
+| Conservative | 15% / 35% | 3 / 6 | 55% / 50% | 6% | EGP 3,895 | EGP 50,752 |
+| Base | 20% / 45% | 4 / 8 | 50% / 40% | 4% | EGP 7,872 | EGP 106,637 |
+| Aggressive | 25% / 55% | 5 / 10 | 40% / 30% | 3% | EGP 14,885 | EGP 192,028 |
+
+These sit beside, not inside, the founder's base, downside and upside cases of section 08, which model the whole business (SaaS, fees, pharmacy, lab). Base-case cells use the rounded counts of the source report; other cells differ from unrounded arithmetic by up to 0.2 percent.
+
+### 13.4 Illustrative monthly patient-marketing budget (EGP 150,000), hypothesis only
+Not approved and not reconciled with KX-14 section 09 or the USD 25,000 per month sales and marketing line (Open decision).
+
+| Channel group | A: role-based hypothesis | EGP | B: literal 50/25/15/10 | EGP |
+|---|---|---|---|---|
+| Provider-led enablement | 25% | 37,500 | 50% | 75,000 |
+| Organic and local SEO | 35% | 52,500 | 25% | 37,500 |
+| Referral and WhatsApp | 15% | 22,500 | 15% | 22,500 |
+| Paid and partnerships (reserve until the liquidity gate) | 25% | 37,500 | 10% | 15,000 |
+
+Blended patient CAC if the full EGP 150,000 were spent: EGP 652 / 367 / 235 at month 6 and EGP 56 / 32 / 21 at month 12 (conservative / base / aggressive); MER 0.03 / 0.05 / 0.10 at month 6 and 0.34 / 0.71 / 1.28 at month 12. So the budget must ramp with liquidity (KX-29 section 09).
+
+### 13.5 LTV and CAC guardrails
+- Fee LTV of one attended new patient is about EGP 38 (EGP 40 less a 4% dispute rate), plus Pay margin once measured. Repeat visits at the same network earn no fee (ADR-007).
+- Paid CAC at or below about EGP 38 pays back on the fee alone. Scale a campaign only at LTV/CAC of at least 3; sustain at 1; stop below 1 for two weeks (ASSUMPTION).
+- Where CAC exceeds the fee, the spend is an investment in supply and retention and is tracked separately.
+- Track MER monthly; below 1 needs a finance-approved reason. Include delivered-message cost by Meta category before approving proactive messaging.
+- No large paid spend without verified provider supply (KX-29 section 11). Definitions: KX-32.

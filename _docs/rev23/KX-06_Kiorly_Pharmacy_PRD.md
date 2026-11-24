@@ -1,7 +1,7 @@
 # KX06 — Kiorly Pharmacy PRD
 
 Source: 16xpvUfI-F2iI1IR6lk461_o6B0qIcsRw
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; previous text was Rev 2.2, 19 Nov 2026, not revised in the 20 Nov edition; this update adds build status)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; previous text was Rev 2.2, 19 Nov 2026, not revised in the 20 Nov edition; this update adds build status; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 Pharmacy operating software for Egypt's 88,000 licensed pharmacies: lot-accurate inventory, pharmacist-gated dispensing, fast POS, supplier automation — and, when ready, Kiorex orders.
 
@@ -200,3 +200,10 @@ Observed in `kiorly-pharmacy` (60 commits since 19 Nov) and the e2e suite 17. Lo
 - Added §08 build status for the mobile pharmacy module, provider adapters (consent, AI, storage), plan gate and role fixes.
 - Product requirements, dispensing flow, commercial model and compliance gates are unchanged.
 - Not verified: pharmacy modules on a simulator or device, any real vendor.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- Pharmacy has no growth surface today (the repository is a scaffold until M9). Proposed Phase 4: pharmacy public pages `/{locale}/{cc}/pharmacy/{slug}` with `Pharmacy` structured data and provider links, only when `kiorex.pharmacy_orders` is effective (launch-locked). Roadmap, GRW-P4-2.
+- Pharmacy consent and notification registries still have to adopt KX-24 before any marketing; until then no pharmacy marketing messages exist (Open).
+- Pharmacy data never enters acquisition segments; no ad audience is ever built from pharmacy or prescription data (Proposed rule, enforced by tests).

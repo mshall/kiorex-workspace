@@ -296,3 +296,4 @@ code.ic-code{ background:var(--acc-soft); color:var(--ink) }
 .lede:has(.callout){ border:0; background:none; padding:0; margin:0 0 4mm }
 
 .figcap{ break-after:avoid }
+.figcap{ break-after:avoid }

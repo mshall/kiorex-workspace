@@ -385,6 +385,83 @@
         "_docs/rev23/KX-26_System_Architecture_Reference.md",
         "_docs/KX-26_System_Architecture_Reference.md"
       ]
+    },
+    {
+      "code": "KX-27",
+      "file": "KX-27_Growth_and_Patient_Acquisition_Engine_PRD",
+      "title": "Growth and Patient Acquisition Engine PRD",
+      "subtitle": "What the Growth Engine must do, for whom, in which phase, how we will know it works, and what is built today versus proposed.",
+      "family": "platform",
+      "group": "Growth Engine",
+      "sources": [
+        "_docs/rev23/KX-27_Growth_and_Patient_Acquisition_Engine_PRD.md"
+      ]
+    },
+    {
+      "code": "KX-28",
+      "file": "KX-28_Growth_Engine_System_Architecture",
+      "title": "Growth Engine System Architecture",
+      "subtitle": "Components, deployment, sequences, data, events, security, privacy, service levels, runbooks, markets and recovery for the Growth Engine.",
+      "family": "platform",
+      "group": "Growth Engine",
+      "sources": [
+        "_docs/rev23/KX-28_Growth_Engine_System_Architecture.md"
+      ]
+    },
+    {
+      "code": "KX-29",
+      "file": "KX-29_Patient_Acquisition_and_GTM_Strategy_Egypt",
+      "title": "Patient Acquisition and Go-to-Market Strategy for Egypt",
+      "subtitle": "Provider-led first, organic second, referral and WhatsApp third, paid last: plans, playbooks, budget hypotheses and scenarios.",
+      "family": "business",
+      "group": "Growth Engine",
+      "sources": [
+        "_docs/rev23/KX-29_Patient_Acquisition_and_GTM_Strategy_Egypt.md"
+      ]
+    },
+    {
+      "code": "KX-30",
+      "file": "KX-30_Attribution_Referrals_Rewards_and_Commission_Architecture",
+      "title": "Attribution, Referrals, Rewards and Commission Architecture",
+      "subtitle": "Where a patient came from, whether Kiorex charges its fee, how a provider can verify it, and how referral rewards would work.",
+      "family": "platform",
+      "group": "Growth Engine",
+      "sources": [
+        "_docs/rev23/KX-30_Attribution_Referrals_Rewards_and_Commission_Architecture.md"
+      ]
+    },
+    {
+      "code": "KX-31",
+      "file": "KX-31_SEO_ASO_and_Organic_Growth_Strategy",
+      "title": "SEO, ASO and Organic Growth Strategy",
+      "subtitle": "Server-rendered public pages, URL and slug rules, structured data, a thin-page guard, Maps and store presence, and measurement.",
+      "family": "platform",
+      "group": "Growth Engine",
+      "sources": [
+        "_docs/rev23/KX-31_SEO_ASO_and_Organic_Growth_Strategy.md"
+      ]
+    },
+    {
+      "code": "KX-32",
+      "file": "KX-32_Growth_Analytics_and_Unit_Economics_Reference",
+      "title": "Growth Analytics and Unit Economics Reference",
+      "subtitle": "One set of definitions: revenue versus booking value, CAC, LTV, ROAS, MER, the canonical funnel, cohorts and k-anonymity.",
+      "family": "business",
+      "group": "Growth Engine",
+      "sources": [
+        "_docs/rev23/KX-32_Growth_Analytics_and_Unit_Economics_Reference.md"
+      ]
+    },
+    {
+      "code": "KX-33",
+      "file": "KX-33_Growth_Engine_Implementation_Roadmap_and_Agent_Handoff",
+      "title": "Growth Engine Implementation Roadmap and Agent Handoff",
+      "subtitle": "Phases 1 to 4, the Phase 1 work packages, dependencies, effort, gates and the rules a build agent must follow.",
+      "family": "platform",
+      "group": "Growth Engine",
+      "sources": [
+        "_docs/rev23/KX-33_Growth_Engine_Implementation_Roadmap_and_Agent_Handoff.md"
+      ]
     }
   ]
 }

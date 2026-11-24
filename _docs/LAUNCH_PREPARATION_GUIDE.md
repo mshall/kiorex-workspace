@@ -104,6 +104,28 @@ Every provider runs behind a `MODE=mock|real` adapter. Full checklists: `kiorex-
 | 9.6 | Open technical follow-ups: Clinic route-matrix maps verified against live AWS, a per-partner stale session limit for Pharmacy/Lab webs, the Lambda Node 26 move, TS 7 blockers, lint warnings promoted to errors. | D | |
 | 9.7 | Branches: `main` of `clinics-management` deploys to AWS on push (`deploy-aws.yml`). `kiorex` has no automatic deployment. Decide when pushes to `main` may deploy and drop `[skip ci]`. | F | |
 
+## 11. Growth Engine human items (added 24 Nov 2026, Proposed programme)
+
+Context: `_docs/rev23/KX-27..KX-33` and `_docs/growth/`. None of these is done; all gate production use of growth features, not development. Owner letters as above (F founder, C counsel, A AWS/org admin, D dev team, V vendor).
+
+| # | Item | Owner | Notes |
+|---|---|---|---|
+| 11.1 | Sign, amend or reject ADR-041 to ADR-047; confirm whether ADR-039 exists in Drive KX-01 | F | KX-01 |
+| 11.2 | Money policy: attribution precedence (`PROVIDER_FIRST`), windows (30, 30, 7 days), EGP 40 for provider-led-then-marketplace patients (proposed no charge), 7-day notice for money-policy changes | F | KX-30; FD-21, FD-22 |
+| 11.3 | Hosts and DNS: `kiorex.com` patient host in the domain table, `kiorly.link` (NH-008, serve or redirect), widget host (`book.kiorex.com` proposed), staging hosts, certificates | F, A | KX-19 update; extends 2.1 to 2.3 |
+| 11.4 | Counsel opinion on PDPL for analytics cookies, visitor keys, direct electronic marketing consent, the reported marketing licence, retention, dependants; DPO record of processing and formal PIA | C | `growth.analytics_visitor`, `growth.marketing_messaging` stay launch-locked OFF |
+| 11.5 | Consent and preference wording AR and EN, versioned (`TODO_NEEDS_HUMAN_v0` today) | C, F | |
+| 11.6 | Provider terms update: attribution rules, provider-led protection and evidence, dispute window, content licence for public pages | C, F | Before commission decisions go live |
+| 11.7 | Apple Team ID, Play signing SHA-256, store accounts for the Kiorex patient app, so patient deep links and ASO can ship | F | Extends 2.5, 8.x |
+| 11.8 | Google Search Console, Bing Webmaster and Google Business Profile ownership; review-markup eligibility check | F | KX-31 |
+| 11.9 | Egypt market pack district list (NH-040, FD-14) for district pages and bootstrap | F | |
+| 11.10 | Real providers for growth sends and measurement in the pre-launch pass: WhatsApp marketing templates and quality-rating policy, SMS, Search Console, Play Console and App Store Connect APIs, ad platforms (Phase 3) | F, V | FD-04; mock until then |
+| 11.11 | Reward credits: legal and regulator assessment (stored value, e-money, vouchers, tax and accounting), go or no-go | C, F | Phase 2, KX-30 section 10 |
+| 11.12 | Company advertising policy: no health-condition targeting, no patient-list audiences, no remarketing | C, F | Phase 3 |
+| 11.13 | WhatsApp assistant safety review and launch gate | F, C | `kiorex.whatsapp_ai_assistant` |
+| 11.14 | Confirm the 50/25/15/10 interpretation and approve or replace the illustrative EGP 150,000 monthly marketing budget; reconcile with KX-13 and KX-14 | F | KX-29, KX-13 section 13 |
+| 11.15 | Decide SSR as a separate App Runner service from day one (cost) and the deploy plan | F, A | FD-17, FD-26 |
+
 ## 10. Go-live runbook (order)
 
 1. Decide and create the production AWS account (1.1, 1.2, 1.3). 2. Domains and certificates (section 2). 3. Apply infrastructure, staging first (1.4). 4. Secrets (section 3) and provider setup (section 5) in staging; sandbox-verify every provider. 5. Passport clients (section 4). 6. Staging soak with demo data, run all e2e suites and the HTML test guide. 7. Counsel and sign-offs (sections 6, 7). 8. Store accounts, builds, listings (section 8). 9. Record real gate evidence (6.1). 10. Production apply and deploy by the founder; smoke test with the live checklist; monitor.

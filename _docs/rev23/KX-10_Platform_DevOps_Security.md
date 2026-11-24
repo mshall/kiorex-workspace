@@ -1,7 +1,7 @@
 # KX10 — Platform, DevOps & Security Engineering
 
 Source: 14qj8qS2R5Q4rtAJyhIs-fajHPKSKA9-0
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; previous text was Rev 2.2, 19 Nov 2026; this update adds provider and mobile security)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; previous text was Rev 2.2, 19 Nov 2026; this update adds provider and mobile security; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 How every Kiorex and Kiorly product is built, shipped, observed and defended — controls already in Kiorly become the standard for the whole ecosystem.
 
@@ -163,3 +163,13 @@ New worker inside the existing API process, no new infrastructure: a database ta
 - Platform baseline, delivery pipeline, observability, resilience and the pen-test and restore-drill items (NH017, NH018) are unchanged and still open.
 - Not verified: AWS secret injection, real-vendor webhook signature formats, device hardening.
 - Added §09: document processing pipeline and job queue (Proposed, KX-25).
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- **Threat model (section 05)**: growth adds forged provider tokens, provider gaming of attribution, open redirects on `kiorly.link`, widget clickjacking and SDK supply chain, cache poisoning on SSR, private-page indexing, reward farming (Roadmap), consent forgery, WhatsApp prompt injection (Roadmap) and PII in UTM parameters. Mitigations in KX-28 section 09 (Proposed).
+- **Controls (Proposed)**: HMAC-signed `lt` tokens with expiry; append-only evidence tables with database triggers; `secretRef`-only integration config; SRI and immutable URLs for the SDK; exact-origin CSP per organisation; rate limiting on the shared Postgres limiter; guard tests `no-health-targeting` and `growth-no-phi`.
+- **Flag operations (section 06)**: `growth.*` flags ship ON except launch-locked ones (`growth.analytics_visitor`, `growth.marketing_messaging`, `growth.patient_referral`, `growth.rewards`, `kiorex.whatsapp_ai_assistant`); OFF returns `403 FEATURE_DISABLED`. Safety messaging is never a flag (ADR-025).
+- **Observability (section 03)**: growth SLIs and SLOs in KX-28 section 11 (decision determinism 100 percent, public availability 99.9 percent, consent propagation 60 s); runbooks RB-G1 to RB-G8.
+- **Secrets**: ad-platform and Search Console credentials are stored only as Secrets Manager references; real integrations wait for the pre-launch pass (FD-04).
+- Not verified: any control implemented.

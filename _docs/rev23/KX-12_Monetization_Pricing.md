@@ -1,7 +1,7 @@
 # KX-12 Monetization & Pricing Architecture
 
 Source: 1hTRK4WdabuUHyCHl8NvsTWfpXADeOMyA
-Revision: Rev 2.3 · Reference Edition (20 November 2026; supersedes KX12 Rev 2.1, 19 Nov 2026)
+Revision: Rev 2.3 · Reference Edition (20 November 2026; supersedes KX12 Rev 2.1, 19 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; a few symbols (>=, <=, ~, arrows) lost in the PDF text layer, gaps marked "[?]".
 
@@ -125,3 +125,13 @@ Home visits are not an add-on: they are included in every plan, and their safety
 
 ## 08 Storage limits and storage packs (Proposed, 23 Nov 2026)
 Storage becomes a metered plan limit (a gauge, not a monthly counter). Proposed defaults: Lite 2 GB, Pro 20 GB, Clinic 100 GB, Enterprise 1 TB, each overridable per tenant. Extra storage is sold as packs (price to be set by the CRO; NEEDS_HUMAN). The 80 percent warning and the grace band follow the existing usage-warning pattern; downloads, exports and deletes are never blocked. Cost rationale and phases: KX-25 §05 and §09.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- **Section 04 (Kiorex fee design) and ADR-007**: fee amount, attended-patient trigger and 24-month lookback are unchanged (As-built). Proposed attribution rule: the fee applies only when the booking's acquisition origin is not `PROVIDER_LED`. Evidence can remove a fee and never add one; any rule that charges more than today is not proposed and needs the CEO (Open decision).
+- **Provider promise, now provable (Proposed)**: bookings through a provider's own link, QR or widget never carry the fee; a decision row records why for both outcomes; disputes with reason `PROVIDER_LED_EVIDENCE` auto-approve when Kiorex evidence supports them. Rules and windows are versioned, approved by two people and effective at least 7 days after approval (KX-30).
+- **Open decision**: EGP 40 for a patient who touched a provider link and later books through marketplace search. Proposed default: no charge (`PROVIDER_FIRST`, 30-day window).
+- **Section 05 (trials, cohorts, incentives)**: BR12 (one free month for both sides) is provider-only. A patient referral reward would be closed-loop discount credit or a coupon, never cash, never a fee change, and only after an attended first visit (Roadmap, Regulatory dependency, KX-30 section 09).
+- **Spend cap and pause (Roadmap)**: a visible monthly cap and pause per provider in the Growth workspace, in line with competitor practice; policy decision for the CEO.
+- **Revenue reporting**: GBV is never revenue; Kiorex revenue is confirmed or billed charges net of reversals (KX-32).

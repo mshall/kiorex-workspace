@@ -1,6 +1,6 @@
 # KX04 — Kiorex Account — Identity & Organizations PRD
 Source: 1yBWJ39HQkbeYBohg41bvLBMGyGeSKK6s
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update records provider readiness and the mobile client)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update records provider readiness and the mobile client; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 > Cleaned from Drive text extraction; symbols restored where obvious; headers/footers removed. Owner: Principal Identity Architect. Audience: Founders, investors, engineering & operations leads. Tags: OIDC + PKCE · Patients first · Provider federation · Account linking · Build vs buy.
 
@@ -107,3 +107,13 @@ Do not hand-write identity. Choose a managed or proven open-source IdP using thi
 - Added §07 build status for OTP providers, Passport readiness and the mobile client.
 - Identity model, flows and build-versus-buy are unchanged.
 - Not verified: any real SMS or WhatsApp delivery.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- **Passport stays out of growth data.** No growth event and no visitor key is created in Passport (Proposed, ADR-045). Growth reads the Passport `sub` only after consent and links visitor touches to a `sub` only with consent.
+- **Erasure**: the `subject.deleted` event (As-built) is the trigger for the Proposed growth erasure consumer (touchpoints, events, preferences; decisions reduced to origin and reason where a provider's financial record needs it, counsel to confirm).
+- **Registration events**: `PatientRegistered` is a growth view derived from patient profile creation; no new Passport event (Proposed).
+- **Widget sign-in**: Passport popup with PKCE inside the widget (Proposed); third-party cookies are not relied on.
+- **Phone OTP verification** is the referee check for the Phase 2 referral programme (Roadmap).
+- Not verified: any growth consumer of `subject.deleted` implemented.

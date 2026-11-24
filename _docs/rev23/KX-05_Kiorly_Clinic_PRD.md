@@ -1,6 +1,6 @@
 # KX-05 — Kiorly Clinic PRD (as built)
 Source: 1JIhEl6TDzm69GR9lZLFpwUTH66mMtrVY
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the build status of 19-23 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the build status of 19-23 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
 Owner role: VP Product, Kiorly. Audience: Product, engineering, sales, support.
 Extraction note: PDF text extraction; check/cross glyphs and some symbols lost (inferred where obvious).
 
@@ -264,3 +264,14 @@ Today patient documents have a 15 MB per-file cap and client-side image shrinkin
 - Plans, money engine, Kiorex connector and professions sections are unchanged.
 - Not verified: the 2 failing staff-app Jest tests (`lite-request.test.tsx`, 23 Nov re-run), real push delivery, a release build, a physical device.
 - Added §14: document storage growth, quotas and retention (Proposed, KX-25).
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- **Section 04 (money engine) and CR-06**: As-built chargeability: not for `CLINIC_LINK`, not for non-new patients, charged for `KIOREX_MARKETPLACE`, `KIOREX_WHATSAPP`, `INTEGRATION`. Proposed addition: appointments gain `acquisitionOrigin`, `acquisitionDecisionRef`, `acquisitionPolicyVersion` and an append-only `KiorexCommissionDecision` row for both charge and no-charge outcomes; origin `PROVIDER_LED` never charges; dispute reason `PROVIDER_LED_EVIDENCE`. `BookingSource` values are not added or renamed.
+- **Section 05 (Kiorex connector)**: Proposed `widgetOrigins` on the profile projection; `COMMISSION_CHARGE_CREATED` gains `decisionRef`, `origin`, `policyVersion`; new `CommissionAdjusted` event.
+- **New capability (Proposed, Phase 1): provider links, QR and widget settings** inside the Kiorex tab, working for standalone organisations: links per organisation, clinic, branch, doctor and desk; QR server-side SVG; A4/A5 AR/EN posters; last-30-day counters; clear text "Bookings through your links never carry a Kiorex fee". Entitlement `clinic.kiorex_listing` is not required.
+- **Supply-side referral** (`ReferralCode`, `Referral`, flag `clinic.referral_rewards`) is As-built and unchanged; patient referral uses different names (`PatientReferral*`).
+- **Flags** (section 10 and 11): new `growth.*` keys are added in kiorex-contracts, mirrored here when published (Proposed).
+- **Branch rule**: clinic growth work lives on branch `kiorex`; no push without founder approval (FD-18).
+- Not verified: migration `20261128110000_growth_links_attribution` applied anywhere.

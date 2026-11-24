@@ -1,6 +1,6 @@
 # KX-26 — System Architecture Reference
 
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (new volume in this set; owner: Chief Software Architect; supersedes: none; consolidates KX-08, KX-09, KX-10, KX-21, KX-24 and KX-25 into one picture)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (new volume in this set; owner: Chief Software Architect; supersedes: none; consolidates KX-08, KX-09, KX-10, KX-21, KX-24 and KX-25 into one picture; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 Subtitle: The whole Kiorex and Kiorly system on one set of diagrams: context, containers, components, data, identity, integration, notifications, storage, hosting, security, mobile and resilience, with what is built and what is planned.
 
@@ -432,3 +432,27 @@ One web entry for the provider products with parity to the Kiorly mobile sign-in
 | Communications control plane | Proposed | KX-24 §10 |
 
 > **Decision** This volume is the single architecture map. When it disagrees with a detail volume (KX-08, KX-09, KX-10, KX-21, KX-24, KX-25), the detail volume and then the code win; update this volume in the next revision.
+
+## Growth Engine update (24 Nov 2026): growth in the system picture
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+Figure 1 — Where the Growth Engine sits (Proposed, except boxes marked As-built).
+
+```mermaid
+flowchart TB
+  PAT["Patients and crawlers"] --> SITE["Public site role, SSR, sitemaps (Proposed)"]
+  PAT --> WID["Booking widget origin (Proposed)"]
+  PRO["Providers"] --> LNK["Provider links, QR, widget settings in Kiorly Clinic (Proposed)"]
+  SITE --> KAPI["Kiorex API As-built"]
+  WID --> KAPI
+  KAPI --> GRW["Growth modules: touch, attribution decision, config, consent (Proposed)"]
+  GRW --> OBX["Outbox As-built"]
+  KAPI -->|"signed booking with acquisition block"| CAPI["Kiorly Clinic API As-built"]
+  LNK --> CAPI
+  CAPI --> COM["Commission decision and charge (decision Proposed, charge As-built)"]
+```
+
+- **Containers and components (sections 03 and 05)**: growth adds modules inside the Kiorex and Kiorly Clinic APIs, an `apps/widget` workspace and the `ROLE=site` deploy role. No new database and no new service (ADR-041).
+- **Integration (section 07)**: contracts 1.10.0 additive (KX-09 update). **Money (section 08)**: fee unchanged; decision rows added; a fourth ledger is Roadmap. **Notifications (section 09)**: consent purposes and suppression extended (KX-24 update). **Flags (section 10)**: `growth.*` keys. **Hosting (section 12)**: CDN behaviours and widget host, validate only.
+- **Security and resilience (sections 14 and 15)**: threat model and failure modes in KX-28 sections 09 and 14; Kiorex outage leaves provider links and QR working (principle P1).
+- **Status (section 17)**: growth is Proposed; wave 1 of Phase 1 was in progress by other agents at the time of writing. Full diagrams: KX-28.

@@ -1,6 +1,6 @@
 # KX-17 Kiorly Clinic Launch Readiness & Go-Live Plan
 Source: 1acyKWJ3OZS1XvlgzOnzMZq6eGVvdthKi
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the done-versus-open status of 23 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the done-versus-open status of 23 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 > Extraction note: symbols (>=, <=, arrows, ranges) dropped; table columns reconstructed best-effort.
 
@@ -117,3 +117,11 @@ Month 3: Commerce-kernel package extraction; Sign in with Kiorex (provider SSO d
 ## What changed in this revision (23 Nov 2026)
 - Added §01a (Done, Open, Blocked) and the list of new human items. Pilot design, gates, cutover and the first 90 days are unchanged.
 - Not verified: everything marked Blocked (never run against a real vendor, device push or AWS); the 2 failing Jest tests.
+
+## Growth Engine update (24 Nov 2026)
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+- **Pilot design (section 03)**: Proposed additions to the 20-clinic pilot: each pilot clinic gets a QR poster kit (A4/A5, AR/EN) and a link per doctor; success measures add link activation (at least 15 of 20 clinics with a booking through a link by day 60), provider-led share, dispute rate below 5 percent and attribution replay equality (KX-29 section 07).
+- **Go / no-go gates (section 04)**: Proposed Growth gates, none recorded as satisfied: contracts 1.10.0 published; counsel opinion and consent wording approved for any production analytics or marketing; provider terms updated for attribution; hosts and DNS decided.
+- **Needs-human register (section 02)**: new rows for `kiorex.com` and `kiorly.link` DNS, widget host, Search Console and Business Profile ownership, Apple Team ID and Play SHA-256, consent wording, marketing licence confirmation. Listed in `_docs/LAUNCH_PREPARATION_GUIDE.md` section 11.
+- **Scorecard (section 01)**: growth readiness is Open: nothing built at 24 Nov 2026 beyond the commission engine and booking slug page (As-built).

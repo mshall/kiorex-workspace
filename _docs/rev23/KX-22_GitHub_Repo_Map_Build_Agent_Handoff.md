@@ -1,6 +1,6 @@
 # KX22 · GitHub Repository Map & Build-Agent Handoff
 Source: 17aubh5cfA7Vx_t9Wv6YXXCTQ1AawGXvx
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the repository states and scripts of 23 Nov 2026)
+Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the repository states and scripts of 23 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
 
 > Extraction note: symbols restored by inference; §06 repo table and §07 two-column module map interleaved on extraction and were re-paired best-effort (cells flagged where ambiguous).
 
@@ -224,3 +224,16 @@ Build-agent additions: read `_docs/PROVIDER_GO_LIVE.md`, `kiorex-contracts/docs/
 ## Domain table and Kiorly Home (ADR-038, 23 Nov 2026)
 Hosts per environment are one table, `kiorex-account/config/domains.json`. Production: www.kiorly.com (Kiorly Home sign-in, `/signin`; kiorly.com redirects), clinic.kiorly.com (alias app.kiorly.com), nurse.kiorly.com, pharmacy.kiorly.com, lab.kiorly.com, account.kiorex.com (Passport); staging uses `*.staging.kiorly.com` placeholders. Build agents never hard-code a host: read it from env (CORS, OIDC redirect and post-logout, `PUBLIC_BASE_URL`) set from that table. Kiorly Home lives in `kiorex-account/apps/kiorly-home`.
 
+## Growth Engine update (24 Nov 2026): repository ownership
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+
+| Concern | Repo | Rule | Label |
+|---|---|---|---|
+| Growth core, public site, widget, ops Growth pages, patient app deep links and consent screens | kiorex-platform | Modules `growth`, `public-site`, `widget`; workspace `apps/widget`; import only `*-public.ts` barrels | Proposed |
+| Provider links, QR, widget settings, commission decision | clinics-management (branch `kiorex`, no push without founder approval) | Extends the existing `src/growth` folder | Proposed |
+| Contracts 1.10.0, flags, config schemas | kiorex-contracts | Additive minor; consumers use the vendored tarball (FD-20) | Proposed |
+| Domain table and app-link templates | kiorex-account | `config/domains.json` stays the single table | Proposed |
+| Staff app Growth tab | kiorly | Thin; uses `/mobile/growth/*` | Proposed |
+| Pharmacy, lab growth | kiorly-pharmacy, kiorly-lab | Phase 4 | Roadmap |
+
+Build-agent brief additions (section 11): follow KX-33 section 07; single owners for shared files (KX-33 section 03); never edit another package's files; growth work packages are `GRW-P1-A` to `M`. `_docs/growth/*` work-package appendices belong to the implementing agents.
