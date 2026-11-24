@@ -1050,6 +1050,24 @@ MODULES.push({id:'home',ic:'8b',title:'Kiorly Home web sign-in',blurb:'One web s
  ]});
 
 /* ---------------------------------------------------------------- 8c CONNECT TO KIOREX (ADR-040) */
+MODULES.push({id:'kiorex-tab',ic:'8d',title:'The Kiorex tab: front door, Talk to us and the funnel',blurb:'The Kiorex tab (Clinic, Nurse) and Connect to Kiorex (Pharmacy, Lab) show one of five states: landing, in progress, waiting, live dashboard, needs attention. Talk to us creates a lead in Kiorex ops. Wording is NEEDS_HUMAN (founder and counsel). ADR-040 amendment.',
+ intro:'Clinic {clinic}/kiorex, Pharmacy {pharm}/kiorex-connect, Lab {lab}/kiorex-connect, Ops {ops}/partner-leads. Automated: `e2e/test/24-kiorex-front-door.e2e.ts` and `playwright.kiorex-tab.config.ts` in each web app. Everything here is mock/dev data.',
+ flows:[
+ {id:'K1',title:'Standalone organisation: landing, Talk to us, Start connecting',goal:'A calm, true landing page; a lead reaches Kiorex ops; the funnel counts it.',who:['owner.basic','ops_admin'],links:[['Clinic Kiorex tab','{clinic}/kiorex'],['Partner leads','{ops}/partner-leads'],['Screenshots (clinic-*, pharmacy-*, lab-*)','kiorex-tab/']],
+  steps:[
+   ['Sign in as a standalone owner (new clinic sign-up, pharmacy or lab) and open the Kiorex tab.','Heading "Reach more patients with Kiorex", the benefits, How it works (4 steps), Your readiness with a count, You stay in control, Fees (a published amount, or "confirmed by the Kiorex team"). No pop-up. Arabic is right to left.'],
+   ['Press Talk to us.','An inline form; Send is disabled until consent is ticked and a phone or e-mail is given; name is prefilled.'],
+   ['Send it, then open {ops}/partner-leads.','One lead with status New; assign it, add a note, set Contacted. The funnel tiles show interested and the conversion.'],
+   ['Press Start connecting.','The wizard opens; the tab now says Connecting with the next step highlighted; the lead shows Started.'],
+   ['Dismiss the card on the home dashboard.','It stays hidden after reload and returns only through "Show the Kiorex card again" on the tab.']
+  ]},
+ {id:'K2',title:'Waiting, live and needs attention',goal:'Every state says what is happening and what to do.',who:['owner.na','ops_admin'],links:[['Clinic Kiorex tab','{clinic}/kiorex']],
+  steps:[
+   ['After Request to go live (flow C1) open the tab.','Kiorex is reviewing your request, and three lines on what happens next.'],
+   ['After Go live (flow C3) reload.','Kiorex at a glance: bookings this month, fees, rating, listings with Pause and Resume, recent bookings, Connection settings; the Passport prompt follows.'],
+   ['Request changes, reject or pause (flow C4).','An amber decision banner with what is missing and how to fix it.']
+  ]}
+ ]});
 MODULES.push({id:'connect',ic:'8c',title:'Connect a standalone organisation to Kiorex',blurb:'A clinic, nurse, pharmacy or lab that started standalone joins the marketplace later: a guided "Connect to Kiorex" checklist in the product, automated checks plus highlighted human steps in the ops console, two-person approval and Go live. ADR-040.',
  intro:'Product side: Clinic and Nurse `{clinic}/kiorex/connect`, Pharmacy `{pharm}/kiorex-connect`, Lab `{lab}/kiorex-connect`. Ops side: {ops}/partner-onboarding. The request is signed and PHI-free; the launch gate for pharmacy orders and lab bookings is only ever recorded by a human super admin on the Feature flags page. Automated e2e: `e2e/test/22-standalone-connect.e2e.ts`. Everything here is mock/dev data.',
  flows:[
