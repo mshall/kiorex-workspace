@@ -1,0 +1,24 @@
+import { kiorex, q, staffLogin, waitFor, syncProviders } from '../src/clients.js';
+import { tokens, providerBySpecialty, book, kiorlyAppointmentFor } from '../src/fixtures.js';
+const t = await tokens(); const p = await providerBySpecialty(t.p1, 'paediatrics');
+const apt0 = await kiorlyAppointmentFor((await book(t.p1, p)).id);
+await q('kiorly', `update "AppointmentType" set "depositAmount" = 150 where "clinicId" = $1 and "marketplaceBookable"`, [apt0.clinicId]);
+await q('kiorly', `update "MarketplaceListing" set "updatedAt" = now() at time zone 'utc' + interval '1 second' where "clinicId" = $1`, [apt0.clinicId]);
+await syncProviders(t.ops);
+const b = await book(t.p1, p); const co = await kiorex(t.p1, 'POST', `/bookings/${b.id}/deposit-checkout`); const pid = co.body.paymentId;
+console.log('checkout', co.status, pid);
+const pays = await Promise.all(Array.from({ length: 10 }, () => kiorex(undefined, 'POST', `/pay/fake-checkout/${pid}/complete`, { outcome: 'pay' })));
+console.log('10 parallel completes', pays.map((r) => r.body.status).join(','));
+await waitFor('PAID', async () => (await kiorex(t.p1, 'GET', `/bookings/${b.id}`)).body.depositStatus === 'PAID');
+console.log('ledger entries for payment:', (await q('kiorex_platform', `select count(*)::int c, sum(case when direction='CREDIT' then "amountMinor" else 0 end)::int cr from "LedgerEntry" e join "LedgerTx" x on x.id = e."txId" where x."refId" = $1 or x."refId" like $2`, [pid, pid + '%']).catch(async (e) => { return [String(e.message).slice(0, 100)]; })));
+const cancels = await Promise.all(Array.from({ length: 8 }, () => kiorex(t.p1, 'POST', `/bookings/${b.id}/cancel`, { reason: 'race' })));
+console.log('8 parallel cancels', cancels.map((r) => r.status).join(','));
+await waitFor('REFUNDED', async () => (await kiorex(t.p1, 'GET', `/bookings/${b.id}`)).body.depositStatus === 'REFUNDED');
+console.log('Refund rows:', await q('kiorex_platform', `select status, "amountMinor" from "Refund" where "paymentId" = $1`, [pid]));
+console.log('payment:', await q('kiorex_platform', `select status, "amountMinor", "refundedMinor" from "PaymentIntent" where id = $1`, [pid]));
+// replay complete after refund -> must not re-capture
+const re = await kiorex(undefined, 'POST', `/pay/fake-checkout/${pid}/complete`, { outcome: 'pay' });
+console.log('complete after refund', re.status, JSON.stringify(re.body));
+console.log('payment after replay:', await q('kiorex_platform', `select status, "amountMinor", "refundedMinor" from "PaymentIntent" where id = $1`, [pid]));
+console.log('ledger tx count for payment:', await q('kiorex_platform', `select x.kind, count(*)::int c from "LedgerTx" x where x."refId" = $1 group by x.kind`, [pid]).catch((e) => [String(e.message).slice(0, 120)]));
+await q('kiorly', `update "AppointmentType" set "depositAmount" = null where "clinicId" = $1`, [apt0.clinicId]);
