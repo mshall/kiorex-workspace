@@ -32,10 +32,13 @@ export async function kxdevProviders(token: string): Promise<Provider[]> {
   return (await providers(token)).filter((p) => KXDEV_DOCTORS.includes(p.nameEn));
 }
 export async function providerBySpecialty(token: string, specialty: string): Promise<Provider> {
-  const r = await kiorex(token, 'GET', `/search/providers?specialty=${specialty}&pageSize=30&sort=rating`);
-  const items: Provider[] = (r.body.items ?? []).filter((p: Provider) => KXDEV_DOCTORS.includes(p.nameEn));
-  if (!items.length) throw new Error(`no ${specialty} provider (run provider sync)`);
-  return items[0];
+  // By NAME, not by rank: the demo catalogue keeps growing (more than 50 paediatricians outrank the KX-DEV doctor on rating), so a rating-ordered first page stops containing them.
+  for (const name of KXDEV_DOCTORS) {
+    const r = await kiorex(token, 'GET', `/search/providers?specialty=${specialty}&q=${encodeURIComponent(name)}&pageSize=30&sort=rating`);
+    const hit: Provider | undefined = (r.body.items ?? []).find((p: Provider) => p.nameEn === name);
+    if (hit) return hit;
+  }
+  throw new Error(`no ${specialty} provider (run provider sync)`);
 }
 
 /** A free future slot for a provider; `skip` spreads parallel/rerun scenarios over different slots. */
@@ -53,7 +56,8 @@ export async function freeSlots(token: string, p: Provider, days = 12, opts: { f
 }
 /** Pick a random slot beyond the 36 h cancellation window so reruns do not collide. */
 export async function pickSlot(token: string, p: Provider) {
-  const s = await freeSlots(token, p, 12, { fresh: true }); // never from Kiorex's 60 s cache: slots booked a moment ago by this or an earlier file would still be listed (flaky BK-04 race test)
+  // 27 days (the types allow 30): every run leaves COMPLETED / NO_SHOW appointments of the growth suites on the doctor's days 3..12 for good (they cannot be cancelled), so a 12-day window runs dry after a few runs
+  const s = await freeSlots(token, p, 27, { fresh: true }); // never from Kiorex's 60 s cache: slots booked a moment ago by this or an earlier file would still be listed (flaky BK-04 race test)
   if (!s.length) throw new Error('no free slots');
   return s[Math.floor(Math.random() * s.length)];
 }

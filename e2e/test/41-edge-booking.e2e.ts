@@ -2,12 +2,14 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { tokens, providerBySpecialty, hold, confirm, pickSlot, book, kiorlyAppointmentFor, freeSlots, confirmBody, type Provider } from '../src/fixtures.js';
 import { kiorex, q, sleep, waitFor } from '../src/clients.js';
 import { kiorlyEvent } from '../src/edge.js';
+import { releaseE2eBookings } from '../src/release.js';
 
 /** EDGE 41: booking concurrency, hold expiry, reschedule windows, input abuse, cross-tenant ids. Real Kiorly Clinic slots (KX-DEV doctors). */
 let t: Awaited<ReturnType<typeof tokens>>; let p: Provider;
 const apptCount = async (bookingId: string) => (await q('kiorly', `select count(*)::int c from "Appointment" where "externalReference" = $1`, [bookingId]))[0].c as number;
 const activeAtSlot = async (clinicianId: string, startsAt: string) => (await q('kiorly', `select count(*)::int c from "Appointment" where "clinicianId" = $1 and "startsAt" = $2 and status in ('SCHEDULED','CONFIRMED','CHECKED_IN')`, [clinicianId, startsAt]))[0].c as number;
-beforeAll(async () => { t = await tokens(); p = await providerBySpecialty(t.p1, 'paediatrics'); });
+// the files before this one (growth, money, Phase 2 campaigns) leave future bookings behind until the global teardown; one doctor has about 50 slots in the window, so free them first
+beforeAll(async () => { await releaseE2eBookings({ settle: true }); t = await tokens(); p = await providerBySpecialty(t.p1, 'paediatrics'); }, 120_000);
 
 describe('B. Last-slot contention', () => {
   it('B1 ten concurrent holds by two patients on one slot: exactly one 201, the rest SLOT_TAKEN with alternatives; no 5xx', async () => {

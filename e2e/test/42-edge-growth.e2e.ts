@@ -3,6 +3,7 @@ import { createHmac } from 'node:crypto';
 import { tokens, providerBySpecialty, type Provider } from '../src/fixtures.js';
 import { kiorex, kiorly, q } from '../src/clients.js';
 import { WEBHOOK_SECRET } from '../src/env.js';
+import { releaseE2eBookings } from '../src/release.js';
 import { bookWith, decisionOf, freshPatient, kxdevGrowthTenant, newLinkCode, seedTouch, signClinicLt } from '../src/growth.js';
 
 /**
@@ -23,6 +24,7 @@ const sign = (payload: string, secret = WEBHOOK_SECRET) => createHmac('sha256', 
 const forge = (claims: Record<string, unknown>, secret?: string) => { const pl = b64(claims); return `${pl}.${sign(pl, secret)}`; };
 
 beforeAll(async () => {
+  await releaseE2eBookings({ settle: true }); // free the slots the earlier files booked (see 41)
   const t = await tokens(); p = await providerBySpecialty(t.p1, 'paediatrics');
   const fx = await kxdevGrowthTenant(p.id); org = fx.org; clinicId = fx.clinicId; admin = fx.admin; restore = fx.restore;
 });

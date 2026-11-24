@@ -13,7 +13,14 @@ describe('b. Provider sync from Kiorly and catalogue search', () => {
     const live = await q('kiorly', `select count(*)::int c from "MarketplaceListing" where status = 'LIVE'`);
     const dir = await kiorex(t.ops, 'GET', '/admin/providers?status=LIVE');
     expect(dir.body.total).toBe(live[0].c);
-    expect(dir.body.items.map((p: any) => p.nameEn)).toEqual(expect.arrayContaining(KXDEV_DOCTORS)); // the QA demo dataset adds more LIVE doctors
+    // the directory is paged (50 a page) and the QA demo dataset adds more LIVE doctors than that: page through it instead of reading page 1
+    const names: string[] = [];
+    for (let page = 1; page <= 100; page++) {
+      const d = await kiorex(t.ops, 'GET', `/admin/providers?status=LIVE&page=${page}`);
+      names.push(...d.body.items.map((p: any) => p.nameEn));
+      if (!d.body.items.length || names.length >= d.body.total) break;
+    }
+    expect(names).toEqual(expect.arrayContaining(KXDEV_DOCTORS));
   });
 
   it('search by specialty (paediatrics) returns the paediatrician with 3 inline slots (DS-01/02/07)', async () => {
