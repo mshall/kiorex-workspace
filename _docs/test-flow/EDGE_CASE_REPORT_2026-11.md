@@ -6,6 +6,30 @@ Suites: `e2e/test/40..49-edge-*.e2e.ts` (real running stack), unit / integration
 
 Result words: **pass** = the system already behaved; **fixed** = a defect was found, fixed and is now covered by a regression test; **gap** = not covered or only partly (see "Remaining risks").
 
+## 0. Results
+
+| Suite | Tests | Result |
+|---|---|---|
+| e2e 40 money | 38 | pass (6 defects fixed on the way) |
+| e2e 41 booking | 16 | pass (1 defect) |
+| e2e 42 attribution | 8 | pass |
+| e2e 43 identity | 9 | pass |
+| e2e 44 pharmacy | 7 | pass (3 defects) |
+| e2e 45 public / privacy | 9 | pass |
+| e2e 46 tenant | 5 | pass |
+| e2e 47 import | 4 | pass (1 defect) |
+| e2e 48 data | 9 | pass (3 defects) |
+| e2e 49 contract sweep | 4 | pass (5 defect groups, about 25 endpoints) |
+| Full e2e run 01..49 on the same stack | 374 passed, 33 skipped (11-nurse-lab needs its own stack; 30-security belongs to the concurrent security sweep) | pass (45 C3 timing fixed afterwards and re-run green) |
+| Kiorex API unit / integration | 578 / 600 | pass |
+| Clinic API node unit / edge + marketplace + patients + kiorex integration | 1222 / 46 | pass |
+| Pharmacy API unit + marketplace e2e | 216 + 17 | pass |
+| Lab API unit | 239 | pass |
+| Playwright patient web edges | 12 | pass |
+| Playwright sign-in edges (Clinic, Pharmacy, Lab) | 6 passed + 1 skipped each | pass |
+
+Lesson learned on the way: new integration specs must leave the shared test database empty (`c.reset()` in `afterAll`); two older specs failed when the new ones ran before them, which looked like a product regression and was test pollution.
+
 ## 1. Defects found and fixed (24)
 
 | # | Area | Defect (what the caller saw) | Root cause | Fix | Regression test |
