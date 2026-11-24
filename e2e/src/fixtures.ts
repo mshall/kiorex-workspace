@@ -33,10 +33,14 @@ export async function kxdevProviders(token: string): Promise<Provider[]> {
 }
 export async function providerBySpecialty(token: string, specialty: string): Promise<Provider> {
   // By NAME, not by rank: the demo catalogue keeps growing (more than 50 paediatricians outrank the KX-DEV doctor on rating), so a rating-ordered first page stops containing them.
-  for (const name of KXDEV_DOCTORS) {
-    const r = await kiorex(token, 'GET', `/search/providers?specialty=${specialty}&q=${encodeURIComponent(name)}&pageSize=30&sort=rating`);
-    const hit: Provider | undefined = (r.body.items ?? []).find((p: Provider) => p.nameEn === name);
-    if (hit) return hit;
+  // Retried for up to 30 s: right after a flag or listing change (08-flags, a Clinic restart) the catalogue is briefly empty or stale, which is eventual consistency, not an absence.
+  for (let attempt = 0; attempt < 15; attempt++) {
+    for (const name of KXDEV_DOCTORS) {
+      const r = await kiorex(token, 'GET', `/search/providers?specialty=${specialty}&q=${encodeURIComponent(name)}&pageSize=30&sort=rating`);
+      const hit: Provider | undefined = (r.body.items ?? []).find((p: Provider) => p.nameEn === name);
+      if (hit) return hit;
+    }
+    await new Promise((r) => setTimeout(r, 2_000));
   }
   throw new Error(`no ${specialty} provider (run provider sync)`);
 }
