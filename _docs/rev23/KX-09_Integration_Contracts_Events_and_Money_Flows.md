@@ -141,7 +141,7 @@ Timeout path: query by reference before any retry; never mint a new key.
 
 ## 06 Money flows
 
-Three separate ledgers, never commingled: Kiorly SaaS billing, provider patient revenue, Kiorex Pay.
+Three separate ledgers, never commingled: Kiorly SaaS billing, provider patient revenue, Kiorex Pay; the credit ledgers below are additional and separate (Proposed for the patient side).
 
 Figure — Deposits flow through Kiorex Pay to providers; Kiorly's own revenue comes from the monthly higher-of invoice.
 
@@ -155,8 +155,20 @@ Figure — Deposits flow through Kiorex Pay to providers; Kiorly's own revenue c
 | Provider patient revenue | Kiorly Clinic (both editions) | revenue (incl. home surcharge), refunds, credit notes, deposits → BillingPayment at check-in, cash at home per clinician drawer | Cash close / Z-report; bank |
 | Kiorly SaaS | Kiorly billing (kernel) | subscription, seats, add-ons, commission, offset, prepaid, credits, VAT | PSP + bank; settlement summary JSON |
 | Credit wallet | Kernel | grant, consume FIFO, expire, late-reversal credit | Σ ledger = balance invariant |
+| Patient credit ledger (Proposed, not built) | kiorex-platform (`growth/rewards`) | issue, reserve, redeem, reverse, expire, hold; refund-credit issue; checkout line snapshot | Σ lot ledger = balance; Σ checkout lines = price; refund allocation invariant; no entry names a provider wallet (RC-1 to RC-7) |
+| Provider credit wallet (As-built CR-05, extended by P2-W, Proposed) | Kiorly Clinic (`credits`) | grant (onboarding, connect, referral, dispute win, goodwill), consume (fees, subscription, usage, sponsored promotion), expire, reverse | Σ ledger = balance, per category; daily balance check; no patient identifier (W-1 to W-8) |
+| Sponsored discount flow (Proposed, not built) | Kiorly Clinic (`promotions`) with the Kiorex booking line | RESERVE at booking, DEBIT at completion, RELEASE on cancel, REVERSE_DEBIT on refund | budget entries = wallet entries for the promotion; each DEBIT has one Kiorex booking line in state DEBITED (RC-S1 to RC-S5) |
 
 Home surcharge is provider patient revenue; Kiorex never takes a share of it and it never enters S or C.
+
+**Credit and sponsored discount money flows (Proposed, ADR-048; Rev 2.5 amendment).** Two credit systems, never commingled with each other, with Kiorex Pay, or with held deposits: **patient credit** (Kiorex, closed loop, spendable only on Kiorex bookings) and **provider credit** (Kiorly, the CR-05 wallet). No conversion, no transfer, no cash-out, no patient top-up. Patient deposits remain in the Kiorex Pay held ledger until the visit and are never provider credit.
+
+| Tender at checkout (order: sponsored price reduction, credit, held deposit, card) | Who funds it | Ledger that records it | Reaches the clinic as |
+|---|---|---|---|
+| Sponsored discount | the clinic, from its credit wallet, debited at visit completion (budget reserved at booking) | Clinic `PromotionBudgetEntry` and wallet entry; Kiorex booking line `PROVIDER_SPONSORED_DISCOUNT` | part of the gross payout, funded by the wallet debit |
+| Patient credit | Kiorex (marketing cost) or the patient's own refunded money (refund credit) | Kiorex patient credit ledger; booking line `PATIENT_CREDIT` | part of the gross payout; the clinic's income is not reduced by Kiorex-funded credit |
+| Card | the patient | Kiorex Pay | the deposit, as today |
+Example: deposit 500, sponsored 100, credit 150, card 250: the patient pays 250, Kiorex Pay pays the clinic the gross 500 after completion, the clinic wallet is debited 100, the fee is unchanged. A refund returns credit to credit and card to the chosen destination (original method by default), and a sponsored share is voided. Contract additions (1.12.0, additive): optional `sponsoredDiscount` block on the booking call, `feeBasisMinor`, `sponsoredDiscountMinor` and `basisPolicyVersion` on `COMMISSION_CHARGE_CREATED`, optional `tender` on deposit events (no patient identity), promotion events and the reserve and release commands. Posting of these funding lines into the Kiorex Pay ledger is off by default until finance decides (H-25). Status: Proposed, nothing built except the CR-05 wallet.
 
 Cash at home is recorded to the clinician's cash drawer and reconciled at shift close; agencies see per-nurse cash owed. Agency nurse pay is calculated in Kiorly (MN02 revenue share) and paid by the agency; Kiorex Pay never pays individual agency nurses.
 

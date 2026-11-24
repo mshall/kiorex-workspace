@@ -115,6 +115,8 @@ IDs are stable. Priority: M = MVP, P2 = phase 2, P3 = later.
 | KXMPAY05 | Ledger: gross, PSP fee, refunds, payouts, held balance per provider; daily PSP reconciliation. | M |
 | KXMPAY06 | Full prepayment of visit fee (optional per provider). | P2 |
 | KXMPAY07 | Unsafe-aborted home visit: deposit held for ops review, never auto-forfeited. | P2 |
+| KXMPAY08 | (Proposed, ADR-048, not built) Refund destination chosen by the patient at refund time: "refund to original payment method" preselected by default, or "keep as credit" as an option, never forced; irreversible once executed; only when the credit flags are on. | P2 |
+| KXMPAY09 | (Proposed, not built) Checkout shows every line in the order sponsored discount (if any), credit, deposit held, card; credit applies to a deposit or prepayment. | P2 |
 ### Notifications (KXMNT)
 | ID | Requirement | Pri |
 |---|---|---|
@@ -254,3 +256,17 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Consent and preferences (As-built).** `/preferences` and `/{locale}/{cc}/preferences` in the web, a preferences screen in the patient app, marketing consent per channel, suppression on STOP. Wording is a draft (NEEDS_HUMAN).
 - **WhatsApp.** The deterministic booking machine is unchanged; STOP now writes suppression even when the booking flag is OFF. The tool-based assistant is Roadmap.
 - **Not verified:** any production behaviour; store accounts and Team ID (NEEDS_HUMAN); the real Search Console and Bing integrations (mock adapter).
+
+## 10 Patient credit, coupons and sponsored discounts (Proposed, 24 Nov 2026)
+Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned), **As-built**, **Regulatory dependency**. **As-built note:** none of this is built in the Kiorex platform; the only existing credit is the provider wallet in Kiorly Clinic. Design: KX-30 section 14, ADR-048, packages P2-B2 and P2-S. Patient CREDIT mode (any stored balance) is **launch-locked and counsel-gated; coupon mode is the default.**
+
+| Capability | Behaviour the patient sees |
+|---|---|
+| Rewards | After a friend's first completed visit (or your own first completed visit) you receive a voucher (default) or credit with an expiry date; nothing on sign-up or an unfinished booking |
+| Goodwill | If a provider cancels late, you wait too long or a booking fails, support can grant a voucher or credit with a reason |
+| Refund choice | When you cancel or request a refund the screen offers **"Refund to original payment method" (selected by default)** and **"Keep as credit"**; you choose; credit can only be used on Kiorex and cannot be withdrawn or sent to anyone |
+| Checkout | Lines are shown separately: price, discount sponsored by the clinic (if any), credit, deposit already held, card; the credit is applied before the card |
+| Family | One owner holds the credit and dependants can use it; no transfer between families |
+| Campaign credit | Time-limited credit usable for certain visit types (and an allowlisted set of specialties) |
+| Provider-sponsored discount | Some clinics fund a discount on their own visit fee; it is labelled "sponsored by <clinic>" with an end date, never a Kiorex discount, and never applies to drugs, tests or procedures |
+Rules: closed loop; no withdrawal, transfer, cash conversion or top-up; expiry and caps on every grant; issuance only after a verified completed visit; reversal when the qualifying booking is refunded or cancelled; never Kiorex revenue. Status of each: Proposed.

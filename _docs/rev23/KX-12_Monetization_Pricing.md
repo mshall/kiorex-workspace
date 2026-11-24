@@ -17,7 +17,7 @@ Kiorly Nurse price ladder added (Proposed): Nurse Lite, Nurse Pro, Nurse Agency,
 Home visits included in every plan (not an add-on); physiotherapists use the Clinic ladder + physio pack.
 
 ## Contents
-01 Revenue architecture · 02 The higher-of rule — why it wins · 03 Price ladders by product · 04 Kiorex fee design · 05 Trials, cohorts and incentives · 06 Add-ons and usage · 07 Price governance
+01 Revenue architecture · 02 The higher-of rule — why it wins · 03 Price ladders by product · 04 Kiorex fee design · 05 Trials, cohorts and incentives · 06 Add-ons and usage · 07 Price governance · 08 Storage limits and storage packs · 09 Credit systems and sponsored promotions (Proposed)
 
 ## 01 Revenue architecture
 Five engines; the first two carry the business for 24 months. Home care and new professions feed engines A and B — no new engine.
@@ -143,3 +143,17 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Defaults built, money decisions open.** `PROVIDER_FIRST` precedence, windows of 30, 30 and 7 days and "no charge for provider-led-then-marketplace" are built as `PROPOSED_DEFAULT`; the CEO has not signed them (KX-33 section 06 items 4 and 5). A change to any money policy needs two super admins and takes effect at least 7 days after approval with a provider announcement.
 - **Provider view (As-built).** The monthly statement shows `providerLedBookings` and fee-bearing bookings from the decision rows; the provider can dispute with `PROVIDER_LED_EVIDENCE` and it auto-approves when Kiorex evidence supports it. The platform can override with a closed reason list and a note (audited, removal only).
 - **Not built:** patient referral rewards and any reward ledger (Roadmap, counsel-gated), the provider monthly cap and pause (Roadmap), a public help page for the rules.
+
+## 09 Credit systems and sponsored promotions (Proposed, 24 Nov 2026)
+Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned), **As-built**, **Regulatory dependency**. **As-built:** only the Clinic provider credit wallet CR-05 exists (grants, first-expiring-first consumption, expiry, late-reversal credit, applied to the Kiorly invoice, daily balance check). The patient credit ledger, refund-as-credit, sponsored promotions, fee draw-down inside the commission flow and usage bundles are **not built**. Full design: KX-30 section 14, ADR-048 in KX-01, packages P2-B2, P2-W, P2-S.
+
+| Question | Monetisation rule (Proposed) |
+|---|---|
+| Is credit revenue? | **No.** Kiorex revenue stays the Kiorly subscription and Kiorex fee commission (engines A and B) and add-ons; patient credit, provider credit grants and sponsored discounts are never revenue when issued; credit consumed against a Kiorex fee reduces the cash invoiced, the fee itself is still earned (recognition by the accountant, H-25) |
+| Two systems | Patient credit (Kiorex, closed loop) and provider credit (Kiorly, existing wallet); no conversion either way; no general-purpose wallet; no top-up; no cash-out |
+| Provider credit uses | Pay fees first (commission and subscription draw from credit, then invoice); goodwill and waivers; dispute wins and fee refunds return as credit; onboarding, free months, setup credit and connect bonus; provider referral rewards (BR12 stays "one free month both sides", now actually paid through the wallet); usage purchases (messaging credits, SMS and WhatsApp bundles, extra storage packs) as prepaid packs priced later; marketing spend (boosts) reserved |
+| Patient credit | Referral and welcome rewards after a completed visit; support goodwill; refund kept as credit by choice (option, original method is the default); campaign credit with expiry and scope; platform-funded credit is a marketing cost within the KX-29 budget, refund credit is the patient's own money and a liability |
+| Sponsored promotions | The clinic funds a discount from its own credit: reservation at booking, debit at completion, release or reversal on cancel or refund, shown as a promotion expense on the clinic statement. Commission is computed on the fee before the sponsored discount (versioned policy `SPONSORED_PROMOTION_POLICY`, default `GROSS_BEFORE_SPONSORED`); the EGP 40 fee is unchanged |
+| Add-ons and usage (section 06) | A prepaid pack bought from credit consumes currency from the wallet and grants units in a separate unit ledger; prices need a CEO decision (H-30); nothing is priced here |
+| Governance (section 07) | Credit grants above the dual-approval threshold need two Super Admins (CR-05, As-built); high-value sponsored promotions need maker-checker; money-policy changes take effect at least 7 days after approval |
+Open decisions: maximum open patient balance, expiry months, goodwill limits, onboarding and bonus amounts, bundle prices, accounting for breakage. Regulatory dependency: counsel on patient CREDIT mode and refund credit (launch guide 11.24).

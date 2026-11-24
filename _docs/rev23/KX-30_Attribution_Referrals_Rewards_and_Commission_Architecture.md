@@ -4,7 +4,7 @@ Revision: Rev 2.4 · Growth Edition, as-built verified 24 November 2026 (new vol
 
 Subtitle: The rules that decide where a patient came from, whether Kiorex charges its fee, how a provider can verify it, and how referral rewards would work if counsel clears them.
 
-Tags: Attribution · Commission · Evidence · Disputes · Referrals · Rewards ledger · Fraud · Versioned policy · ADR-042 · ADR-046
+Tags: Attribution · Commission · Evidence · Disputes · Referrals · Rewards ledger · Fraud · Versioned policy · Credit systems · Sponsored promotions · ADR-042 · ADR-046 · ADR-048
 
 > **Note** How to read this volume. Rev 2.4 re-checked every rule against the decision function (`kiorex-platform/apps/api/src/growth/attribution/decide.ts`), the commission gate (`clinics-management/apps/api/src/kiorex/commission-decision.ts`), the defaults (`growth-defaults.ts`) and their tests. Sections 02 to 08 now say As-built where code and a passing test exist and Proposed where the design is not built. Referral and rewards (sections 09 and 10) are Roadmap and blocked on a legal assessment. The money promise is simple: evidence can remove a fee, it can never add one.
 
@@ -22,9 +22,10 @@ Tags: Attribution · Commission · Evidence · Disputes · Referrals · Rewards 
 |---|---|---|---|
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from architecture decisions sections 6, 9, 10 and 16 | Documentation agent |
 | Rev 2.4 | 24 Nov 2026 | Re-verified against code: token lifetimes (72 h provider-link token, 30 min in-session token), inclusive windows, `FIRST_TOUCH` refusal, reason codes of the commission gate, link revocation behaviour, evidence and dispute path, fraud rules actually built; status labels moved to As-built | Documentation agent |
+| Rev 2.5 | 24 Nov 2026 | Added section 14: two separate credit systems (patient credit and provider credit), refund-as-credit option, provider-sponsored promotions, commission and revenue rule; status Proposed (ADR-048); as-built note that only the Clinic CR-05 wallet exists | Documentation agent |
 
 ## Contents
-01 Summary · 02 As-built commission engine · 03 Concepts · 04 Identity and consent · 05 Windows and policy · 06 Decision algorithm · 07 Chargeability and the charge · 08 Evidence, disputes and audit · 09 Patient referral · 10 Rewards, ledger and configuration · 11 Fraud · 12 Worked examples and tests · 13 Acceptance, KPIs, risks, dependencies, open decisions
+01 Summary · 02 As-built commission engine · 03 Concepts · 04 Identity and consent · 05 Windows and policy · 06 Decision algorithm · 07 Chargeability and the charge · 08 Evidence, disputes and audit · 09 Patient referral · 10 Rewards, ledger and configuration · 11 Fraud · 12 Worked examples and tests · 13 Acceptance, KPIs, risks, dependencies, open decisions · 14 Two separate credit systems and provider-sponsored promotions
 
 ## Key numbers
 <!-- kpis -->
@@ -161,6 +162,8 @@ Naming: `PatientReferral*` and `ProviderReferralLink*` only. `ReferralIssued` is
 | Document gap | BR12 in KX-02 and KX-12 covers provider referral only; the patient programme needs its own business rule number (Open decision) |
 
 ## 10 Rewards, ledger and configuration (Roadmap)
+> **Rev 2.5 note (Proposed):** section 14 extends and, where it differs, supersedes this section: patient credit now has four sources (referral and welcome, goodwill, refund-as-credit option, campaign), the provider credit wallet CR-05 is the second, separate system, and providers may sponsor patient discounts (ADR-048). COUPON mode stays the default and CREDIT mode stays launch-locked and counsel-gated.
+
 Properties (Proposed, counsel-gated, ADR-046): closed loop (usable only against Kiorex bookings: deposits or the patient share of a Kiorex-collected fee), non-transferable, non-cashable, no top-up, no interest, expiry (default 12 months, mirroring the SaaS credit expiry in BR12), capped per person per year, discount only.
 
 > **Risk** Whether any Egyptian central-bank, fintech or consumer-protection rule treats such credit as stored value or e-money is unknown to this volume and must be assessed before any build. Fallback if a wallet is regulated: a plain coupon code applied at checkout with no balance object, using the same ledger as audit. Accounting treatment (marketing expense versus liability) needs finance.
@@ -200,3 +203,53 @@ Tests (As-built, GRW-P1-B, D2; the requirement was): at least 40 decision-table 
 - Dependencies: contracts 1.10.0 and 1.11.0 (built); the Phase 1 migrations (applied locally); provider terms update (open).
 - Open decisions: `PROVIDER_FIRST` default; windows; no charge for provider-led-then-marketplace; patient-referral BR number; reward programme go or no-go.
 - Cross-references: KX-12 (BR12, monetisation), KX-09 (money flows), KX-28 sections 06 to 09, KX-32 (revenue definitions).
+
+## 14 Two separate credit systems and provider-sponsored promotions (Proposed, 24 Nov 2026)
+Status: **Proposed** (ADR-048, founder-approved product design of 24 Nov 2026; not yet signed as an ADR). **As-built note:** the only part that exists is the Clinic provider credit wallet **CR-05** (`clinics-management/apps/api/src/credits`: one wallet per tenant, ledger with grant, first-expiring-first consume, expire, late-reversal credit and a daily balance check; credit already offsets the Kiorly invoice). **Not built:** the patient credit ledger beyond the Phase 2 plan, refund-as-credit, family sharing, support goodwill grants, fee draw-down inside the commission flow, dispute-win credit as a named reason, usage bundles, and provider-sponsored promotions. Work packages: `GRW-P2-B2` (patient), `GRW-P2-W` (provider credit integration), `GRW-P2-S` (sponsored promotions) in `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md`. Legal assessment is required before any stored-value-like feature goes live: **patient CREDIT mode stays launch-locked and counsel-gated; coupon mode is the default.** This section supersedes section 10 where they differ (section 10 described one patient reward ledger; the design below adds the options and the provider side).
+
+### 14.1 Principle: two systems, one experience
+| | Patient credit (Kiorex) | Provider credit (Kiorly) |
+|---|---|---|
+| Owner and code | Kiorex platform, `growth/rewards` | Clinic, `credits` (CR-05 wallet, As-built) |
+| Holder | A patient (or the owner of a family) | A tenant (one wallet per organisation) |
+| Spendable on | Kiorex bookings and Kiorex-collected amounts only | Kiorex fees (commission, subscription), usage, promotions |
+| Shown in | Kiorex patient app and web | Kiorly clinic web and staff app |
+| Ledger | append-only entries, idempotent, expiring lots, reversal, daily reconcile | the same pattern, implemented independently |
+Rules: **no conversion in either direction**, no shared balance row, no shared runtime code, no entry in one that references an object of the other; they share only the ledger pattern and a file of numeric test vectors. Neither is a general-purpose money wallet: no withdrawal, no peer-to-peer or provider-to-provider transfer, no cash conversion, no top-up by the holder.
+
+### 14.2 Patient credit (Kiorex, closed loop)
+| Source | Trigger and rule |
+|---|---|
+| Referral and welcome rewards | After the friend's first completed visit (or one's own); after the refund window; never on sign-up or an unfinished booking |
+| Goodwill and service recovery | Granted by support for a provider late cancellation, a long wait or a failed booking; reason code, booking or ticket reference, per-agent and per-patient limits, second approver above a threshold |
+| Refund as credit | At refund time the patient chooses **"refund to original payment method" (default, preselected)** or **"keep as credit"**. Credit is an option, never forced and never offered for refunds started by anyone else; the choice is immutable once the refund executes; the unspent credit remainder at expiry returns to the original method (proposed, counsel) |
+| Campaign and promotional credit | Expiry, per-user and per-campaign caps, scope by service kind and an allowlisted non-sensitive specialty set; never a health-targeting attribute |
+Use at checkout: credit applies to a booking **deposit or prepayment**, each line is shown, and the order is **credit, then deposit already held, then card** after any price reduction. Family accounts share credit across dependants under **one owner**. Safety rules (each is a test): closed loop; one-way and non-cash; expiry, per-user, per-campaign caps and a maximum open balance on every grant; issuance only on verified qualifying events; reversal when the qualifying booking is refunded or cancelled; never counted as Kiorex revenue; patient top-ups and loads are not allowed; no paying outside Kiorex. Refund math: the patient-paid parts (credit and card) are refunded pro rata; credit returns to credit, the card part to the chosen destination, and a sponsored share is voided, never paid to the patient (worked example in the work package: D 500, S 100, C 150, K 250).
+
+### 14.3 Provider credit (Kiorly)
+| Use | Rule |
+|---|---|
+| Pay Kiorex fees | Per-attended-new-patient commission and subscription charges **draw from credit first, then the invoice** (the higher-of rule is unchanged) |
+| Goodwill and waivers | A waived fee, or a commission refund after a dispute (for example a `PROVIDER_LED_EVIDENCE` win on an already billed charge), **returns as credit** |
+| Onboarding and promotion | Free months, setup credit, credit for connecting to Kiorex |
+| Provider referral | Reward for bringing another clinic or doctor (the CR-09 `referral` block, which `Docs/COMMERCIAL_CONFIG.md` lists as not yet wired into wallet grants) |
+| Usage purchases | Messaging credits, SMS and WhatsApp bundles, extra storage if sold as prepaid packs (units in a separate unit ledger; skeleton) |
+| Marketing spend | Boosts and sponsored placement if ever added (reason reserved) |
+It is never patients' money: patient deposits stay in the Kiorex Pay held ledger until the visit and never become provider credit. No provider-to-provider transfer and no cash-out of promotional credit.
+
+### 14.4 Provider-sponsored promotions (founder decision, Proposed)
+Providers may fund patient discounts from their own credit. This is modelled as a **sponsored promotion, never a conversion of balances**: the clinic configures a promotion (scope: its doctors and services, discount value, budget cap, expiry, eligibility); the patient's discount is applied at checkout as a **sponsored discount line** ("sponsored by the clinic"); a **budget reservation** is held at booking time; when the qualifying visit **completes**, the sponsored amount is debited from the clinic credit wallet (or invoiced if insufficient, per configuration) as a **promotion expense**; cancellation and refund release or reverse it; everything is audited. It appears in the clinic statements and in the Kiorex booking ledger as a distinct **provider-sponsored discount** line.
+| Question | Rule (versioned policy `SPONSORED_PROMOTION_POLICY`, two approvers, effective at least 7 days after approval) |
+|---|---|
+| Commission | Computed on the fee **before** sponsored discount (`GROSS_BEFORE_SPONSORED`, default); the fee is flat per attended new patient today (ADR-007) so the discount changes nothing, and any future percentage model has an explicit basis. A promotion never changes chargeability or attribution |
+| Kiorex revenue | Commission plus Kiorex fees only. A sponsored amount is provider-funded pass-through (neither revenue nor a Kiorex expense); patient credit is never revenue; platform-funded credit is a marketing cost or liability by accounting decision |
+| Compliance | No inducement for clinical decisions: visit-fee scope only, no diagnosis, drug, procedure or test scope or copy, no health targeting; advertising review of every version; **maker-checker for high-value promotions in Super Admin** |
+| Fraud | Self-dealing with staff or owner phone or payment hashes, farming, price inflation before a promotion, no debit without attendance evidence, velocity, collusion loops |
+Money flow (worked example): deposit 500; sponsored 100; patient credit 150; card 250. The patient pays 250; at completion Kiorex Pay pays the clinic 500; the clinic wallet is debited 100; the fee (EGP 40) is unchanged; the clinic statement shows `Promotion expense 100`, the Kiorex booking ledger shows `PROVIDER_SPONSORED_DISCOUNT -100` and `PATIENT_CREDIT -150`.
+
+### 14.5 Delivery order, gates and open decisions
+1. **Now:** provider wallet for fee offsets and waivers (P2-W) and patient **coupon mode** with expiry, limits and reversal (P2-B2, default mode). 2. **After counsel clearance:** patient CREDIT mode including refund-as-credit and family sharing. 3. Provider-sponsored promotions (P2-S, after 1 and with advertising and accounting sign-off). 4. **Later, by demand:** provider prepaid bundles and boosts.
+Flags (all launch-locked unless noted): `growth.rewards`, `growth.patient_credit`, `growth.refund_as_credit`, `growth.family_credit`, `growth.support_goodwill`, `growth.sponsored_promotions`; `clinic.provider_credit_v2` (default ON) and `clinic.usage_bundles` (OFF).
+Reconciliation invariants (acceptance): sum of ledger = balance for both systems; no cross-ledger entries; refund-as-credit math; sponsored discount accounting end to end.
+Human items (launch guide 11.24 to 11.31): counsel on credit mode, refund credit, family and promotions; accounting and VAT treatment of sponsored discounts; advertising rules; Super Admin review procedure; pricing of bundles. Open decisions: order-of-use interpretation, refund-credit expiry behaviour, maximum open balance, high-value thresholds.
+Not verified: any of this running; the legal position of any credit balance in Egypt.
