@@ -15,7 +15,7 @@ import { createHash } from 'node:crypto';
 const tag = rnd().toLowerCase();
 const LEAD_SECRET = process.env.KIOREX_LEAD_SIGNING_SECRET ?? 'kiorex-dev-lead-signing-secret';
 const signed = (body: string, secret = LEAD_SECRET, ts = Math.floor(Date.now() / 1000)) => ({ 'content-type': 'application/json', 'X-Kiorly-Timestamp': String(ts), 'X-Kiorly-Signature': `sha256=${createHmac('sha256', createHash('sha256').update(secret).digest('hex')).update(`${ts}.${body}`).digest('hex')}` });
-const postLead = (path: string, body: string, h = signed(body)) => fetch(`${KIOREX_API}/partners/v1/${path}`, { method: 'POST', headers: h, body });
+const postLead = (path: string, body: string, h: Record<string, string> = signed(body)) => fetch(`${KIOREX_API}/partners/v1/${path}`, { method: 'POST', headers: h, body });
 const form = (o: Record<string, unknown> = {}) => ({ contactName: 'E2E Owner', contactRole: 'Owner', phone: '+201000009888', preferredTime: 'MORNING', note: 'Call after 10', consent: true, ...o });
 let sup: string; const clinicTenants: string[] = [];
 
