@@ -11,8 +11,9 @@ require("./gen-svgs.cjs")(out("svg"));
 
 const ACCENT = { kiorex: { light: "#0369A1", dark: "#38BDF8", name: "Kiorex" }, clinic: { light: "#0D9488", dark: "#2DD4BF", name: "Kiorly Clinic" },
   lab: { light: "#7C3AED", dark: "#A78BFA", name: "Kiorly Lab" }, pharmacy: { light: "#16A34A", dark: "#4ADE80", name: "Kiorly Pharmacy" },
-  // The Kiorly staff app (ADR-037, 23 Nov 2026): the Kiorex mark with the Kiorly accent (Ocean), NOT a product colour (the app spans Clinic teal, Lab violet, Pharmacy green).
-  kiorly: { light: "#0369A1", dark: "#38BDF8", name: "Kiorly" } };
+  // The Kiorly staff app (ADR-037, 23 Nov 2026; recoloured 24 Nov 2026): Indigo + Periwinkle chevrons, coral pulse, NOT a product colour (the app spans Clinic teal, Lab violet, Pharmacy green).
+  // light = periwinkle on light surfaces, dark = lighter periwinkle on indigo/dark surfaces. App icon = solid Indigo tile with white chevrons and the coral pulse.
+  kiorly: { light: "#818CF8", dark: "#A5B4FC", name: "Kiorly" } };
 const png = (svg, size, file) => sharp(svg, { density: 384 }).resize(size, size).png().toFile(file);
 
 // One asset set per brand: "kiorex" -> dist/ (unchanged paths); clinic/lab/pharmacy -> dist/products/<p>/ with the product accent on the right chevron + icon gradient.
@@ -20,9 +21,11 @@ async function build(prod, D, vb0) {
   const A = ACCENT[prod];
   const o = (...p) => path.join(D, ...p);
   fs.mkdirSync(o("pwa"), { recursive: true }); fs.mkdirSync(o("expo"), { recursive: true });
-  const iconSvg = Buffer.from(fs.readFileSync(path.join(root, "kiorex-app-icon.svg"), "utf8").replace(/#0369A1/g, A.light).replace('aria-label="Kiorex app icon"', `aria-label="${A.name} app icon"`));
+  let iconSrc = fs.readFileSync(path.join(root, "kiorex-app-icon.svg"), "utf8").replace(/#0369A1/g, A.light).replace('aria-label="Kiorex app icon"', `aria-label="${A.name} app icon"`);
+  if (prod === "kiorly") iconSrc = iconSrc.replace(/<stop offset="0" stop-color="#3730A3"\/><stop offset="1" stop-color="[^"]+"\/>/, '<stop offset="0" stop-color="#4338CA"/><stop offset="1" stop-color="#3730A3"/>'); // Indigo tile, only a whisper of depth
+  const iconSvg = Buffer.from(iconSrc);
   const bleed = (scale, bg = true) => Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3730A3"/><stop offset="1" stop-color="${A.light}"/></linearGradient></defs>
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3730A3"/><stop offset="1" stop-color="${prod === "kiorly" ? "#3730A3" : A.light}"/></linearGradient></defs>
   ${bg ? '<rect width="1024" height="1024" fill="url(#g)"/>' : ""}
   <g transform="translate(512 512) scale(${scale}) translate(-549.5 -440)">
     <polyline points="373,237 505,440 373,643" fill="none" stroke="#fff" stroke-width="44"/>
@@ -33,7 +36,7 @@ async function build(prod, D, vb0) {
     <polyline points="373,237 505,440 373,643" fill="none" stroke="#3730A3" stroke-width="38"/>
     <polyline points="720,237 588,440 720,643" fill="none" stroke="${A.light}" stroke-width="38"/>
     <path d="M222 440 H510 L525 428 L540 466 L557 392 L574 460 L588 441 H877" fill="none" stroke="#E8735E" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/></g></svg>`);
-  fs.copyFileSync(prod === "kiorex" || prod === "kiorly" ? path.join(root, "kiorex-mark.svg") : out("svg", `${prod}-mark.svg`), o("favicon.svg"));
+  fs.copyFileSync(prod === "kiorex" ? path.join(root, "kiorex-mark.svg") : out("svg", `${prod}-mark.svg`), o("favicon.svg"));
   await png(iconSvg, 16, o("favicon-16.png")); await png(iconSvg, 32, o("favicon-32.png")); await png(iconSvg, 48, o("favicon-48.png"));
   await png(iconSvg, 180, o("apple-touch-icon.png"));
   for (const sz of [192, 512]) { await png(iconSvg, sz, o("pwa", `icon-${sz}.png`)); await png(bleed(0.62), sz, o("pwa", `maskable-${sz}.png`)); }
@@ -48,10 +51,13 @@ async function build(prod, D, vb0) {
   await png(Buffer.from(iconSvg.toString().replace(/rx="228"/, 'rx="0"')), 1024, o("expo", "icon.png"));
   await png(bleed(0.62, false), 1024, o("expo", "adaptive-foreground.png"));
   fs.writeFileSync(o("expo", "adaptive-background-color.txt"), "#3730A3\n");
-  await png(markOnly(0.9), 1024, o("expo", "splash-icon.png"));
-  await png(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="#3730A3" opacity="0"/><g transform="translate(512 512) scale(0.9) translate(-549.5 -440)">
+  // The native splash sits on the flat Indigo ground (#3730A3, dark #0F1024) in BOTH themes, so the splash mark is the INVERSE tone (white + light accent + light coral). The earlier light-tone
+  // splash-icon.png (Indigo + Ocean strokes) was invisible on Indigo (patient app: "logo missing on the splash"). markOnly() (Indigo + accent) stays available for light grounds.
+  void markOnly;
+  const splashInverse = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="#3730A3" opacity="0"/><g transform="translate(512 512) scale(0.9) translate(-549.5 -440)">
     <polyline points="373,237 505,440 373,643" fill="none" stroke="#fff" stroke-width="38"/><polyline points="720,237 588,440 720,643" fill="none" stroke="${A.dark}" stroke-width="38"/>
-    <path d="M222 440 H510 L525 428 L540 466 L557 392 L574 460 L588 441 H877" fill="none" stroke="#F08A75" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/></g></svg>`), 1024, o("expo", "splash-icon-dark.png"));
+    <path d="M222 440 H510 L525 428 L540 466 L557 392 L574 460 L588 441 H877" fill="none" stroke="#F08A75" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/></g></svg>`);
+  await png(splashInverse, 1024, o("expo", "splash-icon.png")); await png(splashInverse, 1024, o("expo", "splash-icon-dark.png"));
   await png(iconSvg, 48, o("expo", "favicon.png"));
   // Android status-bar notification icon (expo-notifications `icon`): white on transparent, derived from the mono mark SVG (never redrawn). Android keeps only the alpha channel.
   // The pulse is thickened (11 -> 22) so it stays visible at 24 dp; everything else is the mark's own geometry. 96x96 = the file the plugin takes; it generates the density set itself, we also ship the set.
@@ -67,7 +73,7 @@ async function build(prod, D, vb0) {
     fs.writeFileSync(o("expo", "notification-icons", `drawable-${d}`, "notification_icon.png"), await notif(sz));
   }
   // OG image 1200x630: Ground background + the product lockup
-  const lockup = fs.readFileSync(out("svg", `${prod === "kiorly" ? "kiorex" : prod}-lockup.svg`), "utf8").trim().replace(/<svg[^>]*>/, (m) => m.replace(/ (width|height)="[^"]*"/g, ""));
+  const lockup = fs.readFileSync(out("svg", `${prod}-lockup.svg`), "utf8").trim().replace(/<svg[^>]*>/, (m) => m.replace(/ (width|height)="[^"]*"/g, ""));
   const vb = lockup.match(/viewBox="([^"]+)"/)[1].split(" ").map(Number);
   const lw = 880, lh = (lw * vb[3]) / vb[2];
   const og = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F6FC"/><stop offset="1" stop-color="#E4E8F7"/></linearGradient></defs>
@@ -81,6 +87,16 @@ async function build(prod, D, vb0) {
 (async () => {
   const vb = await build("kiorex", out());
   for (const p of ["clinic", "lab", "pharmacy", "kiorly"]) await build(p, out("products", p));
+  // Kiorly static art (staff app + Kiorly Home): app icon tile and splash, derived from the generated kiorly mark (never redrawn).
+  {
+    const body = (tone) => fs.readFileSync(out("svg", `kiorly-mark${tone}.svg`), "utf8").replace(/^<svg[^>]*>|<\/svg>\s*$/g, "");
+    const icon = fs.readFileSync(out("products", "kiorly", "favicon.svg"), "utf8"); void icon;
+    const iconSrc = fs.readFileSync(path.join(root, "kiorex-app-icon.svg"), "utf8").replace(/<stop offset="0" stop-color="#3730A3"\/><stop offset="1" stop-color="[^"]+"\/>/, '<stop offset="0" stop-color="#4338CA"/><stop offset="1" stop-color="#3730A3"/>').replace('aria-label="Kiorex app icon"', 'aria-label="Kiorly app icon"');
+    fs.writeFileSync(out("svg", "kiorly-app-icon.svg"), iconSrc);
+    const splash = (bg, tone) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1170 2532" role="img" aria-label="Kiorly"><rect width="1170" height="2532" fill="${bg}"/><svg x="235" y="1000" width="700" height="476" viewBox="206 206 688 468">${body(tone)}</svg></svg>`;
+    fs.writeFileSync(out("svg", "kiorly-splash.svg"), splash("#3730A3", "-inverse"));
+    fs.writeFileSync(out("svg", "kiorly-splash-dark.svg"), splash("#0F1024", "-inverse"));
+  }
   const lockup = fs.readFileSync(out("svg", "kiorex-lockup.svg"), "utf8").trim().replace(/<svg[^>]*>/, (m) => m.replace(/ (width|height)="[^"]*"/g, ""));
   // Email / print letterhead
   fs.writeFileSync(out("svg", "letterhead.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 794 1123" width="794" height="1123"><rect width="794" height="1123" fill="#fff"/>

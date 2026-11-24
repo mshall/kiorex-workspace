@@ -90,3 +90,7 @@ Also avoid on store listings/screenshots: prices, plan comparison tables, "free"
 
 ## 10. Not verified
 Full text of 3.1.3(c) multi-user wording; Apple 5.1.1 demo-account text (page excerpt truncated); Google account deletion page content; commission amounts for US link-outs; exact effective dates of 2026 changes.
+
+
+## Kiorly store listing: brand colours (24 Nov 2026)
+Icon: solid Indigo `#3730A3` tile, white chevrons, coral `#E8735E` pulse line (artwork `_brand/dist/products/kiorly/expo/icon.png`, adaptive background `#3730A3`). In-app and web marks on light surfaces: Indigo `#3730A3` + Periwinkle `#818CF8` chevrons with the coral pulse; on dark/indigo surfaces white + `#A5B4FC`. Screenshots for the listing must show the light-surface header (no gradient banner) and the single language menu. Kiorex (patient app) keeps Indigo + Ocean.
