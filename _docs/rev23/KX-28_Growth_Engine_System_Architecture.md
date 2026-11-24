@@ -1,18 +1,18 @@
 # KX-28 — Growth Engine System Architecture
 
-Revision: Rev 2.4 draft 1 · Growth Edition, 24 November 2026 (new volume; owner: Chief Software Architect; supersedes: none)
+Revision: Rev 2.4 · Growth Edition, as-built verified 24 November 2026 (new volume; owner: Chief Software Architect; supersedes: Rev 2.4 draft 1 of this volume)
 
 Subtitle: How the Growth Engine is built inside the existing Kiorex and Kiorly systems: components, deployment, sequences, data, events, security, privacy, service levels, runbooks, markets and recovery.
 
 Tags: Architecture · Components · Sequences · Data model · Contracts 1.10.0 · Threat model · PIA · SLO · Runbooks · Multi-market · DR
 
-> **Note** How to read this volume. Section 02 is the only section that describes what exists today. Every diagram after it is Proposed unless its caption says As-built. Requirements are in KX-27; attribution and money rules in KX-30.
+> **Note** How to read this volume. Section 02 is the verified baseline and, since Rev 2.4, the as-built table of everything Phase 1 added (checked against the repositories and tests on 24 Nov 2026). Diagrams are labelled in their captions: As-built where code and a passing test exist, Proposed where only designed, Roadmap for Phase 2 and later. Requirements are in KX-27; attribution and money rules in KX-30.
 
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-28 |
-| REVISION | Rev 2.4 draft 1 · Growth Edition (24 November 2026) |
-| STATUS | Proposed (ADR-041 to ADR-047 unsigned); Phase 1 wave 1 in progress by other agents |
+| REVISION | Rev 2.4 · Growth Edition (24 November 2026) |
+| STATUS | Phase 1 As-built locally, not deployed (ADR-041 to ADR-047 still Proposed); Phase 2 and later Roadmap |
 | OWNER ROLE | Chief Software Architect |
 | AUDIENCE | Engineering, build agents, security and privacy reviewers, SRE |
 | RELATED | KX-26 system architecture; KX-08; KX-09; KX-10; KX-21; KX-24; KX-27; KX-30; KX-32; KX-33 |
@@ -21,6 +21,7 @@ Tags: Architecture · Components · Sequences · Data model · Contracts 1.10.0 
 | Revision | Date | Change | Author |
 |---|---|---|---|
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from the architecture decisions report; status legend added | Documentation agent |
+| Rev 2.4 | 24 Nov 2026 | Section 02 rebuilt from code (baseline plus as-built table); figures and tables relabelled; configuration kinds, flags, migrations, events and SLO status corrected; gaps listed | Documentation agent |
 
 ## Contents
 01 Summary · 02 As-built baseline · 03 Logical components · 04 Deployment · 05 Ownership and modules · 06 Sequence diagrams · 07 Data model · 08 Events and contracts 1.10.0 · 09 Security and threat model · 10 Privacy impact assessment · 11 SLIs and SLOs · 12 Runbooks · 13 Multi-market configuration · 14 Failure modes and disaster recovery · 15 Acceptance, KPIs, risks, dependencies, cross-references
@@ -28,18 +29,18 @@ Tags: Architecture · Components · Sequences · Data model · Contracts 1.10.0 
 ## Key numbers
 <!-- kpis -->
 - **0** new services, **0** Redis, **0** Kafka (ADR-041)
-- **8** configuration kinds, versioned and maker-checker
-- **13** SLIs with proposed SLOs
-- **1.10.0** additive contracts minor
+- **10** configuration kinds in the contract vocabulary, **5** with JSON Schemas and editable in Phase 1 (`ATTRIBUTION_POLICY`, `SEO`, `WIDGET_POLICY`, `CONSENT_DEFAULTS`, `MARKET_GROWTH`), versioned and maker-checker
+- **13** SLIs with proposed SLOs; only decision determinism and latency have tests, none is monitored yet
+- **1.10.0 and 1.11.0** additive contracts minors (71 flag keys, 14 added by growth)
 - **4th** ledger (rewards), Phase 2, never commingled
 
 ## Status legend (read first)
-Every statement in this volume carries one of these labels, in a column, a prefix or a callout. Growth Engine Phase 1 is being implemented by other agents while this volume is written, so the labels matter more than usual.
+Every statement in this volume carries one of these labels, in a column, a prefix or a callout. Phase 1 is now built locally; the labels separate what runs from what is only designed.
 
 | Label | Meaning | Rule for readers |
 |---|---|---|
-| **As-built** | Exists in code and tests in the workspace, verified by reading the repositories on 24 Nov 2026 (discovery) and re-checked for the items named in KX-28 §02 | Safe to rely on. Everything not listed as As-built does not exist yet |
-| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. As of this revision no growth ADR is Accepted, so this label marks only rules inherited from existing Accepted ADRs |
+| **As-built** | Exists in code with a passing test in the workspace, verified by reading the repositories and re-running the suites on 24 Nov 2026 (Rev 2.4). Local only: not deployed, not run against a real provider | Safe to rely on for behaviour in the local stack |
+| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. No growth ADR (ADR-041 to ADR-047) has been accepted, so this label marks only rules inherited from existing Accepted ADRs |
 | **Proposed** | Designed in the Growth reports of 24 Nov 2026 and written up here, not yet signed (ADR-041 to ADR-047) | Build only after sign-off, or inside a work package the founder released |
 | **Roadmap** | Phase 2 to 4 capability, scoped coarsely | Do not build; estimates are ranges |
 | **Open decision** | A founder or CEO choice with a stated default | Use the default, never decide silently |
@@ -59,8 +60,9 @@ Growth is a module family inside the two modular monoliths, not a new system. Ki
 | Mock first | `GrowthIntegrationPort` with `MODE=mock|real` | FD-04, ADR-035 |
 | Configuration is versioned data | `GrowthConfigVersion` with maker-checker | ADR-047 (Proposed) |
 
-## 02 As-built baseline (24 Nov 2026)
-Verified by reading code. Nothing in the Growth Engine list in section 03 exists yet except where marked.
+## 02 As-built baseline
+### 2.1 Baseline before Phase 1 (discovery, 24 Nov 2026, kept for the record)
+The rows below describe the repositories before the Growth Engine code landed. Rows that Phase 1 changed are marked in section 2.2.
 
 | Area | As-built fact | Where |
 |---|---|---|
@@ -78,10 +80,29 @@ Verified by reading code. Nothing in the Growth Engine list in section 03 exists
 | Contracts | `@kiorex/contracts` 1.9.0; 57 flag keys; no growth event | kiorex-contracts |
 | Growth modules | `kiorex-platform/apps/api/src/growth` does not exist; clinic `src/growth` holds only the referral files | verified 24 Nov 2026 before wave 1 landed |
 
-> **Warning** Wave 1 agents are creating the first growth code now. A later agent must re-verify this table against the repositories before the volume is uploaded to Drive; items that become As-built should then be relabelled.
+### 2.2 As-built after Phase 1 (verified 24 Nov 2026)
+Evidence: unit suites re-run on 24 Nov 2026 (contracts 276, Kiorex API 578, Clinic API 1,222, Passport 314) plus the growth integration suites on a local Postgres; the e2e suites 25 to 28 and the edge sweep 40 to 49 are recorded in `_docs/growth/GROWTH_PHASE1_WORK_PACKAGES.md` sections 8 to 12 and `_docs/test-flow/EDGE_CASE_REPORT_2026-11.md`. Nothing is deployed.
+
+| Area | As-built fact | Where | Label |
+|---|---|---|---|
+| Contracts | `@kiorex/contracts` 1.11.0 (1.10.0 then 1.11.0, both additive); 71 flag keys (13 `growth.*` plus `kiorex.whatsapp_ai_assistant`); growth OpenAPI `kiorex-growth.v1` (`/growth/v1/touch`, `/growth/v1/events`, `/growth/v1/evidence/{bookingId}`, `/api/v1/bootstrap`); marketplace OpenAPI 1.5.0 with `acquisition`, optional `lt`, `GET /referral-links/{code}` and `GET /referral-links`; events `CommissionAdjusted`, `PatientConsentUpdated`, `ReferralLinkCreated`, `ReferralLinkRevoked`, internal `AttributionAssigned` and `PatientAcquisitionRecorded`; five config JSON Schemas | `kiorex-contracts` | As-built |
+| Kiorex schema | Migrations `20261128100000_growth_core`, `20261128120000_growth_attribution_consent`, `20261129090000_growth_analytics_v1`, `20261129120000_growth_admin_config`, `20261130090000_growth_link_registry`; models `GrowthAcquisitionSource`, `GrowthTouchpoint`, `GrowthAttributionDecision`, `GrowthEvent`, `GrowthMetricDaily`, `GrowthRevenueFact`, `GrowthSpendEntry`, `GrowthConfigVersion`, `GrowthConfigReader`, `GrowthSlug`, `GrowthSlugHistory`, `GrowthLandingPage`, `WidgetRegistration`, `GrowthFraudSignal`, `GrowthVisitorConsent`, `CommunicationSuppression`; `BookingIntent.acquisitionOrigin` and `attributionDecisionId` | `kiorex-platform/apps/api/prisma` | As-built |
+| Clinic schema | Migrations `20261128110000_growth_links_attribution`, `20261128120000_growth_link_tags`, `20261128120100_growth_widget_settings`; models `ProviderReferralLink`, `ProviderReferralLinkDaily`, `BookingWidgetConfig`, `KiorexCommissionDecision`; appointment columns for origin, decision ref and policy version; dispute reason `PROVIDER_LED_EVIDENCE` | `clinics-management/apps/api/prisma` (branch `kiorex`) | As-built |
+| Attribution | Pure `decide.ts` (PROVIDER_FIRST default, windows 30, 30, 7 days inclusive, dwell minimum 1,000 ms, other-organisation touches ignored); one immutable decision per booking and policy version; `lt` verified in two formats; booking flow writes the decision before the clinic call; flag OFF is identical to before | `growth/attribution`, `booking` | As-built |
+| Commission | `isCommissionChargeableBooking(source, isNew, origin)`; append-only `KiorexCommissionDecision` at check-in; `PROVIDER_LED_EVIDENCE` dispute auto-approval; `CommissionAdjusted`; monthly statement counters | `clinics-management/.../kiorex` | As-built |
+| Provider links | Links for five scopes, QR SVG and PNG from a local library (no third-party service), A4 and A5 AR and EN posters, public `/q/:code` and `go/:slug`, widget settings, Growth workspace UI, staff app Growth tab (Clinic and Nurse). Server PDF not built | `clinics-management/.../growth/provider-links`, `kiorly` | As-built |
+| Public site | SSR role, 14 page types, slugs with history, guard, JSON-LD, robots, segmented sitemaps, SPA fallback; Lighthouse not measured | `kiorex-platform/apps/api/src/public-site`, `apps/web/src/public` | As-built (lab scores open) |
+| Widget | Widget host as a role of the API image, per-request CSP from `WidgetRegistration`, SDK 1.46 KB gzip, Preact widget 18 KB gzip, Passport popup sign-in (client `kiorex-widget`) | `apps/widget`, `apps/api/src/widget` | As-built (real Passport popup not exercised) |
+| Deep links | Domain table keys `patient`, `link`, `widget` and `appLinks.patient`; bootstrap endpoint; well-known files (404 in production until configured); fallback pages; handlers in the patient app and the staff app; deferred link by Play referrer | `kiorex-account/config`, `market`, mobile apps | As-built (not verified on a device) |
+| Consent | Consent purposes, append-only history, `PatientConsentUpdated`, anonymous visitor consent, suppression list, marketing gate, STOP handling, web banner and preference centre, patient app preferences screen. `growth.analytics_visitor` and `growth.marketing_messaging` launch-locked | `growth/consent`, `engagement`, web, mobile | As-built |
+| Analytics | Rollups, funnel, channels, cohorts, unit economics, k = 10 masking, CSV export, spend entry, provider analytics | `growth/analytics` | As-built |
+| Config | `GrowthConfigService` with maker-checker, effective dates, rollback as a new version, propagation monitor, guardrails; ops console group with 22 sections | `growth/config`, `growth/admin`, `apps/ops` | As-built |
+| Link registry | The Clinic emits link created and revoked events and serves a signed lookup; Kiorex stores `linkStatus` and reconciles hourly | `growth/links` | As-built |
+| Erasure | `subject.deleted` consumer registered as the `growth` anonymiser; a bug that made the Passport back-channel deletion read as a plain revoke was fixed (`auth.controller.ts`, e2e 28) | `growth/erasure`, `auth` | As-built |
+| Not built | Daily decision replay job; WhatsApp assistant; campaign engine; patient referral and rewards; lifecycle journeys; real Search Console, Play Console and App Store Connect adapters; Pharmacy and Lab Growth tabs; `no-health-targeting.unit.spec.ts` (only `growth-no-phi.unit.spec.ts` exists) | | Roadmap |
 
 ## 03 Logical components
-Figure 1 — Logical components and ownership. Proposed unless noted.
+Figure 1 — Logical components and ownership. As-built for the Phase 1 components (Rev 2.4); nothing in it is deployed.
 
 ```mermaid
 flowchart TB
@@ -131,7 +152,7 @@ flowchart TB
 ```
 
 ## 04 Deployment
-Figure 2 — Deployment view. Proposed. No deployment is performed until the founder says so (FD-17); infrastructure changes are validated only with `tofu validate` and `tofu fmt`.
+Figure 2 — Deployment view. Code and module flags As-built, infrastructure designed and validated only (`tofu validate`, `tofu fmt`), not applied. No deployment is performed until the founder says so (FD-17); infrastructure changes are validated only with `tofu validate` and `tofu fmt`.
 
 ```mermaid
 flowchart LR
@@ -151,32 +172,32 @@ flowchart LR
 
 | Decision | Detail | Label |
 |---|---|---|
-| Same image, two roles | `ROLE=site` serves server-rendered public routes; `ROLE=api` serves the API; one image, scaled separately later | Proposed (ADR-043) |
-| Cache | HTML `s-maxage=300`, `stale-while-revalidate=3600`, path-only cache key, query whitelist `page` and `sort`; purge on `LISTING_STATUS_CHANGED` and `PROVIDER_PROFILE_UPDATED` | Proposed |
-| Widget origin | Dedicated host (proposed `book.kiorex.com`) whose CSP `frame-ancestors` is generated per request from an exact-origin allowlist; every other host keeps `'none'` | Proposed (ADR-044), Open decision (host name) |
+| Same image, two roles | `SITE_ROLE=all|api|site` serves server-rendered public routes from the API image; the widget host is a third role of the same image (`WIDGET_HOST`); one image, scaled separately later | As-built (code, Dockerfile builds); ADR-043 still Proposed |
+| Cache | HTML `s-maxage=300`, `stale-while-revalidate=3600`, ETag, path-only cache key with a query whitelist; purge on `LISTING_STATUS_CHANGED` and `PROVIDER_PROFILE_UPDATED` (the CDN purge adapter is a mock) | As-built (headers), Proposed (CDN behaviours not applied) |
+| Widget origin | Dedicated host (`book.kiorex.com` in the domain table) whose CSP `frame-ancestors` is generated per request from an exact-origin allowlist; every other host keeps `'none'` | As-built (ADR-044 still Proposed); Open decision (host name and DNS) |
 | Cell | Kiorex runs one cell today (`frankfurt`); growth data stays in the cell; cross-cell routing is out of scope until a second cell exists | As-built constraint |
 
 ## 05 Ownership and modules
 | Concern | Repo and path | Phase | Label |
 |---|---|---|---|
-| Growth core API | kiorex-platform `apps/api/src/growth/**` | 1 | Proposed |
-| Public site (SSR role, sitemaps, robots, well-known) | kiorex-platform `apps/api/src/public-site/**`, `apps/web/src/public/**` | 1 | Proposed |
-| Widget app and SDK | kiorex-platform `apps/widget/**` | 1 | Proposed |
-| Ops Growth pages | kiorex-platform `apps/ops/src/pages/growth/**` | 1 | Proposed |
-| Provider links, QR, widget settings, workspace UI | clinics-management `apps/api/src/growth/**` (existing folder extended), `apps/web/src/features/growth/**`; branch `kiorex`, no push without founder approval (FD-18) | 1 | Proposed |
-| Commission decision | clinics-management `appointments/booking-attribution.ts`, `src/kiorex/**` | 1 | Proposed |
-| Contracts | kiorex-contracts (events, OpenAPI, flags, config schemas) | 1 | Proposed |
-| Hosts and app links | kiorex-account `config/domains.json`, `config/app-links/*` | 1 | Proposed |
-| Staff app tab | kiorly `app/(tabs)`, `src` | 1 (thin) | Proposed |
-| Pharmacy and lab | kiorly-pharmacy, kiorly-lab | 4 | Roadmap |
+| Growth core API | kiorex-platform `apps/api/src/growth/**` | 1 | As-built |
+| Public site (SSR role, sitemaps, robots, well-known) | kiorex-platform `apps/api/src/public-site/**`, `apps/web/src/public/**` | 1 | As-built |
+| Widget app and SDK | kiorex-platform `apps/widget/**` | 1 | As-built |
+| Ops Growth pages | kiorex-platform `apps/ops/src/pages/growth/**` | 1 | As-built |
+| Provider links, QR, widget settings, workspace UI | clinics-management `apps/api/src/growth/**` (existing folder extended), `apps/web/src/features/growth/**`; branch `kiorex`, no push without founder approval (FD-18) | 1 | As-built |
+| Commission decision | clinics-management `appointments/booking-attribution.ts`, `src/kiorex/**` | 1 | As-built |
+| Contracts | kiorex-contracts (events, OpenAPI, flags, config schemas) | 1 | As-built |
+| Hosts and app links | kiorex-account `config/domains.json`, `config/app-links/*` | 1 | As-built |
+| Staff app tab | kiorly `app/(tabs)/(more)/clinic/growth.tsx`, `src/modules/clinic/growth.ts` (the repository was renamed from `kiorly-team` to `kiorly`) | 1 (thin) | As-built |
+| Pharmacy and lab | kiorly-pharmacy, kiorly-lab | 4 | Roadmap (vendored contracts only; no Growth tab, no link service) |
 
-Module boundaries: growth imports only `*-public.ts` barrels of other modules; `module-boundaries.unit.spec.ts` enforces it (As-built test). Two new guard tests are proposed: `no-health-targeting.unit.spec.ts` (modelled on the As-built `no-tax-authority.unit.spec.ts`) and `growth-no-phi.unit.spec.ts`.
+Module boundaries: growth imports only `*-public.ts` barrels of other modules; `module-boundaries.unit.spec.ts` enforces it (As-built test). Guard tests: `growth-no-phi.unit.spec.ts` is As-built; `no-health-targeting.unit.spec.ts` (modelled on `no-tax-authority.unit.spec.ts`) is not written yet (Proposed).
 
 ## 06 Sequence diagrams
-All Proposed.
+Labels per diagram (Rev 2.4): 6.1 to 6.4 As-built; 6.5 Roadmap; 6.6 consent As-built, rewards Roadmap.
 
 ### 6.1 Referral-to-booking attribution
-Figure 3 — A patient arrives through a provider link and books through the widget.
+Figure 3 — A patient arrives through a provider link and books through the widget (As-built; e2e 25 and 27).
 
 ```mermaid
 sequenceDiagram
@@ -201,7 +222,7 @@ sequenceDiagram
 ```
 
 ### 6.2 Commission decision
-Figure 4 — At check-in the clinic writes the decision whether or not a fee applies.
+Figure 4 — At check-in the clinic writes the decision whether or not a fee applies (As-built).
 
 ```mermaid
 sequenceDiagram
@@ -222,7 +243,7 @@ sequenceDiagram
 ```
 
 ### 6.3 Widget booking
-Figure 5 — Widget security and idempotency.
+Figure 5 — Widget security and idempotency (As-built; Playwright and `widget.int.spec.ts`).
 
 ```mermaid
 sequenceDiagram
@@ -243,7 +264,7 @@ sequenceDiagram
 ```
 
 ### 6.4 SSR request path
-Figure 6 — A crawler or patient requests a doctor page.
+Figure 6 — A crawler or patient requests a doctor page (As-built).
 
 ```mermaid
 sequenceDiagram
@@ -266,7 +287,7 @@ sequenceDiagram
 ```
 
 ### 6.5 WhatsApp assistant (Phase 2, Roadmap)
-Figure 7 — Tool-based assistant with a closed registry.
+Figure 7 — Tool-based assistant with a closed registry (Roadmap, Phase 2).
 
 ```mermaid
 sequenceDiagram
@@ -290,7 +311,7 @@ sequenceDiagram
 ```
 
 ### 6.6 Consent and rewards (rewards are Roadmap, counsel-gated)
-Figure 8 — Consent capture and the delayed reward.
+Figure 8 — Consent capture (As-built) and the delayed reward (Roadmap).
 
 ```mermaid
 sequenceDiagram
@@ -310,7 +331,7 @@ sequenceDiagram
 ```
 
 ## 07 Data model
-Logical entities mapped to existing or new tables. KP is the Kiorex database, CM the clinic database. All new KP tables carry `market`. Models keep the PascalCase naming of the existing schemas.
+Logical entities mapped to existing or new tables. Every Phase 1 row is As-built (section 2.2 lists the migrations); Phase 2 and 3 rows are Roadmap. Differences from the design: `ProviderReferralLinkDaily` and `BookingWidgetConfig` exist as designed; no `GrowthFraudReview` table (fraud review columns sit on `GrowthFraudSignal`); `GrowthRevenueFact`, `GrowthSpendEntry`, `GrowthVisitorConsent`, `GrowthConfigReader` and `WidgetRegistration` are additional. KP is the Kiorex database, CM the clinic database. All new KP tables carry `market`. Models keep the PascalCase naming of the existing schemas.
 
 | Logical entity | Class | Home | Table or change | Phase |
 |---|---|---|---|---|
@@ -337,9 +358,9 @@ Logical entities mapped to existing or new tables. KP is the Kiorex database, CM
 | GrowthExperiment, ExperimentAssignment | New | KP | `GrowthExperiment`, `GrowthExperimentAssignment` | 3 |
 | AuditEvent | Existing | KP and CM | `AuditLog` with actions prefixed `growth.` | 1 |
 
-Immutability: `GrowthTouchpoint`, `GrowthAttributionDecision` and `KiorexCommissionDecision` reject UPDATE and DELETE by database trigger. Erasure and retention run through `SECURITY DEFINER` functions (`growth_erase_subject`, `growth_purge_expired`) that write an audit row. Corrections create a new row with `supersedesId`.
+Immutability (As-built): `GrowthTouchpoint`, `GrowthAttributionDecision`, `KiorexCommissionDecision` and both consent tables reject UPDATE and DELETE by database trigger. Erasure and retention run through `SECURITY DEFINER` functions (`growth_erase_subject`, `growth_purge_expired`) that write an audit row. Corrections create a new row with `supersedesId`.
 
-Figure 9 — Core entity relations (Proposed).
+Figure 9 — Core entity relations (As-built for the Phase 1 entities).
 
 ```mermaid
 erDiagram
@@ -352,8 +373,8 @@ erDiagram
   GrowthConfigVersion ||--o{ GrowthAttributionDecision : "policy version"
 ```
 
-## 08 Events and contracts 1.10.0
-Contracts 1.10.0 is an additive minor (Proposed). No existing event is renamed or removed; consumers that ignore unknown fields keep validating.
+## 08 Events and contracts 1.10.0 and 1.11.0
+Contracts 1.10.0 and 1.11.0 are additive minors (As-built, published to the vendored tarballs of the platform, pharmacy and lab). No existing event is renamed or removed; consumers that ignore unknown fields keep validating.
 
 | Change | Detail |
 |---|---|
@@ -362,8 +383,9 @@ Contracts 1.10.0 is an additive minor (Proposed). No existing event is renamed o
 | `PROVIDER_PROFILE_UPDATED` | Additive `widgetOrigins[]` |
 | New event `CommissionAdjusted` | Amount waived or changed by dispute, with decision ref; `COMMISSION_CHARGE_REVERSED` stays for full reversal |
 | New event `PatientConsentUpdated` | `{purpose, granted, textVersion}`, opaque subject ref only |
+| 1.11.0 | Optional SEO extension keys, optional `lt` on the booking body, signed lookup `GET /referral-links/{code}` and feed `GET /referral-links`, `ReferralLinkCreated` with `orgRef` and `clinicRef`, new `ReferralLinkRevoked` |
 | New OpenAPI `kiorex-growth.v1` | Public `POST /growth/v1/touch`, `POST /growth/v1/events`, `GET /api/v1/bootstrap` |
-| Flags | `growth.*` keys added to the catalogue (list in KX-30 section 10) |
+| Flags | 14 keys added to the catalogue (13 `growth.*` and `kiorex.whatsapp_ai_assistant`; list in KX-30 section 10) |
 | Config schemas | JSON Schemas for config kinds shared by API and ops UI |
 | Naming | Growth events are PascalCase (matches Rev 2.3 and the founder's list); outbox type equals the name; `ReferralIssued` is a clinical event and is never reused; patient referral uses `PatientReferral*` |
 
@@ -389,6 +411,8 @@ Internal (Kiorex outbox, not published to partners): `AttributionAssigned`, `Pat
 | Secrets in integrations | Ad accounts | `secretRef` only; none in database, logs or UI |
 | PII in URLs (UTM carrying emails) | Privacy | Keep only `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` and four click-id keys, each length-capped, pattern-checked and PHI-checked |
 
+> **Note** Status (Rev 2.4). As-built mitigations: HMAC link tokens with expiry, evidence hash, dwell minimum, only Kiorex sets origin, exact-origin CSP, `postMessage` origin and source checks, SRI on the SDK, path-only cache key from config, thin-page guard, an App.tsx snapshot test that every SPA route is public-table or `noindex`, unticked consent controls, a closed UTM and click-id field list with a PHI guard, secrets as references only (a test sets sentinel values and asserts none appears in any read model). Not built: random audit sampling of provider-led bookings and the public help page; reward and assistant rows are Roadmap. The internal penetration test (`_docs/security/PENTEST_2026-11_REPORT.md`) found no flaw in the growth core and verified the link resolver and widget controls; its 14 findings are in KX-10.
+
 ## 10 Privacy impact assessment (summary)
 > **Warning** This is an engineering summary. The formal PIA is a DPO deliverable (Regulatory dependency). Legal bases below are proposals for counsel to confirm.
 
@@ -408,7 +432,7 @@ Internal (Kiorex outbox, not published to partners): `AttributionAssigned`, `Pat
 Never stored: IP address (a daily-rotating keyed hash for rate limiting and fraud, 24 hours), full user agent, full referrer URL (host only), unknown query parameters, device fingerprints, search text, any health information. Dependants are excluded from growth tables. Cross-border: Kiorex data stays in the Frankfurt cell; only aggregates leave AWS (Regulatory dependency, DPO). Subject rights: erasure through the `subject.deleted` consumer deletes touchpoints, events and preferences; decisions are reduced to origin and reason where the provider's financial record requires it (counsel to confirm).
 
 ## 11 SLIs and SLOs
-All Proposed, targets are ASSUMPTION to ratify.
+All targets are Proposed (ASSUMPTION to ratify). Status in Rev 2.4: decision latency p99 under 150 ms on 1,000 seeded touches and decision determinism (replay equality) are tested; the daily 1,000-decision replay job, page availability, Web Vitals, sitemap freshness, indexation and widget ready time are not measured or monitored, and no alert exists.
 
 | SLI | SLO |
 |---|---|
@@ -428,6 +452,8 @@ All Proposed, targets are ASSUMPTION to ratify.
 | Outbox lag for growth consumers | p95 at most 60 s |
 
 ## 12 Runbooks
+The levers named below exist as built (flags `growth.attribution`, `growth.ssr_public_pages`, `growth.widgets`, `growth.marketing_messaging`; revocation of a widget origin; slug history); the runbooks themselves are not yet written as operator documents and stay Proposed.
+
 | Runbook | Trigger | First actions | Label |
 |---|---|---|---|
 | RB-G1 Decision mismatch | Daily replay differs | Page on-call; freeze policy changes; compare stored inputs hash; stop sending the acquisition block by flag `growth.attribution` OFF (decision becomes UNATTRIBUTED, today's rules apply); never edit rows, append a superseding decision | Proposed |
@@ -440,7 +466,7 @@ All Proposed, targets are ASSUMPTION to ratify.
 | RB-G8 Kiorex outage | Kiorex API down | Providers keep working: clinic links and QR work standalone; bookings through widget fail closed with a friendly message; Clinic bookings by other sources unaffected | Proposed |
 
 ## 13 Multi-market configuration
-Every growth table has `market` (ISO alpha-2). Configuration resolves `(kind, scope MARKET cc)` with fallback to GLOBAL. No market conditionals in code. A new market is configuration plus data.
+As-built: every growth table has `market` (ISO alpha-2) and config resolves with market isolation in every read. Every growth table has `market` (ISO alpha-2). Configuration resolves `(kind, scope MARKET cc)` with fallback to GLOBAL. No market conditionals in code. A new market is configuration plus data.
 
 | Setting | Where | Example for Egypt | Label |
 |---|---|---|---|
@@ -471,7 +497,7 @@ Root URL while one market is live: 301 to `/ar/eg/`; with two or more live marke
 Backup and restore targets are those of KX-21; growth adds no new storage tier. Data cell failover is out of scope until a second cell exists.
 
 ## 15 Acceptance criteria, KPIs, risks, dependencies, cross-references
-- Acceptance: the Phase 1 exit list of KX-27 section 07; SLO baselines recorded from the first pilot month; replay job running; every route in the SPA is either public-table or `noindex` (snapshot test).
+- Acceptance (status Rev 2.4: met locally, with the open items named in KX-27 section 07 and KX-33 section 04): the Phase 1 exit list of KX-27 section 07; SLO baselines recorded from the first pilot month; replay job running; every route in the SPA is either public-table or `noindex` (snapshot test).
 - KPIs: decision determinism, p99 decision latency, page availability, indexed pages, consent correctness (definitions KX-32).
 - Risks: schema bottleneck (single owner for the Kiorex growth migration `20261128100000_growth_core` and the clinic migration `20261128110000_growth_links_attribution`), SSR on the shared image affecting API latency (mitigation: role split and flag), CDN cost, thin-page abuse, legal drift.
 - Dependencies: contracts 1.10.0; hosts and DNS; counsel; store accounts.

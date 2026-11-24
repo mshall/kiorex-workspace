@@ -1,7 +1,7 @@
 # KX-14 Go-to-Market & Marketing Plan
 
 Source: 1y50CZ9gxFGp8e-pzGTWwX2INUCWfchVJ
-Revision: Rev 2.3 · Reference Edition (20 November 2026; supersedes KX14 Rev 2.1, 19 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (supersedes KX14 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; some symbols lost; timeline-bar positions in §08 not recoverable.
 
@@ -9,7 +9,7 @@ Supply first, density second, demand third — how Kiorly wins clinics, physioth
 
 - Authored in the role of Chief Marketing Officer. Owns positioning, brand voice, demand generation and the marketplace liquidity playbook.
 - Tags: Positioning · Beachhead clusters · Channel plan · Competitive map · Launch calendar
-- DOCUMENT: KX14 | REVISION: Rev 2.3 · Reference Edition | DATE: 20 November 2026 | STATUS: Approved reference
+- DOCUMENT: KX14 | REVISION: Rev 2.4 · Reference Edition | DATE: 24 November 2026 | STATUS: Approved reference
 - AUDIENCE: Founders, sales, marketing, investors | OWNER ROLE: Chief Marketing Officer | SUPERSEDES: KX14 Rev 2.1 19 Nov 2026
 
 ## WHAT CHANGED IN REV 2.3 (as printed)
@@ -150,7 +150,7 @@ Every external figure in this document traces to one of these sources; internal 
 - poidata.io (Jul 2026): lab counts by area (Nasr City, Heliopolis, New Cairo among top).
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 - **Section 05 (demand generation)**: the as-built facts behind the promises. "Every provider shares kiorly.link/<slug>" is not yet true: code serves `${APP_WEB_URL}/b/<slug>` and `kiorly.link` is not wired (NH-008). "Provider profiles indexed; schema markup" is not yet true: the patient web is a client-only SPA (KX-31 section 02). Proposed fixes: KX-27 and KX-28.
 - **Patient acquisition mix (Open decision)**: the founder's 50/25/15/10 hypothesis (provider-led, organic, referral and WhatsApp, paid and partnerships). The interpretation (share of attended new patients versus share of budget) is not confirmed. Detail: KX-29 section 03.
@@ -158,3 +158,7 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - **Section 09 (budget)**: patient acquisition 30 percent and content and SEO 12 percent have no per-channel unit economics yet; an illustrative EGP 150,000 monthly split is hypothesised in KX-13 section 13.4 and KX-29 section 09. No large paid spend before the cluster liquidity gate.
 - **Playbooks, 30/60/90 day, 6 and 12 month plans, geography and specialty priorities**: KX-29 (Proposed).
 - **SEO and ASO**: KX-31 (Proposed).
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): this volume was re-read against the repositories; the only changes are status refreshes. Labels as in KX-27; nothing is deployed.
+- Status refresh only: the engine behind the Growth update above is As-built locally (KX-33 section 04); nothing is deployed and no page is indexed. Plan, budgets and cluster order are unchanged hypotheses.

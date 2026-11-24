@@ -78,7 +78,7 @@ flowchart TB
 | **Shared stack** | NestJS 10, Prisma 6, PostgreSQL 16, React 18 + Vite + TanStack Query + shadcn/ui + Tailwind, i18next (AR/EN, RTL), Expo |
 | **Integration** | HMAC REST + outbox webhooks (KX-09), Passport OIDC, feature-flag control plane, Kiorex Pay |
 | **Truth rule** | Kiorly Clinic is the only system of record for appointments (ADR-005) |
-| **Reference set** | Rev 2.3: 24 volumes KX-00 to KX-23, ADRs 001 to 032 |
+| **Reference set** | Rev 2.4 (24 Nov 2026): 34 volumes KX-00 to KX-33, ADRs 001 to 047 (041 to 047 Proposed), contracts 1.11.0 |
 | **Infra** | OpenTofu only (ADR-028); nothing deployed, no AWS deploy until the founder says so |
 | **Providers** | Mock by default; real SMS, Email, WhatsApp, payments, consent, AI and storage adapters are built and need only URLs and credentials: [_docs/PROVIDER_GO_LIVE.md](_docs/PROVIDER_GO_LIVE.md) |
 
@@ -246,7 +246,7 @@ kiorex-v2/
 ├── TEST_GUIDE.md         how to run, seed and test every flow with every test user (DEV ONLY)
 ├── TEST_DATA.md          synthetic QA data index (DEV ONLY)
 ├── _brand/               logo SVGs, tokens, Tailwind preset, RN theme, favicons (README inside)
-├── _docs/                KX-00..KX-23 extracts, rev23/, FOUNDER_DECISIONS.md, UI review, autopilot  (README inside)
+├── _docs/                KX-00..KX-23 older extracts, rev23/ (current, KX-00..KX-33), DOCS_SYNC_MANIFEST.md, FOUNDER_DECISIONS.md, UI review, autopilot  (README inside)
 ├── docs/                 this README's INDEX and images (assets/)
 ├── e2e/                  cross-service end-to-end suite and stack scripts
 ├── scripts/              seed-all, seed-staging, push-all, ops-sync                          (README inside)
@@ -307,7 +307,7 @@ Work in the repo that owns the change; keep contracts first (change `kiorex-cont
 
 | Term | Meaning |
 |---|---|
-| **KX-nn** | Numbered reference volume (KX-00 to KX-23) |
+| **KX-nn** | Numbered reference volume (KX-00 to KX-33) |
 | **ADR** | Architecture decision record (001 to 032) |
 | **Outbox** | Same-transaction event table delivered at least once to another system |
 | **HMAC** | Keyed hash that signs every cross-product request and webhook |

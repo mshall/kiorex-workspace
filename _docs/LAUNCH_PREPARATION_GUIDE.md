@@ -1,6 +1,6 @@
 # Launch preparation guide (build this out after development is done)
 
-Status: LIVING DOCUMENT, started 24 Nov 2026. When the founder asks for "the launch preparation guide", read this file, bring every row up to date against the repos, and present it. Add new items here whenever a decision or a human-only step appears.
+Status: LIVING DOCUMENT, started 24 Nov 2026, re-verified for Rev 2.4 on 24 Nov 2026 (sections 1 to 12 are all present, in order). When the founder asks for "the launch preparation guide", read this file, bring every row up to date against the repos, and present it. Add new items here whenever a decision or a human-only step appears.
 
 Rules that apply to every row: nothing is deployed to AWS until the founder says so; `tofu apply` is the founder's decision; production credentials, store accounts, domains and legal sign-offs are human-only; no launch gate is ever recorded by code.
 
@@ -38,6 +38,7 @@ Legend: **Owner** F = founder, C = counsel, A = AWS/org admin, D = dev team (Cla
 | 3.3 | Partner enrolment codes are created by ops in the console per partner (one time, hashed, expiring). Nothing to provision. | F (ops) | |
 | 3.4 | JWT/session secrets for Pharmacy and Lab (`JWT_SECRET`/`AUTH_JWT_SECRET`) required in production. | D, F | |
 | 3.5 | All provider keys below go into Secrets Manager under `/{product}/{env}/{purpose}`. | F | |
+| 3.6 | **Growth link token secret:** apply the empty container `/kiorex-platform/<env>/growth-link-token` (`growth_link_token_secret`), write a random value of at least 16 characters, then set `growth_link_token_secret_inject = true`, apply and redeploy. Without it the in-session `kxl1.` token is invalid in production (the Clinic provider-link token still works through the shared Clinic secret). | F, D | GRW-P1-C; `growth-secrets.ts` |
 
 ## 4. Identity (Kiorex Passport)
 
@@ -104,13 +105,17 @@ Every provider runs behind a `MODE=mock|real` adapter. Full checklists: `kiorex-
 | 9.6 | Open technical follow-ups: Clinic route-matrix maps verified against live AWS, a per-partner stale session limit for Pharmacy/Lab webs, the Lambda Node 26 move, TS 7 blockers, lint warnings promoted to errors. | D | |
 | 9.7 | Branches: `main` of `clinics-management` deploys to AWS on push (`deploy-aws.yml`). `kiorex` has no automatic deployment. Decide when pushes to `main` may deploy and drop `[skip ci]`. | F | |
 
-## 11. Growth Engine human items (added 24 Nov 2026, Proposed programme)
+## 10. Go-live runbook (order)
 
-Context: `_docs/rev23/KX-27..KX-33` and `_docs/growth/`. None of these is done; all gate production use of growth features, not development. Owner letters as above (F founder, C counsel, A AWS/org admin, D dev team, V vendor).
+1. Decide and create the production AWS account (1.1, 1.2, 1.3). 2. Domains and certificates (section 2). 3. Apply infrastructure, staging first (1.4). 4. Secrets (section 3) and provider setup (section 5) in staging; sandbox-verify every provider. 5. Passport clients (section 4). 6. Staging soak with demo data, run all e2e suites and the HTML test guide. 7. Counsel and sign-offs (sections 6, 7). 8. Store accounts, builds, listings (section 8). 9. Record real gate evidence (6.1). 10. Production apply and deploy by the founder; smoke test with the live checklist; monitor.
+
+## 11. Growth Engine human items (added 24 Nov 2026; the programme is built locally, none of these is done)
+
+Context: `_docs/rev23/KX-27..KX-33` and `_docs/growth/`. None of these is done; all gate production use of growth features, not development. Rev 2.4 added 11.16 to 11.23. Owner letters as above (F founder, C counsel, A AWS/org admin, D dev team, V vendor).
 
 | # | Item | Owner | Notes |
 |---|---|---|---|
-| 11.1 | Sign, amend or reject ADR-041 to ADR-047; confirm whether ADR-039 exists in Drive KX-01 | F | KX-01 |
+| 11.1 | Sign, amend or reject ADR-041 to ADR-047 (still Proposed). ADR-039 is found and Accepted (Clinic repository, registered in KX-01 Rev 2.4), so numbering stands | F | KX-01 |
 | 11.2 | Money policy: attribution precedence (`PROVIDER_FIRST`), windows (30, 30, 7 days), EGP 40 for provider-led-then-marketplace patients (proposed no charge), 7-day notice for money-policy changes | F | KX-30; FD-21, FD-22 |
 | 11.3 | Hosts and DNS: `kiorex.com` patient host in the domain table, `kiorly.link` (NH-008, serve or redirect), widget host (`book.kiorex.com` proposed), staging hosts, certificates | F, A | KX-19 update; extends 2.1 to 2.3 |
 | 11.4 | Counsel opinion on PDPL for analytics cookies, visitor keys, direct electronic marketing consent, the reported marketing licence, retention, dependants; DPO record of processing and formal PIA | C | `growth.analytics_visitor`, `growth.marketing_messaging` stay launch-locked OFF |
@@ -125,6 +130,14 @@ Context: `_docs/rev23/KX-27..KX-33` and `_docs/growth/`. None of these is done; 
 | 11.13 | WhatsApp assistant safety review and launch gate | F, C | `kiorex.whatsapp_ai_assistant` |
 | 11.14 | Confirm the 50/25/15/10 interpretation and approve or replace the illustrative EGP 150,000 monthly marketing budget; reconcile with KX-13 and KX-14 | F | KX-29, KX-13 section 13 |
 | 11.15 | Decide SSR as a separate App Runner service from day one (cost) and the deploy plan | F, A | FD-17, FD-26 |
+| 11.16 | **Lighthouse and field Web Vitals** on the three SSR templates (doctor, specialty+district, clinic) against `lighthouserc.json`; the CLI was never installed, so no lab score exists. Fix any budget miss before indexing is allowed | D | KX-31 section 05; `ssr-smoke.mjs --lighthouse` ready |
+| 11.17 | **Universal and App Links on devices:** native rebuild of the patient and staff apps, real association files (Team ID and SHA-256), check on an iPhone and an Android phone; the simulator checklist is in TEST_GUIDE | F, D | GRW-P1-H; extends 11.7 |
+| 11.18 | **Widget with the real Passport popup:** restart the dev or staging Passport so it loads the `kiorex-widget` client, run the booking from a provider site; confirm DNS, CDN and the `WIDGET_HOST` value | D, A | GRW-P1-G |
+| 11.19 | Environment values for the public site and apps: `SITE_ENVIRONMENT=production` (only then are pages indexable), `SITE_GOOGLE_SITE_VERIFICATION`, `SITE_BING_SITE_VERIFICATION`, `WIDGET_HOST`, `APPLE_TEAM_ID`, `ANDROID_SHA256_CERT_FINGERPRINTS`, `IOS_APP_STORE_URL`, `ANDROID_PLAY_STORE_URL`, `REGIONAL_API_ENDPOINTS`, `GROWTH_CONFIG_*` | F, D | KX-31 |
+| 11.20 | Per-organisation partner credentials for the evidence and link-lookup calls (today a shared Clinic secret plus an organisation header is used) | D, F | KX-30 section 08 |
+| 11.21 | Decide whether `reviewMarkupEnabled` ships `false` until Google review-snippet eligibility is checked (default is `true`) | F | KX-31 section 07 |
+| 11.22 | Product decisions from the edge-case report: bind `lt` to a session or accept the 72-hour window; 410 tombstone or 301 for delisted profiles; hour-early quiet-hours deferral on two DST nights | F, D | EDGE_CASE_REPORT risks 2, 3, 5 |
+| 11.23 | Written provider-facing page of the attribution rules and the approval of the first ACTIVE attribution policy version by two super admins (none is seeded) | F, C | KX-30 sections 05 and 08 |
 
 ## 12. Security (added 24 Nov 2026 after the internal penetration test)
 
@@ -142,6 +155,9 @@ Source: `security/PENTEST_2026-11_REPORT.md` (findings, fixes, residual risk, ho
 | 12.8 | Audit and detection: CloudTrail organisation trail to an immutable bucket, GuardDuty and Malware Protection for S3 on the uploads and import-staging buckets (the onboarding scanner is a mock until then), alarms on 401 / 403 / 429 spikes and on `auth.dev_login`-style audit actions, log review owner. | A, D | KX-21 |
 | 12.9 | Open product decisions from the report: credentials inside the tenant SQL export (KX-PT-L4), platform-level restore of marketplace appointments (L5), Clinic role-matrix review with the product owner (L6), shared store for nonces and rate limits (L1). | F, D | |
 | 12.10 | Re-run `cd e2e && npm run test:security` against every release candidate (production-mode boot, throw-away databases) and keep the report with the release evidence. | D | |
+| 12.11 | Engineering follow-ups from the sweeps (no human needed, tracked here so they are not lost): DTO classes for the 115 untyped Clinic request bodies; revoke the first tokens when an authorization code is replayed; row lock for the Lab cancel versus specimen scan race; shared nonce store for the Clinic marketplace HMAC; scheduled daily decision replay job; fix the order-dependent growth-analytics k-anonymity integration test | D | EDGE_CASE_REPORT section 3; KX-33 section 04 |
+| 12.12 | Phone linking of Passport accounts to staff rows is OFF by default in production (`OIDC_PHONE_LINK`, `KIOREX_OIDC_PHONE_LINK`): decide whether to opt in after verifying staff phone numbers | F | KX-04 Rev 2.4 section |
+| 12.13 | Telehealth: Cloudflare TURN key (3.2), video consent wording and the clinical-governance gate for `kiorex.telemedicine`, a real call on two devices over a relay | F, C, D | ADR-039 |
 
 Incident contacts (fill before launch; do not commit real phone numbers to the repo, keep them in the password manager and print the sheet):
 
@@ -152,9 +168,5 @@ Incident contacts (fill before launch; do not commit real phone numbers to the r
 | AWS account admin | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` |
 | Counsel / data-protection officer | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` |
 | PSP, WhatsApp and SMS vendor security desks | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` |
-
-## 10. Go-live runbook (order)
-
-1. Decide and create the production AWS account (1.1, 1.2, 1.3). 2. Domains and certificates (section 2). 3. Apply infrastructure, staging first (1.4). 4. Secrets (section 3) and provider setup (section 5) in staging; sandbox-verify every provider. 5. Passport clients (section 4). 6. Staging soak with demo data, run all e2e suites and the HTML test guide. 7. Counsel and sign-offs (sections 6, 7). 8. Store accounts, builds, listings (section 8). 9. Record real gate evidence (6.1). 10. Production apply and deploy by the founder; smoke test with the live checklist; monitor.
 
 Cross-references: `_docs/COMPLETENESS_MATRIX.md`, `Docs/NEEDS_HUMAN.md` in each repo, `_docs/rev23/KX-17` (launch readiness), `_docs/rev23/KX-21` (AWS reference), `_docs/test-flow/index.html` (test guide).

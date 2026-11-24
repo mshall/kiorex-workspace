@@ -1,6 +1,6 @@
 # KX-29 — Patient Acquisition and Go-to-Market Strategy for Egypt
 
-Revision: Rev 2.4 draft 1 · Growth Edition, 24 November 2026 (new volume; owner: Chief Marketing Officer; supersedes: none; extends KX-14 sections 03 to 05 and 09 for patient demand)
+Revision: Rev 2.4 · Growth Edition, status refreshed 24 November 2026 (new volume; owner: Chief Marketing Officer; supersedes: Rev 2.4 draft 1 of this volume; extends KX-14 sections 03 to 05 and 09 for patient demand)
 
 Subtitle: How Kiorex gets patients in Egypt without buying them: provider-led first, organic second, referral and WhatsApp third, paid last and only after verified provider supply.
 
@@ -11,7 +11,7 @@ Tags: Go-to-market · Egypt · 30/60/90 · 6 and 12 months · Playbooks · Geogr
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-29 |
-| REVISION | Rev 2.4 draft 1 · Growth Edition (24 November 2026) |
+| REVISION | Rev 2.4 · Growth Edition (24 November 2026) |
 | STATUS | Proposed strategy; founder confirmation of the 50/25/15/10 interpretation is an Open decision |
 | OWNER ROLE | Chief Marketing Officer, with Head of Growth |
 | AUDIENCE | Founders, marketing, field operations, finance, investors |
@@ -21,6 +21,7 @@ Tags: Go-to-market · Egypt · 30/60/90 · 6 and 12 months · Playbooks · Geogr
 | Revision | Date | Change | Author |
 |---|---|---|---|
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from the Phase 1 work packages report, section 6, extended with playbooks, geography, specialties and scenarios | Documentation agent |
+| Rev 2.4 | 24 Nov 2026 | Status refresh only: engine deliverables in the timeline are now built locally (KX-33); the strategy, scenarios and numbers are unchanged and remain hypotheses | Documentation agent |
 
 ## Contents
 01 Summary · 02 Principles and constraints · 03 The 50/25/15/10 hypothesis · 04 Geography · 05 Specialties · 06 Playbooks · 07 30, 60 and 90 days · 08 Six and twelve months · 09 Budget hypotheses · 10 Scenarios · 11 Guardrails · 12 KPIs, risks, dependencies, open decisions
@@ -34,12 +35,12 @@ Tags: Go-to-market · Egypt · 30/60/90 · 6 and 12 months · Playbooks · Geogr
 - **0** large paid spend before the liquidity gate
 
 ## Status legend (read first)
-Every statement in this volume carries one of these labels, in a column, a prefix or a callout. Growth Engine Phase 1 is being implemented by other agents while this volume is written, so the labels matter more than usual.
+Every statement in this volume carries one of these labels, in a column, a prefix or a callout. Phase 1 is now built locally, so the labels separate what runs from what is only designed.
 
 | Label | Meaning | Rule for readers |
 |---|---|---|
-| **As-built** | Exists in code and tests in the workspace, verified by reading the repositories on 24 Nov 2026 (discovery) and re-checked for the items named in KX-28 §02 | Safe to rely on. Everything not listed as As-built does not exist yet |
-| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. As of this revision no growth ADR is Accepted, so this label marks only rules inherited from existing Accepted ADRs |
+| **As-built** | Exists in code with a passing test in the workspace, verified by reading the repositories and re-running the suites on 24 Nov 2026 (Rev 2.4). Local only: not deployed, not run against a real provider | Safe to rely on for behaviour in the local stack |
+| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. No growth ADR (ADR-041 to ADR-047) has been accepted, so this label marks only rules inherited from existing Accepted ADRs |
 | **Proposed** | Designed in the Growth reports of 24 Nov 2026 and written up here, not yet signed (ADR-041 to ADR-047) | Build only after sign-off, or inside a work package the founder released |
 | **Roadmap** | Phase 2 to 4 capability, scoped coarsely | Do not build; estimates are ranges |
 | **Open decision** | A founder or CEO choice with a stated default | Use the default, never decide silently |
@@ -121,8 +122,8 @@ Month 1 is January 2027 (KX-14 section 08); today is 24 Nov 2026. The first colu
 
 | Window | Goals | Engine deliverables (Proposed, KX-33) | Field and content | Exit evidence |
 |---|---|---|---|---|
-| Before month 1 and first 30 days | Founders sign ADR-041 to ADR-047; counsel starts the consent and marketing questions; 20 pilot clinics recruited (KX-17) | Phase 1 wave 0 and 1: contracts, schemas, links and QR, consent, SSR skeleton | QR kit designed; Arabic FAQ and help copy drafted; Search Console and Business Profile owners named | ADRs signed; pilot list; counsel engagement letter |
-| 60 days | Pilot clinics live with links and QR; first indexed pages in the pilot cluster | Phase 1 wave 2: attribution live, commission integration, widget beta, SEO templates, analytics overview | Posters at desks; link shared in clinic WhatsApp groups; Business Profile guide; first provider-led bookings | At least 15 of 20 pilot clinics with a booking through a link |
+| Before month 1 and first 30 days | Founders sign ADR-041 to ADR-047; counsel starts the consent and marketing questions; 20 pilot clinics recruited (KX-17) | Phase 1 contracts, schemas, links and QR, consent, SSR, attribution, commission integration, widget, analytics and Super Admin config are As-built locally (KX-33); production needs the gates in KX-33 section 06 | QR kit designed; Arabic FAQ and help copy drafted; Search Console and Business Profile owners named | ADRs signed; pilot list; counsel engagement letter |
+| 60 days | Pilot clinics live with links and QR; first indexed pages in the pilot cluster | Deploy and verify (not done): Lighthouse, device app links, real Passport popup for the widget, DNS and CDN for the hosts | Posters at desks; link shared in clinic WhatsApp groups; Business Profile guide; first provider-led bookings | At least 15 of 20 pilot clinics with a booking through a link |
 | 90 days | KX-17 pilot exit; attribution accuracy audit | Phase 1 complete; SLO baselines; first Search Console data | Measure provider-led share, dispute rate, link activation, organic impressions | Replay equality 100 percent; dispute rate below 5 percent; consent audit clean |
 
 ## 08 Six and twelve months

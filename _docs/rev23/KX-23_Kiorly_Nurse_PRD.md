@@ -1,5 +1,5 @@
 Source: 1KmhUM-11TEpgqAQfD-loqUbv0s3YUnCm
-Revision: Rev 2.3 · Reference Edition · first issued 20 November 2026, updated 23 November 2026 for the unified Kiorly staff app · Status: Approved reference · Document KX-23 (new volume; owner: Head of Home Care Product; supersedes: none, introduced in Rev 2.3 with ADR-029..032; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 · Status: Approved reference · Document KX-23 (owner: Head of Home Care Product; supersedes: KX-23 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
 
 # KX-23 Kiorly Nurse PRD
 
@@ -159,9 +159,13 @@ The nurse edition runs on the phone in the single staff app **Kiorly** (ADR-033,
 - Not verified: nurse flows on a physical device, real push.
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 - Nurse pages and links (Proposed, Phase 4): `/{locale}/{cc}/home-nursing/{city}/{district}` is indexable only when `nurse.individual_kiorex_listing` is effective (launch-locked, GKN2) and the district has live agency providers; home addresses never appear, districts only.
 - Nurse agencies and solo nurses get provider links and QR through Kiorly Clinic's Nurse edition (same Phase 1 package, standalone-capable).
 - Home-nursing and care-plan commission rules are unchanged: only the first attended visit of a new patient is commissionable (As-built), and provider-led origin removes the fee.
 - Nurse listing is not a growth launch dependency (Open, KX-01 Q7).
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): this volume was re-read against the repositories; the only changes are status refreshes. Labels as in KX-27; nothing is deployed.
+- Status refresh only: the Nurse edition inherits Quick setup (Nurse 8 of 8 in the shared Playwright run, per the agents' record), the Connect to Kiorex wizard and front door, the Growth workspace and the Kiorly app Growth tab for the Nurse role (As-built locally, KX-05 Rev 2.4 section). Nurse pages exist in the public site as `/{locale}/eg/nurse/{slug}` and, for the care-type district pages, still depend on the `nurse.individual_kiorex_listing` gate. No Nurse requirement changed.

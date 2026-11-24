@@ -1,6 +1,6 @@
 # KX-26 — System Architecture Reference
 
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (new volume in this set; owner: Chief Software Architect; supersedes: none; consolidates KX-08, KX-09, KX-10, KX-21, KX-24 and KX-25 into one picture; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (owner: Chief Software Architect; supersedes: KX-26 Rev 2.3, 23 Nov 2026; consolidates KX-08, KX-09, KX-10, KX-21, KX-24 and KX-25 into one picture; Rev 2.4 as-built section with final diagrams added at the end)
 
 Subtitle: The whole Kiorex and Kiorly system on one set of diagrams: context, containers, components, data, identity, integration, notifications, storage, hosting, security, mobile and resilience, with what is built and what is planned.
 
@@ -11,7 +11,7 @@ Tags: C4 context and containers · Components · Data and storage · Identity ·
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-26 |
-| REVISION | Rev 2.3 · Reference Edition (updated 23 November 2026) |
+| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
 | STATUS | Architecture as built locally; hosting and real vendors Planned |
 | OWNER ROLE | Chief Software Architect |
 | AUDIENCE | Engineering, build agents, security reviewers, technical due diligence, new joiners |
@@ -434,7 +434,7 @@ One web entry for the provider products with parity to the Kiorly mobile sign-in
 > **Decision** This volume is the single architecture map. When it disagrees with a detail volume (KX-08, KX-09, KX-10, KX-21, KX-24, KX-25), the detail volume and then the code win; update this volume in the next revision.
 
 ## Growth Engine update (24 Nov 2026): growth in the system picture
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 Figure 1 — Where the Growth Engine sits (Proposed, except boxes marked As-built).
 
@@ -455,4 +455,97 @@ flowchart TB
 - **Containers and components (sections 03 and 05)**: growth adds modules inside the Kiorex and Kiorly Clinic APIs, an `apps/widget` workspace and the `ROLE=site` deploy role. No new database and no new service (ADR-041).
 - **Integration (section 07)**: contracts 1.10.0 additive (KX-09 update). **Money (section 08)**: fee unchanged; decision rows added; a fourth ledger is Roadmap. **Notifications (section 09)**: consent purposes and suppression extended (KX-24 update). **Flags (section 10)**: `growth.*` keys. **Hosting (section 12)**: CDN behaviours and widget host, validate only.
 - **Security and resilience (sections 14 and 15)**: threat model and failure modes in KX-28 sections 09 and 14; Kiorex outage leaves provider links and QR working (principle P1).
-- **Status (section 17)**: growth is Proposed; wave 1 of Phase 1 was in progress by other agents at the time of writing. Full diagrams: KX-28.
+- **Status (section 17)**: growth Phase 1 is As-built locally since Rev 2.4 (see the final section of this volume); ADR-041 to ADR-047 stay Proposed. Full diagrams: KX-28.
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Containers and components.** Growth adds modules inside the Kiorex and Clinic APIs, the `apps/widget` workspace and the two extra roles of the Kiorex image. No new database, service, Redis or Kafka (ADR-041, built that way). Kiorly Home is a static app in `kiorex-account`. Telehealth media is browser to browser; only STUN and TURN are external.
+- **Integration (section 07).** Contracts 1.10.0 and 1.11.0 are vendored in the platform, pharmacy and lab; the partner intake is published, the lead and funnel endpoints are not (KX-09).
+- **Identity (section 06).** Eleven Passport clients; per-organisation default sign-in; back-channel logout in all three staff webs and Kiorex; phone linking off by default in production.
+- **Security (section 14).** The pentest controls of KX-10 are in the code; the external test, WAF attachment and `TRUSTED_PROXY_HOPS` are open.
+- **Status (section 17).** Growth Phase 1 is As-built locally with the gaps in KX-33 section 04; ADR-041 to ADR-047 are Proposed; telehealth (ADR-039) and the connect wizards (ADR-040) are Accepted and built locally.
+
+Final as-built views, verified 24 Nov 2026. Figure 14 shows what runs on the local stack today; Figure 15 the sign-in paths; Figure 16 the roles of the deployable images. Nothing in them is deployed. The diagrams above that predate Phase 1 stay as the design record and are superseded by these where they differ.
+
+Figure 14 — Ecosystem as built (local stack).
+
+```mermaid
+flowchart LR
+  subgraph CL["Clients"]
+    direction TB
+    PAT["Patient web and app"]
+    CRAW["Crawlers"]
+    HOST["Provider websites"]
+    OPS["Ops console"]
+    STAFF["Kiorly app and web"]
+  end
+  subgraph KX["Kiorex API image"]
+    direction TB
+    SITE["Public site role"]
+    WID["Widget host role"]
+    KAPI["API role"]
+  end
+  subgraph PR["Provider APIs"]
+    direction TB
+    CAPI["Clinic API"]
+    PHA["Pharmacy API"]
+    LAB["Lab API"]
+  end
+  PASS["Passport"]
+  KDB[("Kiorex Postgres")]
+  CDB[("Clinic Postgres")]
+  PAT --> KAPI
+  CRAW --> SITE
+  HOST --> WID
+  OPS --> KAPI
+  STAFF --> CAPI
+  STAFF --> PHA
+  STAFF --> LAB
+  SITE --> KAPI
+  WID --> KAPI
+  KAPI --> KDB
+  KAPI -->|"signed booking"| CAPI
+  CAPI -->|"outbox events"| KAPI
+  CAPI --> CDB
+  PASS -.-> KAPI
+  PASS -.-> CAPI
+```
+
+Figure 15 — Sign-in paths (As-built).
+
+```mermaid
+sequenceDiagram
+  participant P as Person
+  participant H as Kiorly Home
+  participant I as Passport
+  participant X as Product web and API
+  P->>H: choose Clinic, Nurse, Pharmacy or Lab
+  alt Passport (default)
+    H->>I: PKCE code flow, client kiorly-home
+    I-->>H: code
+    H->>X: open login with sso=passport
+    X->>I: own silent code flow
+    I-->>X: tokens, staff row found by sub or verified phone
+  else Password
+    H->>X: handoff login
+    X-->>H: single-use code, 30 s
+    H->>X: open login with handoff code
+    X->>X: exchange once, session
+  end
+  I-->>X: back-channel logout token on sign-out or deletion
+```
+
+Figure 16 — Roles of the deployable images (As-built in code, not deployed).
+
+```mermaid
+flowchart LR
+  IMG["Kiorex API image"] --> R1["api role"]
+  IMG --> R2["site role, public pages"]
+  IMG --> R3["widget host role"]
+  CIMG["Clinic API image"] --> C1["api, link resolver, telehealth"]
+  SEED["Seed image"] --> DB[("Postgres")]
+  R1 --> DB
+  R2 --> DB
+  R3 --> DB
+```

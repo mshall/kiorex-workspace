@@ -1,7 +1,7 @@
 # KX-13 36-Month Financial Model & Unit Economics
 
 Source: 1FBBBnCWZ4RlIY71XahyLPRwTTbvFVHdf
-Revision: Rev 2.3 · Reference Edition (20 November 2026; supersedes KX13 Rev 2.1, 19 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (supersedes KX13 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; several symbols (>=, <=, +/-, arrows) lost; table numeric cells in this read ARE present (the older extract lost them).
 
@@ -9,7 +9,7 @@ A driver-based model of revenue, costs, cash and runway for the Kiorex ecosystem
 
 - Authored in the role of Chief Financial Officer. Owns the model, capital plan, unit economics and financial controls.
 - Tags: Driver-based · 3 scenarios · P&L + cash · Unit economics · Funding gates
-- DOCUMENT: KX13 | REVISION: Rev 2.3 · Reference Edition | DATE: 20 November 2026 | STATUS: Approved reference
+- DOCUMENT: KX13 | REVISION: Rev 2.4 · Reference Edition | DATE: 24 November 2026 | STATUS: Approved reference
 - AUDIENCE: Founders, investors, board | OWNER ROLE: Chief Financial Officer | SUPERSEDES: KX13 Rev 2.1 19 Nov 2026
 
 ## WHAT CHANGED IN REV 2.3 (as printed)
@@ -222,3 +222,10 @@ Blended patient CAC if the full EGP 150,000 were spent: EGP 652 / 367 / 235 at m
 - Where CAC exceeds the fee, the spend is an investment in supply and retention and is tracked separately.
 - Track MER monthly; below 1 needs a finance-approved reason. Include delivered-message cost by Meta category before approving proactive messaging.
 - No large paid spend without verified provider supply (KX-29 section 11). Definitions: KX-32.
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Financial model unchanged.** Rev 2.4 changes no figure in this volume. The as-built analytics reproduce the KX-32 section 08 worked examples in a unit test (month 6 fee revenue EGP 7,872, month 12 EGP 106,637, LTV EGP 38.40 on the fee alone), which confirms the arithmetic of section 13 but not its assumptions, which remain ASSUMPTION until pilot data.
+- **Commission attribution as built:** the fee-bearing share of attended new patients is now measurable from decision rows (`PROVIDER_LED` against `MARKETPLACE` and `UNATTRIBUTED`); revenue is confirmed or billed charges net of reversals, recorded when the visit is completed because the Clinic sends no confirmation event. Spend is entered manually with a second approver; CAC and ROAS stay empty (not zero) until spend exists.
+- **Still open:** the re-base of the attended-visit series (KX-32 section 08), the EGP 150,000 illustration (KX-29 section 09) and Pay margin per patient. No finance decision was taken in Rev 2.4.

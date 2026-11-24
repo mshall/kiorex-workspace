@@ -1,22 +1,30 @@
 # KX00 — Master Blueprint & Reading Guide
 Source: 1PCtr6eLZsin2wRXCw6MiC0YikOBrvSFV
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; supersedes the 20 Nov 2026 text of this volume; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (first issued 20 November 2026; supersedes KX00 Rev 2.3, 23 Nov 2026; this update lists all 34 volumes KX-00 to KX-33, adds the Rev 2.4 build status and records that the Growth Engine Phase 1 is built locally)
 
 > Cleaned from Drive text extraction; symbols dropped by extractor (≥ ≤ × → bullets) restored where obvious; headers/footers removed. Owner role: CEO. Supersedes: KX00 Rev 2.2 (19 Nov 2026). Audience: Founders, investors, engineering & operations leads.
 
 Subtitle: One ecosystem, two brands, five products — how Kiorex and Kiorly decouple, make money, launch in Egypt and scale, and where every detail lives.
 
-## WHAT CHANGED IN REV 2.3
+## WHAT CHANGED IN REV 2.4
+- Volumes KX-25 to KX-33 are in the reading order below: **34 volumes, KX-00 to KX-33** (KX-25 storage and KX-26 architecture were missing from the table; KX-27 to KX-33 are the Growth Engine set).
+- A Rev 2.4 build status table (24 Nov 2026) replaces the claim that Growth is only designed. Growth Phase 1 is built and tested locally; nothing is deployed; the gates are open.
+- Key numbers refreshed: contracts 1.11.0, ADR-001 to ADR-047 (ADR-039 and ADR-040 Accepted; ADR-041 to ADR-047 Proposed), the verified test baseline of 24 Nov 2026.
+- Volumes changed in Rev 2.4: KX-01 to KX-10, KX-12 to KX-15, KX-17 to KX-19, KX-21 to KX-24, KX-26 to KX-33 (see `_docs/DOCS_SYNC_MANIFEST.md`). Unchanged: KX-11, KX-16, KX-20, KX-25.
+- Unchanged: strategy, brands, business model, governance, every financial figure.
+
+**Rev 2.3 changes (kept for history):**
 Kiorly suite adds Kiorly Nurse (an edition of Kiorly Clinic, ADR-031; providers now include physiotherapists and nurses, ADR-029). Home visits by doctors, physiotherapists and nurses become part of the ecosystem (ADR-030); new principle P12. Document map adds KX-23 Kiorly Nurse PRD (24 volumes).
 
-## Key numbers (verified 23 Nov 2026)
-- Reference set: **27 volumes** (KX-00 to KX-26); decision log ADR-001 to ADR-036 (31 Accepted, 5 Proposed, see KX-01).
+## Key numbers (verified 23 Nov 2026; Rev 2.4 changes marked)
+- Reference set: **34 volumes** (KX-00 to KX-33); decision log ADR-001 to ADR-047 (ADR-039 and ADR-040 Accepted, ADR-041 to ADR-047 Proposed, see KX-01). Counts below were last recomputed on 23 Nov 2026 except where marked Rev 2.4.
 - Code: **7 repositories** plus the workspace (contracts, platform, account, clinic, pharmacy, lab, kiorly). Commits since 19 Nov 2026 (git log of the local clones): contracts 23, platform 112, account 48, clinics-management 322 (branch kiorex, includes merges from main), pharmacy 60, lab 69, kiorly 19, workspace 34.
-- Contracts `@kiorex/contracts` **1.7.0**; notification layer tests 60, 100 % coverage of `src/notify`.
+- Contracts `@kiorex/contracts` **1.11.0** (Rev 2.4; 1.10.0 and 1.11.0 are the additive Growth minors; 71 flag keys, 56 event schemas); notification layer tests 60, 100 % coverage of `src/notify`.
 - Provider adapters: **8 kinds** (SMS, Email, WhatsApp, Payment, Push, Storage, Consent, AI), mock by default, real by configuration; **0** real vendors contacted.
 - Demo data: **36** medical specialties, **2** LIVE doctors each (72), **12** demo patients, 108 demo bookings, home visits and nurse tenants.
 - Tests: end-to-end suites 16/17/18 (staff app routes versus web) **47 + 30 + 34 = 111**, all passing on the 23 Nov re-run; Expo web per-role specs clinic 6, pharmacy 19, lab 20; patient app Jest **157** (re-run 23 Nov, all pass); staff app Jest **167** (re-run 23 Nov, all pass; two upgrade-request tests used a fixed date that aged out of the request window and now use a relative one).
 - Not verified: real push delivery (APNs, FCM), a release build, the patient app on a device, any real vendor, any AWS deployment.
+- Rev 2.4 test baseline, re-run 24 Nov 2026: contracts 276, Kiorex API unit 578, Clinic API unit 1,222, Passport 314, staff app 276, patient app 251, patient web 282, ops console 84. The edge-case sweep recorded 374 e2e passes and 33 skips on one stack; the internal penetration test closed 14 findings (28 security e2e tests).
 
 ## Contents
 01 Executive summary · 02 The ecosystem at a glance · 03 Brand, domains and store accounts · 04 Operating principles · 05 Business model in one page · 06 Where we are and the critical path · 07 Lean governance and decision rights · 08 Document map · 09 How to use this set with Cursor and the team · 10 Glossary
@@ -132,9 +140,24 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 | Document storage growth: lifecycle, quotas, compression, retention | Planned (Proposed, ADR-036) | KX-25 |
 | System architecture reference (all diagrams in one volume) | Done | KX-26 |
 | Real vendor URLs and credentials (SMS, email, WhatsApp, PSP, consent, AI, storage) | Blocked | Human: contracts, templates, sender ids, PSP onboarding |
+
 | Real push delivery (APNs, FCM, EAS project id) | Blocked | Human: keys and accounts; never observed |
 | Store submissions (Apple, Google) | Blocked | Store accounts (KX-19); ADR-033 still Proposed |
 | AWS deployment and secret injection | Blocked | Founder instruction: no deploy; Passport Lambda secrets route missing |
+
+### Build status at 24 Nov 2026 (Rev 2.4)
+| Area | Status | Evidence / what remains |
+|---|---|---|
+| Growth Engine Phase 1 (13 packages) | Done locally; not deployed | KX-33 §04 lists each gap: Lighthouse unmeasured, device deep links unverified, real Passport popup for the widget, daily replay job, Pharmacy and Lab Growth tabs |
+| Contracts 1.10.0 and 1.11.0 | Done | additive; vendored in platform, pharmacy and lab |
+| Quick setup, Connect to Kiorex wizards, Kiorex tab front door, partner leads and alerts | Done locally | ADR-040; counsel-approved terms and real providers open |
+| Telehealth, Clinic-owned peer-to-peer (ADR-039) | Done locally | no real call on devices; Cloudflare TURN key NEEDS_HUMAN |
+| Kiorly Home, per-organisation default sign-in, back-channel logout, staff phone linking | Done locally | ADR-038; production Passport client, DNS and certificates open |
+| Internal penetration test and edge-case sweep | Done; 14 and 24 defects fixed | external penetration test (NH017) still required |
+| Staff app renamed Kiorly (repo `kiorly`) | Done | store registration NEEDS_HUMAN |
+| Growth ADR-041 to ADR-047 | Proposed | no founder signature recorded |
+| Legal gates (PDPL opinion, consent wording, marketing licence, provider terms) | Blocked, human | KX-33 §06; none recorded as satisfied |
+| AWS deployment, DNS, store submissions | Blocked | founder instruction: no deploy |
 
 ## 07 Lean governance and decision rights
 | Decision class | Decides | Consulted | Evidence required |
@@ -149,7 +172,7 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 **NOTE** When headcount passes 40 (KX18), split the CEO's architecture and security rights to a hired CTO and security lead; until then, three founders' signatures replace five councils.
 
 ## 08 Document map
-25 volumes (KX00 to KX24) in ten folders mirroring the Kiorex Drive structure. KX24 Notifications & Messaging Architecture was added on 23 Nov 2026; KX23 Kiorly Nurse PRD was added in Rev 2.3.
+34 volumes (KX00 to KX33) in eleven folders mirroring the Kiorex Drive structure (the Growth Engine set is folder 10). KX24 Notifications & Messaging Architecture was added on 23 Nov 2026; KX23 Kiorly Nurse PRD in Rev 2.3; KX25 and KX26 on 23 Nov 2026; KX27 to KX33 on 24 Nov 2026.
 
 | ID | Folder | Document | Written as |
 |---|---|---|---|
@@ -168,6 +191,8 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 | KX21 | 03 | AWS Cloud Hosting & Infrastructure Reference | Principal Cloud Architect |
 | KX22 | 03 | GitHub Repository Map & Build-Agent Handoff | Chief Software Architect |
 | KX24 | 03 | Notifications & Messaging Architecture (shared notification layer, provider adapters) | Chief Software Architect |
+| KX25 | 03 | Document Storage Growth, Cost Control & Retention (Proposed, ADR-036) | Chief Software Architect |
+| KX26 | 03 | System Architecture Reference (all diagrams in one volume) | Chief Software Architect |
 | KX11 | 03 / AI docs | AI Strategy, Architecture & Governance | Chief AI Officer |
 | KX12 | 04 Financial Model & GTM | Monetization & Pricing Architecture | CRO |
 | KX13 | 04 | 36-Month Financial Model & Unit Economics | CFO |
@@ -178,8 +203,15 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 | KX18 | 07 Roadmap & Delivery | 36-Month Roadmap & Operating Model | COO |
 | KX19 | 08 Brand, Domains & Accounts | Brand Architecture, Domains & Store Accounts | Chief Brand Officer |
 | KX20 | 09 Pitch Deck | Investor Brief | CEO & CFO |
+| KX27 | 10 Growth Engine | Growth & Patient Acquisition Engine PRD | Head of Product |
+| KX28 | 10 | Growth Engine System Architecture | Chief Software Architect |
+| KX29 | 10 | Patient Acquisition & Go-to-Market Strategy for Egypt | CMO |
+| KX30 | 10 | Attribution, Referrals, Rewards & Commission Architecture | Chief Software Architect, CEO for money policy |
+| KX31 | 10 | SEO, ASO & Organic Growth Strategy | Head of Growth and SEO |
+| KX32 | 10 | Growth Analytics & Unit Economics Reference | Head of Finance |
+| KX33 | 10 | Growth Engine Implementation Roadmap & Agent Handoff | Chief Software Architect |
 
-Reading paths: Messaging and providers (1 h) KX24 · KX09 · KX10 §08 · _docs/PROVIDER_GO_LIVE.md. Staff and patient mobile apps (1 h) KX01 ADR033 · KX05 §13 · KX23 · _docs/mobile/. Investor (30 min) KX20 · KX13 · KX14 · KX15. Engineer joining (2 h) KX08 · KX21 · KX09 · KX10 · KX05. Clinical/compliance (1 h) KX16 · KX15 · KX11 · KX17 go-live gates · KX23 nursing scope. Commercial team (1 h) KX12 · KX14 · KX19 · KX05 and KX23 capabilities. Build agent: KX22 · KX01 · KX08 · KX09 · KX21 · Product PRD for the repo.
+Reading paths: Growth (1.5 h) KX27 §01 to §04 · KX30 §02 and §06 · KX28 §02 to §06 · KX33 §04 and §06 · KX29 §03 and §09 · KX32 §04 and §4.1. Security and launch (1 h) KX10 Rev 2.4 section · KX15 Rev 2.4 section · KX17 · _docs/LAUNCH_PREPARATION_GUIDE.md §11 and §12 · _docs/security/PENTEST_2026-11_REPORT.md. Messaging and providers (1 h) KX24 · KX09 · KX10 §08 · _docs/PROVIDER_GO_LIVE.md. Staff and patient mobile apps (1 h) KX01 ADR033 · KX05 §13 · KX23 · _docs/mobile/. Investor (30 min) KX20 · KX13 · KX14 · KX15. Engineer joining (2 h) KX08 · KX21 · KX09 · KX10 · KX05. Clinical/compliance (1 h) KX16 · KX15 · KX11 · KX17 go-live gates · KX23 nursing scope. Commercial team (1 h) KX12 · KX14 · KX19 · KX05 and KX23 capabilities. Build agent: KX22 · KX01 · KX08 · KX09 · KX21 · Product PRD for the repo.
 
 ## 09 How to use this set with Cursor and the team
 - Cursor sessions: attach the relevant PRD (KX03…07, KX23) plus KX08/KX09. Kiorly work continues to follow Docs/kiorly-cursor-build-sequence.md in the repo; new repos get their own build sequence derived from these PRDs.
@@ -213,10 +245,10 @@ Reading paths: Messaging and providers (1 h) KX24 · KX09 · KX10 §08 · _docs/
 ## Growth Engine update (24 Nov 2026)
 Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
 
-- **New volumes (Proposed, Rev 2.4 draft 1):** KX-27 Growth and Patient Acquisition Engine PRD · KX-28 Growth Engine System Architecture · KX-29 Patient Acquisition and Go-to-Market Strategy for Egypt · KX-30 Attribution, Referrals, Rewards and Commission Architecture · KX-31 SEO, ASO and Organic Growth Strategy · KX-32 Growth Analytics and Unit Economics Reference · KX-33 Growth Engine Implementation Roadmap and Agent Handoff. The document count in section 08 therefore becomes 34 volumes (KX00 to KX33).
+- **New volumes (Rev 2.4; first drafted as Proposed on 24 Nov 2026, now status-verified):** KX-27 Growth and Patient Acquisition Engine PRD · KX-28 Growth Engine System Architecture · KX-29 Patient Acquisition and Go-to-Market Strategy for Egypt · KX-30 Attribution, Referrals, Rewards and Commission Architecture · KX-31 SEO, ASO and Organic Growth Strategy · KX-32 Growth Analytics and Unit Economics Reference · KX-33 Growth Engine Implementation Roadmap and Agent Handoff. The document count in section 08 therefore becomes 34 volumes (KX00 to KX33).
 - **Document map additions:** all seven sit in folder "10 Growth Engine" (Drive upload deferred until implementation status is final). Written as: Head of Product (KX27), Chief Software Architect (KX28, KX30, KX33), CMO (KX29), Head of Growth and SEO (KX31), Head of Finance (KX32).
 - **Reading path, Growth (1.5 h):** KX27 section 01 to 04 → KX30 sections 02 and 06 → KX28 sections 02 to 06 → KX33 sections 04 and 06 → KX29 sections 03 and 09 → KX32 section 04.
-- **Decision log:** ADR-041 to ADR-047 are Proposed (KX-01). ADR-039 does not appear in the repository set; verify in Drive before assuming it is free.
+- **Decision log:** ADR-041 to ADR-047 remain Proposed (KX-01). ADR-039 was found in the Clinic repository and is Accepted (telehealth, KX-01 Rev 2.4); the numbering question is closed.
 - **Critical path note:** the growth engine does not change the launch critical path; it adds Phase 1 work (84 engineer-days) that must land before marketing spend and before provider-led protection is promised in marketing copy.
 - **Glossary additions:** Provider-led (a booking credited to a provider's own link, QR or widget; no Kiorex fee). Origin (`PROVIDER_LED`, `MARKETPLACE`, `UNATTRIBUTED`). Touchpoint, attribution decision, `lt` token, thin-page guard (see KX-30, KX-31).
-- Not verified: founder sign-off of any growth ADR; any growth code running (wave 1 was in progress when this update was written).
+- Rev 2.4: Phase 1 is built and tested locally; see the build status table in section 06 and KX-33 §04. Not verified: founder sign-off of any growth ADR; anything running outside the local stack.

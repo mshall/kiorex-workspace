@@ -1,7 +1,7 @@
 # KX-15 Risk & Compliance Framework
 
 Source: 189VvrWvsSTnBwRpDHdGVuXSYkjx7YXZU
-Revision: Rev 2.3 · Reference Edition (20 November 2026; supersedes KX15 Rev 2.1, 19 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (supersedes KX15 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; multi-column obligations table partly scrambled — rows reconstructed best-effort.
 
@@ -9,7 +9,7 @@ The obligations the ecosystem must meet in Egypt and beyond, how they map to con
 
 - Authored in the role of Chief Risk & Compliance Officer. Owns the obligations register, risk register, policies and audit readiness.
 - Tags: Obligations register · Control mapping · 18 key risks · Heatmap · Audit readiness
-- DOCUMENT: KX15 | REVISION: Rev 2.3 · Reference Edition | DATE: 20 November 2026 | STATUS: Approved reference
+- DOCUMENT: KX15 | REVISION: Rev 2.4 · Reference Edition | DATE: 24 November 2026 | STATUS: Approved reference
 - AUDIENCE: Founders, counsel, auditors, investors, enterprise customers | OWNER ROLE: Chief Risk & Compliance Officer | SUPERSEDES: KX15 Rev 2.1 19 Nov 2026
 
 ## WHAT CHANGED IN REV 2.3 (as printed)
@@ -111,7 +111,7 @@ Heatmap (L × I, axes 1–5): I5: R5 R9 R15 at L2, R1 R14 at L3; I4: R6 R8 at L2
 Deleting a medical document currently hard-deletes it. Proposed control: soft delete with a mandatory reason, retention floor per market and document class (proposal: clinical 10 years from last clinical activity, financial proofs 7 years; NEEDS_HUMAN: DPO to confirm), legal hold that blocks purge, a nightly purge job that keeps only an anonymous audit record (ids, size, hash, actor, reason), and erasure requests that create a DPO task and never delete inside the retention period. EXIF and GPS data are stripped from uploaded photos. Detail: KX-25 §07.
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 **Regulatory facts checked (secondary sources only; counsel must confirm).** Egypt PDPL Law 151 of 2020: direct electronic marketing needs the data subject's consent and sender identity; a registry of approvals must be kept; commentary reports a licence for direct electronic marketing (reported as Article 28); executive regulations were reported issued in 2025 with a one-year compliance period (the decision number differs between sources). All of this is a Regulatory dependency.
 
@@ -131,3 +131,11 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 | 12 | Complete record of processing and formal PIA | DPO deliverable; summary in KX-28 section 10 | DPO |
 
 Risk register additions: GR1 to GR10 in KX-27 section 09. The full list of 26 NEEDS_HUMAN items is in `_docs/growth/GROWTH_PHASE1_WORK_PACKAGES.md` section 7. No gate is recorded as satisfied here.
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Security findings summary.** The internal white-box penetration test of 24 Nov 2026 (`_docs/security/PENTEST_2026-11_REPORT.md`) found 14 issues: 1 Critical, 5 High, 7 Medium, 1 Low; all are fixed with regression tests and re-verified (28 security e2e tests, production-mode boots, clean `npm audit --omit=dev`). Residual Low and Info items are documented (per-instance Clinic limiters, unauthenticated `/health/ready`, 500 on a few ops payloads, credentials in the tenant SQL export, restore scope, build-tool advisories). The external penetration test (NH017) is still required and is not replaced.
+- **Edge-case sweep.** 24 defects fixed (PSP capture idempotency, booking races, hostile input, contract sweeps). Remaining risks to register: untyped Clinic request bodies (115 parameters), `lt` tokens not bound to a person within 72 hours, a one-hour error on two Cairo DST nights in a quiet-hours helper, the Lab cancel race, no 410 tombstone for delisted profiles, a replayed authorization code leaves the first tokens valid.
+- **Compliance as built (not as approved).** Consent is append-only with versioned wording keys; withdrawal and STOP write suppression; erasure is wired to the Passport deletion event and was fixed in Rev 2.4 work (growth rows anonymised: touches a decision used are kept anonymised for 25 months, others deleted at 13); no PHI in growth payloads is enforced by tests; dependants never enter growth tables; the visitor key and marketing messaging stay launch-locked. **None of this satisfies a legal gate**: the PDPL opinion, consent wording, marketing licence, provider terms and data-residency view remain Regulatory dependencies (KX-33 section 06) and no gate evidence is recorded.
+- **Telehealth.** ADR-039 sends no media through our servers and records none; Cloudflare is a transport-only sub-processor for relayed calls (listed in the Clinic sub-processor note); video consent wording and the governance gate for `kiorex.telemedicine` are NEEDS_HUMAN.

@@ -1,6 +1,6 @@
 # Growth & Patient Acquisition Engine: Phase 1 Work Packages, later phases, finance, GTM and NEEDS_HUMAN
 
-Status: PROPOSED plan, 24 Nov 2026. Read with `GROWTH_ARCHITECTURE_DECISIONS.md` (referred to as ARCH, section numbers as in that file) and `GROWTH_DISCOVERY.md` (DISC). Paths are relative to `/Users/shall/Documents/Peraonal/Work/kiorex-v2/`. Repo short names: `KP` kiorex-platform, `CM` clinics-management (branch `kiorex`, never push without founder approval, FD-18), `KC` kiorex-contracts, `KA` kiorex-account, `KL` kiorly (staff app), `E2E` e2e.
+Status: PROPOSED plan of 24 Nov 2026 (sections 1 to 7), with the as-built records of the implementing agents in sections 8 to 12 and a Rev 2.4 verification in section 13 that supersedes any older status statement in this file. Read with `GROWTH_ARCHITECTURE_DECISIONS.md` (referred to as ARCH, section numbers as in that file) and `GROWTH_DISCOVERY.md` (DISC). Paths are relative to `/Users/shall/Documents/Peraonal/Work/kiorex-v2/`. Repo short names: `KP` kiorex-platform, `CM` clinics-management (branch `kiorex`, never push without founder approval, FD-18), `KC` kiorex-contracts, `KA` kiorex-account, `KL` kiorly (staff app, renamed from `kiorly-team`), `E2E` e2e.
 
 Conventions to follow (from repo CLAUDE.md and existing code): Conventional Commits with requirement ids, e.g. `feat(growth): GRW-P1-B decision function`; AR and EN strings with RTL checked; no PHI in logs or analytics; mock-first adapters; flags default per ADR-023; no deploy; `tofu validate`/`fmt` only; tests named like existing ones (`*.node.test.ts` and `*.integration.test.ts` in CM; `*.unit.spec.ts` and `test/*.int.spec.ts` in KP; vitest in KC and KA).
 
@@ -297,7 +297,7 @@ Use the table as a *hypothesis sheet*: replace each cell with pilot actuals at M
 | 19 | WhatsApp assistant safety review (emergency handling, no medical advice, escalation SLA) and launch gate | CMO, clinical safety | `kiorex.whatsapp_ai_assistant` |
 | 20 | Real provider credentials and templates (WhatsApp, SMS, FCM/APNs, Search Console API, Play, App Store Connect) in the pre-launch pass (FD-04) | CEO, ops | any real send |
 | 21 | District list in the Egypt market pack (NH-040, FD-14) required for district SEO pages and bootstrap | Ops | F, J |
-| 22 | Verify ADR-039 status in the Drive KX-01 before assigning ADR-041 | Founder | ADR numbering |
+| 22 | ~~Verify ADR-039 status in the Drive KX-01 before assigning ADR-041~~ Closed in Rev 2.4: ADR-039 exists in `clinics-management/Docs/adr/ADR-039-telehealth-p2p-webrtc.md` (accepted for implementation 23 Nov 2026) and is registered in KX-01; ADR-041 stands | Founder | none |
 | 23 | Approve edits to KX-19 (hosts), KX-24 (marketing campaigns scope), KX-13, KX-14, KX-03 KXMBK10, KX-15; create KX-27 | Founder | docs |
 | 24 | Founder decision on whether `kiorly.link` serves the clinic-branded page itself or only redirects to `www`/`app` host (ARCH §4.2 assumes it serves or redirects to the clinic web `/b/<slug>`) | Founder | D1 |
 | 25 | Whether to deploy the SSR role as a second App Runner service from day one (cost, KX-21 sizing) or as one service (FD-17: no deploys until the founder says so) | Founder, CTO | E production |
@@ -481,3 +481,37 @@ Nothing pushed, nothing deployed, providers mocked. `kiorly` (staff app), `clini
 - **Bug found and fixed by M (`kiorex-platform` `apps/api/src/auth/auth.controller.ts`)**: every Passport logout token carries the standard back-channel event, and the Kiorex handler checked it first, so `subject.deleted` was read as a plain session revoke and the growth (and patient) anonymisers never ran after a Passport account deletion. The Kiorex URI is now checked first (unit spec `auth-backchannel.unit.spec.ts`, e2e `28`). The dev Kiorex API was rebuilt and restarted to pick it up.
 - **Docs**: `TEST_GUIDE.md` (W16 and a "Growth & Patient Acquisition engine, end to end" section with flows G1 to G11), `_docs/test-flow/index.html` module "Growth and Patient Acquisition" (copied to the iCloud path), `clinics-management/Docs/GROWTH.md` and `Docs/MOBILE.md`, `e2e/README.md`, screenshots `_docs/test-flow/growth/staff-app-growth-owner-{en,ar}-390.png`.
 - **Honest gaps**: the consenting-visitor touch is written by the harness (the endpoint is locked by the counsel gate, no gate is recorded); the sitemap is empty and every page is noindex in this non-production stack, so indexable output is covered by the unit tests only; approved `ZZ`-market configuration versions stay in the dev database (immutable); real evidence mode, real search-engine and ad integrations, device Universal and App Links, Lighthouse and PDF posters are not covered; the dev stack needs `GrowthAcquisitionSource.linkStatus` (migration `20261130090000_growth_link_registry` of the gap-closure work) before bookings get a decision.
+
+## 13. Rev 2.4 verification (24 Nov 2026): status of every package and corrections to sections 8 to 12
+Verified by reading the code and re-running the suites on 24 Nov 2026 (contracts 276; Kiorex API unit 578; Clinic API unit 1,222; Passport 314; staff app jest 276; patient app jest 251; patient web vitest 282; ops vitest 84; Kiorex growth integration 278 of 279; Clinic growth and kiorex integration 55 plus 1 live test skipped by design). The Playwright, e2e and iOS simulator figures quoted in sections 8 to 12 are the implementing agents' own records and were not re-run. Nothing is deployed or pushed.
+
+| Package | Status | Open item |
+|---|---|---|
+| A contracts | Done (1.10.0, 1.11.0) | none |
+| B0, D0 schemas | Done | production role separation for the maintenance functions |
+| B attribution core | Done | no daily replay job (`replay` exists on demand); a `FIRST_TOUCH` policy falls back to `PROVIDER_FIRST` |
+| C booking integration | Done | mobile app never receives `lt` |
+| D1 links, QR, widget settings, workspace | Done | no server PDF |
+| D2 commission intake | Done | none |
+| E public site SSR | Done with gaps | Lighthouse not measured; CDN purge mock |
+| F SEO templates | Done with gaps | pharmacy and lab pages are brand pages; copy needs CMO review |
+| G widget and SDK | Done with gaps | real Passport popup not exercised; DNS and CDN for the host not applied |
+| H deep links | Partial | device verification, Team ID, SHA-256, native rebuild |
+| I consent | Done with gaps | no banner on SSR pages; wording draft; `kxv` cookie locked |
+| J analytics | Done with gaps | revenue confirmation inferred at COMPLETED; manual spend; one k-anonymity integration test fails after other suites in one ordered run and passes alone |
+| K Super Admin config | Done with gaps | approved future version cannot be withdrawn; landing pages read-only |
+| L staff app tab | Partial | Pharmacy and Lab tabs not built |
+| M end to end and docs | Done | consenting-visitor touch written by the harness |
+
+**Statements in sections 8 to 12 that are stale (kept above as history, do not rely on them):**
+1. Section 9, package I "Mobile consent screen not built": it was built in the gap-closure wave (`apps/mobile/app/(tabs)/(more)/settings/preferences.tsx`, `preferences.test.tsx`, section 11). The SSR banner remains unbuilt.
+2. Section 9, B and I "Maker-checker controllers are K's" and "`decideForBooking` is not yet called by the booking flow": both are done (K, C).
+3. Section 10, C and J gap 1 ("`lt` is not in the OpenAPI contract") and gap 2 and 3 (no `ReferralLinkCreated`, no lookup, Kiorex never sees revocations): closed by contracts 1.11.0 and the link registry (section 11).
+4. Section 10, F gap 1 (`SEO.schema.json` rejects extension keys): closed by contracts 1.11.0; K's own note that SEO keys are validated by F's hook is superseded.
+5. Section 9, H gap 6 (duplicate well-known routes): closed, one owner with a guard test (section 11).
+6. Section 12, L "Not done: mobile controller": the mobile controller exists (`growth-mobile.controller.ts`); the Pharmacy and Lab tabs are the real gap.
+7. Section 11 "Still open: the staff app Growth tab (another lane)": done in section 12.
+
+**Corrections to the design text of sections 2 to 6 found while verifying:** the Clinic provider-link token lives 72 hours (`kx-lt1`), the in-session `kxl1.` token 30 minutes (design said 30 minutes); the commission policy version is `CP1@<rate validFrom>` and `FOLLOW_UP_VISIT` is a reason code; `WAIVED` exists as a decision kind; pharmacy and lab SEO pages were built in Phase 1 behind launch-locked flags (design said Phase 4); the Passport clients that exist are `kiorex-web`, `kiorex-widget`, `kiorex-ops`, `kiorex-mobile`, `kiorly`, `kiorly-team` (legacy name accepted), `kiorex-passport-web`, `kiorly-clinic`, `kiorly-pharmacy-web`, `kiorly-lab-web` and `kiorly-home`.
+
+**New human items from the pentest and edge-case reports** (also in `LAUNCH_PREPARATION_GUIDE.md` sections 11 and 12): `TRUSTED_PROXY_HOPS=2`, `CORS_ORIGINS`, WAF attachment with rate rules for `/growth/v1/*`, `/b/`, `/q/`, `/r/`, `PARTNER_LEAD_SIGNING_SECRET` and the products' `KIOREX_LEAD_SIGNING_SECRET`, `GROWTH_LINK_TOKEN_SECRET`, removing `ALLOW_INSECURE_DEFAULT_SECRETS` and `SANDBOX_PAYMENTS_ALLOWED` once real secrets exist, the external penetration test, a decision on tenant SQL export credentials, whether per-instance limiters are acceptable, per-session binding of `lt`, the DST quiet-hours edge, and a product decision on 410 tombstones for delisted profiles.

@@ -1,6 +1,6 @@
 # KX24 — Notifications & Messaging Architecture
 
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (new volume in this set; owner: Chief Software Architect; supersedes: none in this folder. A Drive draft of this volume dated 22 Nov 2026 is labelled "Rev 2.4" and numbers its main decision ADR-033; this Markdown reconciles it with what is built, see §02 and §13; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (owner: Chief Software Architect; supersedes: KX-24 Rev 2.3, 23 Nov 2026; a Drive draft of 22 Nov 2026 labelled "Rev 2.4" numbers its main decision ADR-033 and is reconciled in §02 and §13; Rev 2.4 as-built section added at the end, status-labelled)
 
 Subtitle: Email, SMS, push, WhatsApp and the in-app inbox across Kiorex, Kiorly Clinic (and the Nurse edition), Kiorly Pharmacy and Kiorly Lab: one shared notification layer, per-product adapters, mock by default, real by configuration.
 
@@ -11,7 +11,7 @@ Tags: Notification layer · Channel adapters · Consent and PHI guard · Provide
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-24 |
-| REVISION | Rev 2.3 · Reference Edition (updated 23 November 2026) |
+| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
 | STATUS | Built layer: Done in kiorex-platform; Planned elsewhere. Control plane: Proposed |
 | OWNER ROLE | Chief Software Architect |
 | AUDIENCE | Engineering, build agents, operations, DPO / CMO reviewers, technical due diligence |
@@ -258,7 +258,7 @@ Open decisions carried from the draft: OD-1 Egyptian SMS vendor (Infobip, Twilio
 - Not verified: any live vendor delivery, real push delivery, persistence of the dispatch store in production, GitHub visibility of the repos named in the draft.
 
 ## Growth Engine update (24 Nov 2026): consent, lifecycle and the WhatsApp assistant
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 - **Section 01 non-goals**: "marketing campaigns" is no longer a non-goal of the programme. It stays a non-goal of the Rev 2.3 build. Proposed scope for Phase 2: campaigns, lifecycle journeys and frequency caps built on this layer, not beside it (ADR-034). Phase 1 and 2 growth messaging is sent from Kiorex Engagement only (patient-delivery owner rule); clinic recall keeps its current consent gate until clinic adoption (step 5) lands.
 - **Purposes (section 04)**: As-built `TRANSACTIONAL, REMINDER, MARKETING, SECURITY`. Proposed: a `CLINICAL` purpose following severity rules (CRITICAL bypasses quiet hours; marketing never does); a template is bound to exactly one purpose and a marketing template can never be sent under another (unit test). Consent purposes in Kiorex `ConsentRecord` gain `ANALYTICS_MEASUREMENT`, `MARKETING_WHATSAPP`, `MARKETING_SMS`, `MARKETING_EMAIL`, `MARKETING_PUSH`, with a versioned wording id, source, time and a rotating `ipHash` (wording is NEEDS_HUMAN).
@@ -268,3 +268,13 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - **Preference centre and STOP handling (Proposed, Phase 1)**: one screen in web and app; STOP and إلغاء write a suppression record.
 - **Open**: `ChannelConversation.context` retention is NOT VERIFIED; a purge job after booking completion is proposed. Meta pricing categories change cost; model messaging cost before proactive sends.
 - Not verified: marketing licence and consent mechanics (Regulatory dependency).
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Consent (As-built).** Purposes `ANALYTICS_MEASUREMENT` and `MARKETING_WHATSAPP`, `_SMS`, `_EMAIL`, `_PUSH` extend `ConsentRecord`; history is append-only; every change emits `PatientConsentUpdated` in the same transaction; anonymous visitor consent writes `GrowthVisitorConsent`; `GET/PUT /me/preferences` and `POST /me/preferences/unsubscribe-marketing` serve the web preference centre and the patient app screen. Wording keys are `TODO_NEEDS_HUMAN` drafts shown with a draft chip outside production.
+- **Lifecycle (partly built).** The shared notification layer now has a marketing gate: flag `growth.marketing_messaging` (launch-locked), per-channel consent, opt-out, suppression, quiet hours 21:00 to 09:00 Cairo and caps of 1 per day and 3 per week (defaults). WhatsApp STOP (and the Arabic stop word) writes suppression and withdraws consent even when the booking flag is OFF; a fresh opt-in lifts the person's own STOP. **No marketing template ships and no lifecycle journey exists** (Roadmap, Phase 2); the gate is exercised only by a test-registered template.
+- **Lead alerts (As-built, mock providers).** "A partner lead arrived" alerts go to the Kiorex team through the same notification layer (templates AR and EN, the person's own opt-in, quiet hours, channels e-mail, WhatsApp and push). Tables `OpsStaffContact`, `LeadAlertConfig` and a per-recipient delivery ledger (migration `20261127090000_lead_alerts`); ops can switch alerts and channels and each team member can opt out. The older note that lead notification is not built is superseded.
+- **Telehealth messages.** A telehealth notifier service exists in the Clinic (`telehealth-notifier.service.ts`, mock providers); its message content was not re-read in Rev 2.4.
+- **Known edge.** `quietUntil` in `@kiorex/contracts` converts the end of a quiet window with the offset at "now", so on the two Cairo DST nights a deferral can end an hour early; the platform's own `quietWindowEnd` is exact (edge report risk 3).
+- **Not verified:** real providers, Meta marketing template approval, the marketing licence (Regulatory dependency), the WhatsApp assistant (Roadmap).

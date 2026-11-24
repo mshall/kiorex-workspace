@@ -1,6 +1,6 @@
 # KX02 — Ecosystem Business Requirements (BRD)
 Source: 1YCnxmSbm-JIp0pu8iEm_F2XAINqyXAEr
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference; supersedes KX02 Rev 2.1, 19 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (Approved reference; supersedes KX02 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
 
 > Cleaned from Drive text extraction; comparison symbols (≥ ≤) restored by inference; headers/footers removed. Owner: Chief Business Analyst. Audience: Founders, investors, engineering & operations leads. Tags: Objectives & KPIs · Stakeholders · 61 business rules · End-to-end journeys · Traceability.
 
@@ -185,7 +185,7 @@ Internal facts trace to repository mshall/clinics-management (commit 6b24a79, 19
 - Kiorly repository Docs: BOOKING_ATTRIBUTION, KIOREX_COMMISSION_CHARGES, MONTHLY_SETTLEMENT, KIOREX_MARKETPLACE, PLANS_AND_ENTITLEMENTS, TRIAL_ENGINE, kiorly-cursor-build-sequence §24.
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 | Item | Status | Detail |
 |---|---|---|
@@ -198,3 +198,7 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 | Traceability | Proposed | KX-27 requirement ids GR-101 to GR-602 map to work packages GRW-P1-A to M in KX-33 |
 
 Not verified: counsel opinion on consent and marketing licensing.
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): this volume was re-read against the repositories; the only changes are status refreshes. Labels as in KX-27; nothing is deployed.
+- Status refresh only: the Phase 1 requirements behind BO and BR items mentioned in the Growth update above (provider-led promise, evidence, consent-gated analytics) are As-built locally (KX-27 section 07, KX-33 section 04). No business requirement changed in Rev 2.4. Nothing is deployed and the gates in KX-33 section 06 are open.

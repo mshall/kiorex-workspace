@@ -1,7 +1,7 @@
 # KX06 — Kiorly Pharmacy PRD
 
 Source: 16xpvUfI-F2iI1IR6lk461_o6B0qIcsRw
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; previous text was Rev 2.2, 19 Nov 2026, not revised in the 20 Nov edition; this update adds build status; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 
 Pharmacy operating software for Egypt's 88,000 licensed pharmacies: lot-accurate inventory, pharmacist-gated dispensing, fast POS, supplier automation — and, when ready, Kiorex orders.
 
@@ -12,7 +12,7 @@ Tags: Inventory & lots · Rx validation · POS · Suppliers & recalls · Kiorex 
 | Field | Value |
 |---|---|
 | DOCUMENT | KX06 |
-| REVISION | Rev 2.3 · Reference Edition (updated 23 Nov 2026) |
+| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
 | DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Founders, investors, engineering & operations leads |
@@ -202,8 +202,19 @@ Observed in `kiorly-pharmacy` (60 commits since 19 Nov) and the e2e suite 17. Lo
 - Not verified: pharmacy modules on a simulator or device, any real vendor.
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 - Pharmacy has no growth surface today (the repository is a scaffold until M9). Proposed Phase 4: pharmacy public pages `/{locale}/{cc}/pharmacy/{slug}` with `Pharmacy` structured data and provider links, only when `kiorex.pharmacy_orders` is effective (launch-locked). Roadmap, GRW-P4-2.
 - Pharmacy consent and notification registries still have to adopt KX-24 before any marketing; until then no pharmacy marketing messages exist (Open).
 - Pharmacy data never enters acquisition segments; no ad audience is ever built from pharmacy or prescription data (Proposed rule, enforced by tests).
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Quick setup (As-built).** The Pharmacy first-run checklist (Finish setup) opens each screen, auto-detects completion and is tested (Pharmacy 4 of 4 Playwright runs, 6 rule tests; the implementing agents' record).
+- **Connect to Kiorex wizard (As-built, ADR-040).** Branch opt-in, priced catalogue, hours and collection, licence number and document, payout label placeholder (an account-number-like input is refused, no bank data stored), terms; a signed request carries a freshly issued HMAC client and webhook secret, stored encrypted by Kiorex until Go live. A rejection returns the pharmacy to STANDALONE. The Kiorex tab shows the five-state front door.
+- **Routing (As-built).** Orders, carts and webhooks are routed per partner registration, so a second live pharmacy is served; the launch gate `kiorex.pharmacy_orders` stays human evidence only.
+- **Staff sign-in (As-built).** Public PKCE client `kiorly-pharmacy-web`, back-channel logout at `/api/v1/auth/oidc/backchannel-logout`, phone linking (off by default in production), Kiorly Home handoff, staff phone editable by owners.
+- **Growth (As-built, limited).** A pharmacy page exists in the public site (`/{locale}/{cc}/pharmacy/{slug}`) as a brand page for a LIVE partner only when `kiorex.pharmacy_orders` is effective; there is no provider-link service and no Growth tab in Pharmacy. Contracts 1.11.0 are vendored.
+- **Security (As-built).** Security headers, Swagger off in production, trusted-proxy handling, dummy hash compare for unknown users, constant-time SNS secret compare, NUL characters refused with 400; the edge sweep fixed cancel-versus-accept races (F12) and hostile cart lines.
+- Tests: Pharmacy API unit and marketplace e2e pass in the edge run (216 and 17). Not verified: real SMS and WhatsApp providers, licence verification in production.

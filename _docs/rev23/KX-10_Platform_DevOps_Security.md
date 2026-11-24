@@ -1,7 +1,7 @@
 # KX10 — Platform, DevOps & Security Engineering
 
 Source: 14qj8qS2R5Q4rtAJyhIs-fajHPKSKA9-0
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; previous text was Rev 2.2, 19 Nov 2026; this update adds provider and mobile security; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 
 How every Kiorex and Kiorly product is built, shipped, observed and defended — controls already in Kiorly become the standard for the whole ecosystem.
 
@@ -12,7 +12,7 @@ Tags: OpenTofu IaC · CI/CD gates · Observability & on-call · Security control
 | Field | Value |
 |---|---|
 | DOCUMENT | KX10 (03 — Technical documents) |
-| REVISION | Rev 2.3 · Reference Edition (updated 23 Nov 2026) |
+| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
 | DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Engineering, security reviewers, auditors, enterprise customers |
@@ -165,7 +165,7 @@ New worker inside the existing API process, no new infrastructure: a database ta
 - Added §09: document processing pipeline and job queue (Proposed, KX-25).
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 - **Threat model (section 05)**: growth adds forged provider tokens, provider gaming of attribution, open redirects on `kiorly.link`, widget clickjacking and SDK supply chain, cache poisoning on SSR, private-page indexing, reward farming (Roadmap), consent forgery, WhatsApp prompt injection (Roadmap) and PII in UTM parameters. Mitigations in KX-28 section 09 (Proposed).
 - **Controls (Proposed)**: HMAC-signed `lt` tokens with expiry; append-only evidence tables with database triggers; `secretRef`-only integration config; SRI and immutable URLs for the SDK; exact-origin CSP per organisation; rate limiting on the shared Postgres limiter; guard tests `no-health-targeting` and `growth-no-phi`.
@@ -173,3 +173,14 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - **Observability (section 03)**: growth SLIs and SLOs in KX-28 section 11 (decision determinism 100 percent, public availability 99.9 percent, consent propagation 60 s); runbooks RB-G1 to RB-G8.
 - **Secrets**: ad-platform and Search Console credentials are stored only as Secrets Manager references; real integrations wait for the pre-launch pass (FD-04).
 - Not verified: any control implemented.
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Internal penetration test, 24 Nov 2026 (`_docs/security/PENTEST_2026-11_REPORT.md`).** White-box, local stack only, synthetic data; it does not replace the external test (NH017). 14 findings, all fixed with regression tests: 1 Critical (KX-PT-01 org backup restore executed uploaded SQL), 5 High (SSRF through tenant webhooks; dev auth helpers honoured in production; Kiorex starting on published dev secrets; unauthenticated sandbox PSP capture; `sharp` CVEs), 7 Medium (X-Forwarded-For spoofing, missing per-account throttle, OpenAPI exposed in production, missing security headers, reflected CORS, XLSX zip bomb, SES bounce webhook failing open), 1 Low (500 on array payloads, unescaped title, non-constant-time compare). Verification: `e2e/test/30-security.e2e.ts` 28 of 28, production-mode boot of all four APIs, `npm audit --omit=dev` clean in every repo.
+- **Controls now in the code (As-built).** `assertProductionSecrets()` refuses to start on published dev values (names only in the message; `ALLOW_INSECURE_DEFAULT_SECRETS=true` is for staging bring-up); sandbox payments closed in production unless `SANDBOX_PAYMENTS_ALLOWED=true`; Swagger off in production unless `SWAGGER_ENABLED=true`; `TRUSTED_PROXY_HOPS` (client IP from the Nth entry from the right, `trust proxy` set from the same value); CORS allow-list (`CORS_ORIGINS` plus configured product URLs); `safe-outbound.ts` for webhooks (https only, public addresses only, validated inside the socket lookup, no redirects); 20 login attempts per e-mail per 15 minutes; security headers on all four APIs; restore refuses marketplace appointment rows and audit rows.
+- **Rate limits (As-built).** The shared Postgres limiter (`RateLimitBucket`) serves touches, events, leads and funnel markers, widget sessions, config reads, slots, holds and confirms, with `Retry-After`; growth touches also keep a keyed, daily-rotating IP hash for 24 hours. The Clinic marketplace nonce store and auth limiter are still in memory per instance (KX-PT-L1).
+- **Secrets (As-built, values NEEDS_HUMAN).** `GROWTH_LINK_TOKEN_SECRET` (Kiorex; no key at all in production when unset), the lead signing secret (`PARTNER_LEAD_SIGNING_SECRET` in Kiorex equals `KIOREX_LEAD_SIGNING_SECRET` in each product, empty Secrets Manager containers created by the product-stack module, injected only after a value exists), `FIELD_ENCRYPTION_KEY`, webhook and record-share keys, `TELEHEALTH_LINK_SECRET` (optional), Cloudflare TURN key (Clinic).
+- **Production flags to check.** `NODE_ENV=production`, `TRUSTED_PROXY_HOPS=2`, `CORS_ORIGINS`, `PSP_MODE` and payment mode `real`, `SWAGGER_ENABLED` unset, `ALLOW_INSECURE_DEFAULT_SECRETS` and `SANDBOX_PAYMENTS_ALLOWED` unset, launch-locked growth flags OFF without gate evidence. The WAF rule files are intent only until attached.
+- **Edge-case sweep (`_docs/test-flow/EDGE_CASE_REPORT_2026-11.md`).** 24 defects fixed (PSP retries, booking races, hostile input, untyped bodies answering 500); 374 e2e passed in the full run. Residual risks: untyped Clinic bodies, `lt` not bound to a person, a DST edge in `quietUntil`, the Lab cancel race, no 410 for delisted profiles.
+- **Not verified:** WAF behaviour, the CloudFront header chain, the external penetration test, load.

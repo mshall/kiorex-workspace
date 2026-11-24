@@ -1,6 +1,6 @@
 # KX04 — Kiorex Account — Identity & Organizations PRD
 Source: 1yBWJ39HQkbeYBohg41bvLBMGyGeSKK6s
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update records provider readiness and the mobile client; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 
 > Cleaned from Drive text extraction; symbols restored where obvious; headers/footers removed. Owner: Principal Identity Architect. Audience: Founders, investors, engineering & operations leads. Tags: OIDC + PKCE · Patients first · Provider federation · Account linking · Build vs buy.
 
@@ -109,7 +109,7 @@ Do not hand-write identity. Choose a managed or proven open-source IdP using thi
 - Not verified: any real SMS or WhatsApp delivery.
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 - **Passport stays out of growth data.** No growth event and no visitor key is created in Passport (Proposed, ADR-045). Growth reads the Passport `sub` only after consent and links visitor touches to a `sub` only with consent.
 - **Erasure**: the `subject.deleted` event (As-built) is the trigger for the Proposed growth erasure consumer (touchpoints, events, preferences; decisions reduced to origin and reason where a provider's financial record needs it, counsel to confirm).
@@ -117,3 +117,15 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - **Widget sign-in**: Passport popup with PKCE inside the widget (Proposed); third-party cookies are not relied on.
 - **Phone OTP verification** is the referee check for the Phase 2 referral programme (Roadmap).
 - Not verified: any growth consumer of `subject.deleted` implemented.
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Passport clients (As-built, `config/idp.json`):** `kiorex-web`, `kiorex-widget` (public PKCE popup client of the booking widget), `kiorex-ops`, `kiorex-mobile`, `kiorly` (the staff app, scheme `kiorly://`), `kiorly-team` (legacy name, still accepted), `kiorex-passport-web`, `kiorly-clinic`, `kiorly-pharmacy-web`, `kiorly-lab-web`, and `kiorly-home` (public PKCE client of the one web sign-in at `www.kiorly.com/signin`, ADR-038). Staging and production registrations are config only.
+- **Back-channel logout (As-built).** Passport posts a signed `logout_token` to the Clinic (`/api/v1/auth/kiorex/backchannel-logout`), Pharmacy and Lab (`/api/v1/auth/oidc/backchannel-logout`) and Kiorex. Receivers verify signature, issuer, audience, `typ`, events, `sid` or `sub`, store the `jti` against replay and end the matching sessions. **Defect found and fixed in Rev 2.4 work:** the Kiorex handler read every logout token as a plain session revoke, so `subject.deleted` never ran the patient and growth anonymisers after a Passport account deletion; the Kiorex event is now checked first (unit spec and e2e 28).
+- **Kiorly Home handoff (As-built).** Product choice by tile; Method Passport opens `<product>/login?sso=passport&from=kiorly-home[&edition=NURSE]` and the product completes its own silent code flow; Method Password uses a single-use handoff code (256 random bits, SHA-256 stored, 30 seconds, bound to the product and the Home origin, never a token) through `POST /auth/handoff/login` and `/auth/handoff/exchange`; the fallback is the product's own login with a reason notice.
+- **Per-organisation default sign-in (As-built, ADR-038 second amendment).** `defaultSignInMethod` is a tenant setting (migration `20261124150000_default_signin_method`); the Connect wizard offers to make Passport the default after Go live. e2e 20 and 21 cover staff Passport sign-in and web session revocation.
+- **Staff phone linking (As-built, off by default in production).** The first Passport login links the unique active staff row with the same verified E.164 phone (Clinic `Employee.phone`, Pharmacy and Lab `StaffUser.phone`); no match, several matches or an unverified phone gives 401 or 403 `PASSPORT_NOT_LINKED`; never auto-created. `OIDC_PHONE_LINK=true` or `KIOREX_OIDC_PHONE_LINK=true` opts in. Owners can set the staff phone (strict E.164, unique per tenant, audited without the number).
+- **Security (As-built):** the dev OTP master code is refused in production and codes are CSPRNG, stored only as a salted HMAC (Passport security test); production uses the managed IdP (Cognito) and the dev IdP is a reference only. Open from the edge sweep: a replayed authorization code is refused but the tokens of its first redemption stay valid (RFC 6749 advises revoking them).
+- **Domains used by identity:** the staff app association claims `/open/*` only, so a Passport redirect to the web callback `/signin/callback` is never captured by the app.
+- Tests: Passport 314 passing; real-stack specs for Kiorly Home and the staff app exist. Not verified: production Passport client, DNS and certificates.

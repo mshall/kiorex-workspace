@@ -1,7 +1,7 @@
 # KX09 — Integration Contracts, Events & Money Flows
 
 Source: 1p5Hwgw5gCg7L3A6gsIVxYcN2p6WZKUl7
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds contracts 1.7.0 and the provider webhook convention; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 
 ## What changed in Rev 2.3
 Additive (minor) contract version: provider sync adds profession, edition, service locations and coverage districts; slots accept serviceLocation=HOME; holds carry visitAddress. New events HOME_VISIT_ASSIGNED / _EN_ROUTE / _ABORTED_UNSAFE, SAFETY_ALERT_RAISED, CARE_PLAN_*, ReferralIssued, MedicationOrderShared. Money flows: home surcharge, cash at home, agency nurse pay, deposit hold on unsafe abort.
@@ -15,7 +15,7 @@ Tags: HMAC API · Outbox events · Idempotency · Kiorex Pay ledger · Home visi
 | Field | Value |
 |---|---|
 | DOCUMENT | KX09 (03 — Technical documents) |
-| REVISION | Rev 2.3 · Reference Edition (updated 23 Nov 2026) |
+| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
 | DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Engineering, finance operations, auditors |
@@ -195,7 +195,7 @@ The notify entry is a library contract, not a wire contract: products do not cal
 - Not verified: the Pharmacy and Lab pin state beyond what FD-20 says.
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 **Contracts 1.10.0 (Proposed, additive minor; As-built is 1.9.0).** No event is renamed or removed; consumers that ignore unknown fields keep validating.
 
@@ -211,3 +211,14 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 | Internal Kiorex outbox events (not published): `AttributionAssigned`, `PatientAcquisitionRecorded`, `PatientRegistered`; Phase 2 reward and campaign events | Proposed, Roadmap |
 
 Money flows (section 06): the reward ledger would be a **fourth** ledger, never commingled with Kiorex Pay, held deposits or the clinic SaaS credit ledger (Roadmap, counsel-gated). Fee amount and charge lifecycle are unchanged. Detail: KX-28 section 08 and KX-30.
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Contracts 1.10.0 and 1.11.0 (As-built, both additive).** Marketplace OpenAPI 1.5.0 (30 paths): optional `acquisition` block and `attribution` on `POST /bookings` (400 `ACQUISITION_BLOCK_INVALID`, `ACQUISITION_EVIDENCE_HASH_INVALID`), optional `lt`, signed lookup `GET /referral-links/{code}` and feed `GET /referral-links`. New `kiorex-growth.v1` (1.0.0): `POST /growth/v1/touch`, `POST /growth/v1/events`, `GET /growth/v1/evidence/{bookingId}`, `GET /bootstrap`. Partner intake `kiorex-partner-intake.v1` (1.0.0): `connection-requests`; the lead and funnel endpoints are NOT published (follow-up). Webhooks `kiorex-webhooks.v1` 1.1.0 includes `/auth/backchannel-logout`. 56 event schemas.
+- **Events (As-built).** `CommissionAdjusted` (clinic), `PatientConsentUpdated` (kiorex), `ReferralLinkCreated` (now with `orgRef` and `clinicRef`), `ReferralLinkRevoked` (new), internal `AttributionAssigned` and `PatientAcquisitionRecorded`; additive optional `decisionRef`, `origin`, `policyVersion` on `COMMISSION_CHARGE_CREATED` and `COMMISSION_CHARGE_REVERSED`, `widgetOrigins[]` on `PROVIDER_PROFILE_UPDATED`, `acquisitionOrigin` on appointment status events, and `isNewPatientAtBooking` on the Clinic's appointment events. The acquisition block is covered by the existing request HMAC; the evidence hash is canonical JSON v1.
+- **Config schemas and flags (As-built).** Five JSON Schemas (`ATTRIBUTION_POLICY`, `SEO`, `WIDGET_POLICY`, `CONSENT_DEFAULTS`, `MARKET_GROWTH`); 71 flag keys (14 added by growth).
+- **Distribution (As-built).** Vendored tarballs are refreshed in the platform, pharmacy and lab (`dist-pack/kiorex-contracts-1.11.0.tgz`, lockfile integrity fixed; Docker `npm ci` passes). A contracts test proves 1.11.0 is a superset of 1.10.0.
+- **Telehealth (gap).** The additive `telehealth` block on Clinic events and the `VIDEO` location are consumed by Kiorex but are not in `@kiorex/contracts` 1.11.0; Kiorex tolerates missing and extra fields. Open: publish the schemas.
+- **Money flows are unchanged.** Evidence can only remove a fee; the fee, the dispute window and the monthly billing rule are as in KX-12.
+- Not verified: per-organisation partner credentials for evidence and lookup calls (a shared Clinic secret is used).

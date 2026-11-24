@@ -1,7 +1,7 @@
 # KX-12 Monetization & Pricing Architecture
 
 Source: 1hTRK4WdabuUHyCHl8NvsTWfpXADeOMyA
-Revision: Rev 2.3 · Reference Edition (20 November 2026; supersedes KX12 Rev 2.1, 19 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (supersedes KX12 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; a few symbols (>=, <=, ~, arrows) lost in the PDF text layer, gaps marked "[?]".
 
@@ -9,7 +9,7 @@ Part 04 — Financial Model & GTM. Every way the ecosystem earns money, the pric
 
 - Authored in the role of Chief Revenue Officer. Owns pricing, packaging, commercial policy and revenue quality.
 - Tags: Dual engine · Higher-of rule · Plan ladders · Kiorly Nurse ladder · Add-ons · Price governance
-- DOCUMENT: KX12 | REVISION: Rev 2.3 · Reference Edition | DATE: 20 November 2026 | STATUS: Approved reference
+- DOCUMENT: KX12 | REVISION: Rev 2.4 · Reference Edition | DATE: 24 November 2026 | STATUS: Approved reference
 - AUDIENCE: Founders, sales, finance, investors | OWNER ROLE: Chief Revenue Officer | SUPERSEDES: KX12 Rev 2.1 19 Nov 2026
 
 ## WHAT CHANGED IN REV 2.3 (as printed)
@@ -127,7 +127,7 @@ Home visits are not an add-on: they are included in every plan, and their safety
 Storage becomes a metered plan limit (a gauge, not a monthly counter). Proposed defaults: Lite 2 GB, Pro 20 GB, Clinic 100 GB, Enterprise 1 TB, each overridable per tenant. Extra storage is sold as packs (price to be set by the CRO; NEEDS_HUMAN). The 80 percent warning and the grace band follow the existing usage-warning pattern; downloads, exports and deletes are never blocked. Cost rationale and phases: KX-25 §05 and §09.
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 - **Section 04 (Kiorex fee design) and ADR-007**: fee amount, attended-patient trigger and 24-month lookback are unchanged (As-built). Proposed attribution rule: the fee applies only when the booking's acquisition origin is not `PROVIDER_LED`. Evidence can remove a fee and never add one; any rule that charges more than today is not proposed and needs the CEO (Open decision).
 - **Provider promise, now provable (Proposed)**: bookings through a provider's own link, QR or widget never carry the fee; a decision row records why for both outcomes; disputes with reason `PROVIDER_LED_EVIDENCE` auto-approve when Kiorex evidence supports them. Rules and windows are versioned, approved by two people and effective at least 7 days after approval (KX-30).
@@ -135,3 +135,11 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - **Section 05 (trials, cohorts, incentives)**: BR12 (one free month for both sides) is provider-only. A patient referral reward would be closed-loop discount credit or a coupon, never cash, never a fee change, and only after an attended first visit (Roadmap, Regulatory dependency, KX-30 section 09).
 - **Spend cap and pause (Roadmap)**: a visible monthly cap and pause per provider in the Growth workspace, in line with competitor practice; policy decision for the CEO.
 - **Revenue reporting**: GBV is never revenue; Kiorex revenue is confirmed or billed charges net of reversals (KX-32).
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Commission attribution as built (As-built).** The fee amount, the attended-new-patient trigger, the 24-month lookback and the monthly "higher of subscription or commission, never both" rule are unchanged (ADR-007). The only addition is one more way to be non-chargeable: acquisition origin `PROVIDER_LED` (a provider link, QR, widget or prior provider touch of the same organisation inside its window). Evidence can only remove a fee: a test proves a provider touch never adds one and `MARKETPLACE` and `UNATTRIBUTED` behave exactly like today.
+- **Defaults built, money decisions open.** `PROVIDER_FIRST` precedence, windows of 30, 30 and 7 days and "no charge for provider-led-then-marketplace" are built as `PROPOSED_DEFAULT`; the CEO has not signed them (KX-33 section 06 items 4 and 5). A change to any money policy needs two super admins and takes effect at least 7 days after approval with a provider announcement.
+- **Provider view (As-built).** The monthly statement shows `providerLedBookings` and fee-bearing bookings from the decision rows; the provider can dispute with `PROVIDER_LED_EVIDENCE` and it auto-approves when Kiorex evidence supports it. The platform can override with a closed reason list and a note (audited, removal only).
+- **Not built:** patient referral rewards and any reward ledger (Roadmap, counsel-gated), the provider monthly cap and pause (Roadmap), a public help page for the rules.

@@ -1,7 +1,7 @@
 # KX07 — Kiorly Lab PRD
 
 Source: 1sPyClcmk-Yxo3TgKsYq7kE-Pzxv490Al
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds build status of 19-23 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 
 ## What changed in Rev 2.3
 Home collection (KLORD04) is built on the shared @kiorly/field-visit package (ADR-030): coverage zones, travel buffers, on-my-way/arrived geostamps, safety timer and SOS for phlebotomists.
@@ -16,7 +16,7 @@ Tags: LIMS · Chain of custody · QC & Westgard · Critical values · Home colle
 | Field | Value |
 |---|---|
 | DOCUMENT | KX07 |
-| REVISION | Rev 2.3 · Reference Edition (updated 23 Nov 2026) |
+| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
 | DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Founders, investors, engineering & operations leads |
@@ -175,7 +175,18 @@ Observed in `kiorly-lab` (69 commits since 19 Nov), contracts 1.6.0 and the e2e 
 - Not verified: lab modules on a device, real push, any real vendor.
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 - Lab has no growth surface today (scaffold until M15). Proposed Phase 4: lab public pages with `MedicalLaboratory` structured data and booking links, only when `kiorex.lab_bookings` is effective (launch-locked). Roadmap, GRW-P4-2.
 - Lab and result data never enter acquisition segments, event properties or ad payloads (Proposed rule, `no-health-targeting` test).
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Quick setup (As-built).** The Lab onboarding page walks the same checklist (Lab 4 of 4 Playwright runs, 6 rule tests; the implementing agents' record).
+- **Connect to Kiorex wizard (As-built, ADR-040).** Lab site, priced catalogue, collection and hours, licence number and document, payout label placeholder, terms; signed request with issued HMAC client and webhook secret; `integrationMode` switches STANDALONE to INTEGRATED on request and back on rejection. The launch gate `kiorex.lab_bookings` is human evidence only.
+- **Routing (As-built).** Lab bookings and the Nurse lab relay are routed per registration.
+- **Staff sign-in (As-built).** Public PKCE client `kiorly-lab-web`, back-channel logout, phone linking (owners set the phone through `POST/PUT /staff`), Kiorly Home handoff (Lab uses organisation slug and e-mail, it has no passwords).
+- **Growth (As-built, limited).** A lab page exists in the public site as a brand page behind the launch-locked flag; no link service and no Growth tab in Lab. Contracts 1.11.0 are vendored.
+- **Security and edge (As-built).** Security headers, Swagger off in production, constant-time SNS secret compare, NUL refusal. Open: the cancel-versus-specimen-scan race needs a row lock or a conditional update (edge report risk 4).
+- Tests: Lab API unit 239 passing in the edge run. Not verified: real LIS integrations, real providers.

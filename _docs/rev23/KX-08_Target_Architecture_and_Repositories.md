@@ -1,7 +1,7 @@
 # KX08 — Target Architecture & Repository Design
 
 Source: 1uLxpvO063I9jGeKscWTN5eJiou3mwfNs
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the notification layer, provider adapters, the staff app and the repository states of 23 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 
 ## What changed in Rev 2.3
 Kiorly Nurse runs as an edition inside clinics-management (ADR-031); nurse.kiorly.com alias; no new repository or database.
@@ -16,7 +16,7 @@ Tags: C4 views · 6 repositories · Modular monoliths · Kernel & field-visit pa
 | Field | Value |
 |---|---|
 | DOCUMENT | KX08 (03 — Technical documents) |
-| REVISION | Rev 2.3 · Reference Edition (updated 23 Nov 2026) |
+| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
 | DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Engineering, Cursor sessions, technical due diligence |
@@ -392,7 +392,7 @@ Code: 256 random bits (base64url, 43 chars), stored only as a SHA-256 hash in ta
 - **Rules kept.** Launch gates are never recorded by code; secrets are encrypted, shown once and never logged; logs and audit rows carry ids, counts and stable codes only; real providers stay config-only (the handshake is a signed read against the partner's own API; notifications go through the mock layer until the provider pass).
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 - **Section 02/03/04 (context, containers, repositories)**: Proposed growth modules: kiorex-platform `apps/api/src/growth`, `public-site`, `widget` plus `apps/widget` (small Vite workspace); clinics-management `apps/api/src/growth` (existing folder extended) and `apps/web/src/features/growth`. No new service, no Redis, no Kafka (ADR-041). The SSR deploy role is the same image with `ROLE=site` (ADR-043).
 - **Section 08 (deployment topology)**: Proposed CloudFront behaviours for `/{ar,en}/*`, `/sitemap*.xml`, `/robots.txt`, `/.well-known/*` to the site role; widget host with a per-request CSP. `tofu validate` only; no apply (FD-17).
@@ -400,3 +400,14 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - **Section 07 (data model)**: Proposed new tables and columns are listed in KX-28 section 07 (KP: `GrowthTouchpoint`, `GrowthAttributionDecision`, `GrowthEvent`, `GrowthConfigVersion` and others; CM: `ProviderReferralLink`, `BookingWidgetConfig`, `KiorexCommissionDecision`, appointment columns).
 - **Section 09/10 (flags)**: Proposed `growth.*` flags with launch-locked entries (see KX-30 section 10).
 - Not verified: any of these in code at the time of writing.
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Repositories (As-built, workspace root `kiorex-v2`).** `kiorex-platform` (API, patient web, ops console, patient mobile app, `apps/widget`, `infra/tofu`), `kiorex-account` (Passport and `apps/kiorly-home`, `config/domains.json`, `config/idp.json`), `kiorex-contracts` (1.11.0), `clinics-management` (Kiorly Clinic and Nurse; branch `kiorex`, never pushed without founder approval, FD-18), `kiorly-pharmacy`, `kiorly-lab`, `kiorly` (the staff app; renamed from `kiorly-team` on 24 Nov 2026, bundle id `com.kiorly.app`, legacy client and header names still accepted), `e2e` and `_docs` in the root repository.
+- **New code areas (As-built).** Kiorex API: `src/growth`, `src/public-site`, `src/widget`, `src/partner-onboarding`, `src/partner-leads`, `src/market` (bootstrap). Clinic API: `src/growth/provider-links`, `src/kiorex` (commission decision), `src/telehealth`, `src/mobile/growth-mobile.*`. Widget: `kiorex-platform/apps/widget` (Preact, SDK 1.46 KB gzip).
+- **Domain table (As-built, `kiorex-account/config/domains.json`).** Production keys: `passport` account.kiorex.com, `patient` kiorex.com, `link` kiorly.link, `widget` book.kiorex.com, `home` www.kiorly.com (apex kiorly.com redirects), `clinic`, `nurse`, `pharmacy`, `lab` under kiorly.com and `api.<product>.kiorly.com`; staging uses `.staging.` hosts (placeholders). The staff app association claims `/open/*` only. Hosts are not registered or delivered (NEEDS_HUMAN: `kiorex.com`, `kiorly.link`, certificates).
+- **Roles of one image (As-built).** `SITE_ROLE=all|api|site` serves the public pages from the API image; the widget host is selected by `WIDGET_HOST`; `apps/api/Dockerfile` builds the API, SSR bundle and widget (the final stage builds after the vendored contracts lockfile fix); `Dockerfile.seed` seeds. Only `SITE_ENVIRONMENT=production` is indexable.
+- **Host security statement amended (ADR-044, still Proposed).** Every host keeps `frame-ancestors 'none'` except the widget embed document, whose value equals the organisation's verified origins.
+- **Per-organisation default sign-in and handoff** are described in KX-04 and section 13 of this volume; no change to their design.
+- Not verified: Docker image run in a cloud environment; DNS; `tofu apply`.

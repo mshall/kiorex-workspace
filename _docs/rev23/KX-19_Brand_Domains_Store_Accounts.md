@@ -1,6 +1,6 @@
 # KX19 · Brand Architecture, Domains & Store Accounts
 Source: 1aTb7g8qsYtcLMTS1muWTRHCXfQKTluxs
-Revision: Rev 2.3 · Reference Edition (20 November 2026, Approved reference). Supersedes: KX19 Rev 2.1 19 Nov 2026 · Growth update 24 Nov 2026 (addendum, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (Approved reference). Supersedes: KX19 Rev 2.3, 20 Nov 2026 · Rev 2.4 as-built section added at the end, status-labelled
 
 > Extraction note: symbols restored by inference; Arabic names for Kiorly Nurse came out as scrambled presentation-form glyphs (text layer reversed); the PDF shows the Arabic product name "كيورلي نرس" (Proposed; alternative "كيورلي للتمريض" — per scrambled glyphs; confirm in PDF).
 
@@ -88,7 +88,7 @@ Social handles: @kiorex and @kiorly on Instagram, Facebook, TikTok, LinkedIn, X 
 Every external figure traces to these sources; internal facts trace to mshall/clinics-management (commit 6b24a79, 19 Nov 2026) or founder decisions in KX01. Apple App Review Guidelines 5.1.1(ix): apps in highly regulated fields such as healthcare should be submitted by a legal entity providing the services; regulated apps must provide documentation of authorization.
 
 ## Growth Engine update (24 Nov 2026): domain reconciliation
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 The domain table of section 03 is stale against the as-built `kiorex-account/config/domains.json` (ADR-038). The reconciliation below is Proposed until the founder approves; `domains.json` remains the single per-environment table.
 
@@ -105,3 +105,9 @@ The domain table of section 03 is stale against the as-built `kiorex-account/con
 | Book host | Not listed | Not listed | Add `widget` host (proposed `book.kiorex.com`) for embeddable booking with a per-request `frame-ancestors` allowlist | Proposed, Open decision |
 
 Other rules kept: host-only cookies, never `Domain=.kiorex.com` or `.kiorly.com`; HSTS on every host. App-link files for the patient app move to the `kiorex.com` host (Team ID and SHA-256 are NEEDS_HUMAN). Section 04 store accounts: none created; growth ASO depends on them (KX-31 section 10).
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Domains as built (supersedes the Proposed reconciliation above).** `kiorex-account/config/domains.json` now carries, per environment, `patient` (production `https://kiorex.com`; staging `https://www.staging.kiorex.com`, a placeholder), `link` (`https://kiorly.link`; staging `https://staging.kiorly.link`), `widget` (`https://book.kiorex.com`; staging `https://book.staging.kiorex.com`), `home` (`https://www.kiorly.com`, apex `kiorly.com` redirects), `passport`, `clinic`, `nurse`, `pharmacy`, `lab` and per-product `api` hosts; `app.kiorly.com` is an alias of the clinic web. The patient app-link block (`appLinks.patient`) and association templates exist with `TODO_NEEDS_HUMAN` placeholders for the Apple Team ID and the Android SHA-256; the staff app association claims `/open/*` only. A test proves the new hosts are HTTPS in staging and production and unique.
+- **Still not true:** no host is registered, delegated or certified; `kiorly.link` has no behaviour behind it (serve or redirect is an Open decision, NH-008); the widget host and the SSR host are roles of the Kiorex API image, not separate services. `kiorex.com` and `kiorly.link` are Open decisions for the founder (domain ownership). Store accounts: none created; the Kiorly store title is `Kiorly: Clinic, Pharmacy & Lab` (ADR-037).

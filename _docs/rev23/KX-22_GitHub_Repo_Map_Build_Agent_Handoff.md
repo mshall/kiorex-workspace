@@ -1,6 +1,6 @@
 # KX22 · GitHub Repository Map & Build-Agent Handoff
 Source: 17aubh5cfA7Vx_t9Wv6YXXCTQ1AawGXvx
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the repository states and scripts of 23 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 
 > Extraction note: symbols restored by inference; §06 repo table and §07 two-column module map interleaved on extraction and were re-paired best-effort (cells flagged where ambiguous).
 
@@ -225,7 +225,7 @@ Build-agent additions: read `_docs/PROVIDER_GO_LIVE.md`, `kiorex-contracts/docs/
 Hosts per environment are one table, `kiorex-account/config/domains.json`. Production: www.kiorly.com (Kiorly Home sign-in, `/signin`; kiorly.com redirects), clinic.kiorly.com (alias app.kiorly.com), nurse.kiorly.com, pharmacy.kiorly.com, lab.kiorly.com, account.kiorex.com (Passport); staging uses `*.staging.kiorly.com` placeholders. Build agents never hard-code a host: read it from env (CORS, OIDC redirect and post-logout, `PUBLIC_BASE_URL`) set from that table. Kiorly Home lives in `kiorex-account/apps/kiorly-home`.
 
 ## Growth Engine update (24 Nov 2026): repository ownership
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 | Concern | Repo | Rule | Label |
 |---|---|---|---|
@@ -237,3 +237,12 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 | Pharmacy, lab growth | kiorly-pharmacy, kiorly-lab | Phase 4 | Roadmap |
 
 Build-agent brief additions (section 11): follow KX-33 section 07; single owners for shared files (KX-33 section 03); never edit another package's files; growth work packages are `GRW-P1-A` to `M`. `_docs/growth/*` work-package appendices belong to the implementing agents.
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Repository map after the rename.** The staff app repository and folder are `kiorly` (renamed from `kiorly-team` on 24 Nov 2026; bundle id and scheme unchanged, legacy client and header names accepted). Other repositories: `kiorex-platform`, `kiorex-account`, `kiorex-contracts`, `clinics-management` (branch `kiorex`), `kiorly-pharmacy`, `kiorly-lab`, plus `e2e`, `_docs` and the root `CLAUDE.md`. `kiorex-account` also hosts `apps/kiorly-home`; `kiorex-platform` also hosts `apps/widget` and the patient mobile app.
+- **Single-owner files (as used in Phase 1, now free again).** Kiorex Prisma schema and `app.module.ts`, Clinic Prisma schema, the ops `App.tsx`, contracts `events/index.json`, `flags/catalogue.json`, OpenAPI and version, and `config/domains.json`; the owners of Phase 1 are listed in KX-33 section 03. Migrations are named `2026MMDDHHMM_<topic>`; the growth ones are in KX-28 section 02.
+- **Commands.** Kiorex API unit `npm run test:unit` (jest), integration `NODE_OPTIONS=--experimental-vm-modules npx jest --selectProjects integration --runInBand --testPathPatterns <pattern>` with Postgres on `:5433` (each run gets its own database); Clinic `node --import tsx --test` (`*.node.test.ts` unit, `*.integration.test.ts` with `DATABASE_URL=...kiorly_test`); contracts and Passport `npx vitest run`; security `cd e2e && npm run test:security`; edge `cd e2e && npx vitest run test/4*-edge-*.e2e.ts`. Services are restarted only through `e2e/scripts/up.sh --build --restart --only=<svc>`.
+- **Reading order for a build agent.** `CLAUDE.md`, KX-22 section 11, KX-33 and KX-28 for Growth; `_docs/growth/GROWTH_PHASE1_WORK_PACKAGES.md` sections 8 to 13 for the as-built records; `_docs/LAUNCH_PREPARATION_GUIDE.md` for human steps; `TEST_GUIDE.md` and `_docs/test-flow/index.html` for flows.
+- **Rules unchanged:** no push of the clinic `kiorex` branch without the founder (FD-18), no deploy, no `@aws-sdk/*` outside adapters, mock-first providers, Conventional Commits with requirement ids.

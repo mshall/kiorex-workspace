@@ -1,6 +1,6 @@
 # KX-17 Kiorly Clinic Launch Readiness & Go-Live Plan
 Source: 1acyKWJ3OZS1XvlgzOnzMZq6eGVvdthKi
-Revision: Rev 2.3 · Reference Edition, updated 23 November 2026 (first issued 20 November 2026; this update adds the done-versus-open status of 23 Nov 2026; Growth update 24 Nov 2026 added at the end, status-labelled)
+Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 
 > Extraction note: symbols (>=, <=, arrows, ranges) dropped; table columns reconstructed best-effort.
 
@@ -119,9 +119,17 @@ Month 3: Commerce-kernel package extraction; Sign in with Kiorex (provider SSO d
 - Not verified: everything marked Blocked (never run against a real vendor, device push or AWS); the 2 failing Jest tests.
 
 ## Growth Engine update (24 Nov 2026)
-Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built.
+Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), **Proposed** (ADR-041 to ADR-047, unsigned), **Roadmap**, **Open decision**, **Regulatory dependency**. Full legend in KX-27. Source: `_docs/growth/` reports of 24 Nov 2026. Nothing here is implemented unless marked As-built. Rev 2.4: where this section differs from the Rev 2.4 as-built update at the end of the volume, the end section wins.
 
 - **Pilot design (section 03)**: Proposed additions to the 20-clinic pilot: each pilot clinic gets a QR poster kit (A4/A5, AR/EN) and a link per doctor; success measures add link activation (at least 15 of 20 clinics with a booking through a link by day 60), provider-led share, dispute rate below 5 percent and attribution replay equality (KX-29 section 07).
 - **Go / no-go gates (section 04)**: Proposed Growth gates, none recorded as satisfied: contracts 1.10.0 published; counsel opinion and consent wording approved for any production analytics or marketing; provider terms updated for attribution; hosts and DNS decided.
 - **Needs-human register (section 02)**: new rows for `kiorex.com` and `kiorly.link` DNS, widget host, Search Console and Business Profile ownership, Apple Team ID and Play SHA-256, consent wording, marketing licence confirmation. Listed in `_docs/LAUNCH_PREPARATION_GUIDE.md` section 11.
 - **Scorecard (section 01)**: growth readiness is Open: nothing built at 24 Nov 2026 beyond the commission engine and booking slug page (As-built).
+
+## Rev 2.4 as-built update (24 Nov 2026)
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+
+- **Launch preparation guide.** `_docs/LAUNCH_PREPARATION_GUIDE.md` is the single human checklist: sections 1 to 9 (accounts, domains, secrets, identity, providers, launch-locked gates, business and legal, apps and stores, data and hardening), 10 (go-live runbook), 11 (Growth Engine human items) and 12 (Security from the pentest). Pilot go or no-go reads that guide, not this section, for the human steps.
+- **Readiness against the Growth scorecard (As-built locally).** Links, QR kit, widget, attribution, commission decisions, SSR pages, consent, analytics and Super Admin configuration exist and pass their tests; nothing is deployed. The pilot success measures above (link activation, provider-led share, dispute rate, replay equality) cannot be measured until deployment and there is no scheduled replay job yet.
+- **Added go or no-go blockers from Rev 2.4:** the external penetration test; `TRUSTED_PROXY_HOPS`, `CORS_ORIGINS`, WAF attachment and real secrets; Lighthouse and device deep-link checks; the real Passport popup for the widget; counsel and DPO outputs; the Apple Team ID and Play SHA-256; DNS for `kiorex.com`, `kiorly.link` and the widget host.
+- **Verified test baseline (24 Nov 2026):** Clinic unit 1,222, Kiorex API unit 578, Passport 314, contracts 276, staff app 276, patient app 251; the full e2e run (01 to 49) was recorded as 374 passed and 33 skipped by the edge sweep.

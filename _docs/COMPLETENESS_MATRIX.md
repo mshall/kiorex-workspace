@@ -450,21 +450,27 @@ The matrix above was generated on 20 Nov 2026 and was not re-run. Items that app
 | Communications control plane (KX-24 §10) | MISSING (Proposed) | not built |
 | Document storage growth: lifecycle, quotas, compression, retention (KX-25, ADR-036) | MISSING (Proposed); build prompt written | `_docs/prompts/CURSOR_PROMPT_document_storage_growth.md` |
 
-## Growth Engine (24 Nov 2026, Proposed; added by the documentation update)
-Status values as above. Growth requirement ids are those of KX-27 (GR-xxx) and work packages of KX-33 (GRW-P1-A to M). Verified by reading the repositories on 24 Nov 2026 before Phase 1 wave 1 landed; wave 1 was being implemented by other agents, so a verifying agent must re-run this section.
+## Growth Engine (24 Nov 2026, re-verified for Rev 2.4)
+Status values as above. Growth requirement ids are those of KX-27 (GR-xxx) and work packages of KX-33 (GRW-P1-A to M). Re-verified on 24 Nov 2026 by reading the code and re-running the suites (contracts 276, Kiorex API unit 578, Clinic API unit 1,222, Passport 314, staff app 276, patient app 251, patient web 282, ops 84; Kiorex growth integration 278 of 279, Clinic growth and kiorex integration 55). All DONE+TESTED rows are local only: nothing is deployed and no provider is real.
 
 | Item | Status | Evidence or blocker |
 |---|---|---|
 | Booking source stamp, new-patient freeze, chargeability (`CLINIC_LINK` never chargeable), charge engine, disputes | DONE+TESTED (existing) | `cr02-booking-attribution.node.test.ts`, `cr03-commission-charge.*`, `cr04-kiorex-commission.node.test.ts` |
 | Supply-side doctor-to-doctor referral (CR-09) | DONE+TESTED (existing, not growth scope) | `cr09-referral.*` |
-| GR-1xx provider links, QR, widget settings (GRW-P1-D0, D1) | MISSING | Not in code at verification time |
-| GR-2xx attribution engine, commission decision, `acquisition` block (GRW-P1-A, B0, B, C, D2) | MISSING | Not in code at verification time |
-| GR-3xx SSR public pages, sitemap, robots, hreflang, JSON-LD, slugs (GRW-P1-E, F) | MISSING | Patient web is a client-only SPA |
-| GR-4xx widget and SDK, deep links, bootstrap (GRW-P1-G, H) | MISSING | `frame-ancestors 'none'` decision to be amended (ADR-044) |
-| GR-5xx consent purposes, preference centre, suppression, growth analytics (GRW-P1-I, J) | MISSING | Existing anonymous analytics only |
-| GR-6xx growth configuration versions and ops Growth pages (GRW-P1-K) | MISSING | Flags and `PolicySetting` only |
-| Staff app Growth tab (GRW-P1-L), end-to-end scenarios (GRW-P1-M) | MISSING | |
-| Contracts 1.10.0 | MISSING | Published contracts are 1.9.0 |
+| GR-1xx provider links, QR, widget settings (GRW-P1-D0, D1) | DONE+TESTED (no server PDF; browser print) | Clinic `provider-links.node.test.ts`, `provider-links.integration.test.ts`, `link-registry.integration.test.ts`, e2e 27 |
+| GR-2xx attribution engine, commission decision, `acquisition` block (GRW-P1-A, B0, B, C, D2) | DONE+TESTED (no daily replay job) | `decide.unit.spec.ts`, `growth-attribution.int.spec.ts`, `growth-booking.int.spec.ts`, Clinic `commission-decision*` tests, e2e 25, 27, 42 |
+| GR-3xx SSR public pages, sitemap, robots, hreflang, JSON-LD, slugs (GRW-P1-E, F) | DONE+TESTED locally; PARTIAL for performance: Lighthouse and field Web Vitals never measured | `public-site.int.spec.ts`, `public-site-seo.int.spec.ts`, `growth-slugs.int.spec.ts`, web `src/public/__tests__`, e2e 28 and 45 |
+| GR-4xx widget and SDK (GRW-P1-G) | DONE+TESTED (real Passport popup not exercised; stand-in IdP) | `widget.int.spec.ts`, `apps/widget` vitest and Playwright, e2e 28 and 45 |
+| GR-4xx deep links and bootstrap (GRW-P1-H) | PARTIAL: code, config and unit/integration tests; no device verification; Apple Team ID and Play SHA-256 missing (BLOCKED-HUMAN) | `deep-links.int.spec.ts`, mobile `deepLink.test.ts`, `deferredLink.test.ts`, staff app `deep-link.test.ts`, `domains.test.ts` |
+| GR-5xx consent purposes, preference centre, suppression (GRW-P1-I) | DONE+TESTED (web SPA and patient app; no banner on SSR pages; wording draft, BLOCKED-HUMAN) | `consent.int.spec.ts`, web `consent.test.ts`, mobile `preferences.test.tsx`, Playwright `e2e/consent.spec.ts` |
+| GR-5xx growth analytics (GRW-P1-J) | DONE+TESTED; one k-anonymity integration test fails in a full ordered run and passes alone | `growth-analytics.int.spec.ts`, `analytics-formulas.unit.spec.ts`, ops `growth-analytics.test.tsx`, e2e 26 |
+| GR-6xx growth configuration versions and ops Growth pages (GRW-P1-K) | DONE+TESTED | `growth-config.int.spec.ts`, `growth-admin.int.spec.ts`, ops vitest, Playwright `e2e/growth.spec.ts` |
+| Staff app Growth tab (GRW-P1-L) | DONE+TESTED for Clinic and Nurse; MISSING for Pharmacy and Lab | `growth-helpers`, `growth-screen` jest, Clinic `growth-mobile.node.test.ts`, Playwright `clinic-growth` |
+| End-to-end scenarios (GRW-P1-M) | DONE+TESTED (40 tests in e2e 25 to 28; edge sweep 40 to 49 with 374 passing in the full run) | `e2e/test/25..28`, `_docs/test-flow/EDGE_CASE_REPORT_2026-11.md` |
+| Contracts 1.10.0 and 1.11.0 | DONE+TESTED | `kiorex-contracts` 276 tests, additive diff tests |
+| Telehealth over our own peer-to-peer WebRTC, Clinic-owned (ADR-039, Accepted) with the Kiorex-side session link and patient card | DONE+TESTED locally; real TURN credentials (Cloudflare key) and a device camera check BLOCKED-HUMAN | Clinic `telehealth.integration.test.ts`, `telehealth-flow-a.integration.test.ts`, `telehealth-edge.integration.test.ts` (7), `telehealth-core.node.test.ts`; Kiorex `test/telehealth.int.spec.ts`, mobile and web telehealth tests |
+| Internal penetration test fixes (KX-PT-01 to 14) | DONE+TESTED; external test BLOCKED-HUMAN | `e2e/test/30-security.e2e.ts` 28 tests, `_docs/security/PENTEST_2026-11_REPORT.md` |
 | Phase 2 to 4 (campaigns, referral, rewards, assistant, lifecycle, experiments, ads, ecosystem) | MISSING (Roadmap) | |
+| Daily decision replay job; Pharmacy and Lab Growth tabs; real Search Console, Play Console, App Store Connect adapters | MISSING | KX-33 section 04 and 08 |
 | PDPL consent, marketing licence, reward-credit legal assessment, provider terms, store accounts, hosts and DNS | BLOCKED-HUMAN | See KX-33 section 06 and `LAUNCH_PREPARATION_GUIDE.md` section 11 |
 

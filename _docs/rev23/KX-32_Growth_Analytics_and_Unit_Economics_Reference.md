@@ -1,6 +1,6 @@
 # KX-32 — Growth Analytics and Unit Economics Reference
 
-Revision: Rev 2.4 draft 1 · Growth Edition, 24 November 2026 (new volume; owner: Head of Finance with the Head of Growth; supersedes: none)
+Revision: Rev 2.4 · Growth Edition, as-built verified 24 November 2026 (new volume; owner: Head of Finance with the Head of Growth; supersedes: Rev 2.4 draft 1 of this volume)
 
 Subtitle: One set of definitions for every growth number: what counts, what is divided by what, revenue versus booking value, CAC, LTV, ROAS, MER, the canonical funnel, cohorts and privacy-safe reporting.
 
@@ -11,8 +11,8 @@ Tags: Metrics · Definitions · Denominators · Revenue vs GBV · CAC · LTV · 
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-32 |
-| REVISION | Rev 2.4 draft 1 · Growth Edition (24 November 2026) |
-| STATUS | Proposed definitions; sources As-built where named |
+| REVISION | Rev 2.4 · Growth Edition (24 November 2026) |
+| STATUS | Definitions fixed; Phase 1 implementation As-built locally (`growth/analytics/*`); spend entry manual; no Phase 2 campaign data |
 | OWNER ROLE | Head of Finance; Head of Growth |
 | AUDIENCE | Finance, growth, product, investors, data analysts |
 | RELATED | KX-13; KX-14; KX-27; KX-28; KX-29; KX-30 |
@@ -21,6 +21,7 @@ Tags: Metrics · Definitions · Denominators · Revenue vs GBV · CAC · LTV · 
 | Revision | Date | Change | Author |
 |---|---|---|---|
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from architecture decisions section 17 and the work-packages finance section | Documentation agent |
+| Rev 2.4 | 24 Nov 2026 | Re-verified against `growth/analytics/*`: endpoints, k = 10 masking with secondary suppression, revenue definition and its two deviations (confirmation inferred at COMPLETED, BILLED not observed), canonical events actually emitted, worked examples tested | Documentation agent |
 
 ## Contents
 01 Summary · 02 Principles · 03 Data sources · 04 Definitions and denominators · 05 Formulas · 06 Funnel and canonical events · 07 Cohort method · 08 Bottom-up pressure test · 09 LTV and CAC guardrails · 10 Privacy and k-anonymity · 11 Acceptance, KPIs, risks, dependencies, open decisions
@@ -34,12 +35,12 @@ Tags: Metrics · Definitions · Denominators · Revenue vs GBV · CAC · LTV · 
 - **0** places where GBV is shown as revenue
 
 ## Status legend (read first)
-Every statement in this volume carries one of these labels, in a column, a prefix or a callout. Growth Engine Phase 1 is being implemented by other agents while this volume is written, so the labels matter more than usual.
+Every statement in this volume carries one of these labels, in a column, a prefix or a callout. Phase 1 is now built locally; the labels separate what runs from what is only designed.
 
 | Label | Meaning | Rule for readers |
 |---|---|---|
-| **As-built** | Exists in code and tests in the workspace, verified by reading the repositories on 24 Nov 2026 (discovery) and re-checked for the items named in KX-28 §02 | Safe to rely on. Everything not listed as As-built does not exist yet |
-| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. As of this revision no growth ADR is Accepted, so this label marks only rules inherited from existing Accepted ADRs |
+| **As-built** | Exists in code with a passing test in the workspace, verified by reading the repositories and re-running the suites on 24 Nov 2026 (Rev 2.4). Local only: not deployed, not run against a real provider | Safe to rely on for behaviour in the local stack |
+| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. No growth ADR (ADR-041 to ADR-047) has been accepted, so this label marks only rules inherited from existing Accepted ADRs |
 | **Proposed** | Designed in the Growth reports of 24 Nov 2026 and written up here, not yet signed (ADR-041 to ADR-047) | Build only after sign-off, or inside a work package the founder released |
 | **Roadmap** | Phase 2 to 4 capability, scoped coarsely | Do not build; estimates are ranges |
 | **Open decision** | A founder or CEO choice with a stated default | Use the default, never decide silently |
@@ -65,8 +66,8 @@ Under ADR-007 Kiorex earns EGP 40 only on an attended new patient, once per pati
 | `Appointment.isNewPatientAtBooking`, check-in status | Attended new patient | As-built |
 | Anonymous `AnalyticsEvent` and `ProfileViewDaily` | 13 event names, 7 properties, no identifiers | As-built |
 | Ops `LiquidityPage`, `PartnerFunnelMark` | Liquidity and supply funnel | As-built |
-| `GrowthAttributionDecision`, `GrowthTouchpoint`, `GrowthEvent`, `GrowthMetricDaily` | Origin, evidence, canonical events, rollups | Proposed |
-| Campaign spend and budgets | Manual entry (Phase 2), integrations (Phase 2 and 3) | Roadmap |
+| `GrowthAttributionDecision`, `GrowthTouchpoint`, `GrowthEvent`, `GrowthMetricDaily`, `GrowthRevenueFact`, `GrowthSpendEntry` | Origin, evidence, canonical events, rollups, revenue facts from clinic charge events, manual spend | As-built |
+| Campaign spend and budgets | Manual spend entry with maker-checker is As-built (`GrowthSpendEntry`, database CHECK that the approver differs); campaign records and integrations are Phase 2 | As-built (manual), Roadmap (campaigns) |
 | Meta, Google, Play, App Store rate and spend data | Pulled by adapters in mock mode first | Roadmap |
 
 ## 04 Definitions and denominators
@@ -88,6 +89,23 @@ Under ADR-007 Kiorex earns EGP 40 only on an attended new patient, once per pati
 | ROAS | Kiorex revenue attributed to a campaign over its spend; not GBV | Click window per policy | Decisions |
 | MER | Total Kiorex revenue over total marketing spend in the period | All spend lines | Finance |
 | Cohort retention | Share of a registration-month cohort that books again within 30, 90 and 180 days | Retention is a product measure; it does not earn fees by itself | Events |
+
+### 4.1 As-built implementation notes (Rev 2.4)
+| Item | What the code does | Label |
+|---|---|---|
+| Revenue | `kiorexRevenue` accepts only charge facts: CONFIRMED or BILLED charges minus reversals; PENDING, DISPUTED and WAIVED are not revenue; GBV, deposits, credits, tax lines and settlements have no way in (test) | As-built |
+| Revenue date | The Clinic sends no confirmation event, so Kiorex writes the CONFIRMED fact when the booking is COMPLETED. The definition says period by charge confirmation date; the implementation uses completion. BILLED and waiver events other than reversal are not observed | As-built, deviation |
+| Attended | Booking-to-attended and cohort figures use Kiorex-side booking status, not the Clinic attendance record | As-built, deviation |
+| CAC, ROAS | `null` (not zero) when no approved spend exists; channel rows match spend by source kind and campaign only; CAC by campaign needs campaign tags (Phase 2) | As-built |
+| LTV | `f * (1 - r)` with Pay margin 0 (not modelled) | As-built |
+| Verdict | LTV over CAC at least 3 scale, at least 1 sustain, else review | As-built |
+| k-anonymity | `K_MIN = 10`; cells of 1 to 9 show `<10` and carry no money or ratio; secondary suppression masks the smallest visible cell when exactly one cell is masked and the total is shown; CSV export uses the same outputs | As-built |
+| Endpoints (ops, `ops/growth-analytics`) | `overview`, `funnel`, `channels`, `breakdown/:dimension`, `cohorts`, `unit-economics`, `export/:report`, `spend` (list, enter, approve, reject), `rollup` (super admin) | As-built |
+| Endpoints (provider, `growth/v1/provider-analytics`) | `overview`, `funnel`, `channels`, `cohorts`, `export/:report`; signed partner, own organisation only, no Kiorex money | As-built |
+| Rollups | `GrowthRollupService`, hourly job and manual trigger, idempotent including concurrent runs; visitor-stream rows never carry booking-only dimensions; no specialty-by-visitor join (test) | As-built |
+| Cohorts | Closed 30, 90 and 180 day windows | As-built |
+| Worked examples | `analytics-formulas.unit.spec.ts` reproduces section 08 (month 6 EGP 7,872, month 12 EGP 106,637, LTV 38.40) | As-built |
+| Reconciliation | `growth-analytics.int.spec.ts` reconciles the overview to bookings and charges on the seed and asserts GBV is never revenue | As-built |
 
 ## 05 Formulas
 ```
@@ -125,13 +143,14 @@ flowchart TB
   G --> H["BookingAttended"]
 ```
 
-Canonical events written to `GrowthEvent` (names stable, minimal properties; Proposed): `PageViewed` (landing kind only), `SearchStarted`, `ResultsViewed`, `ProviderViewed`, `SlotSelected`, `BookingInitiated`, `BookingConfirmed`, `BookingAttended` (from COMPLETED or CHECKED_IN), `BookingCancelled`, `AppInstalled`, `PatientRegistered`, `WidgetLoaded`, `WidgetBookingStarted`, `WhatsAppConversationStarted`, `ConsentGranted`.
+Canonical events written to `GrowthEvent` (names stable, minimal properties; the 15 names are As-built in contracts `GROWTH_EVENT_NAMES`, nine may be reported by a client, the rest are written only by the server): `PageViewed` (landing kind only), `SearchStarted`, `ResultsViewed`, `ProviderViewed`, `SlotSelected`, `BookingInitiated`, `BookingConfirmed`, `BookingAttended` (from COMPLETED or CHECKED_IN), `BookingCancelled`, `AppInstalled`, `PatientRegistered`, `WidgetLoaded`, `WidgetBookingStarted`, `WhatsAppConversationStarted`, `ConsentGranted`.
 
 | Stage range | Measured how |
 |---|---|
 | Up to `ProviderViewed` | Anonymous stream, by care type and market only |
 | From `SlotSelected` | Server-side operational facts keyed to the booking |
 | Visitor-keyed analysis | Only with consent; specialty and provider ids rejected by the event guard |
+| Emitters (As-built) | Server facts: `SlotSelected`, `BookingInitiated`, `BookingConfirmed`, `BookingAttended` (new or returning bucket), `BookingCancelled` (closed reason), `PatientRegistered`, `WhatsAppConversationStarted`, idempotent per booking. Web and mobile libraries send `PageViewed`, `SearchStarted`, `ResultsViewed`, `ProviderViewed`, `ConsentGranted`, `AppInstalled` after the visitor decides. No emitter was found in the widget app for `WidgetLoaded` and `WidgetBookingStarted`: NOT VERIFIED that they fire |
 | Mapping | `BookingInitiated` from the booking INTENT event; `BookingConfirmed` from `APPOINTMENT_CONFIRMED`; `BookingAttended` from COMPLETED or CHECKED_IN; `BookingCancelled` from the two cancel events; no duplicate events |
 
 ## 07 Cohort method
@@ -172,7 +191,7 @@ Reading: the bottom-up of attended new patients is about 14 percent (month 6) an
 - Dependants are excluded from growth tables.
 
 ## 11 Acceptance criteria, KPIs, risks, dependencies, open decisions
-- Acceptance (GRW-P1-J): overview numbers reconcile to `BookingIntent` and commission charges on the demo seed; GBV is never labelled revenue (test); rollup idempotent; k-masking tested; funnel arithmetic tested on a fixture; no specialty-by-visitor join possible (test).
+- Acceptance (GRW-P1-J), status Rev 2.4: met locally by the tests named in section 4.1. Overview numbers reconcile to `BookingIntent` and commission charges on the demo seed; GBV is never labelled revenue (test); rollup idempotent; k-masking tested; funnel arithmetic tested on a fixture; no specialty-by-visitor join possible (test).
 - KPIs: reconciliation variance zero on seed; freshness; share of bookings with a decision row.
 - Risks: definitions drift between decks (this volume is the source); small cells identify people (k rule); attribution gaps without consent (reporting notes the coverage).
 - Dependencies: Phase 1 rollups; Phase 2 spend entry and integrations; KX-13 re-base.
