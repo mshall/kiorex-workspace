@@ -1,3 +1,14 @@
-{ "name": "kiorex-brand", "private": true, "version": "1.0.0",
-  "scripts": { "build": "node scripts/build-tokens.cjs && node scripts/gen-wordmarks.cjs && node scripts/gen-assets.cjs" },
-  "devDependencies": { "harfbuzzjs": "^1.6.4", "opentype.js": "^1.3.4", "sharp": "^0.33.0" } }
+{
+ "name": "kiorex-brand",
+ "private": true,
+ "version": "1.0.0",
+ "scripts": {
+  "build": "node scripts/build-tokens.cjs && node scripts/gen-wordmarks.cjs && node scripts/gen-assets.cjs && node scripts/gen-kiorex-v2.cjs",
+  "test": "node --test kiorly-guard.node.test.cjs kiorex-no-legacy.node.test.cjs"
+ },
+ "devDependencies": {
+  "harfbuzzjs": "^1.6.4",
+  "opentype.js": "^1.3.4",
+  "sharp": "^0.33.0"
+ }
+}

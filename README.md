@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/kiorex-logo-lockup.svg" alt="Kiorex" height="84">
+<img src="docs/assets/kiorex-logo-lockup.svg" alt="Kiorex" height="96">
 
 # Kiorex v2 workspace
 
@@ -231,10 +231,10 @@ Open founder and human decisions are in one table: **[_docs/FOUNDER_DECISIONS.md
 
 ## Brand
 
-Indigo `#3730A3`, Ocean `#0369A1`, Coral pulse `#E8735E`, Ground `#F4F6FC`. The mark is two facing chevrons (indigo and ocean) with a coral ECG pulse through the centre. Never redraw it: use the SVGs and components in [`_brand/`](_brand/README.md).
+Indigo `#3730A3`, Ocean `#0369A1`, Coral pulse `#E8735E`, Ground `#F4F6FC`. The Kiorex logo is the responsive 8-channel waveform: indigo bars on the left, ocean bars on the right and a coral ECG pulse through the centre (below 32px it becomes the 4-channel micro mark; founder spec 25 Nov 2026, `_brand/KIOREX_LOGO_SPEC_v2.md`). The Kiorly products keep their own chevron marks. Never redraw it: use the SVGs and components in [`_brand/`](_brand/README.md).
 
 <div align="center">
-<img src="docs/assets/kiorex-mark.svg" alt="Kiorex mark" height="56">&nbsp;&nbsp;&nbsp;<img src="docs/assets/kiorex-wordmark.svg" alt="Kiorex wordmark" height="40">&nbsp;&nbsp;&nbsp;<img src="docs/assets/kiorex-app-icon.svg" alt="Kiorex app icon" height="56">
+<img src="docs/assets/kiorex-mark.svg" alt="Kiorex mark" height="56">&nbsp;&nbsp;&nbsp;<img src="docs/assets/kiorex-app-icon.svg" alt="Kiorex app icon (badge)" height="56">
 </div>
 
 ## Folder map

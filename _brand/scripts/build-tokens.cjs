@@ -47,6 +47,9 @@ const staticVars = [
   `  --kx-touch-min: ${T.layout.touchMin}px;`, `  --kx-touch-nurse: ${T.layout.nurseTouchMin}px;`,
   `  --kx-gradient: linear-gradient(135deg, ${T.brand.indigo} 0%, ${T.brand.ocean} 100%);`,
   `  --kx-nurse-rose: ${T.brand.nurseRose};`,
+  // Kiorex logo system v2 (25 Nov 2026): explicit brand colours (graphic use). Coral is NEVER for small text or critical clinical alerts on light grounds (WCAG), see brandRules in tokens.json.
+  `  --kx-brand-indigo: ${T.brand.indigo};`, `  --kx-brand-indigo-lift: ${T.brand.indigoLift};`, `  --kx-brand-ocean: ${T.brand.ocean};`, `  --kx-brand-ocean-lift: ${T.brand.oceanLift};`,
+  `  --kx-brand-coral: ${T.brand.coral};`, `  --kx-brand-ground: ${T.brand.ground};`, `  --kx-brand-dark-surface: ${T.brand.darkSurface};`, `  --kx-brand-ink: ${T.brand.ink};`, `  --kx-brand-coral-text: ${T.brand.coralText};`,
   // legacy aliases kept so existing consumers of the v1 tokens.css keep working
   `  --kx-ink: var(--kx-primary);`, `  --kx-ink-2: var(--kx-secondary);`, `  --kx-pulse: var(--kx-accent);`, `  --kx-ground: var(--kx-bg);`,
   `  --kx-text-muted-legacy: var(--kx-text-muted);`, `  --kx-radius: var(--kx-radius-md);`,
@@ -70,7 +73,7 @@ ${themeVars(D, "dark", 0, T.elevation.dark).replace(/^/gm, "  ")}
 /* Arabic: switch family, add line-height for tall Arabic glyphs */
 :root[lang="ar"], [dir="rtl"] { --kx-font: var(--kx-font-ar); }
 :root[lang="ar"] body, [dir="rtl"] body { line-height: ${ty.arabicLineHeight}; letter-spacing: 0; }
-/* Focus ring — coral, always visible for keyboard users */
+/* Focus ring — indigo (AA on light and dark), always visible for keyboard users */
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: var(--kx-focus-width) solid var(--kx-focus);
   outline-offset: var(--kx-focus-offset);

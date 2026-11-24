@@ -6,7 +6,12 @@ export const theme = {
     "ocean": "#0369A1",
     "coral": "#E8735E",
     "ground": "#F4F6FC",
-    "nurseRose": "#E11D48"
+    "nurseRose": "#E11D48",
+    "indigoLift": "#6366F1",
+    "oceanLift": "#38BDF8",
+    "darkSurface": "#0F172A",
+    "ink": "#0F172A",
+    "coralText": "#8F4944"
   },
   "ramps": {
     "indigo": {

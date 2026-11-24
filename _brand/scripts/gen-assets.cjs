@@ -21,7 +21,7 @@ async function build(prod, D, vb0) {
   const A = ACCENT[prod];
   const o = (...p) => path.join(D, ...p);
   fs.mkdirSync(o("pwa"), { recursive: true }); fs.mkdirSync(o("expo"), { recursive: true });
-  let iconSrc = fs.readFileSync(path.join(root, "kiorex-app-icon.svg"), "utf8").replace(/#0369A1/g, A.light).replace('aria-label="Kiorex app icon"', `aria-label="${A.name} app icon"`);
+  let iconSrc = fs.readFileSync(path.join(root, "kiorex-app-icon-legacy.svg"), "utf8").replace(/#0369A1/g, A.light).replace('aria-label="Kiorex app icon"', `aria-label="${A.name} app icon"`);
   if (prod === "kiorly") iconSrc = iconSrc.replace(/<stop offset="0" stop-color="#3730A3"\/><stop offset="1" stop-color="[^"]+"\/>/, '<stop offset="0" stop-color="#4338CA"/><stop offset="1" stop-color="#3730A3"/>'); // Indigo tile, only a whisper of depth
   const iconSvg = Buffer.from(iconSrc);
   const bleed = (scale, bg = true) => Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
@@ -36,7 +36,7 @@ async function build(prod, D, vb0) {
     <polyline points="373,237 505,440 373,643" fill="none" stroke="#3730A3" stroke-width="38"/>
     <polyline points="720,237 588,440 720,643" fill="none" stroke="${A.light}" stroke-width="38"/>
     <path d="M222 440 H510 L525 428 L540 466 L557 392 L574 460 L588 441 H877" fill="none" stroke="#E8735E" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/></g></svg>`);
-  fs.copyFileSync(prod === "kiorex" ? path.join(root, "kiorex-mark.svg") : out("svg", `${prod}-mark.svg`), o("favicon.svg"));
+  fs.copyFileSync(prod === "kiorex" ? path.join(root, "kiorex-mark-legacy.svg") : out("svg", `${prod}-mark.svg`), o("favicon.svg"));
   await png(iconSvg, 16, o("favicon-16.png")); await png(iconSvg, 32, o("favicon-32.png")); await png(iconSvg, 48, o("favicon-48.png"));
   await png(iconSvg, 180, o("apple-touch-icon.png"));
   for (const sz of [192, 512]) { await png(iconSvg, sz, o("pwa", `icon-${sz}.png`)); await png(bleed(0.62), sz, o("pwa", `maskable-${sz}.png`)); }
@@ -61,7 +61,7 @@ async function build(prod, D, vb0) {
   await png(iconSvg, 48, o("expo", "favicon.png"));
   // Android status-bar notification icon (expo-notifications `icon`): white on transparent, derived from the mono mark SVG (never redrawn). Android keeps only the alpha channel.
   // The pulse is thickened (11 -> 22) so it stays visible at 24 dp; everything else is the mark's own geometry. 96x96 = the file the plugin takes; it generates the density set itself, we also ship the set.
-  const monoMark = fs.readFileSync(out("svg", "kiorex-mark-mono.svg"), "utf8").replace(/currentColor/g, "#FFFFFF").replace('stroke-width="11"', 'stroke-width="22"');
+  const monoMark = fs.readFileSync(out("svg", "kiorex-mark-legacy-mono.svg"), "utf8").replace(/currentColor/g, "#FFFFFF").replace('stroke-width="11"', 'stroke-width="22"');
   const notif = async (size) => {
     const inner = Math.round(size * 0.84), h = Math.round((inner * 468) / 688);
     const mark = await sharp(Buffer.from(monoMark), { density: 1200 }).resize(inner, h).png().toBuffer();
@@ -73,7 +73,7 @@ async function build(prod, D, vb0) {
     fs.writeFileSync(o("expo", "notification-icons", `drawable-${d}`, "notification_icon.png"), await notif(sz));
   }
   // OG image 1200x630: Ground background + the product lockup
-  const lockup = fs.readFileSync(out("svg", `${prod}-lockup.svg`), "utf8").trim().replace(/<svg[^>]*>/, (m) => m.replace(/ (width|height)="[^"]*"/g, ""));
+  const lockup = fs.readFileSync(out("svg", `${prod}-lockup${prod === "kiorex" ? "-legacy" : ""}.svg`), "utf8").trim().replace(/<svg[^>]*>/, (m) => m.replace(/ (width|height)="[^"]*"/g, ""));
   const vb = lockup.match(/viewBox="([^"]+)"/)[1].split(" ").map(Number);
   const lw = 880, lh = (lw * vb[3]) / vb[2];
   const og = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F6FC"/><stop offset="1" stop-color="#E4E8F7"/></linearGradient></defs>
@@ -85,23 +85,19 @@ async function build(prod, D, vb0) {
 }
 
 (async () => {
-  const vb = await build("kiorex", out());
+  // The old Kiorex (two-chevron) asset set now lives in dist/legacy/; the CURRENT Kiorex assets in dist/ root are produced by gen-kiorex-v2.cjs (run it AFTER this script).
+  const vb = await build("kiorex", out("legacy"));
   for (const p of ["clinic", "lab", "pharmacy", "kiorly"]) await build(p, out("products", p));
   // Kiorly static art (staff app + Kiorly Home): app icon tile and splash, derived from the generated kiorly mark (never redrawn).
   {
     const body = (tone) => fs.readFileSync(out("svg", `kiorly-mark${tone}.svg`), "utf8").replace(/^<svg[^>]*>|<\/svg>\s*$/g, "");
     const icon = fs.readFileSync(out("products", "kiorly", "favicon.svg"), "utf8"); void icon;
-    const iconSrc = fs.readFileSync(path.join(root, "kiorex-app-icon.svg"), "utf8").replace(/<stop offset="0" stop-color="#3730A3"\/><stop offset="1" stop-color="[^"]+"\/>/, '<stop offset="0" stop-color="#4338CA"/><stop offset="1" stop-color="#3730A3"/>').replace('aria-label="Kiorex app icon"', 'aria-label="Kiorly app icon"');
+    const iconSrc = fs.readFileSync(path.join(root, "kiorex-app-icon-legacy.svg"), "utf8").replace(/<stop offset="0" stop-color="#3730A3"\/><stop offset="1" stop-color="[^"]+"\/>/, '<stop offset="0" stop-color="#4338CA"/><stop offset="1" stop-color="#3730A3"/>').replace('aria-label="Kiorex app icon"', 'aria-label="Kiorly app icon"');
     fs.writeFileSync(out("svg", "kiorly-app-icon.svg"), iconSrc);
     const splash = (bg, tone) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1170 2532" role="img" aria-label="Kiorly"><rect width="1170" height="2532" fill="${bg}"/><svg x="235" y="1000" width="700" height="476" viewBox="206 206 688 468">${body(tone)}</svg></svg>`;
     fs.writeFileSync(out("svg", "kiorly-splash.svg"), splash("#3730A3", "-inverse"));
     fs.writeFileSync(out("svg", "kiorly-splash-dark.svg"), splash("#0F1024", "-inverse"));
   }
-  const lockup = fs.readFileSync(out("svg", "kiorex-lockup.svg"), "utf8").trim().replace(/<svg[^>]*>/, (m) => m.replace(/ (width|height)="[^"]*"/g, ""));
-  // Email / print letterhead
-  fs.writeFileSync(out("svg", "letterhead.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 794 1123" width="794" height="1123"><rect width="794" height="1123" fill="#fff"/>
-  <svg x="56" y="48" width="220" height="${220 * vb[3] / vb[2]}" viewBox="${vb.join(" ")}">${lockup.replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg>
-  <line x1="56" y1="120" x2="738" y2="120" stroke="#E2E6F2" stroke-width="1"/><line x1="56" y1="120" x2="156" y2="120" stroke="#E8735E" stroke-width="2"/>
-  <line x1="56" y1="1063" x2="738" y2="1063" stroke="#E2E6F2" stroke-width="1"/></svg>`);
+  // letterhead.svg (print / email) is now produced by gen-kiorex-v2.cjs from the new Kiorex logo.
   console.log("assets ok");
 })();

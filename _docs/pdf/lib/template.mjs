@@ -30,8 +30,11 @@ function mix(a, b, t) {
 export function buildHtml({ doc, fam, parsed, brandDir, fontsDir, css, js, built, srcRel }) {
   const m = parsed.meta;
   const read = (f) => fs.readFileSync(path.join(brandDir, 'dist/svg', f), 'utf8').replace(/<\?xml[^>]*\?>/, '');
-  const lockup = read(`${fam.logo}-lockup.svg`);
-  const mark = read('kiorex-mark-inverse.svg');
+  // Kiorex-family covers (platform, business) use the NEW 8-channel KIOREX logo (founder spec 25 Nov 2026); the Kiorly families keep their lockups and the legacy chevron watermark (unchanged).
+  const readRoot = (f) => fs.readFileSync(path.join(brandDir, f), 'utf8').replace(/<\?xml[^>]*\?>/, '');
+  const kiorex = fam.logo === 'kiorex';
+  const lockup = kiorex ? readRoot('kiorex-logo-full.svg') : read(`${fam.logo}-lockup.svg`);
+  const mark = kiorex ? readRoot('kiorex-mark-onbrand.svg') : read('kiorex-mark-legacy-inverse.svg');
   const rev = m.revisionLabel || doc.revision || 'Rev 2.3';
   const status = m.status || 'Reference';
   const subtitle = doc.subtitle || m.kv.subtitle || '';

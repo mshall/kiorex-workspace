@@ -130,6 +130,15 @@
   --kx-touch-nurse: 56px;
   --kx-gradient: linear-gradient(135deg, #3730A3 0%, #0369A1 100%);
   --kx-nurse-rose: #E11D48;
+  --kx-brand-indigo: #3730A3;
+  --kx-brand-indigo-lift: #6366F1;
+  --kx-brand-ocean: #0369A1;
+  --kx-brand-ocean-lift: #38BDF8;
+  --kx-brand-coral: #E8735E;
+  --kx-brand-ground: #F4F6FC;
+  --kx-brand-dark-surface: #0F172A;
+  --kx-brand-ink: #0F172A;
+  --kx-brand-coral-text: #8F4944;
   --kx-ink: var(--kx-primary);
   --kx-ink-2: var(--kx-secondary);
   --kx-pulse: var(--kx-accent);

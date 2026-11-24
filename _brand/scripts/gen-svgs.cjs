@@ -23,7 +23,9 @@ module.exports = function (dir) {
       : n.k === "pulse" ? `<path d="${n.d}" fill="none" stroke="${pal[n.role]}" stroke-width="${n.sw}" stroke-linejoin="round" stroke-linecap="round"/>`
       : n.k === "line" ? `<line x1="${n.x1}" y1="${n.y1}" x2="${n.x2}" y2="${n.y2}" stroke="${pal[n.role]}" stroke-width="${n.sw}"/>`
       : `<path fill="${pal[n.role]}" d="${n.d}" transform="${n.transform}"/>`).join("\n  ");
-    const name = `${prod === "staff" ? "kiorly" : prod}-${v}${lang === "ar" ? "-ar" : ""}${tone === "color" ? "" : "-" + tone}.svg`;
+    // The OLD Kiorex artwork (two chevrons) is kept under a legacy name: Kiorex itself moved to the 8-channel waveform logo (gen-kiorex-v2.cjs, 25 Nov 2026), the Kiorly marks are still derived from this scene.
+    const legacy = prod === "kiorex" || prod === "passport";
+    const name = `${prod === "staff" ? "kiorly" : prod}-${v}${legacy ? "-legacy" : ""}${lang === "ar" ? "-ar" : ""}${tone === "color" ? "" : "-" + tone}.svg`;
     fs.writeFileSync(path.join(dir, name), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sc.viewBox.join(" ")}" role="img"${lang === "ar" ? ' lang="ar"' : ""} aria-label="${v === "mark" ? markName(prod) : lang === "ar" ? PRODUCT_NAMES_AR[prod] : PRODUCT_NAMES[prod]}">\n  ${body}\n</svg>\n`);
   }
 };

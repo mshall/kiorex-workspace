@@ -22,6 +22,8 @@ Endorsed-brand model: two master brands; Kiorly products carry a 'by Kiorex' end
 | Kiorly Lite / Pro / Clinic / Enterprise | Plan names (Clinic edition) | Pharmacy/Lab plans may use Lite / Pro / Chain; Kiorly Nurse uses Nurse Lite / Nurse Pro / Nurse Agency |
 
 ## 02 Identity system
+**Update, 25 Nov 2026 (founder, supersedes the mark and colour wording below for Kiorex): the Kiorex logo is the responsive 8-channel waveform system.** Eight Indigo bars (left) and eight Ocean bars (right) mirror around a coral ECG pulse; a vertical coral divider and the wordmark KIOREX (Plus Jakarta Sans SemiBold, final X in Ocean) complete the lockup. Below 32 px height it becomes a 4-channel micro mark (favicon, small icons). Palette: Indigo `#3730A3` (dark lift `#6366F1`), Ocean `#0369A1` (dark lift `#38BDF8`), Coral Pulse `#E8735E` (graphic only: never small text or critical clinical alerts on light backgrounds), Ground `#F4F6FC`, Dark Surface `#0F172A`. Geometry and rules: `_brand/KIOREX_LOGO_SPEC_v2.md` and `_brand/README.md`. The Kiorly products and the Kiorly app keep their own chevron marks and accents; the stethoscope-heart description and the Sky/Teal/Navy palette below are historical.
+
 The stethoscope-heart mark is the parent symbol. Kiorex uses it in a sky/teal gradient; Kiorly uses it in violet with a product accent colour. Arabic and Latin wordmarks are designed as a pair with equal visual weight.
 
 | Colour | Hex | Role |
