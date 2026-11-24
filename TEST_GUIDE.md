@@ -264,3 +264,37 @@ Inventory, rules and per-step results: `_docs/test-flow/quick-setup-inventory.md
 6. **Finished.** When every step is done or skipped the card turns into "You're all set" with **Dismiss**; it stays dismissed for the organisation (server side) and returns when new work appears (for example a new clinic).
 7. **Arabic / dark / sizes.** Switch language and theme; check 360, 768, 1440 and 2560 px: no horizontal scroll, RTL mirrored, Tab reaches every button.
 Automated: Clinic `cd clinics-management/apps/web && PLAYWRIGHT_NO_SERVER=1 npx playwright test e2e/quick-setup-clinic.spec.ts e2e/quick-setup-nurse.spec.ts --project=chromium` (needs the API :3010 and web :5174 up); Pharmacy `cd kiorly-pharmacy/apps/web && npx playwright test -c playwright.setup.config.ts`; Lab `cd kiorly-lab/apps/web && npx playwright test -c playwright.setup.config.ts`; rules: `node --import tsx --test src/onboarding/onboarding-plan.node.test.ts` (Clinic) and `src/modules/setup/setup-plan.node.test.ts` (Pharmacy, Lab).
+
+## Mobile deep links and regional bootstrap (GRW-P1-H)
+Scope: patient app (`kiorex-platform/apps/mobile`, scheme `kiorex`, host `kiorex.com`) and the Kiorly staff app (`kiorly`, scheme `kiorly`, host `www.kiorly.com`). Universal and App Links need a **native build** (associated domains entitlement and verified intent filters are native config) and, for real verification, the Apple Team ID and the Play app-signing SHA-256 in the well-known files (NEEDS_HUMAN, launch guide section 2.5). Until then the checks below use the custom scheme, which needs no association, and a development build or Expo Go for the scheme.
+
+**Automated (run these first)**
+- `cd kiorex-platform/apps/mobile && npx jest src/__tests__/deepLink.test.ts src/__tests__/deferredLink.test.ts src/__tests__/nativeIntent.test.tsx src/__tests__/appLinksConfig.test.ts src/__tests__/bootstrap.test.ts` (parser with malicious inputs, install referrer fixtures, consent gate, native config).
+- `cd kiorly && npx jest src/__tests__/deep-link.test.ts`.
+- `cd kiorex-platform/apps/api && npm run test:unit -- src/market` and `NODE_OPTIONS=--experimental-vm-modules npx jest --selectProjects integration --runInBand --testPathPatterns deep-links` (bootstrap, well-known files, fallback pages).
+- `cd kiorex-platform/apps/web && npx playwright test -c playwright.deeplinks.config.ts` (fallback page in Pixel 7 and desktop Chromium, own server on :4391).
+- `cd kiorex-account && npx vitest run test/domains.test.ts` (hosts and association templates).
+
+**Bootstrap (any machine with the API on :4000)**
+1. `curl -s localhost:4000/api/v1/bootstrap | jq` *Expected:* `liveMarkets` has one entry, `showMarketSelector:false`, an `apiEndpoint` ending in `/api/v1`, `capabilities`, header `Cache-Control: public, max-age=60`. `curl -s 'localhost:4000/api/v1/bootstrap?cc=sa'` *Expected:* still the live market (SA is not live). Adding `-H 'X-Forwarded-For: 8.8.8.8' -H 'CloudFront-Viewer-Country: US'` changes nothing: the market never follows the caller location.
+2. `curl -si localhost:4000/.well-known/apple-app-site-association` and `.../assetlinks.json` *Expected:* 200, `application/json`, no redirect, `X-Kiorex-App-Links: placeholder` and the `TODO_NEEDS_HUMAN_*` values until `APPLE_TEAM_ID` and `ANDROID_SHA256_CERT_FINGERPRINTS` are set (production answers 404 until they are).
+
+**iOS simulator (`xcrun simctl`)** (patient app installed from a development build; boot the simulator first)
+1. `xcrun simctl openurl booted 'kiorex://doctor/<doctor-id>'` *Expected:* the doctor profile opens. With `https://kiorex.com/ar/eg/doctor/<doctor-id>` the same screen opens only after the association is verified (Team ID needed); without it Safari opens the website.
+2. `xcrun simctl openurl booted 'kiorex://r/AB12CD3456'` *Expected:* the invitation screen with **Allow** and **Not now** (equal weight, draft wording). Nothing is sent before the choice (watch the API log: no `POST /growth/v1/touch`). **Allow** sends one touch; **Not now** discards the code.
+3. `xcrun simctl openurl booted 'kiorex://q/7XK2M9QP'` *Expected:* the same screen for a provider QR code. `'kiorex://q/7XK2M9QI'` (invalid character) *Expected:* Home.
+4. `xcrun simctl openurl booted 'kiorex://appointment/<booking-id>'` signed out *Expected:* sign-in first, then the appointment opens. The link never signs you in.
+5. `xcrun simctl openurl booted 'kiorex://doctor/x?to=https://evil.example'` and `'kiorex://doctor/..%2f..%2fetc'` *Expected:* no navigation to the URL; the second opens Home.
+6. `xcrun simctl openurl booted 'kiorex://claim'` *Expected:* the claim code screen (iOS has no install referrer): a valid code is accepted, `https://evil.example` shows "This code is not valid".
+7. Staff app: `xcrun simctl openurl booted 'kiorly://open/visit:<appointment-id>'` *Expected:* Home, then (signed in) the visit; signed out you sign in first. `'kiorly://open/https:evil.example'` *Expected:* Home.
+
+**Android (`adb`)**
+1. `adb shell am start -W -a android.intent.action.VIEW -d 'kiorex://r/AB12CD3456' com.kiorex.app` and the same for `kiorex://doctor/<id>`, `kiorex://q/<code>`, `kiorex://appointment/<id>`. *Expected:* as the iOS steps.
+2. App Links (needs the signing fingerprint published): `adb shell pm verify-app-links --re-verify com.kiorex.app` then `adb shell pm get-app-links com.kiorex.app` *Expected:* `kiorex.com: verified`. Then `adb shell am start -W -a android.intent.action.VIEW -d 'https://kiorex.com/ar/eg/doctor/<id>'`.
+3. Deferred link (Play install referrer): needs a build installed from the Play internal testing track through the fallback page after **Allow**; the first launch then shows the invitation screen with the code and a second cold start shows nothing (read once). There is no reliable local `adb` simulation of the Play referrer, so the parsing and read-once behaviour are covered by the jest fixtures (`deferredLink.test.ts`); the on-device path is NOT verified until a Play build exists.
+4. Staff app: `adb shell am start -W -a android.intent.action.VIEW -d 'kiorly://open/rx:<id>' com.kiorly.app`.
+
+**Web fallback and store pages (browser on a phone or device emulation)**
+1. Open `http://localhost:4000/r/AB12CD3456?l=en` (API on :4000; set `ANDROID_PLAY_STORE_URL` and `IOS_APP_STORE_URL` to see the store buttons). *Expected:* "Open in the app", "Continue on the web", consent with **Allow** and **Not now**; the network tab shows no `touch` call and the Play link has no `referrer=` before the choice. **Allow:** one `POST /api/v1/growth/v1/touch` (`landingKind`, `ref`, `dwellMs` only), the Play link gains `referrer=kxref%3Dr.AB12CD3456` and the claim code appears. **Not now:** nothing is sent.
+2. `/q/7xk2m9qp` (provider QR), `/a/<id>` (appointment, no consent block), `/r/abc` and `/q/7XK2M9QI` *Expected:* 404, nothing echoed. Add `?to=https://evil.example&next=//evil.example` to a valid link *Expected:* ignored, no redirect.
+3. With `growth.deep_links` OFF in the ops console, `/r/<code>` redirects (302) to the website; the well-known files stay served.
