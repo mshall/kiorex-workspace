@@ -57,6 +57,11 @@ Server side of "Sign in with Kiorex Passport" for the provider products. Passpor
 - Body `{eventId,type,aggregateType,aggregateId,occurredAt,target:"KIOREX",data}`; Kiorex de-duplicates on eventId. Kiorly emits `RESCHEDULED` (not `APPOINTMENT_RESCHEDULED`); `depositRefundable` may be absent → apply policy fallback. See kiorex-contracts/CHANGELOG.md.
 - `@kiorex/contracts` local package: `file:../../../kiorex-contracts/dist-pack/kiorex-contracts-1.0.0.tgz` from apps inside a monorepo (rebuild: `npm run pack:local` in kiorex-contracts).
 
+## Growth link registry (contracts 1.11.0, 24 Nov 2026)
+- The Clinic owns provider link codes. It emits `ReferralLinkCreated` (with `orgRef` = tenant id) and `ReferralLinkRevoked` on the same outbox webhook as every other event; Kiorex `LinkRegistryService` stores code -> organisation and `linkStatus` (`ACTIVE|PAUSED|REVOKED`).
+- Signed lookup, marketplace HMAC: `GET {clinic}/marketplace/v1/referral-links/{code}` (404 `REFERRAL_LINK_NOT_FOUND`) and the reconciliation feed `GET .../referral-links?updatedSince=&limit=&cursor=` (oldest first). Kiorex confirms an unconfirmed code at decision time and reconciles hourly.
+- `POST /marketplace/v1/bookings` documents the optional `lt` (Clinic link token); a revoked or paused code never makes a NEW booking provider-led. Evidence (`GET /api/v1/growth/v1/evidence/{bookingId}`) is signed with the marketplace request HMAC plus `X-Kiorly-Org-Ref`; the Clinic uses it with `GROWTH_EVIDENCE_MODE=real` (default `mock`).
+
 ## Feature-flag control plane (ADR-023/024/025, KX-08 §08–09, KX-05 FF01–06)
 - Registry + super admin live in Kiorex API. Snapshot: `GET http://localhost:4000/api/v1/control/v1/flags/snapshot?product=<kiorly-clinic|kiorex|kiorex-account|kiorly-pharmacy|kiorly-lab>`
   - Auth: `X-Kiorex-Product-Key` + HMAC signature (same scheme as marketplace HMAC; dev key `ff_<product>_dev`, secret `ff_dev_secret_change_me`).
