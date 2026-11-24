@@ -126,6 +126,33 @@ Context: `_docs/rev23/KX-27..KX-33` and `_docs/growth/`. None of these is done; 
 | 11.14 | Confirm the 50/25/15/10 interpretation and approve or replace the illustrative EGP 150,000 monthly marketing budget; reconcile with KX-13 and KX-14 | F | KX-29, KX-13 section 13 |
 | 11.15 | Decide SSR as a separate App Runner service from day one (cost) and the deploy plan | F, A | FD-17, FD-26 |
 
+## 12. Security (added 24 Nov 2026 after the internal penetration test)
+
+Source: `security/PENTEST_2026-11_REPORT.md` (findings, fixes, residual risk, honest gaps). Owner letters as above (F founder, C counsel, A AWS/org admin, D dev team, V vendor). Everything here is operator action or a human decision; the code fixes are already in.
+
+| # | Item | Owner | Notes |
+|---|---|---|---|
+| 12.1 | **External penetration test** by an independent firm on staging, after 12.2 to 12.6 are applied: all four APIs, web apps, Kiorly Home, managed Passport, widget and public site, staff app (iOS, Android), AWS configuration, telehealth, a business-logic track on commission and attribution. Retest included, CVSS report, attestation letter. Fix all High before launch (KX-10). Repeat yearly and after major releases. | F, V | NH017; scope text in the report, section 6 |
+| 12.2 | Set `TRUSTED_PROXY_HOPS` (CloudFront + App Runner = `2`) on every API; verify the real header chain in staging. Without it all clients share one IP bucket and per-IP limits protect nothing. Set `CORS_ORIGINS` for the Kiorex API and confirm the Clinic web origin (production CORS is an allow-list). | D, A | New environment variables in each service's env |
+| 12.3 | **WAF**: attach the web ACL from each `platform/waf-rules.json` to the CloudFront distributions: managed groups (common, known bad inputs, SQLi, IP reputation, bot control), rate-based rules per path (`/auth/*`, OTP, `/partners/v1/*`, `/growth/v1/*`, `/q/*`, `/r/*`, `/b/*`), body size limit, allow-list for `/admin/*` and the ops console, block `/docs*`, `/dev/*` and `/api/docs*` at the edge, Origin-header and Host-header rules. Start in count mode, then block. | A, D | KX-21 HB01 |
+| 12.4 | **Bug bounty / vulnerability disclosure**: publish `security.txt` (`/.well-known/security.txt`) and a disclosure policy with safe-harbour wording (counsel), a mailbox that reaches two people, a triage SLA (acknowledge in 2 working days). Start with a private programme after the external test; public only when someone owns triage. | F, C | Reward budget is a founder decision |
+| 12.5 | **Key and secret rotation**: rotate every secret in section 3 at go-live (nothing from the dev stack is reused), then every 90 days (Secrets Manager rotation); rotate immediately on staff exit or suspected leak. Includes `JWT_SECRET` (>= 32 random characters), `FIELD_ENCRYPTION_KEY` (rotation needs a re-encryption job: plan it before real national IDs are stored), webhook and HMAC secrets (dual-secret window already supported for lead signing), integration client secrets, TURN and PSP keys. Production boots fail by design on missing or published dev secrets: if a service will not start, that is the control working. | A, D | Runbook per secret in `Docs/` of each repo |
+| 12.6 | Remove staging bring-up flags when real values exist: `ALLOW_INSECURE_DEFAULT_SECRETS`, `SANDBOX_PAYMENTS_ALLOWED` (staging tfvars). Set `PSP_MODE` / `PAYMENT_MODE=real` before production traffic (production tfvars still say `TODO_NEEDS_HUMAN`; with a mock PSP the sandbox checkout would be the only payment path). Keep `SWAGGER_ENABLED` unset or `false` in production. | D, F | |
+| 12.7 | **Incident response**: name the incident commander and a deputy, and a 24-hour contact list: founder, tech lead, AWS account admin, counsel / DPO, PSP and WhatsApp vendor security contacts, hosting support. Fill the table below. Breach clock: 72 h to the regulator and 3 days to subjects (runbook `PDPC_DATA_BREACH.md`). Practise once (tabletop) before launch. | F, C | `[NEEDS_HUMAN]` placeholders: no real names or numbers are recorded in this repo |
+| 12.8 | Audit and detection: CloudTrail organisation trail to an immutable bucket, GuardDuty and Malware Protection for S3 on the uploads and import-staging buckets (the onboarding scanner is a mock until then), alarms on 401 / 403 / 429 spikes and on `auth.dev_login`-style audit actions, log review owner. | A, D | KX-21 |
+| 12.9 | Open product decisions from the report: credentials inside the tenant SQL export (KX-PT-L4), platform-level restore of marketplace appointments (L5), Clinic role-matrix review with the product owner (L6), shared store for nonces and rate limits (L1). | F, D | |
+| 12.10 | Re-run `cd e2e && npm run test:security` against every release candidate (production-mode boot, throw-away databases) and keep the report with the release evidence. | D | |
+
+Incident contacts (fill before launch; do not commit real phone numbers to the repo, keep them in the password manager and print the sheet):
+
+| Role | Name | Primary contact | Backup |
+|---|---|---|---|
+| Incident commander | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` |
+| Deputy / technical lead | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` |
+| AWS account admin | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` |
+| Counsel / data-protection officer | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` |
+| PSP, WhatsApp and SMS vendor security desks | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` |
+
 ## 10. Go-live runbook (order)
 
 1. Decide and create the production AWS account (1.1, 1.2, 1.3). 2. Domains and certificates (section 2). 3. Apply infrastructure, staging first (1.4). 4. Secrets (section 3) and provider setup (section 5) in staging; sandbox-verify every provider. 5. Passport clients (section 4). 6. Staging soak with demo data, run all e2e suites and the HTML test guide. 7. Counsel and sign-offs (sections 6, 7). 8. Store accounts, builds, listings (section 8). 9. Record real gate evidence (6.1). 10. Production apply and deploy by the founder; smoke test with the live checklist; monitor.
