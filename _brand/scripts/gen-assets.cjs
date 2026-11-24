@@ -53,6 +53,19 @@ async function build(prod, D, vb0) {
     <polyline points="373,237 505,440 373,643" fill="none" stroke="#fff" stroke-width="38"/><polyline points="720,237 588,440 720,643" fill="none" stroke="${A.dark}" stroke-width="38"/>
     <path d="M222 440 H510 L525 428 L540 466 L557 392 L574 460 L588 441 H877" fill="none" stroke="#F08A75" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/></g></svg>`), 1024, o("expo", "splash-icon-dark.png"));
   await png(iconSvg, 48, o("expo", "favicon.png"));
+  // Android status-bar notification icon (expo-notifications `icon`): white on transparent, derived from the mono mark SVG (never redrawn). Android keeps only the alpha channel.
+  // The pulse is thickened (11 -> 22) so it stays visible at 24 dp; everything else is the mark's own geometry. 96x96 = the file the plugin takes; it generates the density set itself, we also ship the set.
+  const monoMark = fs.readFileSync(out("svg", "kiorex-mark-mono.svg"), "utf8").replace(/currentColor/g, "#FFFFFF").replace('stroke-width="11"', 'stroke-width="22"');
+  const notif = async (size) => {
+    const inner = Math.round(size * 0.84), h = Math.round((inner * 468) / 688);
+    const mark = await sharp(Buffer.from(monoMark), { density: 1200 }).resize(inner, h).png().toBuffer();
+    return sharp({ create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).composite([{ input: mark, left: Math.floor((size - inner) / 2), top: Math.floor((size - h) / 2) }]).png().toBuffer();
+  };
+  fs.writeFileSync(o("expo", "notification-icon.png"), await notif(96));
+  for (const [d, sz] of Object.entries({ mdpi: 24, hdpi: 36, xhdpi: 48, xxhdpi: 72, xxxhdpi: 96 })) {
+    fs.mkdirSync(o("expo", "notification-icons", `drawable-${d}`), { recursive: true });
+    fs.writeFileSync(o("expo", "notification-icons", `drawable-${d}`, "notification_icon.png"), await notif(sz));
+  }
   // OG image 1200x630: Ground background + the product lockup
   const lockup = fs.readFileSync(out("svg", `${prod === "kiorly" ? "kiorex" : prod}-lockup.svg`), "utf8").trim().replace(/<svg[^>]*>/, (m) => m.replace(/ (width|height)="[^"]*"/g, ""));
   const vb = lockup.match(/viewBox="([^"]+)"/)[1].split(" ").map(Number);
