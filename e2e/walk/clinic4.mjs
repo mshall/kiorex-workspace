@@ -1,0 +1,24 @@
+import { chromium, open, shot, loadAuth, URLS } from './lib.mjs';
+import { snapAll, FULL, STD, problems } from './common.mjs';
+import { clinicGet } from './api.mjs';
+const browser = await chromium.launch(); const R = '[data-testid=kiorex-connect]';
+await clinicGet('clinicB', '/kiorex/connect?clinicId=x').catch(() => {});
+await snapAll(browser, { product: 'clinic', authKey: 'clinicB', path: '/kiorex/connect', step: '5-live-passport-prompt', ready: R, combos: FULL });
+const { page, context, logs } = await open(browser, { product: 'clinic', auth: loadAuth('clinicB') });
+await page.goto(URLS.clinic + '/kiorex/connect'); await page.waitForSelector(R); await page.waitForTimeout(1000);
+console.log('status:', await page.locator('[data-testid=connect-status]').innerText(), '| passport card:', await page.locator('[data-testid=connect-passport]').count(), '| doctor listing:', (await page.locator('[data-testid^=connect-doctor-]').first().innerText()).replace(/\n/g, ' '));
+const pauseBtn = page.locator('[data-testid^=connect-doctor-] button', { hasText: /^Pause$/ });
+console.log('pause buttons', await pauseBtn.count());
+await pauseBtn.first().click(); await page.waitForTimeout(2000);
+console.log('after pause:', (await page.locator('[data-testid^=connect-doctor-]').first().innerText()).replace(/\n/g, ' '));
+await shot(page, 'clinic', 'en', 'light', 1440, '6-doctor-paused-by-owner');
+await page.locator('[data-testid^=connect-doctor-] button', { hasText: /^Resume$/ }).first().click(); await page.waitForTimeout(2000);
+console.log('after resume:', (await page.locator('[data-testid^=connect-doctor-]').first().innerText()).replace(/\n/g, ' '));
+// passport default prompt
+await page.click('[data-testid=connect-passport-set]').catch((e) => console.log('passport set click failed', String(e).slice(0, 80))); await page.waitForTimeout(1500);
+console.log('passport card text:', (await page.locator('[data-testid=connect-passport]').innerText()).replace(/\n/g, ' | '));
+const href = await page.locator('[data-testid=connect-passport] a').getAttribute('href'); await page.locator('[data-testid=connect-passport] a').click(); await page.waitForTimeout(1500);
+console.log('invite link', href, '->', page.url().replace(URLS.clinic, ''), '|', await page.locator('h1').first().innerText().catch(() => 'no h1'));
+console.log(logs);
+await context.close();
+console.log(problems.join('\n') || 'no problems'); await browser.close();
