@@ -21,6 +21,7 @@ Tags: Metrics · Definitions · Denominators · Revenue vs GBV · CAC · LTV · 
 | Revision | Date | Change | Author |
 |---|---|---|---|
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from architecture decisions section 17 and the work-packages finance section | Documentation agent |
+| Rev 2.7 | 25 Nov 2026 | Revenue definition amended for the two credit systems and sponsored promotions (ADR-048 Proposed); product decisions are counts, not revenue | W7 A4 documentation |
 | Rev 2.4 | 24 Nov 2026 | Re-verified against `growth/analytics/*`: endpoints, k = 10 masking with secondary suppression, revenue definition and its two deviations (confirmation inferred at COMPLETED, BILLED not observed), canonical events actually emitted, worked examples tested | Documentation agent |
 
 ## Contents
@@ -74,7 +75,7 @@ Under ADR-007 Kiorex earns EGP 40 only on an attended new patient, once per pati
 | Metric | Definition | Denominator or filter | Source |
 |---|---|---|---|
 | Gross booking value (GBV) | Sum of visit fees of CONFIRMED bookings | Informational; never revenue | `BookingIntent` |
-| Kiorex revenue | Sum of commission charges in CONFIRMED or BILLED (EGP 40 flat today) plus sponsored fees later, net of reversals and waivers; excludes provider SaaS revenue (a separate line in KX-13) | Period by charge confirmation date | `KiorexCommissionCharge` |
+| Kiorex revenue | Sum of commission charges in CONFIRMED or BILLED (EGP 40 flat today), net of reversals and waivers; excludes provider SaaS revenue (a separate line in KX-13). **Rev 2.7 (ADR-048): patient credit, refund credit, provider credit and provider-sponsored discount amounts are never Kiorex revenue** (patient credit is a liability or a marketing expense of the funder, a sponsored amount is provider-funded and is neither Kiorex revenue nor a Kiorex marketing expense); the Kiorex fee of a sponsored booking is computed on the fee before the sponsored discount (`SPONSORED_PROMOTION_POLICY.commissionBasis = GROSS_BEFORE_SPONSORED`). Pharmacy, lab and nurse decisions (`GrowthProductDecision`) carry no charge: the commission link of products is inert (AD-13) | Period by charge confirmation date | `KiorexCommissionCharge` |
 | Attended new patient (ANP) | An appointment attended with `isNewPatientAtBooking` true | Counted once per patient per provider network in the lookback | Clinic stamp |
 | Provider-led share | `PROVIDER_LED / (PROVIDER_LED + MARKETPLACE + UNATTRIBUTED)` bookings (or attended new patients; always state which) | Same period and market | Decisions |
 | Incremental Kiorex bookings | Bookings with origin `MARKETPLACE` | | Decisions |
