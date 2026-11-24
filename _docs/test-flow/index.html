@@ -1253,6 +1253,60 @@ MODULES.push({id:'mobile',ic:'9',title:'Kiorex patient mobile app',blurb:'The pa
   ]}
  ]});
 
+/* ---------------------------------------------------------------- 8f EDGE CASES (EDGE-40..49) */
+MODULES.push({id:'edge',ic:'8f',title:'Edge cases (money, races, hostile input, time zones, narrow and wide screens)',blurb:'What happens at the edges: double clicks, the same webhook twice, two people on the last slot, a cancel racing an accept, forged or expired tokens, hostile text, bad dates, Cairo summer time, 320 px and 2560 px, offline. 24 defects were found and fixed in this sweep; every flow below is also asserted by an automated suite. Dev data only.',
+ intro:'Automated first (about 4 minutes, the suites create and remove their own `edge_*` fixtures): `cd e2e && npx vitest run test/40-edge-money.e2e.ts test/41-edge-booking.e2e.ts test/42-edge-growth.e2e.ts test/43-edge-identity.e2e.ts test/44-edge-vertical.e2e.ts test/45-edge-public-privacy.e2e.ts test/46-edge-tenant.e2e.ts test/47-edge-import.e2e.ts test/48-edge-data.e2e.ts test/49-edge-fuzz.e2e.ts`; browser: `cd kiorex-platform/apps/web && npx playwright test e2e/edge-ui.spec.ts --project=chromium`. Full scenario list, root causes and remaining risks: `_docs/test-flow/EDGE_CASE_REPORT_2026-11.md`. Kiorex {web}, API {kapi}, Ops {ops}, Clinic API {capi}.',
+ flows:[
+ {id:'E1',title:'Double pay and pay after cancel',goal:'A deposit is charged once and a payment that arrives after a cancellation is refunded.',who:['hoda','ops_super'],links:[['Kiorex patient web','{web}'],['Ops payments','{ops}']],
+  steps:[
+   ['Book a deposit-required visit (a KX-DEV doctor with a test deposit). Open the checkout, click Pay twice quickly, finish in both tabs.','One payment and one deposit; the second tab says it is already paid. Ops -> Payments shows one captured intent for the booking.'],
+   ['Start another deposit checkout, cancel the booking in a second tab, then complete the payment in the first.','The payment is captured and refunded automatically, once, for the full amount; the booking stays cancelled.'],
+   ['Ops -> Payments: refund a completed (released) visit deposit.','Refused: the deposit was already released to the clinic.']
+  ]},
+ {id:'E2',title:'Last slot and reschedule collisions',goal:'Two people never get the same slot, and the loser is told clearly.',who:['hoda','samir'],links:[['Kiorex patient web','{web}']],
+  steps:[
+   ['Two browsers, two patients, the same doctor and slot: press Hold together.','One hold; the other sees "slot taken" with three alternatives.'],
+   ['Two confirmed bookings: move both to one free slot at the same moment.','One moves; the other gets "slot taken", never "clinic system busy".'],
+   ['Open a hold, wait past five minutes (or set the hold time back in the database), then confirm.','Refused with an expired-hold message and alternatives; no appointment in Kiorly.']
+  ]},
+ {id:'E3',title:'Webhooks twice, late and malformed',goal:'The same event twice changes nothing; a failed one can be retried.',who:['ops_super'],links:[['Ops outbox','{ops}']],
+  steps:[
+   ['Send a signed PSP capture 8 times at once (`e2e/src/edge.ts` `pspDeliver`, or the suite 40 M1).','All answer 200; one `CAPTURED`, the rest `DUPLICATE`; one ledger entry.'],
+   ['Send a capture with a wrong amount, then the same event id with the right amount.','First: 409 `AMOUNT_MISMATCH`, nothing recorded as processed; second: captured.'],
+   ['Send a signed partner envelope with a number as `eventId` (`{"eventId":7,"type":"OrderReady"}`).','400 `INVALID_ENVELOPE`, not a 500 that is retried forever.']
+  ]},
+ {id:'E4',title:'Pharmacy cancel against accept',goal:'The patient and the pharmacist never end in different states.',who:['hoda','ph.pharmacist'],links:[['Kiorex patient web','{web}'],['Pharmacy web','http://localhost:5192']],
+  steps:[
+   ['Place and pay a Kiorex order. In Pharmacy open the inbox; press Accept while the patient presses Cancel.','One wins. Cancelled: patient refunded in full and the pharmacy order is cancelled. Accepted: the patient is told it is too late; no refund.'],
+   ['Repeat three times.','Always consistent; no accepted pharmacy order with a refunded patient.']
+  ]},
+ {id:'E5',title:'Forged, edited and revoked link tokens',goal:'A provider link removes the Kiorex fee only while it is valid.',who:['owner.na'],links:[['Clinic Growth workspace','{clinic}/kiorex/growth'],['Kiorex patient web','{web}']],
+  steps:[
+   ['Create a link, open its short URL, then change one character of the `lt` in the Kiorex URL and book.','The booking works and is NOT fee-free (decision is not PROVIDER_LED).'],
+   ['Revoke the link in the Clinic Growth tab and book again with the old URL.','Not fee-free after the revocation reaches Kiorex (a few seconds).'],
+   ['Use a token older than 72 hours (suite 42 T2).','Expired; not fee-free.']
+  ]},
+ {id:'E6',title:'Cairo summer time',goal:'Times and quiet hours follow Cairo wall-clock time all year.',who:['hoda'],links:[['Kiorex patient web','{web}']],
+  steps:[
+   ['Pick a slot in July and in January. Start the WhatsApp booking (log channel) and compare the time in the message with the Kiorly slot.','Identical wall-clock time in both seasons (summer is +3).'],
+   ['Check the 24 April 2026 and 29 October 2026 nights with the unit spec `market-time.unit.spec.ts`.','A message deferred by the 22:00 to 08:00 quiet window is sent at 08:00 local on both nights.']
+  ]},
+ {id:'E7',title:'Hostile text, bad dates and odd numbers',goal:'Nothing answers 500 for a mistake the caller made.',who:['owner.na'],links:[['Clinic web','{clinic}'],['Kiorex API','{kapi}/api/v1/specialties']],
+  steps:[
+   ['`curl "{kapi}/api/v1/search/providers?pageSize=abc"` and `?page=-1`.','At most 30 results; never the whole catalogue; no 500.'],
+   ['`curl "{kapi}/api/v1/providers/<id>/slots?typeId=<t>&from=2026-12-01&to=2026-11-01"`.','400 `INVALID_RANGE`.'],
+   ['In Clinic -> Patients type `%00`-style, 80 emoji, a zero-width run and 5 000 characters into the search box.','No error page; a NUL character is refused with a clear 400.'],
+   ['Run the contract sweep: `cd e2e && npx vitest run test/49-edge-fuzz.e2e.ts`.','Four green tests: no documented operation of Kiorex, Clinic, Pharmacy or Lab answers 5xx to hostile ids, queries or bodies.']
+  ]},
+ {id:'E8',title:'Narrow, wide, zoomed, offline, keyboard',goal:'The patient web and the sign-in screens stay usable in awkward conditions.',who:['hoda'],links:[['Kiorex patient web','{web}'],['Clinic sign-in','{clinic}/signin']],
+  steps:[
+   ['Resize to 320 px, 640 px (= 200 % zoom) and 2560 px; switch Arabic and English.','No horizontal scroll (the specialty chip row scrolls on purpose); every button reachable.'],
+   ['Search with a 60-character Arabic name with mixed digits, 80 emoji and markup.','No overflow, nothing executes.'],
+   ['Throttle the network to 3 s, then offline, then back; press back, forward and refresh in the booking flow; double-click a slot.','A loading state, then results; offline keeps the page readable; one hold request per click.'],
+   ['Tab through the page without a mouse; turn on reduced motion in the system settings.','A focus ring on every stop; no looping animation.']
+  ]}
+ ]});
+
 /* ---------------------------------------------------------------- 10 CHAINS */
 MODULES.push({id:'chains',ic:'10',title:'Cross-product chains',blurb:'The end-to-end journeys that touch more than one product: use two browser windows (patient + staff) and watch events arrive.',
  flows:[
