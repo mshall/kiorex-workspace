@@ -238,7 +238,9 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     try {
       await setFlag(ops, 'pharmacy.kiorex_orders', 'OFF', 'ORG', orgId);
       await waitPartnerFlags();
-      const read = await kiorex(p1, 'GET', '/pharmacy/pharmacies');
+      // with several live partners an unscoped listing skips a partner that switched itself off (per-registration routing); asking for THIS partner surfaces its FEATURE_DISABLED
+      const demoReg = (await q('kiorex_platform', `select id from "PartnerRegistration" where "clientKey" = 'kx_dev_pharmacy_client'`))[0].id;
+      const read = await kiorex(p1, 'GET', `/pharmacy/pharmacies?partnerId=${demoReg}`);
       expect(read.status).toBe(403);
       expect(read.body).toMatchObject({ code: 'FEATURE_DISABLED', key: 'pharmacy.kiorex_orders', partner: 'pharmacy' });
       expect((await pharmacy(pharm, 'GET', '/kiorex-orders')).status).toBe(403);
@@ -282,12 +284,16 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     expect((await q('kiorly_pharmacy', `select type from "OutboxEvent" where "aggregateId" = $1 order by "occurredAt"`, [o.id])).map((r: any) => r.type)).toEqual(['OrderReady', 'OrderOutForDelivery', 'DispenseCompleted']);
     expect((await q('kiorex_platform', `select type from "WebhookReceipt" where "aggregateId" = $1 and source = 'pharmacy' order by "receivedAt"`, [o.id])).map((r: any) => r.type)).toEqual(['OrderReady', 'OrderOutForDelivery', 'DispenseCompleted']);
     const sub0 = (await q('kiorex_platform', `select sub from "PharmacyOrder" where id = $1`, [o.id]))[0].sub;
-    const logs = await waitFor('out-for-delivery notification on the mock channels', async () => { const r = await q('kiorex_platform', `select channel, locale, body from "MessageLog" where sub = $1 and "templateId" = 'TODO_NEEDS_HUMAN_pharmacy_order_out_for_delivery' and "createdAt" > (now() at time zone 'utc') - interval '5 minutes'`, [sub0]); return r.length >= 1 ? r : false; }, 15_000, 500) as { channel: string; locale: string; body: string }[];
-    expect(logs.every((l) => (l.locale === 'ar' ? /في الطريق/ : /out for delivery/i).test(l.body))).toBe(true); // rendered in the patient's language (AR/EN templates), never the raw key
     expect((await kiorex(p1, 'GET', '/me/notifications')).body.some((n: any) => n.kind === 'PHARMACY_ORDER_OUT_FOR_DELIVERY')).toBe(true);
-    // patient was notified at READY and DISPENSED (mock WhatsApp + push go through the same templates and consent checks as real ones)
-    const sub = (await q('kiorex_platform', `select sub from "PharmacyOrder" where id = $1`, [o.id]))[0].sub;
-    await waitFor('patient notified (ready + dispensed)', async () => (await q('kiorex_platform', `select count(distinct "templateId")::int c from "MessageLog" where sub = $1 and "templateId" in ('TODO_NEEDS_HUMAN_pharmacy_order_ready','TODO_NEEDS_HUMAN_pharmacy_order_dispensed') and "createdAt" > (now() at time zone 'utc') - interval '5 minutes'`, [sub]))[0].c >= 2, 10_000, 500);
+    // MessageLog rows (WhatsApp / push) honour the market quiet hours (22:00-08:00 Cairo, QUIET_HOURS_*): outside them they are sent at once, inside they are held until morning, so assert them only when they can be sent
+    const cairoHour = (new Date().getUTCHours() + 2) % 24; const quiet = cairoHour >= 22 || cairoHour < 8;
+    if (!quiet) {
+      const logs = await waitFor('out-for-delivery notification on the mock channels', async () => { const r = await q('kiorex_platform', `select channel, locale, body from "MessageLog" where sub = $1 and "templateId" = 'TODO_NEEDS_HUMAN_pharmacy_order_out_for_delivery' and "createdAt" > (now() at time zone 'utc') - interval '5 minutes'`, [sub0]); return r.length >= 1 ? r : false; }, 15_000, 500) as { channel: string; locale: string; body: string }[];
+      expect(logs.every((l) => (l.locale === 'ar' ? /في الطريق/ : /out for delivery/i).test(l.body))).toBe(true); // rendered in the patient's language (AR/EN templates), never the raw key
+      // patient was notified at READY and DISPENSED (mock WhatsApp + push go through the same templates and consent checks as real ones)
+      const sub = (await q('kiorex_platform', `select sub from "PharmacyOrder" where id = $1`, [o.id]))[0].sub;
+      await waitFor('patient notified (ready + dispensed)', async () => (await q('kiorex_platform', `select count(distinct "templateId")::int c from "MessageLog" where sub = $1 and "templateId" in ('TODO_NEEDS_HUMAN_pharmacy_order_ready','TODO_NEEDS_HUMAN_pharmacy_order_dispensed') and "createdAt" > (now() at time zone 'utc') - interval '5 minutes'`, [sub]))[0].c >= 2, 10_000, 500);
+    }
   });
 
   it('OUT_FOR_DELIVERY is for delivery orders only: a pickup order cannot be sent out (409 NOT_A_DELIVERY_ORDER), and an early request on a delivery order is refused', async () => {
