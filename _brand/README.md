@@ -6,7 +6,7 @@ Single source of truth for logo, tokens and generated assets. Palette: Indigo `#
 | Path | What |
 |---|---|
 | `tokens.json` | ONE source: ramps, semantic, light/dark themes, type scale, spacing, radius, elevation, motion, focus |
-| `tokens.css` | generated CSS vars (`--kx-*`), `[data-theme=dark]`/`.dark` (+ `prefers-color-scheme` when `data-theme="auto"`), Arabic font switch, coral focus ring, reduced-motion, `.kx-pulse-draw`, `.kx-skeleton`, `.kx-tnum` |
+| `tokens.css` | generated CSS vars (`--kx-*`), `[data-theme=dark]`/`.dark` (+ `prefers-color-scheme` when `data-theme="auto"`), Arabic font switch, indigo focus ring, reduced-motion, `.kx-pulse-draw`, `.kx-skeleton`, `.kx-tnum` |
 | `shadcn-bridge.css` | generated HSL-triplet vars (`--background`, `--primary`, `--ring`...) for shadcn/Radix-style Tailwind configs |
 | `tailwind-preset.cjs` | generated Tailwind preset (`kx-*` colours map to the CSS vars, so dark mode is automatic) |
 | `theme.ts` | generated React Native theme (`theme`, `colorsFor(scheme)`, `shadow(level)`) |
