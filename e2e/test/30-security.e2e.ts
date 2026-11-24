@@ -4,6 +4,7 @@ import { KIORLY, KIOREX, PHARMACY, LAB, PASSPORT, PATIENT_1 } from '../src/env.j
 import { kiorex, kiorly, patientLogin, q, staffLogin, syncProviders, waitFor } from '../src/clients.js';
 import { book, hold, freeSlots, kiorlyAppointmentFor, providerBySpecialty, tokens, type Provider } from '../src/fixtures.js';
 import { decodeJwt } from '../src/passport.js';
+import { growthRoutes } from '../src/growth-p3.js';
 
 /**
  * PENTEST 2026-11 security regression suite (_docs/security/PENTEST_2026-11_REPORT.md).
@@ -316,6 +317,33 @@ describe.skipIf(!ON)('30. security (production-mode boot, throw-away databases)'
       }
     });
   });
+  describe('l. wave 7 (GRW-GC-4): the growth family in production mode', () => {
+    it('every growth route read from the controllers: non-public routes need a session (401), admin routes refuse a patient (403), public routes answer without a 5xx and never hand out a stack', async () => {
+      const routes = await growthRoutes(); expect(routes.length).toBeGreaterThan(120);
+      const patient = t.p1; const bad: string[] = [];
+      for (const r of routes) {
+        const url = `${KIOREX}/api/v1${r.path}`; const send = (tok?: string) => fetch(url, { method: r.method, headers: { 'content-type': 'application/json', ...(tok ? { authorization: `Bearer ${tok}` } : {}) }, body: r.method === 'GET' ? undefined : '{}' }).then(async (x) => ({ status: x.status, text: await x.text() }));
+        const anon = await send(); if (anon.status >= 500) bad.push(`anon ${r.method} ${r.path} -> ${anon.status}`);
+        if (/stack|at \w+ \(|node_modules|PrismaClient/.test(anon.text)) bad.push(`anon ${r.method} ${r.path} leaks internals`);
+        if (!r.public) { if (anon.status !== 401) bad.push(`needs a session: ${r.method} ${r.path} -> ${anon.status}`); if (r.path.startsWith('/admin/') || r.path.startsWith('/ops/')) { const p = await send(patient); if (p.status !== 403) bad.push(`patient on admin ${r.method} ${r.path} -> ${p.status}`); } }
+      }
+      expect(bad).toEqual([]);
+    }, 240_000);
+    it('OpenAPI and docs are hidden, dev feature routes are gone, no fixture gate evidence exists and no launch-locked growth flag is effective', async () => {
+      for (const p of ['/api/docs', '/api/docs-json', '/api/openapi.json', '/api/v1/openapi.json', '/api/v1/docs', '/api/v1/growth/v1/openapi', '/swagger', '/api/swagger-json']) expect((await get(KIOREX + p)).status, p).toBe(404);
+      for (const p of ['/api/v1/dev/messaging/inbound', '/api/v1/dev/channels/whatsapp/conversation', '/api/v1/dev/payments', '/api/v1/dev/samples']) expect((await get(KIOREX + p)).status, p).toBe(404);
+      expect(Number((await q('kiorex_platform', `select count(*)::int c from "FlagGateEvidence" where "gateId" like 'DEV-TEST-FIXTURE%'`))[0].c)).toBe(0);
+      const flags = (await kiorex(t.ops, 'GET', '/admin/flags')).body; const arr = Array.isArray(flags) ? flags : (flags.flags ?? flags.items ?? []);
+      for (const f of arr.filter((x: any) => ['growth.patient_referral', 'growth.rewards', 'growth.patient_credit', 'growth.sponsored_promotions', 'growth.marketing_messaging', 'growth.analytics_visitor', 'kiorex.whatsapp_ai_assistant', 'growth.support_goodwill'].includes(x.key))) expect(f.effective?.global, f.key).toBe(false);
+    });
+    it('experiment, assignment and referral endpoints: no consent means no cookie, no assignment and no data; a forged consent header without the visitor cookie is the same; CORS never reflects an arbitrary origin', async () => {
+      const r = await fetch(`${KIOREX}/api/v1/growth/v1/experiments/assignments`, { headers: { origin: 'https://evil.example', 'x-kx-consent': 'analytics' } });
+      expect(r.status).toBe(200); expect(r.headers.get('set-cookie')).toBeNull(); expect((await r.json() as any).assignments).toEqual([]);
+      expect(r.headers.get('access-control-allow-origin')).not.toBe('https://evil.example'); expect(r.headers.get('access-control-allow-credentials')).not.toBe('true');
+      expect(r.headers.get('x-powered-by')).toBeNull(); expect(r.headers.get('x-content-type-options')).toBe('nosniff');
+    });
+  });
+
 });
 
 void createSign; void LAB;

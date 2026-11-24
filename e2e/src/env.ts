@@ -5,7 +5,9 @@ export const KIORLY_API = `${KIORLY}/api/v1`;
 export const KIOREX_API = `${KIOREX}/api/v1`;
 export const MKT = `${KIORLY}/marketplace/v1`;
 /** E2E_SEC_STACK=1 points every DB helper at the throw-away sec_* clones (scripts/sec-stack.sh) used by the destructive security suite. */
-export const DB = (name: string) => `postgresql://postgres:postgres@127.0.0.1:5433/${process.env.E2E_SEC_STACK && name !== 'kiorex_account' ? 'sec_' : ''}${name}`; // Passport (:4400) is shared, never cloned
+/** E2E_DB_MAP="kiorex_platform=my_clone,kiorly=other" points single helpers at private clones (a lane running its own API instance); it wins over the sec_ prefix. */
+const DB_MAP = new Map((process.env.E2E_DB_MAP ?? '').split(',').filter(Boolean).map((p) => p.split('=') as [string, string]));
+export const DB = (name: string) => `postgresql://postgres:postgres@127.0.0.1:5433/${DB_MAP.get(name) ?? `${process.env.E2E_SEC_STACK && name !== 'kiorex_account' ? 'sec_' : ''}${name}`}`; // Passport (:4400) is shared, never cloned
 export const MKT_KEY = 'kx_dev_client';
 export const MKT_SECRET = 'kx_dev_secret_change_me';
 export const WEBHOOK_SECRET = 'kx_dev_webhook_secret';
