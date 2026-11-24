@@ -197,7 +197,7 @@ describe.skipIf(!ON)('30. security (production-mode boot, throw-away databases)'
       const w = rs.find((r) => r.status === 201)!; const owner = rs.indexOf(w) % 2 ? t.p1 : t.p2;
       // parallel confirms, same key and different keys: one booking, one Kiorly appointment
       const same = await Promise.all(Array.from({ length: 6 }, () => kiorex(owner, 'POST', `/bookings/${w.body.id}/confirm`, { marketplaceConsent: true, remindersConsent: true }, { 'Idempotency-Key': 'sec-same' })));
-      expect(same.every((r) => r.status === 200)).toBe(true);
+      expect(same.map((r) => `${r.status}${r.status === 200 ? '' : ' ' + JSON.stringify(r.body).slice(0, 120)}`), 'six parallel confirms with ONE idempotency key all answer 200 (the first does the work, the rest replay it)').toEqual(Array(6).fill('200'));
       await Promise.all(Array.from({ length: 4 }, (_, i) => kiorex(owner, 'POST', `/bookings/${w.body.id}/confirm`, { marketplaceConsent: true, remindersConsent: true }, { 'Idempotency-Key': 'sec-diff-' + i })));
       await waitFor('kiorly appointment', async () => (await q('kiorly', `select 1 from "Appointment" where "externalReference" = $1`, [w.body.id]))[0]);
       expect(await q('kiorly', `select 1 from "Appointment" where "externalReference" = $1`, [w.body.id])).toHaveLength(1);

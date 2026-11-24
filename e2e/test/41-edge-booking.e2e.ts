@@ -56,6 +56,21 @@ describe('B. Last-slot contention', () => {
     await kiorex(t.p2, 'POST', `/bookings/${again.body.id}/release`);
   });
 
+  it('B6 six parallel confirms of one hold with ONE idempotency key, 15 rounds: all answer 200, the booking ends PENDING_CLINIC / CONFIRMED (never EXPIRED behind a confirmed Clinic appointment), one appointment', async () => {
+    const bad: string[] = [];
+    for (let round = 0; round < 15; round++) {
+      const slot = await pickSlot(t.p1, p); const h = await hold(t.p1, p, slot);
+      if (h.status !== 201) continue; // the slot was taken by an earlier round's cache: not what this test is about
+      const rs = await Promise.all(Array.from({ length: 6 }, () => kiorex(t.p1, 'POST', `/bookings/${h.body.id}/confirm`, confirmBody, { 'Idempotency-Key': `b6-${round}` })));
+      if (rs.some((r) => r.status !== 200)) bad.push(`round ${round}: ${rs.map((r) => r.status).join(',')}`);
+      await waitFor('settled', async () => ['PENDING_CLINIC', 'CONFIRMED', 'EXPIRED'].includes((await kiorex(t.p1, 'GET', `/bookings/${h.body.id}`)).body.status) || undefined, 15_000, 300);
+      const st = (await kiorex(t.p1, 'GET', `/bookings/${h.body.id}`)).body.status;
+      const apts = await q('kiorly', `select count(*)::int c from "Appointment" where "externalReference" = $1`, [h.body.id]);
+      if (st === 'EXPIRED' || apts[0].c !== 1) bad.push(`round ${round}: booking ${st}, ${apts[0].c} Clinic appointment(s)`);
+    }
+    expect(bad).toEqual([]);
+  }, 180_000);
+
   it('B5 release twice, confirm after release, confirm after cancel: all refused, no appointment, slot free', async () => {
     const slot = await pickSlot(t.p1, p);
     const h = await hold(t.p1, p, slot);
