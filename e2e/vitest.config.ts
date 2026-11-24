@@ -8,7 +8,7 @@ class NameSequencer extends BaseSequencer {
 export default defineConfig({
   test: {
     include: ['test/**/*.e2e.ts'], testTimeout: 90_000, hookTimeout: 90_000, fileParallelism: false,
-    globalSetup: ['./test/global.ts'],
+    globalSetup: ['./test/global.ts'], setupFiles: ['./src/http.ts'],
     sequence: { sequencer: NameSequencer },
   },
 });

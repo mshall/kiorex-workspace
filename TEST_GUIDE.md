@@ -232,7 +232,7 @@ Run `cd kiorly && npm run web` and open http://localhost:8082 at phone width.
 
 * The panel heading reads "Test users (dev only)" (EN) / "مستخدمو الاختبار (للتطوير فقط)" (AR) with the DEV tag; the page keeps `dir=rtl` in Arabic and the phone / e-mail text stays left-to-right.
 * After a chip, the destination screen shows the chosen persona (name in the header or account menu); no password or code is typed.
-* Production: `npm run check:dev-test-users` (Clinic web `apps/web`, Pharmacy `apps/web`, Lab `apps/web`, patient app `apps/mobile`, staff app root) builds production + development bundles and fails when the panel or credentials leak.
+* Production: `npm run check:dev-test-users` (Clinic web `apps/web`, Pharmacy `apps/web`, Lab `apps/web`, patient app `apps/mobile`, staff app root) builds production + development bundles and fails when the panel or credentials leak. The same checks now also fail on any local service address (`http(s)://localhost`, `127.0.0.1`, `[::1]`, `.test` URL) in a production build. `kiorex-platform`: `npm run check:bundles` does the same for the patient web, the ops console, the booking widget (app and SDK) and the public SSR site (client and server bundle); Kiorly Home: `npm run check:bundle -w @kiorex/kiorly-home`.
 
 ## 6. Automated smoke test of the panels
 
@@ -362,3 +362,10 @@ By hand (what a human still checks, each *Expected* is what the automation asser
 - **e2e 16 can run any number of times on any day.** Home visits go on random days 2 to 28 ahead and are released afterwards; the Clinic day finds a free 5-minute slot on the clinic's own today (`e2e/src/slots.ts`). If a run is killed half-way, the next run releases the leftovers.
 - **Sign-in limiter is shared.** The Clinic sign-in limiter now lives in Postgres: after many wrong logins in the e2e suite, wait for the window (15 minutes per account) or clear it with `delete from "RateLimitBucket"` on the `kiorly` database.
 - **Health detail is internal.** `curl localhost:3010/api/v1/health/ready` from this Mac still shows providers (loopback, no proxy header); add `-H 'X-Forwarded-For: 203.0.113.9'` to see what the internet sees (status only; `/health/providers` answers 403 `INTERNAL_ONLY`).
+
+
+## Quality checks added 24 Nov 2026 (second closure round)
+
+* **Lighthouse on the public SSR pages.** The audit needs an indexable site, so start a SECOND Kiorex API instance with `SITE_ENVIRONMENT=production`, `JOBS_ENABLED=false` and a free port (the shared dev API on :4000 is `development`, hence `noindex`, which would score SEO 66): `cd kiorex-platform/apps/api && (set -a; . ./.env.example; set +a; NODE_ENV=development PORT=4350 JOBS_ENABLED=false SITE_ENVIRONMENT=production DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/kiorex_platform?schema=public node dist/main.js)`, then `cd ../web && npm run audit:lighthouse -- --base http://localhost:4350 [--runs 3] [--throttling devtools]`. Budgets: `apps/web/lighthouserc.json`. Lab scores differ from field data (one machine, simulated throttling, warm cache): the real-user p75 after launch is what counts. SEO audit: `npm run seo:audit -w apps/api -- --base http://localhost:4350 --host https://kiorex.com`.
+* **Widget against the real Passport popup.** `e2e/scripts/up.sh --restart --only=passport` once (loads the `kiorex-widget` client), then `e2e/scripts/widget-real.sh` (8 Playwright tests, desktop and phone, Arabic and English).
+* **Never-5xx sweeps** (e2e 49) use the bounded keep-alive client in `e2e/src/http.ts`; see `e2e/README.md`.

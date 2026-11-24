@@ -1,0 +1,83 @@
+# Workspace end-to-end suites: the five services (Passport :4400, Kiorly Clinic :3010, Kiorex :4000, Pharmacy :3100, Lab :3200) from the sibling repos, then
+#   - e2e 01..49 (vitest, real HTTP between the services; mock providers)
+#   - 11-nurse-lab on its own throw-away stack (npm run test:nurse)
+#   - 30-security on the isolated production-mode stack (npm run test:security)
+#   - the booking widget against the REAL Passport popup (e2e/scripts/widget-real.sh)
+# Providers are mocked everywhere (sandbox-fake PSP, log messaging, mock video). Nothing is deployed.
+# Manual and nightly only: it checks out seven repositories (needs the secret WORKSPACE_READ_TOKEN, a fine-grained token with read access to them) and takes about 40 minutes.
+# NOT yet executed on GitHub: written from the local scripts (e2e/scripts/up.sh, seed-all.sh) that ran green on 24 Nov 2026; expect to tune paths on the first run.
+name: workspace e2e
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 1 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: e2e 01..49, nurse, security, real-Passport widget
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+          -c max_connections=200
+    env:
+      PGPASSWORD: postgres
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v7
+        with: { path: kiorex-v2 }
+      - name: check out the product repositories next to the workspace
+        run: |
+          set -euo pipefail
+          cd kiorex-v2
+          for r in kiorex-contracts kiorex-platform kiorex-account kiorly-pharmacy kiorly-lab; do
+            git clone --depth 1 "https://x-access-token:${{ secrets.WORKSPACE_READ_TOKEN }}@github.com/mshall/$r.git" "$r"
+          done
+          git clone --depth 1 --branch kiorex "https://x-access-token:${{ secrets.WORKSPACE_READ_TOKEN }}@github.com/mshall/clinics-management.git" clinics-management
+      - uses: actions/setup-node@v7
+        with: { node-version: 26 }
+      - name: databases
+        run: |
+          for d in kiorly kiorly_test kiorex_platform kiorex_platform_test kiorex_account kiorly_pharmacy kiorly_lab; do psql -h 127.0.0.1 -p 5433 -U postgres -c "CREATE DATABASE $d"; done
+      - name: install
+        run: |
+          set -euo pipefail
+          cd kiorex-v2
+          for r in kiorex-contracts kiorex-platform kiorex-account kiorly-pharmacy kiorly-lab clinics-management e2e; do (cd $r && npm ci); done
+      - name: build, migrate, seed and start the five services
+        run: |
+          cd kiorex-v2
+          e2e/scripts/up.sh --build --seed > up.log 2>&1 || { tail -n 80 up.log; exit 1; }
+          scripts/seed-all.sh > seed.log 2>&1 || { tail -n 80 seed.log; exit 1; }
+      - name: e2e 01..49
+        run: cd kiorex-v2/e2e && npx vitest run
+      - name: 11-nurse-lab (own stack)
+        run: cd kiorex-v2/e2e && npm run test:nurse
+      - name: 30-security (isolated production-mode stack)
+        run: cd kiorex-v2/e2e && npm run test:security
+      - name: booking widget against the real Passport popup
+        run: |
+          cd kiorex-v2/kiorex-platform && npx playwright install --with-deps chromium
+          cd .. && e2e/scripts/widget-real.sh --reporter=list
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: e2e-logs
+          path: |
+            kiorex-v2/.e2e/logs
+            kiorex-v2/*.log
+            kiorex-v2/kiorex-platform/apps/widget/test-results
+          retention-days: 7

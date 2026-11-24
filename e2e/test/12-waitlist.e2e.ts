@@ -13,6 +13,8 @@ describe('n. Waitlist autofill against the real Kiorly (KXM-BK-12)', () => {
 
   beforeAll(async () => {
     t = await tokens(); p = await providerBySpecialty(t.p1, 'paediatrics'); staff = await staffLogin('kxdev.mona.fahmy@kiorly.dev');
+    // isolation: join is idempotent per patient+doctor+type, and an entry left by an aborted earlier run (or an overlapping suite) would absorb the offer this file waits for
+    for (const e of ((await kiorex(t.p1, 'GET', '/waitlist')).body as any[]) ?? []) if (['WAITING', 'OFFERED'].includes(e.status)) await kiorex(t.p1, 'DELETE', `/waitlist/${e.id}`);
   });
   afterAll(async () => {
     for (const id of entries) await kiorex(t.p1, 'DELETE', `/waitlist/${id}`).catch(() => undefined);

@@ -8,7 +8,13 @@ svc=$1; act=$2
 [ "$svc" = kiorly ] || { echo "only 'kiorly' is supported"; exit 2; }
 port_pid() { lsof -nP -iTCP:3010 -sTCP:LISTEN -t 2>/dev/null | head -1 || true; }
 case $act in
-  stop) p=$(port_pid); [ -n "$p" ] && kill "$p" && echo "stopped kiorly ($p)" || echo "kiorly not running";;
+  stop) p=$(port_pid)
+    if [ -z "$p" ]; then echo "kiorly not running"; exit 0; fi
+    # SIGTERM starts a graceful shutdown that keeps serving already-open keep-alive connections, so a client with a pooled socket would still get 200s from the
+    # "stopped" API. Wait until the port is really closed (SIGKILL after 8 s) so the scenario starts from a genuinely down service.
+    kill "$p"; for i in $(seq 1 16); do [ -z "$(port_pid)" ] && break; sleep 0.5; done
+    [ -n "$(port_pid)" ] && kill -9 "$p" 2>/dev/null && sleep 1
+    echo "stopped kiorly ($p)";;
   start)
     [ -n "$(port_pid)" ] && { echo "kiorly already running"; exit 0; }
     (cd "$ROOT/clinics-management/apps/api" && nohup env NODE_ENV=development SIGNIN_DEFAULT_METHOD=PASSPORT PORT=3010 APP_WEB_URL=http://localhost:5174 DATABASE_URL="$(DBURL kiorly)" \
