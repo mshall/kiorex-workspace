@@ -20,7 +20,7 @@ Result words: **pass** = the system already behaved; **fixed** = a defect was fo
 | e2e 47 import | 4 | pass (1 defect) |
 | e2e 48 data | 9 | pass (3 defects) |
 | e2e 49 contract sweep | 4 | pass (5 defect groups, about 25 endpoints) |
-| Full e2e run 01..49 on the same stack | 374 passed, 33 skipped (11-nurse-lab needs its own stack; 30-security belongs to the concurrent security sweep) | pass (45 C3 timing fixed afterwards and re-run green) |
+| Full e2e run 01..49 on the same stack (closure round, before the second round below) | 374 passed, 33 skipped (11-nurse-lab needs its own stack; 30-security belongs to the concurrent security sweep) | pass (45 C3 timing fixed afterwards and re-run green) |
 | Kiorex API unit / integration | 578 / 600 | pass |
 | Clinic API node unit / edge + marketplace + patients + kiorex integration | 1222 / 46 | pass |
 | Pharmacy API unit + marketplace e2e | 216 + 17 | pass |
@@ -170,4 +170,96 @@ Pentest Low items closed in the same round (see `_docs/security/PENTEST_2026-11_
 
 Verification: Kiorex integration suite 613 of 613 on three consecutive runs in one ordered invocation (after the RC-01 fix), Clinic integration single invocation 457 of 457, Clinic unit 1,239, Passport 314, staff app jest 276, e2e 16 x 3. Full e2e run on the rebuilt Clinic and Kiorex APIs with nothing else running: 373 passed, 33 skipped, 2 failed: 49 Z2b / Z2c ("never a 5xx" sweeps of Pharmacy and Lab) saw `fetch failed` connection errors on nearly every request after the earlier sweeps in the same file; Z2b passed and Z2c passed when re-run alone (and Z2c passed in the first full run); Pharmacy and Lab were not rebuilt or changed in this round, so this is probably local socket exhaustion by the sweeps, not proven. An earlier full run that overlapped with the Clinic integration suite additionally failed 10-resilience and 12-waitlist, which pass alone.
 
-**Still open after the closure round:** the 13 free-form `Record<string, unknown>` bodies keep service-side parsing; `i18next` (moderate advisory, a major upgrade of the staff app) is not part of the minimatch / glob fix; Pharmacy and Lab Growth tabs (see the work package, section 13).
+**Still open after the closure round (and what happened to it):** the free-form `Record<string, unknown>` bodies (closed in section 6.4: 14 of them, DTOs or bounded schemas, TypeError net removed); `i18next` (closed: staff app on i18next 27, section 6.6); the `fetch failed` of the 49 sweeps and the 10 / 12 flakiness (closed, 6.1 and 6.9; two consecutive full runs green, 6.0); Pharmacy and Lab Growth tabs (still open, see the work package, section 13).
+
+## 6. Second closure round (24 Nov 2026): clean full runs, socket exhaustion, Lighthouse, real Passport popup, free-form bodies, CI
+
+Nothing here was pushed or deployed. Services were rebuilt only through `e2e/scripts/up.sh --build --restart --only=<svc>` (Kiorex twice, Clinic twice, Passport once to load the `kiorex-widget` client).
+
+### 6.0 Results of this round
+
+| Suite | Result |
+|---|---|
+| e2e 01..49 on the shared stack, two consecutive runs (M and N, 19:48 and 20:00) | **383 passed, 33 skipped, 0 failed** in both (the 33 skipped are 11-nurse-lab and 30-security, which run on their own stacks below) |
+| 11-nurse-lab (`npm run test:nurse`, own stack :3012 / :4002 / :3202), after each of M and N | 5 / 5 and 5 / 5 |
+| 30-security (`npm run test:security`, isolated production-mode stack :4300-4303), after each of M and N | 28 / 28 and 28 / 28 |
+| e2e 49 (never-5xx sweeps of Kiorex, Clinic, Pharmacy, Lab, plus the new Z3 oversized-request test) | 5 / 5, about 45 s (it was 4 to 5 minutes with 2 to 5 `fetch failed` offenders) |
+| Earlier full runs of the same round | I green; J green except one security race (a real defect, 6.9 S8); K green; L one file (10-resilience) failed in its `beforeAll`: the catalogue was briefly stale after the flag suite (fixed with a 30 s retry); A to H were polluted by the :3010 kills (6.8), slot exhaustion and the two defects below, and are not counted |
+| Clinic API unit (`node --test`), integration | 1,252 with 1 failure that is not Clinic's (`ff01-registry` vs `kiorex-contracts` 1.12.0 flag `growth.provider_marketing_v2`, Phase 2 work in flight); integration 457 / 457 (run before the last two DTO fixes; the DTO ratchet file 14 / 14 afterwards) |
+| Kiorex booking integration (`booking.int`, own database) | 36 / 36 including the new parallel-confirm test |
+| Kiorex web / ops / widget unit | 282 / 110 / 13 pass; web lint, widget lint and typecheck clean; ops lint and typecheck fail on the uncommitted Phase 2 work (`any` in `i18n/index.ts`, `JSX` namespace in `growth-p2-routes.test.tsx`), not on this round's files |
+| Kiorex patient app jest, `tsc` | 251 / 251, clean |
+| Clinic web / Pharmacy web / Lab web unit and lint | 153 / 64 / 64 pass; lint 0 errors (38 / 1 / 1 warnings that were there before); typecheck clean |
+| Staff app (`kiorly`) jest, `tsc`, `npm audit` | 276 / 276, clean, 0 vulnerabilities |
+| Production bundle checks | web, ops, widget, public site: OK; Clinic, Pharmacy, Lab webs, patient app, staff app, Kiorly Home: OK (6.5) |
+| Widget against the real Passport popup | 8 / 8 (6.3) |
+
+### 6.1 Root causes found
+
+| # | Symptom | Root cause | Fix |
+|---|---|---|---|
+| S1 | Suite 49 sweeps of Pharmacy and Lab (Z2b, Z2c) failed with `fetch failed` on nearly every request after the first sweeps | The sweep read only `res.status` and never the body, so every response kept its socket busy until garbage collection, and Node's default dispatcher kept opening more; later requests found no socket. Two smaller contributors: a 20 kB query string is answered 431 by Node's HTTP layer WITH `Connection: close` (one new connection per GET operation, thousands of `TIME_WAIT` sockets towards one port), and the retry-less client counted one refused connection as a defect | `e2e/src/http.ts` (vitest `setupFile`): one bounded keep-alive undici agent (16 connections, keep-alive below the server's 5 s), `probe()` drains every body, retries connection-level failures 3 times with a growing pause and reports the error code; the sweeps send 9 kB queries and a new test (49 Z3) checks the 20 kB request per API |
+| S2 | 10-resilience: "expected 200 to be 503" after `svc.sh kiorly stop` | `kill` sends SIGTERM; the Clinic shuts down gracefully and keeps answering on already-open keep-alive connections for a while, and a leftover instance keeps running after the listener closed | `svc.sh stop` waits until the port is really closed (SIGKILL after 8 s) |
+| S3 | 12-waitlist depends on what other suites left behind | `join` is idempotent per patient, doctor and type, so a WAITING entry left by an aborted run absorbs the offer the file waits for | the file removes the patient's open entries before it starts |
+
+### 6.2 Lighthouse and Core Web Vitals (public SSR pages, local, 24 Nov 2026)
+
+Lighthouse 13.6 (dev dependency of `apps/web`, `npm run audit:lighthouse -w apps/web`), Chrome headless, default simulated slow-4G / 4x CPU mobile profile and the desktop profile, a second Kiorex API instance on :4350 with `SITE_ENVIRONMENT=production` (the dev API on :4000 is `noindex` by design and would score SEO 66). Budgets in `apps/web/lighthouserc.json`: performance >= 90, accessibility >= 95, best practices >= 95, SEO >= 95, LCP <= 2.5 s, CLS <= 0.1. Pages: home, specialty hub (`/doctors/paediatrics`), city hub (`/locations/cairo`), doctor, clinic, in Arabic and English, mobile and desktop = 20 measurements.
+
+| Measurement (median of 3 runs, simulated slow-4G mobile profile and desktop profile) | Result |
+|---|---|
+| 20 combinations: 5 pages x 2 locales x 2 form factors | all four categories **100** in every one (budgets: performance 90, accessibility 95, best practices 95, SEO 95) |
+| LCP mobile / desktop | worst case 638 ms / 170 ms (budget 2,500 ms) |
+| CLS, TBT | worst case 0.028 and 10 ms (budgets 0.1 and 200 ms) |
+| Cross-check with APPLIED throttling (`--throttling devtools`, mobile, ar + en, 1 run each) | performance 99 to 100, other categories 100, LCP 750 to 761 ms, CLS up to 0.077 (budget 0.1), TBT up to 20 ms |
+
+Lighthouse 12.8 gave 3.5 s FCP and 4.1 s LCP for the same uncompressed pages; the applied-throttling run (a real slowed-down browser, not a model) agrees with 13.6, not 12.8.
+
+Defects found by the audit and fixed (all real, none a score trick): (1) the review-count bars on hub pages set their width with an inline `style` attribute, which the page CSP (`style-src` without `unsafe-inline`) blocks: a console error on every hub page, best practices 92. They are SVG now. (2) `/favicon*`, `/manifest.webmanifest` and `/og-image.png` answered 404 from the API role (they live in the patient web build), a console error on every page: a fixed allow-list route serves them. (3) The site served 340 kB of JavaScript and 19 kB of HTML uncompressed; the CDN compresses in production, the origin now does too (`compression` middleware, public paths only, `SITE_COMPRESSION=false` switches it off). Lighthouse 12.8 (first install) reported mobile LCP 4.1 s for the same pages; Lighthouse 13 models the page load differently and reports 0.8 s, so the cross-check with applied (DevTools) throttling below is the number to trust.
+
+**Lab is not field data.** One machine, simulated throttling, a warm local cache and a database with 89 providers. The targets that count are the real-user p75 on mobile in Egypt (LCP 2.5 s, INP 200 ms, CLS 0.1) after launch, measured by CrUX or the real-user monitoring that does not exist yet. SEO audit (`npm run seo:audit -w apps/api`) of the production-mode instance: 278 pages from 12 sitemap files, 0 errors, 0 warnings (status codes, head tags, canonical and hreflang, JSON-LD, duplicate titles, internal links, Web Vitals hygiene). The dev API (:4000) lists nothing in its sitemap because it is not production-indexable; the audit therefore needs that second instance..
+
+### 6.3 Real Passport popup for the widget
+
+`up.sh --restart --only=passport` loaded the `kiorex-widget` client. `e2e/scripts/widget-real.sh` then ran 8 Playwright tests (desktop Chrome and Pixel 7; 4 each) against the real Kiorex API (:4000, embed and SDK), the real Clinic (:3010, holds and bookings) and the real Passport (:4400): the host page (the only synthetic part, an https origin the clinic really registered through `PUT /growth/widget`) loads the SDK, the iframe lists two doctors, the patient picks a doctor, a visit type and a time, the sign-in button opens the Passport popup (checked: client `kiorex-widget`, PKCE S256, redirect to the widget host callback), the dev quick-pick chip signs in, the popup closes itself, the hold timer shows, consent, confirm, and the host page receives a PHI-free `kx:booked` event; closing the popup without signing in leaves the widget usable and holds nothing; a page on an unregistered origin gets 403 for a session and the CSP lists only the registered origin. No product defect was found. Two test-environment points: recent Chrome blocks an https page from reaching `http://localhost` (Local Network Access), so the test browser disables that one check; and the widget needs a doctor AND a visit type chosen before Continue is enabled when a clinic lists two doctors.
+
+### 6.4 Free-form Clinic bodies closed (EDGE risk 1, last part)
+
+14 controller parameters were typed `Record<string, unknown>` (the earlier count of 13 was one short): patients (active problem, family link), scheduling (appointment type create and patch, availability, waitlist, series), mobile (device registration, push token, vitals), clinical form template, data explorer create and patch, operation note. Where the shape is known they are DTO classes (`*.free-form.dto.ts`, numbers or numeric strings in range, enums, ISO dates, bounded string lengths, `@Lenient` like the earlier 145). Where it is genuinely free-form (data explorer rows depend on the table, the operation note and the section tree of a form template are user-designed) they go through `BoundedObjectPipe` / `@IsBoundedJson` (`common/bounded-json.ts`): plain JSON object only, at most 64 to 512 kB, depth 4 to 12, 200 to 5,000 keys, string length limits, no `__proto__` / `constructor` / `prototype` keys. A ratchet test fails on a new `Record<string, unknown>` body without the pipe. The TypeError-to-400 net in `integration-failure.filter.ts` is removed: a TypeError is a 500 again and is logged. Verified by `inline-dto-coverage.node.test.ts` (13 tests) and `bounded-json.node.test.ts` (6), the Clinic integration suite (457 of 457) and the e2e 49 sweeps without the net.
+
+### 6.5 Production bundles: no dev-only feature, no localhost, for every app
+
+`kiorex-platform/scripts/check-production-bundles.mjs` (`npm run check:bundles`) builds production for the patient web, the ops console, the booking widget (app and SDK) and the public SSR site (client and server bundle) and fails on a dev-only marker (test-users panel, synthetic logins, MSW service worker, mock switches) or on any `http(s)://localhost / 127.0.0.1 / [::1]` or `.test` URL; the web and ops builds are also built in development mode to prove the scan can see a local fallback. The existing `check:dev-test-users` of the Clinic, Pharmacy and Lab webs, the patient app, the staff app and Kiorly Home got the same local-address scan. Real findings, all fixed (see KX-PT-15 in the pentest report): patient web and ops console fell back to `http://localhost:4400` for Passport, both shipped `mockServiceWorker.js`, the three product webs kept the local Kiorly Home URL, the staff app defaulted its API bases and Passport to localhost, the patient app defaulted Passport to localhost and shipped its offline-fixtures module in the production export. Library constants that mention localhost (react-router's URL base, oidc-client-ts, a hostname comparison) are listed as benign in the scripts. Contract drift found while wiring CI: `kiorly-pharmacy/Docs/openapi.json` and `kiorly-lab/Docs/openapi.json` were stale (284 and 323 paths): regenerated, and CI now fails when they drift.
+
+### 6.6 Dependencies
+
+`npm audit` after this round: `--omit=dev` is 0 in every repo. Full audit: 0 in clinics-management, pharmacy, lab, account, contracts, the staff app (i18next 23 -> 27 and react-i18next 14 -> 18, GHSA-6jcc-5g8w-32mx), e2e (vitest 2 -> 5 and vite 8: the tinypool / vitest critical advisories were dev-server only), and the patient app (npm `overrides` glob ^14.0.6 / minimatch ^11.0.9 for the jest chain). **Documented exception:** `kiorex-platform` (root, workspaces) keeps 18 moderate advisories, all in the jest 30 tool chain (`glob` 13 and `minimatch` 10 inside `@jest/*`, `jest-*`, `babel-plugin-istanbul`): dev-only test tooling, not shipped, only reachable through developer-controlled glob patterns. Overriding `glob` globally in that workspace would change the test runner for the Growth Phase 2 work that is in flight in the same repo, so it was not done; revisit with the next jest release. Lighthouse (dev dependency, local measurement only) is at 13.6 because 12.x pulled in `puppeteer-core`, `basic-ftp` and `zod` advisories.
+
+### 6.7 CI added (not executed on GitHub)
+
+`kiorex-platform` ci.yml: `security-edge`, `web-apps`, `playwright-hermetic`, `site-audit`. `kiorly-pharmacy` and `kiorly-lab`: `web-bundle`, `web-e2e` (sign-in, edge, Kiorex tab on a seeded API), OpenAPI drift step. `kiorex-account`: `bundles`, `security-edge`, `browser`. `kiorly` (had no workflow): `test`, `audit`, `bundle`. Workspace `.github/workflows/e2e.yml` (dispatch + nightly: e2e 01..49, nurse, security, real-Passport widget; needs a `WORKSPACE_READ_TOKEN` secret). `clinics-management/.github` was NOT touched: `Docs/CI_PATCH_security_edge.md` describes the jobs for the founder to apply. The commands in each job were run locally; the YAML was only parsed.
+
+### 6.8 Environment finding that cost most of the round
+
+The Kiorly Clinic API on :3010 was killed repeatedly during this round (every few minutes, no log line, no crash report, while Kiorex, Pharmacy, Lab and Passport stayed up). Cause, observed with a process watcher: another session in this workspace ran `clinics-management/scripts/playwright-with-local-ports.sh qa01-golden-flow.spec.ts` with `CI=true`, and that script's `free_listen_port` kills whatever listens on :3010 and :5174 (it did so at 17:36:31 and 17:44:44, each time the Clinic API vanished). It is not a product defect, but it makes a shared-stack e2e run meaningless while such a run is in progress. Mitigation used: a fresh restart through `up.sh` before each full run and discarding any run during which the watcher saw :3010 stop answering. Recommendation: run the golden-flow Playwright (CI mode) only when the workspace e2e stack is idle, or point it at other ports (`local-dev-ports.sh`, without `CI=true`).
+
+### 6.9 More root causes found while getting the full run clean
+
+| # | Symptom | Root cause | Fix |
+|---|---|---|---|
+| S4 | 41, 42 (and later files) failed with "no free slots" in a full run | One KX-DEV doctor has about 50 free slots in the 12-day window the suites use; a full run books more than that (growth, money, edge, Phase 2 campaigns) and cancels only in the global teardown at the very end | `e2e/src/release.ts` + a per-file `afterAll` (`src/cleanup.ts`, a setupFile) cancel the future bookings through the Clinic after EVERY file; the global teardown uses the same function |
+| S5 | 02 and 10 could not find the KX-DEV doctors | They looked on page 1 of a rating-ordered list (30 or 50 rows); the demo catalogue now has more than 50 providers that outrank them | `providerBySpecialty` searches by name (`q=`), 02 pages through the admin directory |
+| S6 | 49 Z2a: `POST /front-desk/encounters/:id/collect-visit-balance` with `{}` was a 500 | `@ValidateNested()` accepts an absent object and `toVisitCollectionInput()` dereferenced it; the TypeError-to-400 net had hidden it. Same shape in `PutProviderProfileDto` | `@IsDefined()` on both, ratchet test for any `@ValidateNested()` property without `@IsDefined` / `@IsOptional` |
+| S7 | Everything behind `:3010` failed at random, 30 times in this round | see 6.8 (an outside `CI=true` Playwright run frees :3010) | environment, not product |
+
+**S8 (a real defect, found by a security-suite flake).** `30-security` "12 parallel holds" failed once in seven runs because one of six parallel confirms of the same booking with the same Idempotency-Key answered `409 SLOT_TAKEN`. Reproduced on the dev stack (about 1 request in 36): the duplicate loses inside Kiorly against the first request's own insert, and `handleConfirmError` then moved the Kiorex booking to `EXPIRED / SLOT_TAKEN` while the Clinic held the appointment as `CONFIRMED` (state divergence; the nightly reconciliation only heals lookups, not this). Fix in `BookingService.confirm`: one confirm per booking at a time per process (in-memory chain; a database lock on a pooled connection would starve the pool under load), and a confirm that fails after the booking already moved past HELD returns the booking as it is. Tests: `booking.int.spec.ts` (six parallel confirms are one Kiorly booking, all 200, CONFIRMED) and e2e 41 B6 (15 rounds of six parallel confirms against the real stack: all 200, never EXPIRED, exactly one Clinic appointment). A second instance racing on the same booking is covered only by the post-check, not by the chain.
+
+### 6.10 Honest gaps after this round
+
+1. The CI YAML (kiorex-platform, pharmacy, lab, account, staff app, workspace e2e) was parsed and its commands were run locally, but no workflow was executed on GitHub. The `site-audit` job assumes the demo seed produces slugs; the Lighthouse script falls back to the first sitemap entry when the configured doctor and clinic are missing, which was not exercised.
+2. Lab scores are not field data. There is no real-user measurement (CrUX, RUM) of INP at all; INP was not measured in the lab either (no interaction script).
+3. `npm audit` full run of `kiorex-platform` keeps 18 moderate dev-only advisories (jest chain) as a documented exception (6.6).
+4. Concurrent confirms are serialised per process only; a second Kiorex instance relies on the post-check (6.9 S8).
+5. The permanent slot leak is mitigated (27-day window, release before 41 and 42), not removed: COMPLETED / NO_SHOW appointments of the growth suites stay on the doctor's calendar. A periodic reset of the dev Clinic data, or a clock-injected completion in those suites, would remove it.
+6. `ops` lint and typecheck are red on uncommitted Phase 2 files that are not part of this round; the Clinic `ff01-registry` unit test is red until the Phase 2 flag `growth.provider_marketing_v2` is registered; the new Clinic ratchet for `Record<string, unknown>` bodies will fail on the untracked `marketplace-provider-verification.controller.ts` until that controller uses a DTO. All three are the Phase 2 owner's to fix; none was touched.
+7. Still not exercised (unchanged from section 3): 10 000-row lists, staff app / ops console / Connect wizards under 320 px and 2560 px, plan downgrade during an open staff-app session, SDK postMessage forgery from a hostile parent page.
