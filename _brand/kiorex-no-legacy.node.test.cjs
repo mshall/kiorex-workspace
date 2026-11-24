@@ -13,7 +13,7 @@ const SURFACES = [
 const SKIP_DIR = new Set(["node_modules", "dist", ".expo", "build", "test-results", "playwright-report"]);
 const OLD = [
   /kiorex-(mark|lockup|wordmark|app-icon)[\w-]*legacy/, /passport-lockup/, /kiorex-logo-lockup\.svg/, /kiorex-wordmark(-inverse|-mono)?\.svg/, /kiorex-lockup(-inverse|-mono)?\.svg/, /kiorex-mark-inverse\.svg/, /kiorex-app-icon\.svg/,
-  /logo-scene/, /wordmarks(-ar)?\.generated/, /brand\/components\/(web|native|shared)/, /<KiorexLogo[^>]*\bvariant=["'{]+(lockup|wordmark)/, /<KiorexLogo[^>]*\btone=/, /product=["']passport["']/,
+  /logo-scene/, /points="40,28 58,60 40,92"/, /points="80,28 62,60 80,92"/, /wordmarks(-ar)?\.generated/, /brand\/components\/(web|native|shared)/, /<KiorexLogo[^>]*\bvariant=["'{]+(lockup|wordmark)/, /<KiorexLogo[^>]*\btone=/, /product=["']passport["']/,
 ];
 const walk = (p) => { if (!fs.existsSync(p)) return []; const s = fs.statSync(p); if (s.isFile()) return [p]; return fs.readdirSync(p).filter((n) => !SKIP_DIR.has(n)).flatMap((n) => walk(path.join(p, n))); };
 test("no Kiorex surface references the old Kiorex logo files or the old <KiorexLogo> API", () => {
