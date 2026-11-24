@@ -36,6 +36,10 @@ scripts/svc.sh kiorly stop|start                # single service (used by 10-res
 | 22-standalone-connect | s. Connect a standalone clinic / pharmacy / lab (ADR-040): enrolment code from ops, signed request (code, then issued key), automated checks, two-person approval, Go live; uniform 401, replay, 413, 429 | ADR-040, contracts 1.9.0 |
 | 23-multi-partner-routing | t. Second live pharmacy and second live lab (wizard + ops walk, multi-tenant :3100 / :3200): each order and booking reaches only its own partner's database, carries its `partnerId`, and its webhooks move only its own orders | ADR-040, per-registration routing |
 
+| 25-growth-booking, 26-growth-analytics | GRW-P1-C and J: attribution decision at hold, signed acquisition block, Clinic decides the fee; analytics numbers reconcile, k = 10 | GRW-P1-C, GRW-P1-J |
+| 27-growth-provider-journeys | GRW-P1-M journeys 1-4: provider link created in the staff app API, QR resolver, patient lands on Kiorex, books, PROVIDER_LED, attended, no commission, statement; marketplace booking and the EGP fee in force; returning patient; dispute `PROVIDER_LED_EVIDENCE`; staff app role matrix. Adds a CLINIC_ADMIN user and a booking slug on the KX-DEV clinic for the run and removes them | GRW-P1-L, M, D1, D2 |
+| 28-growth-platform-journeys | GRW-P1-M journeys 5-12: consent and touches, widget from another origin, deep links and bootstrap, SSR crawl, robots and sitemap, Super Admin configuration with maker-checker (second super admin fixture, isolated market ZZ), analytics k-anonymity, erasure through Passport account deletion, AR/EN | GRW-P1-B, E, F, G, H, I, J, K, M |
+
 `11-nurse-lab` is skipped in the default run (it needs its own outbox workers): `npm run test:nurse` starts the isolated stack, runs it and stops the stack.
 Prerequisites for 13/14: the demo data (`scripts/seed-all.sh`) with the dev-only gate rows GHV1/GHV2/GKN1 (the tests never record a gate).
 

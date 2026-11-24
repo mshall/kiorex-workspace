@@ -25,14 +25,14 @@ export async function freshPatient(name = 'Growth Tester') {
 export function expectOk(got: number, want: number, what: string) { if (got !== want) throw new Error(`${what}: expected ${want}, got ${got}`); }
 
 /** Hold + confirm with optional growth inputs (lt, visitor header). Returns the confirm response and the Kiorex booking id. */
-export async function bookWith(token: string, p: Provider, o: { lt?: string; visitor?: string; slot?: { startsAt: string; endsAt: string }; confirm?: boolean } = {}) {
+export async function bookWith(token: string, p: Provider, o: { lt?: string; visitor?: string; slot?: { startsAt: string; endsAt: string }; confirm?: boolean; headers?: Record<string, string> } = {}) {
   let slot = o.slot ?? (await pickSlot(token, p));
-  let h = await kiorex(token, 'POST', '/bookings', { providerId: p.id, typeId: p.defaultTypeId, startsAt: slot.startsAt, endsAt: slot.endsAt, ...(o.lt ? { lt: o.lt } : {}) }, o.visitor ? { 'X-KX-Visitor': o.visitor } : {});
-  for (let i = 0; i < 6 && h.status === 409 && !o.slot; i++) { slot = await pickSlot(token, p); h = await kiorex(token, 'POST', '/bookings', { providerId: p.id, typeId: p.defaultTypeId, startsAt: slot.startsAt, endsAt: slot.endsAt, ...(o.lt ? { lt: o.lt } : {}) }, o.visitor ? { 'X-KX-Visitor': o.visitor } : {}); }
+  let h = await kiorex(token, 'POST', '/bookings', { providerId: p.id, typeId: p.defaultTypeId, startsAt: slot.startsAt, endsAt: slot.endsAt, ...(o.lt ? { lt: o.lt } : {}) }, { ...(o.visitor ? { 'X-KX-Visitor': o.visitor } : {}), ...(o.headers ?? {}) });
+  for (let i = 0; i < 6 && h.status === 409 && !o.slot; i++) { slot = await pickSlot(token, p); h = await kiorex(token, 'POST', '/bookings', { providerId: p.id, typeId: p.defaultTypeId, startsAt: slot.startsAt, endsAt: slot.endsAt, ...(o.lt ? { lt: o.lt } : {}) }, { ...(o.visitor ? { 'X-KX-Visitor': o.visitor } : {}), ...(o.headers ?? {}) }); }
   if (h.status !== 201) throw new Error(`hold ${h.status} ${JSON.stringify(h.body)}`);
   const id = h.body.id as string;
   if (o.confirm === false) return { id, slot };
-  const c = await kiorex(token, 'POST', `/bookings/${id}/confirm`, confirmBody, { 'Idempotency-Key': id, ...(o.visitor ? { 'X-KX-Visitor': o.visitor } : {}) });
+  const c = await kiorex(token, 'POST', `/bookings/${id}/confirm`, confirmBody, { 'Idempotency-Key': id, ...(o.visitor ? { 'X-KX-Visitor': o.visitor } : {}), ...(o.headers ?? {}) });
   if (c.status !== 200) throw new Error(`confirm ${c.status} ${JSON.stringify(c.body)}`);
   return { id, slot, confirmed: c.body };
 }
@@ -70,3 +70,38 @@ export function signedHeaders(method: string, fullPath: string, secret = WEBHOOK
   return { 'x-kiorly-client-key': key, 'x-kiorly-timestamp': ts, 'x-kiorly-nonce': nonce, 'x-kiorly-signature': sig };
 }
 export { staffLogin, KIOREX_API };
+
+// ---- GRW-P1-M fixtures shared by 27 and 28 ----
+export const KXDEV_ADMIN = { id: 'e2e_growth_admin', email: 'e2e.growth.admin@kiorly.dev', slug: 'e2e-kxdev-zamalek' };
+/**
+ * The KX-DEV clinic has no admin user and no booking slug, so the Growth surfaces (links, widget, statement) cannot be reached through the real API.
+ * This adds a CLINIC_ADMIN (a copy of Dr Mona's row, other id and e-mail) and a booking slug, and returns the restore function. Dev databases only.
+ */
+export async function kxdevGrowthTenant(providerId: string) {
+  const row = (await q('kiorex_platform', `select "tenantId", "clinicId" from "Provider" where id = $1`, [providerId]))[0];
+  const clinicId = row.clinicId as string;
+  const oldSlug = (await q('kiorly', `select "bookingSlug" from "Clinic" where id = $1`, [clinicId]))[0]?.bookingSlug ?? null;
+  await q('kiorly', `update "Clinic" set "bookingSlug" = $2 where id = $1`, [clinicId, KXDEV_ADMIN.slug]);
+  await q('kiorly', `delete from "User" where id = $1`, [KXDEV_ADMIN.id]);
+  await q('kiorly', `insert into "User" select (jsonb_populate_record(null::"User", to_jsonb(u) || $1::jsonb)).* from "User" u where email = 'kxdev.mona.fahmy@kiorly.dev'`, [JSON.stringify({ id: KXDEV_ADMIN.id, email: KXDEV_ADMIN.email, role: 'CLINIC_ADMIN', additionalRoles: [], isTenantOwner: false, phone: null, displayName: 'E2E Growth Admin' })]);
+  const admin = await staffLogin(KXDEV_ADMIN.email);
+  return {
+    org: row.tenantId as string, clinicId, admin, slug: KXDEV_ADMIN.slug,
+    restore: async () => {
+      await q('kiorly', `update "Clinic" set "bookingSlug" = $2 where id = $1`, [clinicId, oldSlug]).catch(() => undefined);
+      await q('kiorly', `delete from "User" where id = $1`, [KXDEV_ADMIN.id]).catch(() => undefined);
+    },
+  };
+}
+
+/** A second Passport super admin (maker-checker needs two people). Row-level fixture in the dev Passport database, removed by `drop`. */
+export const SECOND_ADMIN = { sub: '01HZKX0000000000000E2E0A2', phone: '+201000009777', totp: 'REMOVED-OLD-DEMO-TOTP-SECRET' };
+export async function secondSuperAdmin() {
+  const drop = async () => { await q('kiorex_account', `delete from totp_credentials where sub = $1`, [SECOND_ADMIN.sub]); await q('kiorex_account', `delete from accounts where sub = $1`, [SECOND_ADMIN.sub]); };
+  await drop();
+  await q('kiorex_account', `insert into accounts (sub, phone, phone_verified, name, roles) values ($1, $2, true, 'E2E Second Super Admin', '["ops_admin","super_admin"]'::jsonb)`, [SECOND_ADMIN.sub, SECOND_ADMIN.phone]);
+  await q('kiorex_account', `insert into totp_credentials (sub, secret, confirmed_at) values ($1, $2, now())`, [SECOND_ADMIN.sub, SECOND_ADMIN.totp]);
+  await resetOtpLimits();
+  const login = await loginWithPhone(SECOND_ADMIN.phone, { clientId: 'kiorex-ops', totpSecret: SECOND_ADMIN.totp });
+  return { token: login.accessToken, sub: login.sub, drop };
+}

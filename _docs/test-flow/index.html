@@ -1109,6 +1109,79 @@ MODULES.push({id:'connect',ic:'8c',title:'Connect a standalone organisation to K
   ]}
  ]});
 
+/* ---------------------------------------------------------------- 8e GROWTH & PATIENT ACQUISITION (GRW-P1-L, GRW-P1-M) */
+MODULES.push({id:'growth',ic:'8e',title:'Growth and Patient Acquisition (links, QR, fee-free bookings, statement)',blurb:'Provider links and QR codes bring a clinic its own patients: those bookings never carry a Kiorex fee. A new patient who finds the clinic on Kiorex carries the EGP fee in force. Everything here is mock or dev data; marketing stays launch-locked (no gate is recorded). Wording of consent texts is NEEDS_HUMAN.',
+ intro:'Automated first: `cd e2e && npx vitest run test/25-growth-booking.e2e.ts test/26-growth-analytics.e2e.ts test/27-growth-provider-journeys.e2e.ts test/28-growth-platform-journeys.e2e.ts` (40 tests, about 1 minute; they add and remove their own fixtures) and `cd kiorly/e2e-web && WEB_URL=http://localhost:8096 API_URL=http://localhost:3010/api/v1 npx playwright test -c clinic.config.ts clinic-growth` (serve `npx expo export -p web --output-dir /tmp/kw-web` with `node e2e-web/serve.mjs /tmp/kw-web 8096`). Clinic workspace {clinic}/kiorex/growth, staff app {staff}, Kiorex {web}, API {kapi}, Clinic API {capi}, Ops {ops}.',
+ flows:[
+ {id:'G1',title:'Staff app Growth tab',goal:'An owner shares the clinic link and QR from the phone; a doctor sees only the own link.',who:['owner.na','nadia.na','frontdesk1.na','accountant.na','owner.basic'],links:[['Kiorly Expo web','{staff}'],['Clinic Growth workspace','{clinic}/kiorex/growth'],['Screenshots (staff-app-growth-owner-en/ar-390)','growth/']],
+  steps:[
+   ['Sign in to the staff app (Clinic tile) as `owner.na@demo.kiorex.test`, Work -> Growth.','The public Kiorex profile link (`http://localhost:5180/ar/eg/clinic/demo-na-maadi`) with Share, WhatsApp, SMS, Copy link; a QR code with the same address; "Your links" with 0 of 25 used; performance, suggestions, the Kiorex fee statement for the month; "Open the Growth workspace".'],
+   ['Press Copy link, then Share.','Web: "Link copied" and the address is on the clipboard. iPhone and Android: the system share sheet with the message "Book with ... on Kiorex: <link>" (Copy is in the sheet); WhatsApp and SMS open with the same text.'],
+   ['New link: name "Reception QR", channel Reception desk card, Create. Tap the new row.','"Link created"; the row shows an Active badge and Visits / Bookings / Attended. The sheet offers Share, WhatsApp, SMS, Copy, QR, Pause. The same link is in {clinic}/kiorex/growth with an 8-character code.'],
+   ['Pause the link.','Badge Paused; the QR action is disabled; revoking is only possible on the web.'],
+   ['Sign in as `nadia.na@demo.kiorex.test` (doctor).','Her own doctor profile link only; a note "You are viewing your own link only"; no performance, no fee statement, no New link.'],
+   ['Sign in as `frontdesk1.na@` and `accountant.na@`; then as `owner.basic@` (BASIC).','No Growth tile (the API answers 403 MODULE_NOT_ALLOWED); the BASIC owner lands on the upgrade screen (403 FEATURE_DISABLED).'],
+   ['Switch to Arabic (Me -> Language). Turn the network off and reopen Growth.','Right to left, Arabic-Indic digits, copy "ملفك العام على كيوريكس"; offline shows the last copy with a banner and "This needs a connection" when creating or pausing.']
+  ]},
+ {id:'G2',title:'Provider link: QR scanned, booked, attended, no fee',goal:'A booking through the clinic own link is PROVIDER_LED and never charged; the statement says so.',who:['owner.na','ops_super'],links:[['Clinic Growth workspace','{clinic}/kiorex/growth'],['Kiorex doctor page','{web}'],['Commission statement (API)','{capi}/api/v1/kiorex/commission-statement']],
+  steps:[
+   ['Create a link in the workspace (scope Reception desk). Open `{capi}/api/v1/public/links/q/<CODE>`.','302 to `.../b/<clinic-slug>?s=<CODE>`; an unknown code is 404. The page JSON shows `commissionFree: true`, `tracked: true` and a signed `lt`; the link counts one visit (a crawler user agent does not).'],
+   ['Open the doctor on Kiorex with the token: `{web}/ar/eg/doctor/<doctor-slug>?lt=<LT>`, sign in with a new phone (OTP in `.e2e/logs/passport.log`), book a slot.','The booking is confirmed. In the Kiorex database the decision is origin PROVIDER_LED (reason EXPLICIT_PROVIDER_CHANNEL); the Clinic appointment has `acquisitionOrigin = PROVIDER_LED`.'],
+   ['At the Clinic check the patient in and finish the visit.','No Kiorex commission charge. Billing -> Kiorex shows the decision "Your own channel: no fee". The statement counts it under providerLedBookings and the active charges do not change. The link row shows 1 booking and 1 attended; the staff app shows the same.']
+  ]},
+ {id:'G3',title:'Kiorex marketplace booking: the EGP fee, returning patient, dispute',goal:'A new patient from Kiorex carries the fee in force; a returning patient does not; evidence can remove a fee.',who:['owner.na'],links:[['Kiorex patient web','{web}'],['Clinic Billing','{clinic}/billing']],
+  steps:[
+   ['A new patient finds the doctor on Kiorex search and books without a link; complete the visit.','Decision MARKETPLACE (or UNATTRIBUTED without evidence: still chargeable like before). Exactly one commission charge equal to the rate in force (EGP 40 in ADR-007; the dev database may hold another NEEDS_HUMAN placeholder, see `KiorexCommissionRate` where validTo is null). The statement and the staff app fee card rise by that amount.'],
+   ['The same patient books again and the visit is completed.','Attributed, no second charge (not a new patient).'],
+   ['Open the charge in Billing and dispute it with the reason "The patient came through our own link" while the booking carries one of the clinic link codes (the test writes that fact; evidence mode is mock).','Dispute AUTO_APPROVED, charge reversed, a new decision with the suffix +PLE (PROVIDER_LED, NO_CHARGE), the statement drops by the fee. Without the evidence the dispute stays OPEN for a human.']
+  ]},
+ {id:'G4',title:'Consent and touches',goal:'Nothing about a visitor is kept without consent, and the locked gate is respected.',links:[['Consent versions (API)','{kapi}/api/v1/growth/v1/consent/versions']],
+  steps:[
+   ['`curl -si -XPOST {kapi}/api/v1/growth/v1/touch -H "content-type: application/json" -H "X-KX-Consent: analytics" -d \'{"landingKind":"HOME","utm":{"source":"google"}}\'`','202 `{"accepted":true,"visitorKeySet":false}` and no Set-Cookie: the visitor key stays locked while growth.analytics_visitor is OFF (counsel gate). No row in GrowthTouchpoint.'],
+   ['POST `/growth/v1/consent` with `{"analytics":false,"marketing":false,"source":"web"}` and a `kxv` cookie.','201 and a Set-Cookie that clears the cookie at once. A UTM value that looks like an e-mail is rejected; unknown keys are dropped.'],
+   ['Book as a patient without any touch, then with a referral or campaign touch (the tests write the row the endpoint would write).','UNATTRIBUTED without a touch; MARKETPLACE with a referral (30 days) or a campaign click (7 days); an older click is outside the window.']
+  ]},
+ {id:'G5',title:'Booking widget from another origin',goal:'Only an allowed origin can embed booking; widget bookings are fee-free.',who:['owner.na'],links:[['Widget audit (Ops)','{ops}'],['Widget API','{kapi}/api/v1/widget/v1/config']],
+  steps:[
+   ['In the Growth workspace enable the widget with the origin `https://clinic-site.example.test`. Try `*.example.test`, `http://...` and an origin with a path.','Saved for the first; the others are refused (wildcard, not https, path). Kiorex learns the origin within seconds (Ops -> widget registrations).'],
+   ['`POST {kapi}/api/v1/widget/v1/session` with header `Origin: http://localhost:4000` and body `{"org":"<clinic slug>","parentOrigin":"https://clinic-site.example.test"}`. Repeat with another origin.','200 and a short-lived token; the other origin gets 403 GROWTH_WIDGET_ORIGIN_NOT_ALLOWED and an audit row.'],
+   ['Book through the widget with the token header `X-KX-Widget`.','The decision is PROVIDER_LED and no fee is charged. The same token cannot call any other route (403 WIDGET_ROUTE_NOT_ALLOWED). Remove the origin: the token stops working at once.']
+  ]},
+ {id:'G6',title:'Deep links and bootstrap',goal:'Links open the right place, never a URL from the link.',links:[['Bootstrap','{kapi}/api/v1/bootstrap?cc=EG'],['App links file','{kapi}/.well-known/apple-app-site-association'],['Fallback page (Arabic)','{kapi}/q/7XK2M9QP'],['Fallback page (English)','{kapi}/q/7XK2M9QP?l=en']],
+  steps:[
+   ['Open the bootstrap and the association files.','One live market (EG), no selector, `capabilities.deepLinks`; the association lists /q/*, /r/*, doctor and clinic pages; Apple Team ID and Android fingerprint are TODO_NEEDS_HUMAN placeholders.'],
+   ['Open the fallback pages, then `/q/!!bad!!` and `/q/7XK2M9QP?next=https://evil.example`.','Arabic page right to left, English left to right; the bad code is 404 and is not echoed; the URL parameter is never followed.'],
+   ['Simulator: `xcrun simctl openurl booted "kiorly://open/growth:me"` (app signed in).','Confirm the system "Open in Kiorly?" dialog; the Growth screen should open. Not confirmed in the automated run (the parser is unit-tested); if Home stays, open Work -> Growth.']
+  ]},
+ {id:'G7',title:'Public pages, robots and sitemap',goal:'Server-rendered pages with the right head; private routes never indexed.',links:[['Doctor (Arabic)','{kapi}/ar/eg/doctor/mona-fahmy'],['Doctor (English)','{kapi}/en/eg/doctor/mona-fahmy'],['robots.txt','{kapi}/robots.txt'],['sitemap.xml','{kapi}/sitemap.xml']],
+  steps:[
+   ['View source of both doctor pages.','`lang`/`dir` (ar rtl, en ltr), canonical without utm or lt, hreflang ar / en / x-default, valid JSON-LD (Physician) without phone or e-mail. In this non-production stack: `X-Robots-Tag: noindex` and `noindex,follow`.'],
+   ['Open `/ar/eg/me`, `/ar/eg/account`, `/ar/eg/doctor/not-a-real-doctor`, `/xx/eg`.','404 for each; never indexable.'],
+   ['Open robots.txt and sitemap.xml.','robots disallows everything outside production; the sitemap is a well-formed sitemapindex (empty until the environment is indexable). Ops -> Growth -> SEO shows page counts and guard reasons.']
+  ]},
+ {id:'G8',title:'Super Admin configuration: maker-checker and propagation',goal:'Nobody approves their own change; a change reaches every reader without a redeploy.',who:['ops_super'],links:[['Ops Growth','{ops}']],
+  steps:[
+   ['As `ops_super` create a DRAFT (for example the widget policy) and submit it.','Status Pending approval. Raw secrets and unknown keys are rejected.'],
+   ['Try to approve it yourself.','Refused (403): the approver is never the author. A second super admin approves (test 28 creates one just for the run).'],
+   ['Open the version: in force, diff, propagation, audit trail. Roll back to version 1.','The version is in force from its effective time; propagation lists the readers; the rollback is a NEW version through the same approval; a money policy must be dated at least 7 days ahead and needs a provider announcement; a decision made before the change still cites the old version.']
+  ]},
+ {id:'G9',title:'Analytics and privacy (k = 10)',goal:'Numbers reconcile to bookings and charges; small cells are hidden.',who:['ops_super'],links:[['Ops Growth overview','{ops}']],
+  steps:[
+   ['After G2 and G3 run the rollup (`POST {kapi}/api/v1/ops/growth-analytics/rollup {"days":2}`) twice.','Idempotent: the daily table is identical. Attended new patients equal the facts.'],
+   ['Open the funnel and a breakdown; export CSV.','Every cell is a number of at least 10 or "<10"; no person-level field; the CSV carries the same cells.']
+  ]},
+ {id:'G10',title:'Erasure (subject.deleted)',goal:'Deleting the account removes the growth data of the person.',links:[['Passport account','http://localhost:4400/account']],
+  steps:[
+   ['Delete a patient account in Passport (Account -> Delete) or `DELETE http://localhost:4400/api/account` with the access token.','Passport answers 202 and sends the back-channel event to Kiorex, Clinic, Pharmacy and Lab.'],
+   ['Wait a few seconds and read GrowthTouchpoint.','The person touches and visitor keys are deleted; touches a decision cites become anonymous evidence (no sub, no visitor key, empty IP hash); the decision and the Clinic fee record stay; the audit row `growth.erase_subject` holds only a hash.']
+  ]},
+ {id:'G11',title:'Arabic and English everywhere',goal:'Every Growth surface works in both languages.',links:[['Poster (Arabic)','{capi}/api/v1/growth/links/<id>/poster?lang=ar&size=A5'],['Poster (English)','{capi}/api/v1/growth/links/<id>/poster?lang=en&size=A5']],
+  steps:[
+   ['Open the poster in Arabic and English (browser, Save as PDF to print).','Right to left and left to right, the link code and the short URL on both; no server PDF engine.'],
+   ['Repeat G1, G7 and G6 in Arabic.','Arabic default in the staff app with Arabic-Indic digits; Arabic spells Kiorex as كيوريكس; "by Kiorex" appears only on the splash and About.']
+  ]}
+ ]});
+
 /* ---------------------------------------------------------------- 9 PATIENT MOBILE */
 MODULES.push({id:'qsetup',ic:'8d',title:'Quick setup checklist (Welcome - quick setup)',blurb:'After signing in, every organisation sees a "Welcome - quick setup" list. Each step opens the exact screen for that action, completes by itself when the real data changes, animates, and moves on to the next step. Clinic, Nurse, Pharmacy and Lab.',
  intro:'Use a FRESH organisation (a demo tenant is already set up): Clinic {clinic}/signup (Pro, OTP `424242`), Nurse via the public sign-up API with `edition: "NURSE"`, Pharmacy `POST {pharm}` `/api/v1/onboarding/signup` then press Finish setup, Lab {lab}/onboarding. Inventory of every step: `_docs/test-flow/quick-setup-inventory.md`; results per step: `quick-setup-results.md`. Automated: `e2e/quick-setup-clinic.spec.ts`, `quick-setup-nurse.spec.ts` (Clinic web), `quick-setup.spec.ts` in the Pharmacy and Lab webs. Everything here is mock/dev data.',

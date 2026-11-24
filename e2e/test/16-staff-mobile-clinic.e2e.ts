@@ -46,21 +46,21 @@ const resetReason = 'e2e16 reset';
 describe('a. Role matrix: bootstrap modules, plan, safetyAlertsOnly and endpoint scoping for every clinic demo role', () => {
   // role -> exact module set (MOBILE.md "Modules per role")
   const matrix: { who: string; email: string; role: string; plan: string; raw: string; edition: string; modules: string }[] = [
-    { who: 'owner (Nile Care)', email: NA('owner'), role: 'GROUP_ADMIN', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,visits,prescriptions,labs,vitals,revenue' },
-    { who: 'manager', email: NA('manager'), role: 'BRANCH_MANAGER', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,vitals,revenue' },
+    { who: 'owner (Nile Care)', email: NA('owner'), role: 'GROUP_ADMIN', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,visits,prescriptions,labs,vitals,revenue,growth' },
+    { who: 'manager', email: NA('manager'), role: 'BRANCH_MANAGER', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,vitals,revenue,growth' },
     { who: 'front desk 1', email: NA('frontdesk1'), role: 'RECEPTIONIST', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients' },
     { who: 'front desk 2', email: NA('frontdesk2'), role: 'RECEPTIONIST', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients' },
     { who: 'nurse', email: NA('nurse'), role: 'NURSE', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,vitals,homevisits' },
-    { who: 'doctor Nadia', email: NA('nadia'), role: 'PHYSICIAN', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,visits,prescriptions,labs,vitals' },
-    { who: 'doctor Tamer', email: NA('tamer'), role: 'PHYSICIAN', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,visits,prescriptions,labs,vitals' },
+    { who: 'doctor Nadia', email: NA('nadia'), role: 'PHYSICIAN', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,visits,prescriptions,labs,vitals,growth' },
+    { who: 'doctor Tamer', email: NA('tamer'), role: 'PHYSICIAN', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients,visits,prescriptions,labs,vitals,growth' },
     { who: 'accountant', email: NA('accountant'), role: 'FINANCE_OFFICER', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,revenue' },
     { who: 'call centre', email: NA('callcenter'), role: 'CALL_CENTER', plan: 'PRO', raw: 'PRO', edition: 'CLINIC', modules: 'schedule,patients' },
     // Nurse edition: nurses carry role PHYSICIAN + profession NURSE and never get visit notes / prescription signing (ADR-029)
-    { who: 'solo nurse Mona', email: 'mona@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'PRO', raw: 'NURSE_PRO', edition: 'NURSE', modules: 'schedule,patients,vitals,homevisits,revenue' },
-    { who: 'agency owner', email: 'owner@nurse-demo.kiorly.test', role: 'CLINIC_ADMIN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,visits,prescriptions,labs,vitals,homevisits,revenue' },
+    { who: 'solo nurse Mona', email: 'mona@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'PRO', raw: 'NURSE_PRO', edition: 'NURSE', modules: 'schedule,patients,vitals,homevisits,revenue,growth' },
+    { who: 'agency owner', email: 'owner@nurse-demo.kiorly.test', role: 'CLINIC_ADMIN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,visits,prescriptions,labs,vitals,homevisits,revenue,growth' },
     { who: 'agency dispatcher', email: 'dispatch@nurse-demo.kiorly.test', role: 'RECEPTIONIST', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,homevisits' },
-    { who: 'agency nurse 1', email: 'nurse1@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,vitals,homevisits' },
-    { who: 'agency nurse 2', email: 'nurse2@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,vitals,homevisits' },
+    { who: 'agency nurse 1', email: 'nurse1@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,vitals,homevisits,growth' },
+    { who: 'agency nurse 2', email: 'nurse2@nurse-demo.kiorly.test', role: 'PHYSICIAN', plan: 'ENTERPRISE', raw: 'NURSE_AGENCY', edition: 'NURSE', modules: 'schedule,patients,vitals,homevisits,growth' },
   ];
   for (const r of matrix) {
     it(`${r.who} (${r.email}): ${r.role}, plan ${r.plan}, modules ${r.modules}`, async () => {
