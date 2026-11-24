@@ -1110,6 +1110,42 @@ MODULES.push({id:'connect',ic:'8c',title:'Connect a standalone organisation to K
  ]});
 
 /* ---------------------------------------------------------------- 9 PATIENT MOBILE */
+MODULES.push({id:'qsetup',ic:'8d',title:'Quick setup checklist (Welcome - quick setup)',blurb:'After signing in, every organisation sees a "Welcome - quick setup" list. Each step opens the exact screen for that action, completes by itself when the real data changes, animates, and moves on to the next step. Clinic, Nurse, Pharmacy and Lab.',
+ intro:'Use a FRESH organisation (a demo tenant is already set up): Clinic {clinic}/signup (Pro, OTP `424242`), Nurse via the public sign-up API with `edition: "NURSE"`, Pharmacy `POST {pharm}` `/api/v1/onboarding/signup` then press Finish setup, Lab {lab}/onboarding. Inventory of every step: `_docs/test-flow/quick-setup-inventory.md`; results per step: `quick-setup-results.md`. Automated: `e2e/quick-setup-clinic.spec.ts`, `quick-setup-nurse.spec.ts` (Clinic web), `quick-setup.spec.ts` in the Pharmacy and Lab webs. Everything here is mock/dev data.',
+ flows:[
+ {id:'Q1',title:'Clinic: every step, deep link, auto-detect, animation',goal:'Each row opens its screen with the first field focused, finishes by itself, and the next step is highlighted.',who:[],links:[['Clinic signup','{clinic}/signup'],['Full checklist','{clinic}/onboarding']],
+  steps:[
+   ['Sign up a new Pro clinic at {clinic}/signup. You land on the checklist.','"Welcome - quick setup", 0 of 13 done, step 1 "Confirm clinic profile and license details" is outlined with a Start button. Optional rows say optional.'],
+   ['Press Start on step 1.','The clinic settings screen opens with the licence field focused and outlined; a bar says "Step 1 of 13" with Back to checklist and Skip for now. Type a licence number and Save: the bar turns green, you are taken back, the row shows a check that draws in with a soft green tint, the progress bar eases up, and step 2 is scrolled to and focused.'],
+   ['Open Upload clinic logo, choose any PNG.','Done by itself. Open Set working hours: the button says "Confirm these hours"; pressing it keeps the defaults and finishes the step.'],
+   ['Open Configure appointment types: edit one fee and Save. Open Set your availability: Save.','Each flips to done without a reload. Availability opens its own screen for that clinic.'],
+   ['Invite a receptionist (/team), turn on WhatsApp reminders (/admin, Organization section), import a one-patient CSV (/onboarding/import).','Each flips by itself. On the Lite plan WhatsApp shows "Upgrade to unlock" and is not counted.'],
+   ['Book the first appointment (the booking wizard opens by itself), then open Complete your first check-in.','The link goes to that appointment (check-in button focused). After check-in the row is done.'],
+   ['Reload and sign out / in.','Every finished step is still done; progress is the same.']
+  ]},
+ {id:'Q2',title:'Two or more clinics, branches, labs or agencies',goal:'Per-entity steps are nested, scoped and re-opened by new entities.',who:[],links:[['Clinics','{clinic}/clinics'],['Pharmacy branches','{pharm}/settings?tab=branches'],['Lab sites','{lab}/settings?tab=labs']],
+  steps:[
+   ['Add a second clinic (Clinics > Add clinic), or a second branch (Pharmacy CHAIN) or lab (Lab CHAIN). Open the checklist.','Per-entity steps show "1 of 2" and a Show 2 button; each entity row has its own Open / Skip and its own deep link ending in `entity=<id>`; the bar names the entity.'],
+   ['Finish one entity.','The step stays pending ("1 of 2") until every entity is done; the finished entity row has the check animation.'],
+   ['Add a third entity.','The finished step reopens ("2 of 3"). Collapse / expand hides and shows the list (a button with aria-expanded).']
+  ]},
+ {id:'Q3',title:'Roles, plans and the Kiorex step',goal:'No dead clicks; Connect to Kiorex only for owner/admin.',who:[],links:[['Clinic','{clinic}/onboarding']],
+  steps:[
+   ['Sign in as a branch manager (Clinic), a cashier (Pharmacy) or reception (Lab) of a fresh organisation.','Owner-only steps show a disabled button and "Ask the owner. Can be done by: ...". The server also answers 403 if the call is forged.'],
+   ['Look for Connect to Kiorex.','Hidden for those roles; for the owner it is an optional step that opens {clinic}/kiorex, {pharm}/kiorex-connect or {lab}/kiorex-connect.']
+  ]},
+ {id:'Q4',title:'Nurse: solo and agency',goal:'The step set follows the Nurse kind.',who:[],links:[['Nurse checklist','{clinic}/nurse/onboarding']],
+  steps:[
+   ['Sign up a SOLO nurse (public sign-up API, edition NURSE, plan NURSE_LITE) and open /nurse/onboarding.','Verify credentials, coverage zones, services, prices, availability, safety contact, first appointment. Zones and availability finish by themselves when saved on the same page.'],
+   ['Sign up an AGENCY (plan NURSE_AGENCY).','No coverage zones or personal availability; services, prices, safety contact and the agency profile are listed.']
+  ]},
+ {id:'Q5',title:'Finished state, dismissal, Arabic, dark, sizes',goal:'A calm completion state remembered per organisation; RTL, dark and 360-2560 px.',who:[],links:[],
+  steps:[
+   ['Finish (or skip) every step.','The card becomes "You are all set" with a green check that draws in and a Dismiss button.'],
+   ['Dismiss, reload, sign in on another browser.','Stays dismissed for the organisation. Add a clinic / branch / lab: the checklist returns.'],
+   ['Switch to Arabic and dark; resize to 360 and 2560 px; Tab through the list.','Mirrored layout, readable colours, no horizontal scroll, every button reachable and announced; with "reduce motion" there is no animation but the same states.']
+  ]},
+ ]});
 MODULES.push({id:'mobile',ic:'9',title:'Kiorex patient mobile app',blurb:'The patient Expo app (iOS, Android, web :8081): same API, Passport sign-in (client kiorex-mobile) and flags as the web.',
  intro:'Bundle / package `com.kiorex.app`, scheme `kiorex`. Tabs: Home, Appointments, Records, Account; pushed screens live under a hidden "more" tab so the tab bar stays. Roots verified from `apps/mobile/app`.',
  flows:[
