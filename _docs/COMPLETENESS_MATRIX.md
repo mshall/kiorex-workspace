@@ -474,7 +474,30 @@ Status values as above. Growth requirement ids are those of KX-27 (GR-xxx) and w
 | Free-form Clinic bodies (14) validated; TypeError-to-400 net removed | DONE+TESTED | `common/bounded-json.ts`, `*.free-form.dto.ts`, `inline-dto-coverage.node.test.ts` (ratchets), e2e 49 Z2a |
 | Concurrent confirm of one booking (Kiorex expired a booking the Clinic had confirmed) | FIXED + TESTED | `booking.int.spec.ts`, e2e 41 B6 |
 | CI for security, edge, bundle, browser, SEO and Lighthouse suites outside Clinic | WRITTEN (not executed on GitHub); Clinic's `.github` left to the founder (`Docs/CI_PATCH_security_edge.md`) | `kiorex-platform`, `kiorly-pharmacy`, `kiorly-lab`, `kiorex-account`, `kiorly`, workspace `.github/workflows/e2e.yml` |
-| Phase 2 to 4 (campaigns, referral, rewards, assistant, lifecycle, experiments, ads, ecosystem) | MISSING (Roadmap) | |
-| Daily decision replay job; Pharmacy and Lab Growth tabs; real Search Console, Play Console, App Store Connect adapters | MISSING | KX-33 section 04 and 08 |
+| Phase 2 to 4 (campaigns, referral, rewards, assistant, lifecycle, experiments, ads, ecosystem) | Superseded by the Phases 2 to 4 section below (Rev 2.7) | |
+| Daily decision replay job; Pharmacy and Lab Growth tabs; real Search Console, Play Console, App Store Connect adapters | Replay job built in wave 5 (GC-1); Pharmacy and Lab links built (P4-B1); app tabs wave 9; real adapters MISSING (config-only, no vendor) | KX-33 section 05 |
 | PDPL consent, marketing licence, reward-credit legal assessment, provider terms, store accounts, hosts and DNS | BLOCKED-HUMAN | See KX-33 section 06 and `LAUNCH_PREPARATION_GUIDE.md` section 11 |
 
+## Growth Engine Phases 2 to 4 (25 Nov 2026, Rev 2.7)
+Status values as above. Source: KX-33 section 05 (package table) and the as-built records in `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md`. Everything is local, mocked and launch-locked; none is deployed. Wave 8 exit gate: Kiorex API integration 87 suites and 1,142 tests, three consecutive ordered runs; unit 1,573; Clinic unit 1,417 and integration 534; contracts 383; staff app 307.
+
+| Item | Status | Evidence or blocker |
+|---|---|---|
+| Campaign engine (GRW-P2-A) | DONE+TESTED locally | e2e 29; `growth-campaigns` integration |
+| Provider marketing portal v2 and Clinic marketplace gaps (P2-C, GC-2) | DONE+TESTED locally; no provider photo, no statement e-mail | Clinic `provider-marketing.integration.test.ts` 17 |
+| Patient referral, rewards, two credit systems, refund-as-credit, family credit, goodwill (P2-B1, B2, B3) | DONE+TESTED locally; CREDIT mode BLOCKED-HUMAN (counsel); all amounts zero | integration 82, e2e 31 and 50 |
+| Provider credit integration (P2-W) | DONE+TESTED locally; staff-app card MISSING | Clinic credits integration 17 |
+| Provider-sponsored promotions with Pay wiring (P2-S) | DONE+TESTED locally; BLOCKED-HUMAN (counsel, accounting); Clinic does not read `tender` | e2e 51 and 52 |
+| Lifecycle CRM and send gate (P2-E) | DONE+TESTED locally; marketing sends BLOCKED-HUMAN | e2e 32 |
+| WhatsApp assistant, mock model (P2-D) | DONE+TESTED locally; real model and real buttons MISSING; CMO review BLOCKED-HUMAN | e2e 33 and 37 |
+| Integrations and channel performance (P2-F) | DONE+TESTED with mocks; real adapters MISSING | `growth-integrations.int.spec.ts` 19 |
+| Experiments, reporting models, cohorts and LTV (P3-A, B, C) | DONE+TESTED locally | e2e 34; unit and integration suites |
+| Fraud v2 in shadow, SEO automation (P3-D, P3-F) | DONE+TESTED locally; enforce and auto-noindex OFF | e2e 54 |
+| Marketing automation and recommendations (P3-E) | DONE+TESTED locally | e2e 55 |
+| Market by configuration and wizard (P3-G) | DONE+TESTED locally with synthetic ZY; real market BLOCKED-HUMAN | e2e 38 |
+| Pharmacy and Lab links and product ingest (P4-B1, B2) | DONE+TESTED locally; commission inert | e2e 53 |
+| Cross-product journeys (P4-A) | DONE+TESTED locally; real Clinic and care-plan flow not in e2e | e2e 39 |
+| Corporate partnerships (P4-C) | DONE+TESTED locally; Pay and checkout wiring MISSING; real-stack e2e not run | integration 31 and 11 |
+| Loyalty (P4-D), partner staff-app tabs (P4-B3), Phase 3 and 4 regression (P3-H), gap closure (GC-5) | NOT DELIVERED when this Rev 2.7 was written (wave 9 lanes A1 to A3 in progress); see the as-built records | KX-33 section 05 |
+| Contracts 1.12.1 to 1.14.0 | MISSING (unpublished; local validators) | launch guide, engineering group |
+| Suite 35 `growth-attribution-cohorts` | MISSING | work packages section 12 |

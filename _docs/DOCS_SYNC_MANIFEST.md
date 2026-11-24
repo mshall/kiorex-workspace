@@ -1,4 +1,41 @@
-# Docs sync manifest (Rev 2.4, 24 November 2026)
+# Docs sync manifest (Rev 2.7, 25 November 2026)
+
+For the Drive upload step. **Not uploaded** (founder approval required; nothing was sent to Google Drive in this pass). The PDFs are in `_docs/pdf/out/` (git-ignored, rebuilt with `cd _docs/pdf && node build.mjs --doc KX-01,KX-03,...` or `--all`). The staging folder `/private/tmp/claude-501/kx-final-pdfs/` of the Rev 2.4 pass is NOT refreshed; copy from `_docs/pdf/out/` when approved.
+
+## Rev 2.7: PDFs that changed since the Rev 2.4 set (16 volumes)
+
+All 16 were rebuilt on 25 Nov 2026 with the existing pipeline (16 built, 0 skipped, 0 failed, no warnings in `build-report.json`); the Rev 2.7 label was confirmed in the generated HTML and the page counts and titles were read back with `pdf-lib`. No PDF viewer or text extractor was available on the build machine, so the pages were not eyeballed. Status meaning as below: updated = Markdown source changed.
+
+| Identifier | Name | Revision | Pages | Bytes | Status | File |
+|---|---|---|---|---|---|---|
+| KX-01 | Decision Log and ADRs | Rev 2.7 | 28 | 2,475,010 | updated | `KX-01_Decision_Log_and_ADRs.pdf` |
+| KX-03 | Kiorex Marketplace PRD | Rev 2.7 | 20 | 1,329,833 | updated | `KX-03_Kiorex_Marketplace_PRD.pdf` |
+| KX-05 | Kiorly Clinic PRD | Rev 2.7 | 25 | 1,745,007 | updated | `KX-05_Kiorly_Clinic_PRD.pdf` |
+| KX-09 | Integration Contracts, Events and Money Flows | Rev 2.7 | 16 | 1,164,405 | updated | `KX-09_Integration_Contracts_Events_and_Money_Flows.pdf` |
+| KX-12 | Monetization and Pricing Architecture | Rev 2.7 | 11 | 722,865 | updated | `KX-12_Monetization_and_Pricing_Architecture.pdf` |
+| KX-13 | 36-Month Financial Model and Unit Economics | Rev 2.7 | 14 | 983,903 | updated | `KX-13_36_Month_Financial_Model_and_Unit_Economics.pdf` |
+| KX-14 | Go-To-Market and Marketing Plan | Rev 2.7 | 12 | 670,571 | updated | `KX-14_Go_To_Market_and_Marketing_Plan.pdf` |
+| KX-15 | Risk and Compliance Framework | Rev 2.7 | 12 | 781,395 | updated | `KX-15_Risk_and_Compliance_Framework.pdf` |
+| KX-24 | Notifications and Messaging Architecture | Rev 2.7 | 21 | 1,345,048 | updated | `KX-24_Notifications_and_Messaging_Architecture.pdf` |
+| KX-27 | Growth and Patient Acquisition Engine PRD | Rev 2.7 | 23 | 1,385,784 | updated | `KX-27_Growth_and_Patient_Acquisition_Engine_PRD.pdf` |
+| KX-28 | Growth Engine System Architecture | Rev 2.7 | 35 | 2,568,760 | updated | `KX-28_Growth_Engine_System_Architecture.pdf` |
+| KX-29 | Patient Acquisition and Go-to-Market Strategy for Egypt | Rev 2.7 | 14 | 1,145,160 | updated | `KX-29_Patient_Acquisition_and_GTM_Strategy_Egypt.pdf` |
+| KX-30 | Attribution, Referrals, Rewards and Commission Architecture | Rev 2.7 | 24 | 1,577,552 | updated | `KX-30_Attribution_Referrals_Rewards_and_Commission_Architecture.pdf` |
+| KX-31 | SEO, ASO and Organic Growth Strategy | Rev 2.7 | 17 | 1,202,794 | updated | `KX-31_SEO_ASO_and_Organic_Growth_Strategy.pdf` |
+| KX-32 | Growth Analytics and Unit Economics Reference | Rev 2.7 | 16 | 1,200,391 | updated | `KX-32_Growth_Analytics_and_Unit_Economics_Reference.pdf` |
+| KX-33 | Growth Engine Implementation Roadmap and Agent Handoff | Rev 2.7 | 23 | 1,484,211 | updated | `KX-33_Growth_Engine_Implementation_Roadmap_and_Agent_Handoff.pdf` |
+
+Totals of the changed set: 16 volumes, 311 pages, 21,782,689 bytes. The other 18 volumes (KX-00, 02, 04, 06, 07, 08, 10, 11, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26) are **unchanged** since the Rev 2.4 table below; upload only if the Drive copy is missing or older. KX-27 to KX-33 were never uploaded (status new in the Rev 2.4 pass), so on Drive they appear for the first time at Rev 2.7.
+
+What each changed volume carries (all statuses are local and mocked, nothing deployed): KX-27 to KX-33 Phases 2 to 4 as-built (KX-33 section 05 is the package table); KX-01 ADR-049 to ADR-057 registered Proposed and the assistant decision numbered ADR-051 (scheme A, founder to confirm); KX-03, 05, 09, 12 credit notes updated from "not built" to "built locally, launch-locked"; KX-13, 14, 15, 24 short Rev 2.7 notes with facts only (no price, fee or legal wording invented).
+
+## Other documents changed in the Rev 2.7 pass (Markdown only, not PDF volumes)
+
+`_docs/growth/GROWTH_ARCHITECTURE_DECISIONS.md` (ADR-053 to ADR-057 sections 25 to 29, numbering note), `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md` (ADR table), `kiorex-platform/Docs/adr/ADR-051` (numbering line) and `ADR-053` to `ADR-057` (new repository copies), `TEST_GUIDE.md` and `_docs/test-flow/index.html` (flows G23 to G32; the page is also copied to the iCloud Test Flow folder), `_docs/LAUNCH_PREPARATION_GUIDE.md` (section 11 restructured by owner with status and a legacy crosswalk), `_docs/COMPLETENESS_MATRIX.md`, `_docs/README.md`, `README.md`, `CLAUDE.md`.
+
+---
+
+## Previous manifest (Rev 2.4, 24 November 2026), kept for the unchanged volumes
 
 For the Drive upload step. Not uploaded by the agent that wrote this file. The final PDFs are in `_docs/pdf/out/` (git-ignored, rebuilt with `cd _docs/pdf && node build.mjs --all`) and are copied with identical file names to the staging folder `/private/tmp/claude-501/kx-final-pdfs/`.
 

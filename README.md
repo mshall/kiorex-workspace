@@ -78,7 +78,7 @@ flowchart TB
 | **Shared stack** | NestJS 10, Prisma 6, PostgreSQL 16, React 18 + Vite + TanStack Query + shadcn/ui + Tailwind, i18next (AR/EN, RTL), Expo |
 | **Integration** | HMAC REST + outbox webhooks (KX-09), Passport OIDC, feature-flag control plane, Kiorex Pay |
 | **Truth rule** | Kiorly Clinic is the only system of record for appointments (ADR-005) |
-| **Reference set** | Rev 2.4 (24 Nov 2026): 34 volumes KX-00 to KX-33, ADRs 001 to 047 (041 to 047 Proposed), contracts 1.11.0 |
+| **Reference set** | Rev 2.7 (25 Nov 2026) for the changed volumes (the rest Rev 2.4): 34 volumes KX-00 to KX-33, ADRs 001 to 057 (041 to 057 Proposed), contracts 1.12.0 published (1.12.1 to 1.14.0 unreleased) |
 | **Infra** | OpenTofu only (ADR-028); nothing deployed, no AWS deploy until the founder says so |
 | **Providers** | Mock by default; real SMS, Email, WhatsApp, payments, consent, AI and storage adapters are built and need only URLs and credentials: [_docs/PROVIDER_GO_LIVE.md](_docs/PROVIDER_GO_LIVE.md) |
 
