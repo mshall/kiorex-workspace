@@ -1,6 +1,6 @@
 # KX03 — Kiorex Marketplace PRD
 Source: 1jyq4wTn3bBW4xEahE3-crbpZwrJB18o7
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
+Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 
 > Cleaned from Drive text extraction; symbols restored where obvious; headers/footers removed. Owner: Chief Product Officer. Audience: Founders, investors, engineering & operations leads. Tags: Egypt MVP · Requirement IDs · Booking state machine · Kiorly contract consumer · Home visits · Phase-2 verticals. (Cover requirement-count figure not recoverable from this extraction; Rev 2.2 printed "120".)
 
@@ -258,7 +258,7 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Not verified:** any production behaviour; store accounts and Team ID (NEEDS_HUMAN); the real Search Console and Bing integrations (mock adapter).
 
 ## 10 Patient credit, coupons and sponsored discounts (Proposed, 24 Nov 2026)
-Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned), **As-built**, **Regulatory dependency**. **As-built note:** none of this is built in the Kiorex platform; the only existing credit is the provider wallet in Kiorly Clinic. Design: KX-30 section 14, ADR-048, packages P2-B2 and P2-S. Patient CREDIT mode (any stored balance) is **launch-locked and counsel-gated; coupon mode is the default.**
+Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned), **As-built**, **Regulatory dependency**. **As-built note (Rev 2.7, 25 Nov 2026):** the patient credit ledger, coupon mode (default), credit mode, refund-as-credit with the original payment method preselected, family credit and goodwill are **built locally in the Kiorex platform and launch-locked** (flags `growth.patient_credit`, `growth.refund_as_credit`, `growth.family_credit`, `growth.support_goodwill`; all amounts zero until a human sets them); the Clinic wallet is untouched by them. Not deployed; counsel and accounting gates open (KX-30 section 15). Design: KX-30 section 14, ADR-048, packages P2-B2 and P2-S. Patient CREDIT mode (any stored balance) is **launch-locked and counsel-gated; coupon mode is the default.**
 
 | Capability | Behaviour the patient sees |
 |---|---|

@@ -1,6 +1,6 @@
 # KX-29 — Patient Acquisition and Go-to-Market Strategy for Egypt
 
-Revision: Rev 2.4 · Growth Edition, status refreshed 24 November 2026 (new volume; owner: Chief Marketing Officer; supersedes: Rev 2.4 draft 1 of this volume; extends KX-14 sections 03 to 05 and 09 for patient demand)
+Revision: Rev 2.7 · Growth Edition, status refresh, updated 25 November 2026 (supersedes Rev 2.4 of 24 November 2026; owner: Chief Marketing Officer)
 
 Subtitle: How Kiorex gets patients in Egypt without buying them: provider-led first, organic second, referral and WhatsApp third, paid last and only after verified provider supply.
 
@@ -11,8 +11,8 @@ Tags: Go-to-market · Egypt · 30/60/90 · 6 and 12 months · Playbooks · Geogr
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-29 |
-| REVISION | Rev 2.4 · Growth Edition (24 November 2026) |
-| STATUS | Proposed strategy; founder confirmation of the 50/25/15/10 interpretation is an Open decision |
+| REVISION | Rev 2.7 · Growth Edition (25 November 2026) |
+| STATUS | Proposed strategy (hypotheses); the engine deliverables of Phases 1 to 4 are built locally, not deployed; founder confirmation of the 50/25/15/10 interpretation is an Open decision |
 | OWNER ROLE | Chief Marketing Officer, with Head of Growth |
 | AUDIENCE | Founders, marketing, field operations, finance, investors |
 | RELATED | KX-14; KX-13; KX-17; KX-27; KX-30; KX-31; KX-32; KX-33 |
@@ -22,6 +22,11 @@ Tags: Go-to-market · Egypt · 30/60/90 · 6 and 12 months · Playbooks · Geogr
 |---|---|---|---|
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from the Phase 1 work packages report, section 6, extended with playbooks, geography, specialties and scenarios | Documentation agent |
 | Rev 2.4 | 24 Nov 2026 | Status refresh only: engine deliverables in the timeline are now built locally (KX-33); the strategy, scenarios and numbers are unchanged and remain hypotheses | Documentation agent |
+| Rev 2.7 | 25 Nov 2026 | Phases 2 to 4 as-built status (W5 to W8 and W9 documentation pass); ADR-049 to ADR-057 registered; statuses re-read from the as-built records and the wave 8 exit gate | Documentation agent (wave 9 lane A4) |
+
+## What changed in Rev 2.7
+Status refresh only: the engine behind the playbooks (campaigns, referral, lifecycle, assistant, integrations, experiments, recommendations) is now built locally and launch-locked (KX-33 section 05). The strategy, budgets and scenarios are unchanged and remain hypotheses. No number, price or fee was added.
+
 
 ## Contents
 01 Summary · 02 Principles and constraints · 03 The 50/25/15/10 hypothesis · 04 Geography · 05 Specialties · 06 Playbooks · 07 30, 60 and 90 days · 08 Six and twelve months · 09 Budget hypotheses · 10 Scenarios · 11 Guardrails · 12 KPIs, risks, dependencies, open decisions
@@ -122,7 +127,7 @@ Month 1 is January 2027 (KX-14 section 08); today is 24 Nov 2026. The first colu
 
 | Window | Goals | Engine deliverables (Proposed, KX-33) | Field and content | Exit evidence |
 |---|---|---|---|---|
-| Before month 1 and first 30 days | Founders sign ADR-041 to ADR-047; counsel starts the consent and marketing questions; 20 pilot clinics recruited (KX-17) | Phase 1 contracts, schemas, links and QR, consent, SSR, attribution, commission integration, widget, analytics and Super Admin config are As-built locally (KX-33); production needs the gates in KX-33 section 06 | QR kit designed; Arabic FAQ and help copy drafted; Search Console and Business Profile owners named | ADRs signed; pilot list; counsel engagement letter |
+| Before month 1 and first 30 days | Founders sign ADR-041 to ADR-057; counsel starts the consent and marketing questions; 20 pilot clinics recruited (KX-17) | Phase 1 contracts, schemas, links and QR, consent, SSR, attribution, commission integration, widget, analytics and Super Admin config are As-built locally (KX-33); production needs the gates in KX-33 section 06 | QR kit designed; Arabic FAQ and help copy drafted; Search Console and Business Profile owners named | ADRs signed; pilot list; counsel engagement letter |
 | 60 days | Pilot clinics live with links and QR; first indexed pages in the pilot cluster | Deploy and verify (not done): Lighthouse, device app links, real Passport popup for the widget, DNS and CDN for the hosts | Posters at desks; link shared in clinic WhatsApp groups; Business Profile guide; first provider-led bookings | At least 15 of 20 pilot clinics with a booking through a link |
 | 90 days | KX-17 pilot exit; attribution accuracy audit | Phase 1 complete; SLO baselines; first Search Console data | Measure provider-led share, dispute rate, link activation, organic impressions | Replay equality 100 percent; dispute rate below 5 percent; consent audit clean |
 
@@ -193,3 +198,13 @@ Phase 1 delivery (KX-33); pilot clinics (KX-17); counsel; district list (NH-040)
 
 ### Open decisions
 Interpretation of 50/25/15/10; reconciliation of the EGP 150,000 illustration with KX-13 and KX-14 budget lines; the top 8 specialty list; cluster order confirmation; whether the first paid test is Click-to-WhatsApp or Maps-area.
+
+## Rev 2.7 status note: what the playbooks can use today
+All of these exist in code on the local stack only, mocked, with money, messaging and model features launch-locked; none is deployed or measured against real traffic (KX-33 section 05, KX-27 section 5.7).
+- **Provider-led:** provider links, QR and posters, share cards, free-time cards and recommendations (Clinic), Pharmacy and Lab links, statements v2.
+- **Organic:** SSR pages, SEO quality gate, computed internal links, Lighthouse lab scores (lab, not field data), cohort and channel views.
+- **Referral and rewards:** invite, claim, qualification, coupon mode by default; every reward amount is zero until a human sets it (KX-30).
+- **WhatsApp and lifecycle:** the assistant with a mock model; journeys and an automation builder; every marketing send is skipped until counsel's gate is recorded.
+- **Paid:** campaign records, spend entry and mock adapters; no real ad-platform call and no spend by code.
+- **Measurement:** reporting attribution models, cohorts and LTV estimates (group level), experiments on non-clinical surfaces.
+Not changed by this revision: the 50/25/15/10 interpretation, the illustrative EGP 150,000 monthly budget and every scenario number.

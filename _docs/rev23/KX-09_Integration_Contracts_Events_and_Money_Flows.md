@@ -1,7 +1,7 @@
 # KX09 — Integration Contracts, Events & Money Flows
 
 Source: 1p5Hwgw5gCg7L3A6gsIVxYcN2p6WZKUl7
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
+Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 
 ## What changed in Rev 2.3
 Additive (minor) contract version: provider sync adds profession, edition, service locations and coverage districts; slots accept serviceLocation=HOME; holds carry visitAddress. New events HOME_VISIT_ASSIGNED / _EN_ROUTE / _ABORTED_UNSAFE, SAFETY_ALERT_RAISED, CARE_PLAN_*, ReferralIssued, MedicationOrderShared. Money flows: home surcharge, cash at home, agency nurse pay, deposit hold on unsafe abort.
@@ -161,7 +161,7 @@ Figure — Deposits flow through Kiorex Pay to providers; Kiorly's own revenue c
 
 Home surcharge is provider patient revenue; Kiorex never takes a share of it and it never enters S or C.
 
-**Credit and sponsored discount money flows (Proposed, ADR-048; Rev 2.5 amendment).** Two credit systems, never commingled with each other, with Kiorex Pay, or with held deposits: **patient credit** (Kiorex, closed loop, spendable only on Kiorex bookings) and **provider credit** (Kiorly, the CR-05 wallet). No conversion, no transfer, no cash-out, no patient top-up. Patient deposits remain in the Kiorex Pay held ledger until the visit and are never provider credit.
+**Credit and sponsored discount money flows (Proposed, ADR-048; Rev 2.5 amendment; As-built locally in Rev 2.7: the checkout order, the `tender` block, the held-ledger posting when `postToPayLedger` is true and the refund void are implemented and tested on the local stack, the corporate benefit port is not wired to Pay).** Two credit systems, never commingled with each other, with Kiorex Pay, or with held deposits: **patient credit** (Kiorex, closed loop, spendable only on Kiorex bookings) and **provider credit** (Kiorly, the CR-05 wallet). No conversion, no transfer, no cash-out, no patient top-up. Patient deposits remain in the Kiorex Pay held ledger until the visit and are never provider credit.
 
 | Tender at checkout (order: sponsored price reduction, credit, held deposit, card) | Who funds it | Ledger that records it | Reaches the clinic as |
 |---|---|---|---|

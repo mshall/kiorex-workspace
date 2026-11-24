@@ -1,6 +1,6 @@
 # KX-30 — Attribution, Referrals, Rewards and Commission Architecture
 
-Revision: Rev 2.4 · Growth Edition, as-built verified 24 November 2026 (new volume; owner: Chief Software Architect with the CEO for money policy; supersedes: Rev 2.4 draft 1 of this volume)
+Revision: Rev 2.7 · Growth Edition, Phases 2 to 4 as-built locally, updated 25 November 2026 (supersedes Rev 2.4 of 24 November 2026; owner: Chief Software Architect with the CEO for money policy)
 
 Subtitle: The rules that decide where a patient came from, whether Kiorex charges its fee, how a provider can verify it, and how referral rewards would work if counsel clears them.
 
@@ -11,8 +11,8 @@ Tags: Attribution · Commission · Evidence · Disputes · Referrals · Rewards 
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-30 |
-| REVISION | Rev 2.4 · Growth Edition (24 November 2026) |
-| STATUS | Engine and commission integration As-built locally; defaults are `PROPOSED_DEFAULT` until the CEO signs (ADR-042 stays Proposed); rewards blocked on legal assessment (ADR-046) |
+| REVISION | Rev 2.7 · Growth Edition (25 November 2026) |
+| STATUS | Engine and commission integration As-built locally; referral, rewards, credit, sponsored promotions, fraud v2, reporting models and corporate benefit As-built locally and launch-locked (section 15); defaults are `PROPOSED_DEFAULT` until the CEO signs (ADR-042 Proposed); credit blocked on legal assessment (ADR-046, ADR-048) |
 | OWNER ROLE | Chief Software Architect; CEO for any commission policy |
 | AUDIENCE | Engineering, finance, provider success, counsel |
 | RELATED | KX-12 (monetisation); KX-09 (money flows); KX-13; KX-27; KX-28; KX-32; ADR-007 |
@@ -23,9 +23,14 @@ Tags: Attribution · Commission · Evidence · Disputes · Referrals · Rewards 
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from architecture decisions sections 6, 9, 10 and 16 | Documentation agent |
 | Rev 2.4 | 24 Nov 2026 | Re-verified against code: token lifetimes (72 h provider-link token, 30 min in-session token), inclusive windows, `FIRST_TOUCH` refusal, reason codes of the commission gate, link revocation behaviour, evidence and dispute path, fraud rules actually built; status labels moved to As-built | Documentation agent |
 | Rev 2.5 | 24 Nov 2026 | Added section 14: two separate credit systems (patient credit and provider credit), refund-as-credit option, provider-sponsored promotions, commission and revenue rule; status Proposed (ADR-048); as-built note that only the Clinic CR-05 wallet exists | Documentation agent |
+| Rev 2.7 | 25 Nov 2026 | Phases 2 to 4 as-built status (W5 to W8 and W9 documentation pass); ADR-049 to ADR-057 registered; statuses re-read from the as-built records and the wave 8 exit gate | Documentation agent (wave 9 lane A4) |
+
+## What changed in Rev 2.7
+Sections 09, 10 and 11 relabelled from Roadmap to As-built locally; the section 14 as-built note is superseded by the new section 15, which says exactly what exists (patient and provider credit, refund-as-credit, family credit, goodwill, sponsored promotions with Pay wiring, fraud v2 in shadow, seven reporting models, the separate corporate ledger) and what does not. The money promise is unchanged: evidence can remove a fee, never add one; no downstream product fact, reward or model changes a commission.
+
 
 ## Contents
-01 Summary · 02 As-built commission engine · 03 Concepts · 04 Identity and consent · 05 Windows and policy · 06 Decision algorithm · 07 Chargeability and the charge · 08 Evidence, disputes and audit · 09 Patient referral · 10 Rewards, ledger and configuration · 11 Fraud · 12 Worked examples and tests · 13 Acceptance, KPIs, risks, dependencies, open decisions · 14 Two separate credit systems and provider-sponsored promotions
+01 Summary · 02 As-built commission engine · 03 Concepts · 04 Identity and consent · 05 Windows and policy · 06 Decision algorithm · 07 Chargeability and the charge · 08 Evidence, disputes and audit · 09 Patient referral · 10 Rewards, ledger and configuration · 11 Fraud · 12 Worked examples and tests · 13 Acceptance, KPIs, risks, dependencies, open decisions · 14 Two separate credit systems and provider-sponsored promotions · 15 Rev 2.7 as-built: Phases 2 to 4 money, fraud, models and corporate
 
 ## Key numbers
 <!-- kpis -->
@@ -150,7 +155,7 @@ Provider-led protection is an extra way to be non-chargeable, never a way to cha
 - Existing safeguards kept: `disputeDeadline` (30 days by market pack), `commission-dispute-auto.ts` rules (As-built).
 - **Link revocation (As-built, contracts 1.11.0).** The Clinic emits `ReferralLinkCreated` and `ReferralLinkRevoked` and serves the signed lookup `GET /referral-links/{code}`; Kiorex `LinkRegistryService` stores `linkStatus`, confirms unknown codes through the lookup and reconciles hourly. A revoked or paused code never decides `PROVIDER_LED` for a NEW booking (its touches are filtered and the `lt` is not forwarded). Decisions already written stay (append-only). A REVOKED code never returns to ACTIVE. Residual risk: a still-valid signed token the registry has not yet seen as revoked can keep deciding inside its 72 hours, and it can only remove a fee.
 
-## 09 Patient referral (Roadmap, Regulatory dependency)
+## 09 Patient referral (As-built locally, launch-locked, Regulatory dependency)
 Naming: `PatientReferral*` and `ProviderReferralLink*` only. `ReferralIssued` is a clinical event (a doctor refers a patient to a physio, contracts 1.9.0) and the clinic `Referral` and `ReferralCode` models are the supply-side doctor-to-doctor programme (CR-09, "1 month free both sides"); neither is reused.
 
 | Rule | Detail |
@@ -161,7 +166,9 @@ Naming: `PatientReferral*` and `ProviderReferralLink*` only. `ReferralIssued` is
 | Attribution | A referral touch makes the booking `MARKETPLACE` (Kiorex-acquired); reward qualification continues separately |
 | Document gap | BR12 in KX-02 and KX-12 covers provider referral only; the patient programme needs its own business rule number (Open decision) |
 
-## 10 Rewards, ledger and configuration (Roadmap)
+## 10 Rewards, ledger and configuration (As-built locally, launch-locked)
+> **Rev 2.7 note:** the design below is built in `kiorex-platform` (`growth/referral`, `growth/rewards`): ledger tables are `RewardLot` and `RewardLedgerEntry` (append-only, FIFO, database balance trigger). Section 15 states the exact behaviour and the gaps.
+
 > **Rev 2.5 note (Proposed):** section 14 extends and, where it differs, supersedes this section: patient credit now has four sources (referral and welcome, goodwill, refund-as-credit option, campaign), the provider credit wallet CR-05 is the second, separate system, and providers may sponsor patient discounts (ADR-048). COUPON mode stays the default and CREDIT mode stays launch-locked and counsel-gated.
 
 Properties (Proposed, counsel-gated, ADR-046): closed loop (usable only against Kiorex bookings: deposits or the patient share of a Kiorex-collected fee), non-transferable, non-cashable, no top-up, no interest, expiry (default 12 months, mirroring the SaaS credit expiry in BR12), capped per person per year, discount only.
@@ -180,7 +187,7 @@ Feature switches (flags control plane, ADR-023; defaults per catalogue conventio
 | Provider-led share jump | Rule `PROVIDER_LED_SHARE_JUMP`: last day versus 30-day baseline, jump of 0.35 or more with a minimum sample; review queue in the ops console. Signals never change a decision by themselves (As-built) |
 | Forged or expired `lt` | Ignored; never creates provider-led (As-built; 22 forged shapes, 72 h and skew edges in e2e 42) |
 | Clinic attempts to set origin | Not possible: only Kiorex creates `acquisitionOrigin`; the Clinic cannot turn a decision into a chargeable origin (As-built) |
-Fraud thresholds are code constants or policy values, shown read-only in the ops console. Phase 2 adds patient-level signals and a two-person review for reward reversal; Phase 3 adds scoring.
+Fraud thresholds are code constants or policy values, shown read-only in the ops console. Phase 2 added patient-level signals and a two-person review for reward reversal (As-built locally); Phase 3 added scoring in SHADOW mode (section 15.5).
 
 ## 12 Worked examples and tests
 | Case | Source | New patient | Origin | Result |
@@ -200,12 +207,12 @@ Tests (As-built, GRW-P1-B, D2; the requirement was): at least 40 decision-table 
 - Acceptance: KX-27 section 07 and the GRW-P1-B, C, D2 criteria in KX-33 (met locally; see KX-33 section 04 for gaps).
 - KPIs: decision determinism 100 percent; disputes attributable to attribution below 3 percent of charges; provider-led share; share of bookings with a decision row 100 percent.
 - Risks: a provider games provider-led status (dwell, anomaly rules, audit sampling); Kiorex perceived as biased (public rules, evidence); policy error (rollback by new version, RB-G1 in KX-28); legal reading of "consent" for the `kxv` cookie (counsel).
-- Dependencies: contracts 1.10.0 and 1.11.0 (built); the Phase 1 migrations (applied locally); provider terms update (open).
+- Dependencies: contracts 1.10.0, 1.11.0 and 1.12.0 (built and vendored; 1.12.1 to 1.14.0 unpublished); the Phase 1 migrations (applied locally); provider terms update (open).
 - Open decisions: `PROVIDER_FIRST` default; windows; no charge for provider-led-then-marketplace; patient-referral BR number; reward programme go or no-go.
 - Cross-references: KX-12 (BR12, monetisation), KX-09 (money flows), KX-28 sections 06 to 09, KX-32 (revenue definitions).
 
 ## 14 Two separate credit systems and provider-sponsored promotions (Proposed, 24 Nov 2026)
-Status: **Proposed** (ADR-048, founder-approved product design of 24 Nov 2026; not yet signed as an ADR). **As-built note:** the only part that exists is the Clinic provider credit wallet **CR-05** (`clinics-management/apps/api/src/credits`: one wallet per tenant, ledger with grant, first-expiring-first consume, expire, late-reversal credit and a daily balance check; credit already offsets the Kiorly invoice). **Not built:** the patient credit ledger beyond the Phase 2 plan, refund-as-credit, family sharing, support goodwill grants, fee draw-down inside the commission flow, dispute-win credit as a named reason, usage bundles, and provider-sponsored promotions. Work packages: `GRW-P2-B2` (patient), `GRW-P2-W` (provider credit integration), `GRW-P2-S` (sponsored promotions) in `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md`. Legal assessment is required before any stored-value-like feature goes live: **patient CREDIT mode stays launch-locked and counsel-gated; coupon mode is the default.** This section supersedes section 10 where they differ (section 10 described one patient reward ledger; the design below adds the options and the provider side).
+Status: **Proposed** (ADR-048, founder-approved product design of 24 Nov 2026; not yet signed as an ADR). **As-built note (Rev 2.4 text, superseded by section 15 in Rev 2.7):** at the time the only part that existed was the Clinic provider credit wallet **CR-05** (`clinics-management/apps/api/src/credits`: one wallet per tenant, ledger with grant, first-expiring-first consume, expire, late-reversal credit and a daily balance check; credit already offsets the Kiorly invoice). **Not built:** the patient credit ledger beyond the Phase 2 plan, refund-as-credit, family sharing, support goodwill grants, fee draw-down inside the commission flow, dispute-win credit as a named reason, usage bundles, and provider-sponsored promotions. Work packages: `GRW-P2-B2` (patient), `GRW-P2-W` (provider credit integration), `GRW-P2-S` (sponsored promotions) in `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md`. Legal assessment is required before any stored-value-like feature goes live: **patient CREDIT mode stays launch-locked and counsel-gated; coupon mode is the default.** This section supersedes section 10 where they differ (section 10 described one patient reward ledger; the design below adds the options and the provider side).
 
 ### 14.1 Principle: two systems, one experience
 | | Patient credit (Kiorex) | Provider credit (Kiorly) |
@@ -253,3 +260,33 @@ Flags (all launch-locked unless noted): `growth.rewards`, `growth.patient_credit
 Reconciliation invariants (acceptance): sum of ledger = balance for both systems; no cross-ledger entries; refund-as-credit math; sponsored discount accounting end to end.
 Human items (launch guide 11.24 to 11.31): counsel on credit mode, refund credit, family and promotions; accounting and VAT treatment of sponsored discounts; advertising rules; Super Admin review procedure; pricing of bundles. Open decisions: order-of-use interpretation, refund-credit expiry behaviour, maximum open balance, high-value thresholds.
 Not verified: any of this running; the legal position of any credit balance in Egypt.
+
+## 15 Rev 2.7 as-built: Phases 2 to 4 money, fraud, models and corporate (25 Nov 2026)
+Status: **As-built locally** (code plus passing tests on the local stack, mock providers), **launch-locked**, not deployed; ADR-048 to ADR-057 are Proposed. Numbers: every reward, credit and promotion amount is zero or entered by a human; no price, fee or legal wording is invented here.
+
+### 15.1 Patient referral and rewards (GRW-P2-B1, B2)
+- **Flow.** Invite code, first-claim-wins claim with one refusal shape (no oracle), pure `qualify()` with 16 checks, one `ReferralQualified` per relationship, reward after the referee's attended visit and the hold (default 7 days). A referral never changes the booking's acquisition origin or any commission.
+- **Modes.** COUPON is the default (sealed code, revealed once, single use, the unspent rest expires with its redemption). CREDIT mode, refund-as-credit and family credit are separate launch-locked flags (`growth.patient_credit`, `growth.refund_as_credit`, `growth.family_credit`) and need counsel (KX-33 gate 21). Support goodwill needs a second approver above a threshold.
+- **Ledger.** `RewardLedgerEntry` is append-only with idempotency keys; balances are a database trigger; FIFO with scope and expiry; a cap, ceiling or amount of 0 refuses issuance (fail closed); reversal creates a recoverable-loss record and a 90-day issuance block (code constant); a refund restores credit as a NEW `RESTORED` lot (never earlier than now plus 90 days); reconciliation RC-1 to RC-7 runs daily and in a 300-step random-sequence test.
+- **Checkout order** (pure `composeCheckout`): sponsored price reduction, then credit, then held deposit, then card; the card keeps at least one minor unit. Pay ledger posting of promotional credit follows `REWARD_RULES.postToPayLedger` (default **false**, finance decision H-25); the patient's own refund credit is always posted.
+- **Refund destination.** Preview lists the original payment method first and preselected; "keep as credit" is an option only with all three credit switches on; the choice is immutable; credit that expires returns to the original method.
+- **Gaps.** Clinic staff-phone-match endpoint not built; no payment fingerprint or visit-duration feed; chargebacks have no webhook; reward notices wait for the lifecycle consumer; recoverable-loss and fraud thresholds are code constants.
+
+### 15.2 Provider credit (GRW-P2-W, Clinic)
+Categories and spendable-on rules, append-only trigger, idempotency keys, fee draw-down per use at invoice issue (credit first, then the invoice), dispute-win and waiver returns as credit once, connect bonus and onboarding credit from a market `credit` block (default 0), promotion holds with opaque references and no patient column, a usage-bundle skeleton (off), a Credit section on the monthly statement and PDF, a daily reconcile report, the web page `/credit`. The staff-app credit card and a platform-admin grant dialog beyond GOODWILL are not built.
+
+### 15.3 Provider-sponsored promotions (GRW-P2-S)
+A discount the clinic funds, never a conversion of balances. Clinic: promotion, immutable versions, review with a decided-is-final trigger, append-only budget ledger, one reservation per booking, a deferred cap constraint, `PROMOTION_EXPENSE` invoice and statement line, commission basis fields outside the decision hash. Kiorex: projection, quote, maker-checker review, the sponsored line taken off the deposit first, `tender.sponsoredDiscountMinor` on `deposit-paid`, posting `SPONSOR_FUNDED:clinicCredit -> HELD` only when `postToPayLedger` is true, pro-rata void on refund, payout hold, reconciliation RC-S3 and RC-S4 (e2e 51: D 500, S 100, C 150, K 250). The Kiorex fee is on the fee before the sponsored discount; attribution and chargeability are unchanged; the sponsored amount is never Kiorex revenue. A 20-way reservation race never over-reserves; under load the answer is `503 PROMOTION_RESERVE_BUSY` with `Retry-After`. **Gaps:** the real Clinic does not read `tender` yet; no staff-app card; whether the whole sponsored amount comes off a small deposit or pro-rata is a product decision; accounting and advertising sign-off open (H-25, H-26, H-28).
+
+### 15.4 Reporting models are not the decision
+Seven models share credit for analysis only (ADR-054, KX-32 section 4.2); the decision of section 06 and the charge of section 07 are unchanged and a test proves the decision rows are byte-identical after a model run.
+
+### 15.5 Fraud detection v2 (GRW-P3-D, SHADOW)
+Eleven rules (self, duplicate, bot, farm, fake booking, collusion, cancel, redeem, touch burst, widget abuse, link-token replay); a pure monotone scorer (cap per rule, diminishing returns 0.6, bands 30 and 70); shadow score stored beside the enforced action; cases with append-only signals and decision log; review queue with SLA; bulk dismiss of low and medium cases only; DPO-only audited identity lookup; two-person confirmation when reward value is reversed; suspension with expiry; appeals decided by a different reviewer; weekly fairness report (language and governorate, k >= 10). The action vocabulary is closed to eight verbs: **no verb can change attribution, a commission, a booking or a provider penalty.** All weights, bands and durations are PROPOSED_DEFAULT; nothing enforces until humans flip rules one at a time. An upheld appeal re-enables a code but does not restore reversed value (goodwill does).
+
+### 15.6 Products, continuity and corporate
+- **Products (ADR-056).** The same `decide()` decides Pharmacy, Lab and Nurse orders on their own evidence; the commission link of products is inert; counters on the partner side only.
+- **Corporate (ADR-057).** A separate append-only `CorporateBenefitEntry` ledger with database caps; never patient credit, never provider credit; terms never defaulted; employer reports aggregate-only (k >= 10 with secondary suppression); HR lists hashed with a 30-day matching window; enterprise leads from the Clinic with no reward or fee share. **Not wired into Pay and checkout: no deposit is reduced today.** Funding mode defaults to `SPONSOR_CREDIT`; `PLATFORM_PROMO` needs CFO and counsel.
+
+### 15.7 Not verified
+Any of this running against real money, a real PSP, real clinics or real patients; the legal position of any credit balance, sponsored discount or corporate benefit in Egypt; accounting and VAT treatment; Arabic copy by a native reviewer.

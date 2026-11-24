@@ -1,7 +1,7 @@
 # KX-12 Monetization & Pricing Architecture
 
 Source: 1hTRK4WdabuUHyCHl8NvsTWfpXADeOMyA
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (supersedes KX12 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
+Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; supersedes KX12 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; a few symbols (>=, <=, ~, arrows) lost in the PDF text layer, gaps marked "[?]".
 
@@ -145,7 +145,7 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Not built:** patient referral rewards and any reward ledger (Roadmap, counsel-gated), the provider monthly cap and pause (Roadmap), a public help page for the rules.
 
 ## 09 Credit systems and sponsored promotions (Proposed, 24 Nov 2026)
-Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned), **As-built**, **Regulatory dependency**. **As-built:** only the Clinic provider credit wallet CR-05 exists (grants, first-expiring-first consumption, expiry, late-reversal credit, applied to the Kiorly invoice, daily balance check). The patient credit ledger, refund-as-credit, sponsored promotions, fee draw-down inside the commission flow and usage bundles are **not built**. Full design: KX-30 section 14, ADR-048 in KX-01, packages P2-B2, P2-W, P2-S.
+Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned), **As-built**, **Regulatory dependency**. **As-built:** only the Clinic provider credit wallet CR-05 exists (grants, first-expiring-first consumption, expiry, late-reversal credit, applied to the Kiorly invoice, daily balance check). Rev 2.7: the patient credit ledger, refund-as-credit, sponsored promotions and fee draw-down are **built locally and launch-locked** with every amount zero or entered by a human (no price or fee is set by this volume); usage bundles are a skeleton and off; the corporate benefit is a separate ledger and not wired to Pay. Full design: KX-30 section 14, ADR-048 in KX-01, packages P2-B2, P2-W, P2-S.
 
 | Question | Monetisation rule (Proposed) |
 |---|---|

@@ -1,6 +1,6 @@
 # KX-31 — SEO, ASO and Organic Growth Strategy
 
-Revision: Rev 2.4 · Growth Edition, as-built verified 24 November 2026 (new volume; owner: Head of Growth and SEO lead; supersedes: Rev 2.4 draft 1 of this volume; extends KX-14 section 05)
+Revision: Rev 2.7 · Growth Edition, SEO automation as-built locally, updated 25 November 2026 (supersedes Rev 2.4 of 24 November 2026; owner: Head of Growth and SEO lead)
 
 Subtitle: How Kiorex becomes findable in Arabic and English: server-rendered public pages, URL and slug rules, structured data, a thin-page guard, Maps and store presence, and measurement.
 
@@ -11,8 +11,8 @@ Tags: SEO · ASO · Organic · SSR · hreflang · JSON-LD · Sitemaps · Core We
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-31 |
-| REVISION | Rev 2.4 · Growth Edition (24 November 2026) |
-| STATUS | Server rendering, slugs, sitemaps, structured data and the guard As-built locally (ADR-043 still Proposed); no lab or field Web Vitals measured; Search Console and Bing run in mock; store accounts NEEDS_HUMAN |
+| REVISION | Rev 2.7 · Growth Edition (25 November 2026) |
+| STATUS | Server rendering, slugs, sitemaps, structured data, the guard and SEO automation As-built locally (ADR-043, ADR-053 and later Proposed); Lighthouse lab scores recorded, no field Web Vitals; Search Console and Bing run in mock; store accounts NEEDS_HUMAN |
 | OWNER ROLE | Head of Growth, SEO lead; engineering for rendering |
 | AUDIENCE | Marketing, engineering, content writers, CMO |
 | RELATED | KX-14 section 05; KX-19 (hosts and stores); KX-27; KX-28; KX-29; KX-32 |
@@ -22,9 +22,14 @@ Tags: SEO · ASO · Organic · SSR · hreflang · JSON-LD · Sitemaps · Core We
 |---|---|---|---|
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from architecture decisions sections 4, 5, 13 and the competitive research | Documentation agent |
 | Rev 2.4 | 24 Nov 2026 | Re-verified against `public-site/*`, `growth/seo/*`, `apps/web/src/public/*` and the SEO integration suites: section 02 split into before and after Phase 1; URL, slug, guard, sitemap, JSON-LD and caching rules relabelled with the real values and deviations; Lighthouse gap stated | Documentation agent |
+| Rev 2.7 | 25 Nov 2026 | Phases 2 to 4 as-built status (W5 to W8 and W9 documentation pass); ADR-049 to ADR-057 registered; statuses re-read from the as-built records and the wave 8 exit gate | Documentation agent (wave 9 lane A4) |
+
+## What changed in Rev 2.7
+New section 2.3: Phase 3 SEO automation (quality gate, internal-link graph, vitals, indexation snapshots, automatic noindex OFF by default), lab Lighthouse scores on the SSR pages, the experiment SSR slots and the thin-page finding on district pages. App-store optimisation is unchanged (blocked on store accounts).
+
 
 ## Contents
-01 Summary · 02 As-built baseline · 03 Strategy · 04 URL and slug rules · 05 Rendering and caching · 06 Technical SEO · 07 Structured data · 08 Thin-page guard and content · 09 Maps and Business Profile · 10 ASO · 11 Measurement · 12 Acceptance, KPIs, risks, dependencies, open decisions
+01 Summary · 02 As-built baseline · 03 Strategy · 04 URL and slug rules · 05 Rendering and caching · 06 Technical SEO · 07 Structured data · 08 Thin-page guard and content · 09 Maps and Business Profile · 10 ASO · 11 Measurement · 12 Acceptance, KPIs, risks, dependencies, open decisions · Rev 2.7: section 2.3 (after Phase 3)
 
 ## Key numbers
 <!-- kpis -->
@@ -74,6 +79,19 @@ Local intent is the largest demand pool for this category (Vezeeta shows how lar
 | Crawl files | `robots.txt` per environment, segmented sitemaps with lastmod and alternates, verification meta and files from config, Search Console and Bing through a mock adapter | As-built (mock adapter) |
 | Performance | Public JS 102.0 KB gzip against the 120 KB budget; self-hosted fonts; SSR 3 to 7 ms on the throwaway smoke. Lighthouse and field Web Vitals are NOT measured (CLI not installed) | As-built (budget), Open (lab scores) |
 | Infra | `cdn-edge` and product-stack modules gained `site_enabled`, `site_origin_domain`, `spa_noindex_header` (default off); `apps/api/Dockerfile` added; `tofu fmt` and `validate` only | As-built (validated, not applied) |
+
+### 2.3 After Phase 3 (Rev 2.7, GRW-P3-F, verified 25 Nov 2026 locally)
+| Item | Fact | Label |
+|---|---|---|
+| Quality gate | Nine checks per page and locale: thin content (boilerplate removed; entity floors 15 words for doctor and nurse, 12 clinic, 10 pharmacy and lab; listing templates hub 100, city 90, district 70), near duplicate (shingle similarity, limit 85 percent), Arabic and English parity, title and meta, JSON-LD validity, canonical, hreflang reciprocity, orphan, medical claims, empty page; score, failed checks and content hash stored | As-built locally |
+| Automatic noindex | `SEO_AUTOMATION.autoNoindex` is **OFF** by default; the gate only reports until a human switches it on after reading about a week of reports | As-built, locked by default |
+| Internal links | Computed link graph with caps (50 per page, 3 per cross-link role), stable order, linkable targets only, orphan repair, anchor variety; rendered in SSR templates as `nav[data-computed-links]` without repeating an existing link | As-built locally |
+| Vitals | Lighthouse summary and CrUX rows into `SeoVitalSnapshot`, budgets from `lighthouserc.json`; lab run on ten SSR audits (home, specialty hub, city hub, doctor, clinic; Arabic and English): performance 100, accessibility 100, best practices 96, SEO 100, LCP about 630 ms, CLS 0 to 0.026. Lab numbers on loopback, **not field data** | As-built (lab), field Open |
+| Indexation | Submitted and excluded counts are real; "indexed" reads "not measured" until a Search Console coverage adapter exists | As-built, gap |
+| Finding | District pages of the eight-provider seed list the same doctors as their city pages and fail the near-duplicate check (86 to 88 percent): a content decision (does such a page deserve to exist) is open for the CMO | Open decision |
+| Not wired | Running the gate on publish, profile update and slug change (only the nightly job and a manual run exist); the crawl renders pages serially (fine for the launch catalogue, a scale note beyond a few thousand pages) | Not built |
+| Experiment slots | Two SSR slots can show a variant (`landing.home.hero_copy`, `landing.provider.cta_label`) only when the visitor holds both the analytics cookie and the `kxe` cookie; no consent means no cookie and no cache-key change; CloudFront must include `kxe` in the cache key (human infra item) | As-built, infra open |
+| Market by configuration | A new market's canonical segment and locales come from `MARKET_PROFILE`; the SSR markup for a live new market is not proven | Open |
 
 ## 03 Strategy
 | Pillar | What | Label |

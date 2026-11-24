@@ -1,6 +1,6 @@
 # KX24 — Notifications & Messaging Architecture
 
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (owner: Chief Software Architect; supersedes: KX-24 Rev 2.3, 23 Nov 2026; a Drive draft of 22 Nov 2026 labelled "Rev 2.4" numbers its main decision ADR-033 and is reconciled in §02 and §13; Rev 2.4 as-built section added at the end, status-labelled)
+Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; owner: Chief Software Architect; supersedes: KX-24 Rev 2.3, 23 Nov 2026; a Drive draft of 22 Nov 2026 labelled "Rev 2.4" numbers its main decision ADR-033 and is reconciled in §02 and §13; Rev 2.4 as-built section added at the end, status-labelled)
 
 Subtitle: Email, SMS, push, WhatsApp and the in-app inbox across Kiorex, Kiorly Clinic (and the Nurse edition), Kiorly Pharmacy and Kiorly Lab: one shared notification layer, per-product adapters, mock by default, real by configuration.
 
@@ -278,3 +278,9 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Telehealth messages.** A telehealth notifier service exists in the Clinic (`telehealth-notifier.service.ts`, mock providers); its message content was not re-read in Rev 2.4.
 - **Known edge.** `quietUntil` in `@kiorex/contracts` converts the end of a quiet window with the offset at "now", so on the two Cairo DST nights a deferral can end an hour early; the platform's own `quietWindowEnd` is exact (edge report risk 3).
 - **Not verified:** real providers, Meta marketing template approval, the marketing licence (Regulatory dependency), the WhatsApp assistant (Roadmap).
+
+## Rev 2.7 as-built update (25 Nov 2026, Phases 2 to 4, local only)
+- **Lifecycle journeys and automation (As-built locally).** Four message classes on every template, a stage model, eight journeys, a pure send gate (1,280 vectors against an independent oracle), decisions with reason codes, quiet hours across both Cairo offset-change nights (the contracts `quietUntil` now accepts a zone), a shared frequency budget with campaigns, STOP and withdrawal effective on the next evaluation, holdout, and a journey builder with validator and dry run. **Every marketing send is skipped while `growth.marketing_messaging` is locked.** No marketing template is approved.
+- **WhatsApp assistant (ADR-051).** Built with a mock model and mock WhatsApp; interactive buttons are listed as text in the mock inbox; the Meta adapter must send real interactive messages (launch guide). Consent purpose `AI_PROCESSING` is needed; the deterministic machine does not yet invite the patient to grant it.
+- **Referral and reward notices** are not sent by the reward engine (it emits events the lifecycle layer can read). **Growth messaging stays in Kiorex Engagement only** (patient-delivery owner rule).
+- **Not verified:** real providers, Meta marketing template approval, the marketing licence, native-speaker review of the assistant templates.

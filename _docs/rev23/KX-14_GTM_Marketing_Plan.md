@@ -1,7 +1,7 @@
 # KX-14 Go-to-Market & Marketing Plan
 
 Source: 1y50CZ9gxFGp8e-pzGTWwX2INUCWfchVJ
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (supersedes KX14 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
+Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; supersedes KX14 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; some symbols lost; timeline-bar positions in §08 not recoverable.
 
@@ -162,3 +162,6 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 ## Rev 2.4 as-built update (24 Nov 2026)
 Rev 2.4 verification (24 Nov 2026): this volume was re-read against the repositories; the only changes are status refreshes. Labels as in KX-27; nothing is deployed.
 - Status refresh only: the engine behind the Growth update above is As-built locally (KX-33 section 04); nothing is deployed and no page is indexed. Plan, budgets and cluster order are unchanged hypotheses.
+
+## Rev 2.7 channel tooling update (25 Nov 2026; plan and budgets unchanged)
+The channel plan above is unchanged. Tooling that now exists locally (mocked, not deployed): campaign records with UTM builder and budgets, provider share cards and free-time cards, Pharmacy and Lab links, referral invites (coupon mode, amounts zero), lifecycle journeys and an automation builder (sends locked), the WhatsApp assistant (mock model), channel performance and cohort views, experiments on non-clinical surfaces, and corporate programmes (locked, terms by contract only). No budget, price or target number in this volume was changed.

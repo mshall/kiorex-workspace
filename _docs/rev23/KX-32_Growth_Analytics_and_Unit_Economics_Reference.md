@@ -1,6 +1,6 @@
 # KX-32 — Growth Analytics and Unit Economics Reference
 
-Revision: Rev 2.4 · Growth Edition, as-built verified 24 November 2026 (new volume; owner: Head of Finance with the Head of Growth; supersedes: Rev 2.4 draft 1 of this volume)
+Revision: Rev 2.7 · Growth Edition, Phases 2 and 3 metrics as-built, updated 25 November 2026 (supersedes Rev 2.4 of 24 November 2026; owner: Head of Finance with the Head of Growth)
 
 Subtitle: One set of definitions for every growth number: what counts, what is divided by what, revenue versus booking value, CAC, LTV, ROAS, MER, the canonical funnel, cohorts and privacy-safe reporting.
 
@@ -11,8 +11,8 @@ Tags: Metrics · Definitions · Denominators · Revenue vs GBV · CAC · LTV · 
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-32 |
-| REVISION | Rev 2.4 · Growth Edition (24 November 2026) |
-| STATUS | Definitions fixed; Phase 1 implementation As-built locally (`growth/analytics/*`); spend entry manual; no Phase 2 campaign data |
+| REVISION | Rev 2.7 · Growth Edition (25 November 2026) |
+| STATUS | Definitions fixed; Phases 1 to 3 implementation As-built locally (analytics, channel performance, reporting models, cohorts and LTV, experiments); revenue definition amended for the credit systems and sponsored promotions (ADR-048 Proposed); nothing measured on real traffic |
 | OWNER ROLE | Head of Finance; Head of Growth |
 | AUDIENCE | Finance, growth, product, investors, data analysts |
 | RELATED | KX-13; KX-14; KX-27; KX-28; KX-29; KX-30 |
@@ -23,9 +23,14 @@ Tags: Metrics · Definitions · Denominators · Revenue vs GBV · CAC · LTV · 
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from architecture decisions section 17 and the work-packages finance section | Documentation agent |
 | Rev 2.7 | 25 Nov 2026 | Revenue definition amended for the two credit systems and sponsored promotions (ADR-048 Proposed); product decisions are counts, not revenue | W7 A4 documentation |
 | Rev 2.4 | 24 Nov 2026 | Re-verified against `growth/analytics/*`: endpoints, k = 10 masking with secondary suppression, revenue definition and its two deviations (confirmation inferred at COMPLETED, BILLED not observed), canonical events actually emitted, worked examples tested | Documentation agent |
+| Rev 2.7 | 25 Nov 2026 | Phases 2 to 4 as-built status (W5 to W8 and W9 documentation pass); ADR-049 to ADR-057 registered; statuses re-read from the as-built records and the wave 8 exit gate | Documentation agent (wave 9 lane A4) |
+
+## What changed in Rev 2.7
+New section 4.2 (Phase 2 and 3 as-built: channel performance and blended CAC formulas, reporting models, cohorts and LTV estimates, experiment metrics, recommendation thresholds); section 07 cohort method now has an implementation; revenue definition unchanged from the Rev 2.7 amendment of W7 A4 (credits, sponsored amounts, corporate benefit and product decisions are not Kiorex revenue).
+
 
 ## Contents
-01 Summary · 02 Principles · 03 Data sources · 04 Definitions and denominators · 05 Formulas · 06 Funnel and canonical events · 07 Cohort method · 08 Bottom-up pressure test · 09 LTV and CAC guardrails · 10 Privacy and k-anonymity · 11 Acceptance, KPIs, risks, dependencies, open decisions
+01 Summary · 02 Principles · 03 Data sources · 04 Definitions and denominators · 05 Formulas · 06 Funnel and canonical events · 07 Cohort method · 08 Bottom-up pressure test · 09 LTV and CAC guardrails · 10 Privacy and k-anonymity · 11 Acceptance, KPIs, risks, dependencies, open decisions · Rev 2.7: section 4.2 (Phases 2 and 3 as-built)
 
 ## Key numbers
 <!-- kpis -->
@@ -107,6 +112,17 @@ Under ADR-007 Kiorex earns EGP 40 only on an attended new patient, once per pati
 | Cohorts | Closed 30, 90 and 180 day windows | As-built |
 | Worked examples | `analytics-formulas.unit.spec.ts` reproduces section 08 (month 6 EGP 7,872, month 12 EGP 106,637, LTV 38.40) | As-built |
 | Reconciliation | `growth-analytics.int.spec.ts` reconciles the overview to bookings and charges on the seed and asserts GBV is never revenue | As-built |
+
+### 4.2 As-built implementation notes (Rev 2.7, Phases 2 and 3, local only)
+| Item | What the code does | Label |
+|---|---|---|
+| Not Kiorex revenue | Patient credit and coupons, provider credit and waivers, provider-sponsored promotion amounts and the corporate sponsor benefit are tender or marketing cost, never revenue; product decisions (Pharmacy, Lab, Nurse) are counts, not revenue | As-built |
+| Channel performance | ROAS and blended CAC are shown only when the denominator is at least k = 10 attended patients and spend is at least the EGP 500 floor (`guardRatio`); an adapter row wins over a manual row on reconciliation; with no external row the page says "not connected"; blended CAC includes reward cost read from the ledger as redeemed minus reversed marketing-funded lots | As-built locally |
+| Reporting attribution models | Seven models over the same facts; every model reconciles to the same conversions and revenue to the minor unit; a conversion with no touch is `UNATTRIBUTED`; default report `POSITION_BASED` 40/40/20; windows counted in Cairo market days; data-driven model only at 1,000 attended new patients in 90 days; reporting only, never a decision (ADR-054) | As-built locally |
+| Cohorts and LTV | Acquisition cohort by first attended month; retention at 30, 90 and 180 days; LTV as a group ESTIMATE with n, a 90 percent interval from a seeded bootstrap (1,000 resamples), horizon 12 months, geometric tail, rewards cost subtracted; payback and LTV:CAC against approved spend only; cells below k = 10 stored suppressed; no per-person LTV | As-built locally |
+| Experiments | Primary and guardrail metrics are first-party funnel facts joined by the same unit key; conversions count within 7 days of exposure; arms under 10 show "<10"; no segment breakdown (ADR-053) | As-built locally |
+| Recommendations | Aggregate-only inputs with k 10 and a spend floor of EGP 500; a channel must be 1.5 times better to propose a move, at most 20 percent shifted, pause only after 14 days; all PROPOSED_DEFAULT and human-approved | As-built locally, numbers unconfirmed |
+| Open caveats | Revenue confirmation is still inferred at COMPLETED unless the settlement-facts item of wave 9 closed it (see KX-33 section 05); per-source reward cost is not a metric column; language cohort cut and repeat rate are not built | Open |
 
 ## 05 Formulas
 ```

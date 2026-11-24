@@ -1,6 +1,6 @@
 # KX-05 — Kiorly Clinic PRD (as built)
 Source: 1JIhEl6TDzm69GR9lZLFpwUTH66mMtrVY
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
+Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
 Owner role: VP Product, Kiorly. Audience: Product, engineering, sales, support.
 Extraction note: PDF text extraction; check/cross glyphs and some symbols lost (inferred where obvious).
 
@@ -290,7 +290,7 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - Tests: Clinic API unit 1,222 passing; growth and kiorex integration 55 passing (live evidence test skipped by design). Not verified: deployment; the 115 untyped request bodies still need DTO classes (edge report risk 1).
 
 ## 15 Provider credit wallet, fee draw-down and sponsored promotions (Proposed extension of As-built CR-05, 24 Nov 2026)
-Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned), **As-built**, **Regulatory dependency**. **As-built (branch `kiorex`):** CR-05 wallet exists: one wallet per organisation, a ledger with grant, first-expiring-first consume, expire and late-reversal credit, a daily balance check, manual grants by Super Admin with dual approval above a threshold, credit applied on the Kiorly invoice, referral rewards (CR-09) with fraud rules. **Not built:** fee draw-down as an explicit step of the commission and billing flow, dispute-win credit as a named reason, onboarding and connect credit, wiring of the `referral` block that `Docs/COMMERCIAL_CONFIG.md` lists as open, usage bundles, credit lines on the monthly statement, and sponsored promotions. Packages `GRW-P2-W` and `GRW-P2-S`; design KX-30 section 14; ADR-048.
+Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned), **As-built**, **Regulatory dependency**. **As-built (branch `kiorex`):** CR-05 wallet exists: one wallet per organisation, a ledger with grant, first-expiring-first consume, expire and late-reversal credit, a daily balance check, manual grants by Super Admin with dual approval above a threshold, credit applied on the Kiorly invoice, referral rewards (CR-09) with fraud rules. **Rev 2.7 update (As-built locally, 25 Nov 2026, migrations `20261217100000` and `20270107120000`):** fee draw-down per use at invoice issue, dispute-win and waiver credit as named reasons, onboarding and connect credit from a market block (default 0), promotion holds, a Credit section on the monthly statement and PDF, a daily reconcile report, the web page `/credit`, provider-sponsored promotions with a budget ledger and a `PROMOTION_EXPENSE` invoice line, and "Refer a company" (`ProviderB2BReferral`). **Still not built:** usage bundles (skeleton only, off), the staff-app credit and promotion cards, and reading `tender` from Kiorex. Packages `GRW-P2-W` and `GRW-P2-S`; design KX-30 section 14; ADR-048.
 
 | Capability | Rule |
 |---|---|

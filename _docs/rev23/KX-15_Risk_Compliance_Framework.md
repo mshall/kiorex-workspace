@@ -1,7 +1,7 @@
 # KX-15 Risk & Compliance Framework
 
 Source: 189VvrWvsSTnBwRpDHdGVuXSYkjx7YXZU
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (supersedes KX15 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
+Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; supersedes KX15 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; multi-column obligations table partly scrambled — rows reconstructed best-effort.
 
@@ -139,3 +139,17 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Edge-case sweep.** 24 defects fixed (PSP capture idempotency, booking races, hostile input, contract sweeps). Remaining risks to register: untyped Clinic request bodies (115 parameters), `lt` tokens not bound to a person within 72 hours, a one-hour error on two Cairo DST nights in a quiet-hours helper, the Lab cancel race, no 410 tombstone for delisted profiles, a replayed authorization code leaves the first tokens valid.
 - **Compliance as built (not as approved).** Consent is append-only with versioned wording keys; withdrawal and STOP write suppression; erasure is wired to the Passport deletion event and was fixed in Rev 2.4 work (growth rows anonymised: touches a decision used are kept anonymised for 25 months, others deleted at 13); no PHI in growth payloads is enforced by tests; dependants never enter growth tables; the visitor key and marketing messaging stay launch-locked. **None of this satisfies a legal gate**: the PDPL opinion, consent wording, marketing licence, provider terms and data-residency view remain Regulatory dependencies (KX-33 section 06) and no gate evidence is recorded.
 - **Telehealth.** ADR-039 sends no media through our servers and records none; Cloudflare is a transport-only sub-processor for relayed calls (listed in the Clinic sub-processor note); video consent wording and the governance gate for `kiorex.telemedicine` are NEEDS_HUMAN.
+
+## Rev 2.7 consent, licence and retention rows added by Phases 2 to 4 (25 Nov 2026)
+| # | Item | Built default | Owner |
+|---|---|---|---|
+| 1 | Patient credit, refund-as-credit, family credit: stored-value and consumer-protection position | Coupon mode; flags locked; terms are placeholders | Counsel, CFO |
+| 2 | Provider-sponsored promotions: advertising and price-reference rules, accounting and VAT | Locked OFF; placeholder content-guard list | Counsel, CFO, CMO |
+| 3 | Cross-product continuity consent (`CROSS_PRODUCT_CONTINUITY`) and whether a shared prescription or lab order may seed a prompt | Off by default; draft wording marked | Counsel, DPO |
+| 4 | Assistant: `AI_PROCESSING` consent, disclosure, retention (30 days turns, 12 months tool audit), real-model processor and cross-border | Mock model; redacted text; locked | Counsel, DPO, CMO |
+| 5 | Fraud cases: legal basis and retention of a keyed-hash case, DPO-only identity lookup role | Shadow mode; role must be created | DPO, counsel |
+| 6 | Corporate: HR-list matching window (30 days), 7-year ledger retention of an ended account, what an employer may see (aggregates of 10 or more) | Locked; defaults need confirmation | Counsel, DPO |
+| 7 | Experiments: consent dependency of the `kxe` cookie | Consent-gated; experiments need the locked visitor-analytics flag | Counsel |
+| 8 | New market: direct-marketing licence, consent regime, health-advertising rules, data residency per country | Wizard stores ids and booleans only; ZY synthetic | Counsel, CTO |
+| 9 | Retention periods for new growth tables (assistant, lifecycle decisions, ledgers, fraud, experiments, cohorts) and the record of processing and PIA update | PROPOSED_DEFAULT | DPO |
+Nothing here records a gate; gate evidence is entered only by a human in the Super Admin (ADR-024).

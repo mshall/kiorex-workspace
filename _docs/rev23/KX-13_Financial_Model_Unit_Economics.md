@@ -1,7 +1,7 @@
 # KX-13 36-Month Financial Model & Unit Economics
 
 Source: 1FBBBnCWZ4RlIY71XahyLPRwTTbvFVHdf
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (supersedes KX13 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
+Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; supersedes KX13 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
 
 > Extraction note: text from Drive read_file_content; several symbols (>=, <=, +/-, arrows) lost; table numeric cells in this read ARE present (the older extract lost them).
 
@@ -229,3 +229,9 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Financial model unchanged.** Rev 2.4 changes no figure in this volume. The as-built analytics reproduce the KX-32 section 08 worked examples in a unit test (month 6 fee revenue EGP 7,872, month 12 EGP 106,637, LTV EGP 38.40 on the fee alone), which confirms the arithmetic of section 13 but not its assumptions, which remain ASSUMPTION until pilot data.
 - **Commission attribution as built:** the fee-bearing share of attended new patients is now measurable from decision rows (`PROVIDER_LED` against `MARKETPLACE` and `UNATTRIBUTED`); revenue is confirmed or billed charges net of reversals, recorded when the visit is completed because the Clinic sends no confirmation event. Spend is entered manually with a second approver; CAC and ROAS stay empty (not zero) until spend exists.
 - **Still open:** the re-base of the attended-visit series (KX-32 section 08), the EGP 150,000 illustration (KX-29 section 09) and Pay margin per patient. No finance decision was taken in Rev 2.4.
+
+## Rev 2.7 inputs from the Phases 2 to 4 build (25 Nov 2026; facts only, no new numbers)
+- Reward, referral, credit, goodwill, connect-bonus and onboarding amounts are **zero until a human sets them**; the model must not assume a reward cost. Patient credit, sponsored promotion amounts and the corporate benefit are not Kiorex revenue (KX-32 section 4.2).
+- Marketing spend lines are entered manually or by mock adapters; no real ad spend is executed by code. CAC, ROAS and LTV views exist locally and withhold ratios below k = 10 or an EGP 500 spend floor.
+- Per-product commission is inert; do not model Pharmacy, Lab or Nurse fee revenue from attribution until a founder and CFO decision (KX-12).
+- Re-basing of the series per KX-32 section 08 and the EGP 150,000 illustration remain open founder and finance decisions.
