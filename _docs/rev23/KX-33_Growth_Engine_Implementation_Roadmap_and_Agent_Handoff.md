@@ -1,6 +1,6 @@
 # KX-33 — Growth Engine Implementation Roadmap and Agent Handoff
 
-Revision: Rev 2.4 · Growth Edition, as-built verified 24 November 2026 (new volume; owner: Chief Software Architect with the delivery lead; supersedes: Rev 2.4 draft 1 of this volume)
+Revision: Rev 2.7 · Growth Edition, Phases 2 to 4 as-built locally, updated 25 November 2026 (supersedes Rev 2.4 of 24 November 2026; owner: Chief Software Architect with the delivery lead)
 
 Subtitle: Phases 1 to 4, the 13 Phase 1 work packages with owners, dependencies, acceptance and effort, the commercial and regulatory gates, and the rules a build agent must follow.
 
@@ -11,8 +11,8 @@ Tags: Roadmap · Work packages · Waves · Dependencies · Effort · Gates · Ag
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-33 |
-| REVISION | Rev 2.4 · Growth Edition (24 November 2026) |
-| STATUS | Phase 1 built and verified locally (waves 0 to 4 and a gap-closure wave); ADR-041 to ADR-047 still Proposed; gates and production evidence open |
+| REVISION | Rev 2.7 · Growth Edition (25 November 2026) |
+| STATUS | Phase 1 built locally; Phases 2 to 4 built locally with every money, messaging and model feature launch-locked (section 05); wave 9 hardening and documentation (section 10); nothing deployed; ADR-041 to ADR-057 Proposed; gates and production evidence open |
 | OWNER ROLE | Chief Software Architect; delivery lead |
 | AUDIENCE | Build agents, engineering leads, founders |
 | RELATED | KX-22 (repo map and hand-off); KX-27 to KX-32; KX-17; KX-18 |
@@ -22,9 +22,14 @@ Tags: Roadmap · Work packages · Waves · Dependencies · Effort · Gates · Ag
 |---|---|---|---|
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from the Phase 1 work packages report | Documentation agent |
 | Rev 2.4 | 24 Nov 2026 | Status column re-verified against code and tests; Phase 1 packages relabelled; honest gaps listed per package; next actions rewritten | Documentation agent |
+| Rev 2.7 | 25 Nov 2026 | Phases 2 to 4 as-built status (W5 to W8 and W9 documentation pass); ADR-049 to ADR-057 registered; statuses re-read from the as-built records and the wave 8 exit gate | Documentation agent (wave 9 lane A4) |
+
+## What changed in Rev 2.7
+Status of every Phase 2, 3 and 4 package re-read from the as-built records (W5 to W8, the W7 A2 follow-up and the wave 8 integration and exit gate) and shown in section 05 as built locally, built locked, or not built; new gates 21 to 33 in section 06; next actions rewritten; section 10 added with the evidence and the honest gaps. ADR-049 to ADR-057 are registered in KX-01 (all Proposed). Nothing in Phases 2 to 4 is deployed or production-verified.
+
 
 ## Contents
-01 Summary · 02 Phases · 03 Waves and shared-file ownership · 04 Phase 1 work packages · 05 Phases 2 to 4 packages · 06 Commercial and regulatory gates · 07 Rules for build agents · 08 Recommended next actions · 09 Acceptance, KPIs, risks, dependencies, open decisions
+01 Summary · 02 Phases · 03 Waves and shared-file ownership · 04 Phase 1 work packages · 05 Phases 2 to 4 packages · 06 Commercial and regulatory gates · 07 Rules for build agents · 08 Recommended next actions · 09 Acceptance, KPIs, risks, dependencies, open decisions · 10 Rev 2.7 evidence and honest gaps
 
 ## Key numbers
 <!-- kpis -->
@@ -33,6 +38,8 @@ Tags: Roadmap · Work packages · Waves · Dependencies · Effort · Gates · Ag
 - **5** waves (0 to 4) plus a gap-closure wave; single owners for every shared file
 - **26** NEEDS_HUMAN items in the work packages report (section 7), plus the new human items of the pentest and edge-case reports (launch guide sections 11 and 12)
 - **13 of 13** Phase 1 packages built and tested locally; **0** deployed, **0** production-verified
+- **Phases 2 to 4:** every package of waves 5 to 8 built locally, mocked and launch-locked (section 05); wave 8 exit gate: 87 integration suites, 1,142 tests, three consecutive ordered runs
+- **ADR-041 to ADR-057:** 17 growth decisions, all Proposed and unsigned
 
 ## Status legend (read first)
 Every statement in this volume carries one of these labels, in a column, a prefix or a callout. Phase 1 is now built locally, so the labels separate what runs from what is only designed.
@@ -40,8 +47,8 @@ Every statement in this volume carries one of these labels, in a column, a prefi
 | Label | Meaning | Rule for readers |
 |---|---|---|
 | **As-built** | Exists in code with a passing test in the workspace, verified by reading the repositories and re-running the suites on 24 Nov 2026 (Rev 2.4). Local only: not deployed, not run against a real provider | Safe to rely on for behaviour in the local stack. A gap is named wherever one is known |
-| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. No growth ADR (ADR-041 to ADR-047) has been accepted by the founder, so this label marks only rules inherited from existing Accepted ADRs |
-| **Proposed** | Designed in the Growth reports of 24 Nov 2026 and written up here, not yet signed (ADR-041 to ADR-047) | Build only after sign-off, or inside a work package the founder released |
+| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. No growth ADR (ADR-041 to ADR-057) has been accepted by the founder, so this label marks only rules inherited from existing Accepted ADRs |
+| **Proposed** | Designed in the Growth reports of 24 Nov 2026 and written up here, not yet signed (ADR-041 to ADR-057) | Build only after sign-off, or inside a work package the founder released |
 | **Roadmap** | Phase 2 to 4 capability, scoped coarsely | Do not build; estimates are ranges |
 | **Open decision** | A founder or CEO choice with a stated default | Use the default, never decide silently |
 | **Regulatory dependency** | Needs counsel, DPO, a regulator position or a partner approval (NEEDS_HUMAN) | Flag stays OFF in production until evidence is recorded; never mark a gate satisfied |
@@ -55,9 +62,9 @@ Phase 1 delivers the launch-critical set: provider links and QR, the attribution
 | Phase | Theme | Capabilities | Effort | Label |
 |---|---|---|---|---|
 | 1 Launch-critical | Prove and enable | Links and QR; attribution v1; commission integration; first-party events and analytics overview; SEO-ready pages (SSR, sitemap, robots, hreflang, JSON-LD, slug history); widgets and SDK; deep links and bootstrap; consent and preference centre; Super Admin config v1 | 84 days planned | As-built locally (gaps in section 04) |
-| 2 Conversion and retention | Convert and keep | Campaign engine; patient referral and rewards (counsel-gated); provider Growth workspace v2; WhatsApp assistant; lifecycle messaging with caps; CAC, ROAS and cohorts; Search Console, Play Console and App Store Connect adapters | about 75 days | Roadmap |
-| 3 Optimisation | Learn | Experiments with guardrails; advanced attribution views and holdouts; fraud scoring; paid adapters (Google, Meta, TikTok) with anonymised conversions; SEO automation; AI recommendations (aggregate only); international tooling | about 44 days | Roadmap |
-| 4 Ecosystem | Expand | Cross-product journeys; pharmacy, lab and nurse acquisition pages and links; corporate and insurer programmes (month 15 and later); loyalty if rewards pass legal review | about 45 days | Roadmap |
+| 2 Conversion and retention | Convert and keep | Campaign engine; patient referral and rewards; two credit systems and sponsored promotions; provider Growth workspace v2; WhatsApp assistant; lifecycle messaging with caps; CAC, ROAS and cohorts; integration adapters | about 75 days planned | As-built locally, mocked, launch-locked (section 05) |
+| 3 Optimisation | Learn | Experiments with guardrails; reporting attribution models; fraud scoring (shadow); marketing automation and AI-assisted recommendations; SEO automation; cohorts and LTV; international tooling | about 44 days planned | As-built locally; paid adapters are mock only |
+| 4 Ecosystem | Expand | Pharmacy and Lab links and product ingest; cross-product journeys; corporate partnerships; loyalty; partner staff-app tabs | about 45 days planned | Links, ingest, cross-product and corporate built locally; loyalty and partner tabs in wave 9 (section 05) |
 
 ## 03 Waves and shared-file ownership
 Figure 1 — Waves and parallel lanes.
@@ -110,21 +117,45 @@ Total 84 engineer-days planned (actual effort was not recorded). Scenarios for M
 
 Scenarios 1 to 4 of M are run by `e2e/test/25` and `27`; scenarios 5 to 7 by `28` (SSR crawl and `noindex`, consent matrix, widget origin). Every package ends with: unit tests green, integration tests where listed, lint and typecheck green, OpenAPI regenerated where endpoints change, `Docs/` updated, requirement ids in commits, flag defaults documented, and no secret, `.env` or build output in git.
 
-## 05 Phases 2 to 4 packages
-| ID | Package | Effort (days) | Depends | Label |
-|---|---|---|---|---|
-| GRW-P2-1 | Campaign engine, UTM builder, budgets, state machine | 10 | Phase 1 core | Roadmap |
-| GRW-P2-2 | Patient referral links, qualification, fraud review queue | 10 | Counsel gate on rewards | Roadmap |
-| GRW-P2-3 | Reward ledger and closed-loop credit or coupon fallback | 10 | P2-2, ADR-046, finance treatment | Roadmap |
-| GRW-P2-4 | Provider marketing portal v2: analytics, monthly cap and pause, report export | 8 | Phase 1 | Roadmap |
-| GRW-P2-5 | WhatsApp assistant: orchestrator, tool registry, confirmation, injection tests, cost caps | 12 | KX-11 safety review, Meta templates | Roadmap |
-| GRW-P2-6 | Lifecycle messaging: journeys, caps, segment allowlist, template catalogue | 10 | I, counsel on marketing licence | Roadmap |
-| GRW-P2-7 | Advanced analytics: CAC, ROAS, MER, cohorts, spend entry | 8 | P2-1 | Roadmap |
-| GRW-P2-8 | Search Console, Play Console, App Store Connect adapters | 7 | Accounts (NEEDS_HUMAN) | Roadmap |
-| GRW-P3-1 to 7 | Experiments (8), attribution views (6), fraud scoring (6), paid adapters (8), SEO automation (6), AI recommendations (5), international tooling (5) | 44 | Phase 2 data, legal review of ad policy, second market decision | Roadmap |
-| GRW-P4-1 to 4 | Cross-product journeys (10), pharmacy, lab and nurse pages (12), corporate and insurer programmes (15), loyalty (8) | 45 | M9, M15, GKN2, legal | Roadmap |
+## 05 Phases 2 to 4 packages (status Rev 2.7)
+The original coarse ids `GRW-P2-1` to `GRW-P4-4` of Rev 2.4 are replaced by the package ids of `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md` (plan of 24 Nov 2026, Rev 2.5 and the Rev 2.6 credit amendment). Status labels: **As-built locally** means code plus a passing test in the workspace, mock providers only, not deployed, and every money, messaging, model, loyalty and corporate feature behind a launch-locked flag that only a human gate record can open (ADR-024). Repo short names as in section 04; PH Kiorly Pharmacy, LB Kiorly Lab.
 
-**Status update, 25 Nov 2026 (Rev 2.7, wave 7 lane A4; verified only as far as stated):** GRW-P4-B2 (Kiorex product ingest and decision for Pharmacy and Lab) is **built locally**: `GrowthProductDecision` append-only decisions through the clinic `decide()`, partner link registry with `product`, the optional acquisition block on the pharmacy order and lab booking calls, partner counters (`orders` on placement, `completed` on dispense or report release, once per order), repair job, ops summary with k-anonymity; tests KP unit 5 and integration 14, Pharmacy 3, Lab 3, workspace e2e `53-growth-product-ingest` 3 on the real stack. The commission link of products stays inert (AD-13). **Not built:** the Nurse and home-care call site, continuity entry points in the apps, the funnel event names `order_*` and `lab_booking_*` (contracts 1.13.0 request). GRW-P2-H (Phase 2 close) delivered: ADR-048 to ADR-052 repository copies (Proposed), `Docs/GROWTH.md` sections, KX-32 revenue definition amended, TEST_GUIDE flows G12 to G22 and test-flow module "Growth Phase 2", launch guide rows 11.39 to 11.43. **Not delivered:** e2e suites 31, 32, 34, 35, 50, 51 (see the as-built record in `GROWTH_PHASE2_4_WORK_PACKAGES.md`, W7 A4). ADR-041 to ADR-052 remain Proposed.
+| ID | Package | Repo | Status (Rev 2.7) | Not built or not proven |
+|---|---|---|---|---|
+| GRW-P2-X0 | Contracts 1.12.0: campaign, referral, reward, assistant, lifecycle, integration, product events; credit and sponsored-promotion contracts (Rev 2.6 amendment) | KC | As-built, published and vendored (375 tests at publish; 383 in the unreleased W8 set) | 1.12.1, 1.13.0 and 1.14.0 are NOT published: several kinds, flags and events are mirrored or validated locally (launch guide, contracts row) |
+| GRW-P2-X1 | Phase 2 schema, stubs, ops route registration | KP | As-built (migrations `20261203090000` to `096000`) | Spare slot `099000` unused |
+| GRW-P2-A | Campaign management engine (state machine, UTM builder, budgets, approvals, spend, report) | KP | As-built locally (e2e 29) | No campaign-level reward, no creative upload, landing editor is GC-5; no ad-platform spend by design (ADR-049) |
+| GRW-P2-C | Provider marketing portal v2 (share cards, free-time cards, recommendations, verification updates, statements v2) and GC-2 marketplace contract gaps | CM, KL, KP | As-built locally (Clinic migration `20261203100000`) | No provider photo on cards, no statement e-mail, no web button for the poster PDF, evidence upload not built |
+| GRW-P2-B1 | Patient referral engine and fraud safeguards | KP | As-built locally, flags launch-locked (integration 27) | Clinic staff-phone-match endpoint not built; payment-fingerprint and visit-duration signals have no live feed |
+| GRW-P2-B2 | Patient rewards and credit ledger: coupon mode (default), credit mode, refund-as-credit option, checkout lines, family credit, goodwill, reconciliation RC-1 to RC-7 | KP | As-built locally, CREDIT mode launch-locked and counsel-gated (integration 31 and 24; e2e 31 and 50) | All reward amounts are 0 until a human sets them; `postToPayLedger` default false (finance decision) |
+| GRW-P2-B3 | Patient referral and credit screens (web, app), invite landing, ops pages | KP, KA | As-built locally (Playwright 8 and 8) | No device or simulator run; referral terms are placeholders |
+| GRW-P2-W | Provider credit integration: fee draw-down, dispute-win and waiver credit, connect bonus, promotion holds, usage bundle skeleton, statement section | CM | As-built locally (migration `20261217100000`, integration 17) | Amounts zero; staff-app credit card not built; usage bundles off |
+| GRW-P2-E | Patient lifecycle CRM: four message classes, eight journeys, pure send gate, decisions, console | KP | As-built locally; marketing sends launch-locked (e2e 32) | No marketing template ships; copy review and the licence are human items |
+| GRW-P2-D | WhatsApp AI booking assistant (mock model, closed tool registry, confirm by button, fallback to the deterministic machine) | KP | As-built locally, both flags launch-locked (e2e 33, red team 37) | No real model, no real WhatsApp buttons; CMO safety review is the gate (ADR-051) |
+| GRW-P2-F | Integrations (ten kinds, mock, real adapters config-only) and advanced analytics (channel performance, CAC, ROAS, MER) | KP | As-built locally with mocks (integration 19) | Real adapters never run against a vendor; conversion upload not implemented |
+| GRW-P2-S | Provider-sponsored promotions: Clinic budget and review, Kiorex projection, checkout line and Pay wiring | CM, KP | As-built locally, `growth.sponsored_promotions` launch-locked (e2e 51 and 52) | Clinic does not read `tender` yet; staff-app card not built; accounting treatment (H-25) open |
+| GRW-P2-H | Phase 2 close: ADR copies, `Docs/GROWTH.md`, end-to-end suites | all | Delivered; suites 29 to 34, 36 to 39 and 50 to 55 exist on a real stack (35 does not) | Suite 35 `growth-attribution-cohorts` was not written; some suites ran on private stacks, not the shared one |
+| GRW-P3-A | Experimentation and A/B testing with a never-experiment wall (ADR-053) | KP | As-built locally (e2e 34; SSR variant wired for two slots) | Needs the counsel-gated `growth.analytics_visitor`; CloudFront cache key for `kxe` is a human infra item |
+| GRW-P3-B | Multi-touch reporting models (seven models, reporting only, ADR-054) | KP | As-built locally | `ATTRIBUTION_MODELS` config kind not published (code defaults) |
+| GRW-P3-C | Cohort analytics and LTV estimates (group level, k >= 10) | KP | As-built locally | No per-person LTV; BG/NBD not built; no language cohort cut |
+| GRW-P3-D | Fraud detection v2 (eleven rules, pure scorer, review queue, appeals), SHADOW by default | KP | As-built locally in shadow | Contracts kind `FRAUD_RULES` not published; DPO role and retention are human items |
+| GRW-P3-E | Marketing automation (journey builder, dry run) and AI-assisted recommendations (aggregate only) | KP | As-built locally (e2e 55); `growth.ai_recommendations` launch-locked | Real model path untested against a vendor; no mobile surface |
+| GRW-P3-F | Advanced SEO automation (quality gate, internal-link graph, vitals, indexation snapshots) | KP | As-built locally; automatic noindex OFF by default | Run on publish not wired (nightly and manual only); indexed count 'not measured' |
+| GRW-P3-G | International market tooling: `MARKET_PROFILE`, onboarding wizard, synthetic market ZY (ADR-055) | KP | As-built locally (e2e 38) | Several consumers still answer for EG; no real second market; second data cell does not exist |
+| GRW-P4-B1 | Pharmacy and Lab provider links, QR, public resolver, signed lookup, partner web pages | PH, LB | As-built locally | Short link is the API resolver URL until `kiorly.link` exists; shared flag catalogue lacks partner rows |
+| GRW-P4-B2 | Kiorex product ingest and decision for Pharmacy, Lab and Nurse (ADR-056) | KP, PH, LB | As-built locally (e2e 53); commission link inert | Product funnel event names are a contracts request; Nurse call has no acquisition block |
+| GRW-P4-A | Cross-product journeys (continuity cards, consent, funnel, `CARE_PLAN_BOOKING` call site) | KP | As-built locally, `growth.cross_product` launch-locked (e2e 39) | Parent visit inferred; real Clinic and care-plan flow not in e2e; Arabic copy unreviewed |
+| GRW-P4-C | Corporate partnerships and enterprise acquisition (own ledger, two-person activation, HR lists, leads; Clinic 'Refer a company') (ADR-057) | KP, CM, KC, KL | As-built locally, `growth.corporate` launch-locked | Pay and checkout wiring NOT built (no deposit is reduced); real-stack e2e and Playwright layout passes not run |
+| GRW-P4-D | Additional loyalty and partnership programs (counsel gated) | KP | Wave 9 in progress when this Rev 2.7 was written; see the as-built records in `GROWTH_PHASE2_4_WORK_PACKAGES.md` |  |
+| GRW-P4-B3 | Pharmacy and Lab staff-app tabs and partner web polish | KL, PH, LB | Wave 9 in progress when this Rev 2.7 was written; see the as-built records in `GROWTH_PHASE2_4_WORK_PACKAGES.md` |  |
+| GRW-P3-H | Phase 3 and 4 end-to-end, performance and security regression | E2E | Wave 9 in progress when this Rev 2.7 was written; see the as-built records in `GROWTH_PHASE2_4_WORK_PACKAGES.md` |  |
+| GRW-GC-4 / 4b | Red-team and security suites; market literals removal | KP, E2E | As-built locally (suites 30 block l, 36, 37, 52) | No ZAP run, no external penetration test (human) |
+| GRW-GC-5 | Remaining gap closure and residual items | all | Wave 9 in progress when this Rev 2.7 was written; see the as-built records in `GROWTH_PHASE2_4_WORK_PACKAGES.md` |  |
+| GRW-P4-Z | Documentation and registers (this volume set) | docs | Delivered in Rev 2.7 (wave 9 lane A4); Rev 2.7 PDFs rebuilt, not uploaded |  |
+
+**Counts that matter (Rev 2.7).** Waves 5 to 8 delivered every package above except those marked wave 9. The wave 8 exit gate (25 Nov 2026, local, isolated worktree and private database): Kiorex API integration in one ordered invocation three times on the final head, each 87 suites passed and 1 skipped, 1,142 tests passed; unit 1,573 of 1,573; `lint` (type check, module boundaries, static analysis) clean; ops vitest 283, patient web vitest 362, widget 13, patient app jest 319; Clinic unit 1,417 and integration 534 on a private database; contracts 383; staff app jest 307. Playwright and the e2e set against a real stack were not part of that exit run; the individual suites ran on private stacks (see each as-built record). The shared dev stack on :4000 and :3010 still runs older builds, so the suites that need the newest code ran on private instances.
+
+**Contracts honesty.** Only contracts 1.12.0 is published and vendored. The unreleased set (1.12.1, 1.13.0, 1.14.0) carries flags, config kinds and events that the code already uses (for example `growth.corporate`, `CORPORATE_POLICY`, `FRAUD_RULES`, `SEO_AUTOMATION`, `LTV_POLICY`, `MARKET_PROFILE`, `ATTRIBUTION_MODELS`, `AUTOMATION_POLICY`); until one owner publishes them together the platform validates those kinds locally, mirrors the flags in its own catalogue and evaluates an unknown flag as ON. This is a deployment blocker for the maker-checker of those kinds, not a build gap (launch guide, contracts row).
 
 ## 06 Commercial and regulatory gates
 | # | Gate | Owner | Blocks | Label |
@@ -146,9 +177,22 @@ Scenarios 1 to 4 of M are run by `e2e/test/25` and `27`; scenarios 5 to 7 by `28
 | 15 | WhatsApp assistant safety review and launch gate | CMO, clinical safety | `kiorex.whatsapp_ai_assistant` | Regulatory dependency |
 | 16 | Real provider credentials and templates in the pre-launch pass | CEO, ops | Any real send | Open decision (FD-04) |
 | 17 | District list in the Egypt market pack (NH-040, FD-14) | Ops | F, J | Open decision |
-| 18 | ADR-041 to ADR-047 signature. ADR-039 (telehealth) is accepted and exists in the Clinic repository, so the numbering question is closed | Founder | ADR signing | Open decision |
+| 18 | ADR-041 to ADR-047 signature (the later ADR-048 to ADR-057 are gate 33). ADR-039 (telehealth) is accepted and exists in the Clinic repository, so the numbering question is closed | Founder | ADR signing | Open decision |
 | 19 | Approve doc edits (KX-19 hosts, KX-24 scope, KX-13, KX-14, KX-03 KXMBK10, KX-15). Rev 2.4 applied the as-built facts; commercial wording stays for approval | Founder | This documentation set | Open decision |
 | 20 | `kiorly.link` serves the page or redirects; SSR as a second App Runner service | Founder, CTO | D1, E | Open decision |
+| 21 | Counsel on patient CREDIT mode, refund-as-credit and family credit (stored value, e-money, consumer protection, terms); maximum open balance | Counsel, CFO | `growth.patient_credit`, `growth.refund_as_credit`, `growth.family_credit` | Regulatory dependency |
+| 22 | Accounting and VAT treatment of patient credit, sponsored discounts, `postToPayLedger` and corporate benefit invoicing | CFO, accountant | `postToPayLedger`, `growth.sponsored_promotions`, `growth.corporate` | Open decision |
+| 23 | Counsel and accounting sign-off on provider-sponsored promotions, advertising rules and the review procedure | Counsel, CFO, CMO | `growth.sponsored_promotions` | Regulatory dependency |
+| 24 | Reward, referral and fraud numbers (all amounts 0, fraud rules in shadow); decision to enforce rules one by one | Founder, CFO, risk lead | any issued reward, any enforced fraud rule | Open decision |
+| 25 | WhatsApp assistant: CMO clinical-safety review, wording, AI-processing consent, real-model vendor and data processing agreement | CMO, counsel, founder | `kiorex.whatsapp_ai_assistant`, `growth.assistant_real_model` | Regulatory dependency |
+| 26 | Marketing licence, sender registration, Meta marketing templates and the copy of the eight lifecycle templates | Counsel, CMO | `growth.marketing_messaging` (and every automation journey send) | Regulatory dependency |
+| 27 | Cross-product continuity: consent wording, whether health data may seed a prompt, record of the gate | Counsel, founder | `growth.cross_product` | Regulatory dependency |
+| 28 | Corporate programme: contract template, employee data terms, benefit tax treatment, funding mode, enterprise lead owner | Counsel, CFO, CEO | `growth.corporate` | Regulatory dependency |
+| 29 | Loyalty and partnership programmes: legal form of points, partner contracts, co-promo budgets | Counsel, CFO | `growth.loyalty` | Regulatory dependency |
+| 30 | New market: first real market, regulation, consent regime, data residency and cell | Founder, counsel | real expansion (ZY is synthetic) | Open decision |
+| 31 | Experiment policy and variant copy procedure; the `kxe` cookie consent dependency; CloudFront cache key | CMO, counsel, CTO | `growth.experiments` in production | Open decision |
+| 32 | Publish contracts 1.12.1, 1.13.0 and 1.14.0 together (one owner); remove local validators and flag mirrors | Dev (contracts owner) | maker-checker of the new kinds, flag parity | Open decision |
+| 33 | Ratify ADR-048 to ADR-057 and the numbering scheme (ADR-051 for the assistant decision, scheme A) | Founder | binding of the Growth decisions | Open decision |
 
 Full list: 26 items in the Phase 1 work packages report section 7, plus launch guide sections 11 (Growth) and 12 (Security). No gate is recorded as satisfied by this volume; gate evidence is entered only through the human super-admin route (ADR-024).
 
@@ -162,20 +206,28 @@ Full list: 26 items in the Phase 1 work packages report section 7, plus launch g
 - Tests are named like the neighbouring ones (`*.node.test.ts`, `*.integration.test.ts` in CM; `*.unit.spec.ts`, `test/*.int.spec.ts` in KP; vitest in KC and KA).
 
 ## 08 Recommended next actions
-Rev 2.4 rewrote this list after the verification pass. Done items are removed; the verifying step (old item 6) is complete for Phase 1.
-1. Founder: sign or amend ADR-041 to ADR-047 (still Proposed). ADR-039 is now found in the Clinic repository (`Docs/adr/ADR-039-telehealth-p2p-webrtc.md`, accepted for implementation 23 Nov 2026) and registered in KX-01, so ADR-041 numbering stands.
-2. Founder and CEO: decide the money items (precedence default, windows, no charge for provider-led-then-marketplace) and the interpretation of 50/25/15/10. The defaults are built and marked `PROPOSED_DEFAULT`.
-3. Counsel and DPO: PDPL, marketing licence, rewards and consent wording. They gate production, not development. `growth.analytics_visitor` and `growth.marketing_messaging` stay locked.
-4. Founder: hosts (`kiorex.com`, `kiorly.link`, `book.kiorex.com`), Apple Team ID, Play SHA-256, Search Console ownership (launch guide sections 2, 8 and 11).
-5. Engineering, before any deploy: (Lighthouse on the SSR templates and the real Passport popup for the widget are done, 24 Nov 2026) verify Universal and App Links on a device, set `GROWTH_LINK_TOKEN_SECRET`, `TRUSTED_PROXY_HOPS`, `CORS_ORIGINS` and the lead signing secret (launch guide sections 3 and 12).
-6. Engineering, Phase 1 residuals: daily decision replay job (KX-28 SLO), Pharmacy and Lab Growth tabs, withdrawal of an approved future-dated config version, per-organisation partner credentials for evidence and lookup calls.
-7. Finance: re-base KX-13 per KX-32 section 08 and decide the EGP 150,000 illustration (KX-29 section 09).
-8. Founder: external penetration test against staging after the pentest fixes are deployed (KX-10, `_docs/security/PENTEST_2026-11_REPORT.md`).
+Rev 2.7 rewrote this list after the Phases 2 to 4 documentation pass. The single worklist grouped by owner is the launch preparation guide (`_docs/LAUNCH_PREPARATION_GUIDE.md`, section 11 renumbered); this list is the short version.
+1. Founder: sign or amend ADR-041 to ADR-057 (all Proposed) and confirm the numbering scheme for the assistant decision (ADR-051 everywhere, scheme A, or ADR-058 everywhere, scheme B).
+2. Founder and CEO: the money items of Phase 1 (precedence default, windows, no charge for provider-led-then-marketplace) and the interpretation of 50/25/15/10; then the credit design confirmations (order of use, refund-credit expiry, maximum open balance, goodwill limits, high-value thresholds).
+3. Counsel and DPO: PDPL, marketing licence, consent wording, patient credit, sponsored promotions, continuity consent, corporate terms, fraud-case retention and the DPO role. They gate production, not development; every launch-locked flag stays locked.
+4. Finance: `postToPayLedger`, accounting and VAT treatment of credit and sponsored discounts, reward and credit amounts (all zero today), corporate funding mode, KX-13 re-base per KX-32 section 08.
+5. Engineering, before any deploy: publish contracts 1.12.1, 1.13.0 and 1.14.0 together; wire the corporate benefit into Pay and checkout (no deposit is reduced today); a real-stack run with the real Clinic and the care-plan flow; real WhatsApp interactive buttons in the Meta adapter; per-organisation partner credentials; the remaining wave 9 items of section 05.
+6. Infrastructure and operations: hosts and DNS, Team ID and SHA-256, WAF attachment, CloudFront cache key including `kxe`, Lighthouse and CrUX on the build agent, external penetration test, incident roster.
+7. CMO: native-speaker review of every new Arabic string and template, the assistant red-team corpus and emergency lexicon, SEO content policy, experiment copy procedure.
+8. A first-launch decision: which launch-locked features, if any, a human opens first. The build default is none.
 
 ## 09 Acceptance criteria, KPIs, risks, dependencies, open decisions
-- Acceptance: Phase 1 exit list of KX-27 section 07 (re-checked in Rev 2.4, with the open items named there); contracts 1.10.0 and 1.11.0 published and vendored; documentation updated.
+- Acceptance: Phase 1 exit list of KX-27 section 07 (re-checked in Rev 2.4, with the open items named there); contracts 1.10.0, 1.11.0 and 1.12.0 published and vendored; Phases 2 to 4 per section 05 and the wave exit gates of the work-packages file; documentation updated (Rev 2.7).
 - KPIs: engineer-days burned versus 84 (not recorded); packages Done per wave; defects escaping to e2e; shared-file conflicts (target 0).
 - Risks: shared-file bottleneck (single owners); contract change after consumers start (additive only, A first); scope creep into Phase 2 (flags and package boundaries); legal drift (gates); effort estimates by one author (ASSUMPTION).
 - Dependencies: gates in section 06; vendored contracts (FD-20).
-- Open decisions: see section 06 items 4 to 8, 18 and 20.
+- Open decisions: see section 06 items 4 to 8, 18, 20 and 21 to 33.
 - Cross-references: KX-22, KX-17, KX-18 (roadmap), `_docs/growth/GROWTH_PHASE1_WORK_PACKAGES.md`.
+
+## 10 Rev 2.7 evidence, honest gaps and how to read the as-built records
+- **Where the detail is.** `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md` sections 15 onward hold one as-built record per lane and wave (W5 A1, A3, A4; W6 A1 to A4; W7 A1 to A4 and the A2 follow-up; W8 A1 to A4 and the integration record); each repository's `Docs/GROWTH.md` holds operator and developer detail; `_docs/test-flow/` holds the screenshots and test pages; `TEST_GUIDE.md` flows G12 to G23 and the Phase 3 and 4 flows G24 onward (and `_docs/test-flow/index.html`) hold the manual steps.
+- **Not deployed, not production-verified.** Nothing in Phases 2 to 4 has run in production, against a real PSP, WhatsApp number, ad platform, search console, language model or partner system. Every adapter is a mock or config-only skeleton tested against faked HTTP.
+- **The largest open engineering gaps.** Corporate benefit not wired into Pay and checkout; contracts 1.12.1 to 1.14.0 unpublished; the Clinic does not read `tender` from Kiorex yet; real WhatsApp interactive buttons; the real Clinic and care-plan flow are not in the cross-product e2e; suite 35 not written; the staff-app cards for credit and promotions are not built; the shared dev stack runs older builds than the private stacks used for several suites.
+- **Housekeeping debt recorded by the W7 A2 follow-up.** Two sub-agent runs hit the shared dev stack by mistake: the shared Kiorex `REWARD_RULES` version in force is 14 (CREDIT mode, non-zero amounts) instead of the version 1 defaults (COUPON, amounts 0), two GOODWILL provider-credit grants sit in the append-only Clinic wallet ledger, and a demo clinic deposit amount was cleared. A human or the next lane re-activates version 1 through the two-person flow. No production data is affected.
+- **Findings fixed on the way (for the record).** Experiment salt leaked in admin responses; emergency lexicon gaps; Clinic promotion reserve could answer 500 under a 20-way race (now `503 PROMOTION_RESERVE_BUSY` with `Retry-After`); statement route 500 on a malformed period (now 400); a rewards list that exhausted the connection pool; a UTC-date flake and a TRUNCATE deadlock in the test harness.
+- **Not verified in this volume.** Wave 9 results that were still being written when this revision was prepared are marked in section 05; the as-built records are the source of truth for them.

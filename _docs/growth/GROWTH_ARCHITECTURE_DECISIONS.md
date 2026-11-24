@@ -487,13 +487,24 @@ Dashboards in the existing observability module (`modules/aws/observability`) an
 | ADR-045 | Growth analytics privacy: consent-gated visitor key and k-anonymity | Proposed (needs counsel) |
 | ADR-046 | Closed-loop reward credits | Proposed (blocked on legal assessment) |
 | ADR-047 | Growth configuration versioning and maker-checker | Proposed |
-| ADR-048 | WhatsApp assistant tool architecture | Proposed (Phase 2) |
+| ADR-048 | Two separate credit systems and provider-sponsored promotions (the number once reserved here for the assistant tool architecture was reassigned on 24 Nov 2026) | Proposed (KX-01) |
+| ADR-049 | Campaign engine, approval and budget guardrails | Proposed (repository copy) |
+| ADR-050 | Referral qualification and fraud safeguards | Proposed (repository copy) |
+| ADR-051 | WhatsApp assistant model abstraction, tool confirmation and fallback (section 24; numbering scheme A, see the note below) | Proposed, number to be confirmed by the founder |
+| ADR-052 | Lifecycle message classes and send gate | Proposed (repository copy) |
+| ADR-053 | Experimentation guardrails and denylist (section 25) | Proposed (draft of 25 Nov 2026) |
+| ADR-054 | Multi-touch reporting models versus the deterministic money decision (section 26) | Proposed (draft) |
+| ADR-055 | Market by configuration: `MARKET_PROFILE` and data-cell binding (section 27) | Proposed (draft) |
+| ADR-056 | Product discriminator and cross-product attribution (section 28) | Proposed (draft) |
+| ADR-057 | Corporate programmes and sponsor-funded credit (section 29) | Proposed (draft) |
+
+**Numbering note (25 Nov 2026, wave 9 lane A4; FOUNDER CONFIRMATION REQUIRED, launch guide 11.1).** Two schemes existed for the WhatsApp assistant decision: **ADR-058** in section 24 of this file (and in KX-01) and **ADR-051** in the work-package table and in the repository copy `kiorex-platform/Docs/adr/ADR-051-whatsapp-assistant-model-abstraction.md`. This file now uses **scheme A: ADR-051 everywhere**, because it keeps ADR-048 to ADR-057 one contiguous block that matches the P2-H and P4-Z lists and the files already in the repositories, and it needs no renamed file. **Scheme B** (the alternative) is ADR-058 everywhere: rename the repository copy, leave ADR-051 unused and start the next free number at 059. Nothing is signed either way; the founder picks one, and if scheme B is chosen the six documents that carry the number are listed in launch guide 11.1. ADR-058 is not used by any decision under scheme A.
 
 Volumes: **KX-27** "Growth and Patient Acquisition Architecture" (this set, edited), optionally **KX-28** "Growth Operations and Egypt GTM Playbook". Amend: KX-19 §03 (hosts), KX-24 §01 (marketing campaigns no longer a non-goal), KX-13 (acquisition inputs), KX-14 §05/§09 (channel mix and budget), KX-03 KXMBK10 (widget origin), KX-15 (marketing consent, licence).
 
-## 24. ADR-058 WhatsApp AI booking assistant: model abstraction, tool confirmation and fallback (Proposed, unsigned; 24 Nov 2026)
+## 24. ADR-051 WhatsApp AI booking assistant: model abstraction, tool confirmation and fallback (Proposed, unsigned; 24 Nov 2026)
 
-Numbering: this is the decision once reserved as ADR-048 (the assistant tool architecture, never written) and listed as ADR-051 in the P2-H table; ADR-048 is now the credit decision, so the founder is asked to confirm **ADR-058**. Status **Proposed**: nothing here binds anything until it is signed. Implementation status: built locally with a mock model (GRW-P2-D), not deployed, flags locked.
+Numbering: this is the decision once reserved as ADR-048 (the assistant tool architecture, never written) and listed as ADR-051 in the P2-H table; ADR-048 is now the credit decision. Earlier drafts of this section said ADR-058; **scheme A (ADR-051 everywhere) is applied from 25 Nov 2026 and the founder is asked to confirm it** (see the numbering note in section 23). Status **Proposed**: nothing here binds anything until it is signed. Implementation status: built locally with a mock model (GRW-P2-D), not deployed, flags locked.
 
 **Context.** Patients ask for bookings on WhatsApp in Arabic (Egyptian and Modern Standard) and English. A large language model could understand them, but a model can also be talked into things, can invent, and costs money. Booking is a money and clinical-safety path (ADR-025: safety controls are never flags; the Clinic is the only system of record for appointments, ADR-005).
 
@@ -508,3 +519,87 @@ Numbering: this is the decision once reserved as ADR-048 (the assistant tool arc
 **Consequences.** Cost, abuse and clinical risk are bounded by construction rather than by prompt wording; the assistant can be switched off (or can fail) without a booking ever being blocked; a real model can be swapped in later without changing any safety control. Costs: fixed templates need native-speaker and CMO review; interactive WhatsApp buttons need the real adapter; the lexicon of the mock model is not a substitute for a real model's understanding.
 
 **Open (NEEDS_HUMAN).** CMO clinical-safety sign-off (gate for `kiorex.whatsapp_ai_assistant`), counsel on automated messaging and retention, vendor and DPA for a real model, wording approval, Clinic acceptance of the `KIOREX_WHATSAPP` channel (NH-042). Detail: `kiorex-platform/Docs/ASSISTANT.md`, launch guide 11.13a to 11.13l.
+
+## 25. ADR-053 Experimentation guardrails and denylist (Proposed, unsigned; 25 Nov 2026)
+
+**Status: Proposed, unsigned (draft of 25 Nov 2026, wave 9 lane A4).** Package GRW-P3-A (built locally, W7 lane A1). Founder signature needed: nothing here binds anything until it is signed. Counsel or finance needed: Needs counsel for the consent dependency of the `kxe` cookie (H-12).
+
+**Context.** Growth wants to test landing copy, prompts and tile order. An experiment that touches money, commission, attribution, safety, consent, privacy, price, fee, cancellation or clinical content would break the promises made by ADR-042, ADR-045 and ADR-025 (safety is never a flag, never an experiment). Statistics can also mislead: peeking, unequal splits that hide a bug, and several variants against one control.
+
+**Decision.**
+1. **A never-experiment wall in three layers.** (1) A closed allowlist of surfaces (`surfaces.ts`: landing copy, sign-up value proposition, referral prompt, post-booking share prompt, app tile order, win-back subject line); anything else is `422 EXPERIMENT_SURFACE_FORBIDDEN`. (2) A denylist of names and tags plus every `forbiddenKeyTokens` entry of the contracts file `flags/safety-never-flags.json` (a unit test walks that file and fails if a registry entry intersects it). (3) The database repeats the name rule as the CHECK `GrowthExperiment_surface_never_check`. A linked flag key may not be a safety, money or launch-locked key (`422 EXPERIMENT_FLAG_FORBIDDEN`). A variant carries only `key` and `weightBp`: there is no payload that could alter anything.
+2. **Deterministic assignment under consent.** `HMAC-SHA256(salt, unitKey)` decides allocation and variant; the unit is the consented visitor key or the signed-in `sub` (in-product surfaces only); with neither, control and nothing recorded. The salt is per experiment and never leaves the server. One RUNNING experiment per surface and market.
+3. **Frozen design and two people.** Variants, allocation, salt, surface, metric, mode, alpha, sample plan and eligibility cannot change once started (trigger); terminal states are final; history and results are append-only; the approver differs from the creator (a CHECK and the service).
+4. **Guarded statistics.** Fixed horizon (pooled two-proportion z, Newcombe interval, Holm for several variants, a pre-registered sample size) or sequential (mixture SPRT, always-valid p-value). A sample-ratio mismatch (chi-square below p 0.001) hides results and stops the experiment; guardrail metrics use non-inferiority margins and a breach auto-stops; no winner before the minimum days (7) and sample.
+5. **A winner is a proposal.** Ship-winner writes a history row, an audit row and an outbox event; a human changes a flag or configuration through the existing maker-checker. Flag OFF is a kill switch: the evaluator stops running experiments and writes answer 403.
+6. **Privacy.** Arms under 10 people show `<10`; no breakdown by segment; exposure rows hold an HMAC unit hash; erasure and a 13-month purge of exposure rows exist as SQL functions.
+
+**Consequences.** Experiments cannot reach money or safety even by a configuration mistake; an experiment is slower to start (two people, minimum days); the first SSR slots (home hero copy, provider call-to-action label) need the CloudFront cache key to include `kxe` (launch guide row, `tofu validate` only). **Implementation:** built locally in `kiorex-platform/apps/api/src/growth/experiments/` (unit 40, integration 25, e2e 34 on a private stack); flag `growth.experiments` depends on the counsel-gated `growth.analytics_visitor`; the experiment policy numbers are code defaults until a contracts config kind exists; nothing is deployed.
+
+**Open (NEEDS_HUMAN).** Experiment policy numbers (minimum days 7, SRM p 0.001, guardrail minimum events 20, k = 10), variant copy procedure and the consent dependency of the `kxe` cookie are human items (launch guide, experiments rows).
+
+## 26. ADR-054 Multi-touch reporting models versus the deterministic money decision (Proposed, unsigned; 25 Nov 2026)
+
+**Status: Proposed, unsigned (draft of 25 Nov 2026, wave 9 lane A4).** Package GRW-P3-B (built locally, W7 lane A2). Founder signature needed: nothing here binds anything until it is signed. Counsel or finance needed: None beyond ADR-042; the money decision itself is unchanged.
+
+**Context.** Marketing wants to see credit shared across touches (linear, time decay, position based, data driven). The commission decision of ADR-042 must stay a single deterministic, reproducible, provider-verifiable function; a model that re-distributes credit must never decide whether Kiorex charges a fee.
+
+**Decision.**
+1. **Two separate things.** The *decision* (`decide.ts`, ADR-042) produces `PROVIDER_LED`, `MARKETPLACE` or `UNATTRIBUTED` and drives commission. The *reporting models* (`attribution-models/`) only produce shares of credit for analysis and write their own tables (`GrowthAttributionModelResult`, `GrowthPathSnapshot`). They never read or write a decision, a charge or a policy; a test asserts the decision rows are byte-identical after a run.
+2. **Seven models, one set of facts.** `LAST_TOUCH`, `LAST_NON_DIRECT`, `FIRST_TOUCH`, `LINEAR`, `TIME_DECAY` (7 day half-life), `POSITION_BASED` (40 first, 40 last, 20 shared; the default report) and `DATA_DRIVEN` (a first-order Markov chain with removal effect, computed only at 1,000 or more attended new patients in 90 days). Credit is exact integer arithmetic (a conversion is 1,000,000 parts, revenue split by largest remainder), so every model reconciles to the same conversions and revenue to the minor unit; a conversion with no touch goes to `UNATTRIBUTED`.
+3. **Identity limits.** Touches join one person only through `sub` and a `visitorKey` already recorded together; no fingerprint, no probabilistic matching, no third-party graph; withdrawal of analytics consent removes earlier touches. Windows are counted in market days.
+4. **Privacy.** Aggregates only; path snapshots only for paths shared by 10 or more conversions (a table CHECK); cells under 10 are masked with secondary suppression.
+5. **Lift is separate again.** An experiment-based lift view (holdout against exposed units of a P3-A experiment) uses its own two-proportion test and reports arms of 10 or more units only.
+
+**Consequences.** Finance and marketing get comparable channel views without risk to the fee promise; two views of the same booking can legitimately differ (the decision says who brought the patient for fee purposes, a model says how credit may be shared for budgeting), and the page must say so. **Implementation:** built locally (unit 29, integration 10; 500k-touch fixture rolls up in about 8 s); settings are code defaults until contracts 1.13.0 publishes the `ATTRIBUTION_MODELS` config kind and a flag; nothing is deployed.
+
+**Open (NEEDS_HUMAN).** Default report choice, half-life and the data-driven gate are marketing and analytics confirmations (launch guide, attribution models row).
+
+## 27. ADR-055 Market by configuration: MARKET_PROFILE and data-cell binding (Proposed, unsigned; 25 Nov 2026)
+
+**Status: Proposed, unsigned (draft of 25 Nov 2026, wave 9 lane A4).** Package GRW-P3-G and GRW-GC-4b (built locally, W8 lane A2). Founder signature needed: nothing here binds anything until it is signed. Counsel or finance needed: Counsel per country (licence, consent regime, health-advertising rules); the CTO and counsel for data residency.
+
+**Context.** KX-28 section 13 promised that a new country is a configuration exercise. In practice the code carried about 70 literals for EG, SA and AE (currency, time zone, quiet hours, phone region). A second market would have needed code edits in many modules, and a half-configured market could have appeared to patients.
+
+**Decision.**
+1. **`MARKET_PROFILE` is a versioned configuration kind** (one MARKET-scope version per country through the existing maker-checker, ADR-047) holding names, currency and minor units, phone code and region, IANA time zone, languages, canonical URL segment, quiet hours, working week, geography, specialties, consent defaults, provider-import references, a data-cell binding and regulation switches as booleans and ids. It holds no legal text, price, fee or tax rule.
+2. **A resolver, with a fallback.** `market-registry.ts` reads the configuration first and falls back to the code map for EG, SA and AE (behaviour unchanged). A compile-time-parsed unit test (`no-market-literals`) fails on any `EG|SA|AE` literal or Cairo, Riyadh or Dubai zone outside two allow-listed files, so the registry cannot silently regress.
+3. **An onboarding wizard that never launches.** Eight validated steps, a geography CSV import (all or nothing), a readiness list that separates to-do from needs-a-person (counsel texts, licence, launch gate). Publishing drafts configuration versions for a second approver and registers the live flag `market.<cc>.live` launch-locked OFF; only a person records the gate (ADR-024). A new market stays hidden from bootstrap and sign-up until then.
+4. **Data-cell binding.** A market names the data cell it uses. With one deployed cell (Frankfurt) every new market maps to it and the wizard says so; a second cell and cross-cell routing do not exist and need a decision by counsel and the CTO before a market with a residency requirement.
+
+**Consequences.** A new market needs configuration, counsel work and a person recording the gate, not a code release; the synthetic market `ZY` (JOD, three decimals, Asia/Amman) proves the path in tests. Several consumers still answer for EG (reward currency strings, assistant money formatting, default quiet window of marketing, preference-centre default market) and the SSR markup of a live new market is not proven: a market is not ready for patients until they are done (launch guide, market rows). **Implementation:** built locally (unit 13 + 6, integration 9, e2e 38 8 of 8, Playwright 34); migration `20270128091000_growth_p3_market_onboarding`; nothing is deployed and no real second market is chosen.
+
+**Open (NEEDS_HUMAN).** Which real second market, its regulation and consent regime, data residency and cell are founder and counsel decisions (H-14).
+
+## 28. ADR-056 Product discriminator and cross-product attribution (Proposed, unsigned; 25 Nov 2026)
+
+**Status: Proposed, unsigned (draft of 25 Nov 2026, wave 9 lane A4).** Package GRW-P4-B2 and GRW-P4-A (built locally, W7 lane A4 and W8 lane A3). Founder signature needed: nothing here binds anything until it is signed. Counsel or finance needed: Counsel and product on health data moving between products (the continuity consent); finance on whether any product will ever pay on attribution.
+
+**Context.** Pharmacy, Lab and Nurse orders also come from provider links and from the marketplace, and one care journey can span products (a clinic visit, a prescription sent to a pharmacy, a lab order, a home care booking). Without a rule, attribution for a downstream order is ambiguous, and an in-app prompt between products could leak clinical data or create a fee or a reward by accident.
+
+**Decision.**
+1. **A product discriminator, one decision function.** Growth records carry `product` (`CLINIC`, `PHARMACY`, `LAB`, `NURSE`). A downstream order or booking is decided on its own evidence by the same `decide()` as a clinic booking, with optional per-product windows (`ATTRIBUTION_POLICY.products.<P>.windows`); evidence is limited to links of the same product and organisation; a code first seen under one organisation cannot be claimed by another (`CONFLICT`).
+2. **The commission link of products is inert (AD-13).** A product decision is reporting only: it never creates a charge, a reward or a referral qualification, and no fee is added by any downstream fact. Partner counters (`orders` once at placement, `completed` once at dispense or report release) are the only partner-side effect.
+3. **Continuity entry points are measurement and a gentle prompt, behind a consent.** A shared prescription, a lab order or an attended visit can show a card; only the type and ids are read, never clinical text. A card is shown only when consent `CROSS_PRODUCT_CONTINUITY` is on (off by default, saved only when the patient turns it on) and the flag `growth.cross_product` has its gate recorded by a human. A continued order is decided as `CROSS_PRODUCT` in Kiorex with the parent decision linked, and travels to the partner as `MARKETPLACE`; the partner stores nothing about continuity.
+4. **A separate append-only ledger of links** (`CrossProductContinuity`) and the patient's own prompt state (`CrossProductEntryPoint`) with erasure and purge; the funnel shows counts only, cells under 10 masked.
+
+**Consequences.** Reporting can show whether continuity helps without touching money, and a downstream order can never be mistaken for a fee event. The parent visit is inferred (same person, same clinic, attended, within 7 days) because the Clinic events carry no appointment id; the Nurse partner call has no acquisition block; `CROSS_PRODUCT` is deliberately not added to the partner origin enum. A future exemption for provider-led first bookings is possible because `parentOrigin` is kept, and it is a finance and counsel decision. **Implementation:** built locally (product decision unit 5 and integration 14, cross-product integration 18, e2e 53 and 39 on real stacks); the contracts needs are listed in the launch guide; nothing is deployed and the continuity flag is locked.
+
+**Open (NEEDS_HUMAN).** Whether a product will ever pay on attribution, at what rate and basis (KX-12), the per-product windows, and the continuity consent wording are founder, finance and counsel decisions.
+
+## 29. ADR-057 Corporate programmes and sponsor-funded credit (Proposed, unsigned; 25 Nov 2026)
+
+**Status: Proposed, unsigned (draft of 25 Nov 2026, wave 9 lane A4).** Package GRW-P4-C (built locally, W8 lane A4). Founder signature needed: nothing here binds anything until it is signed. Counsel or finance needed: Counsel and CFO (contract template, employee data terms, benefit tax treatment, invoicing); CEO (enterprise pipeline ownership).
+
+**Context.** Companies may want to cover part of their employees' deposits and Kiorex wants an enterprise pipeline. ADR-048 separated patient credit (Kiorex) from provider credit (Kiorly) and forbade a general wallet. A corporate benefit must not become a third wallet, must not mix employer money with patient or provider balances, and must not reveal which employee used care.
+
+**Decision.**
+1. **A separate ledger, never a wallet.** The sponsor-funded benefit is its own append-only ledger (`CorporateBenefitEntry`: RESERVE, REDEEM, RELEASE, REVERSE). It never writes patient credit (`RewardLot`, ADR-048) and never touches the Clinic provider credit. There is no balance column, no top-up, transfer, gift or cash-out route. The benefit is a per-visit use of an allowance against a share of the deposit that Kiorex collects, and the card always keeps one minor unit. The work-package text that proposed reusing the patient ledger with `kind=CORPORATE` was deliberately not followed; that enum value stays unused.
+2. **The database enforces the money rules.** A trigger serialised on the account refuses a second reservation per booking, any use above the sponsor ceiling or the member cap, and releasing, redeeming or reversing more than exists; the table is append-only with a unique idempotency key.
+3. **Terms are never defaulted.** Ceiling, cap, per-visit maximum, cover share and contract reference are null until ops enters them after a signed contract; an account cannot be ACTIVE without them, without an end date or when the activator was the last editor (two-person rule); terms are frozen while active. The default funding mode is `SPONSOR_CREDIT` (the company funds its own ceiling); `PLATFORM_PROMO` (Kiorex marketing pays) exists as a value and needs a CFO and counsel decision first.
+4. **Privacy by construction.** A member is a keyed hash, never the Passport sub; no endpoint lists members, bookings, providers or specialties; the employer report masks every cell under 10 with secondary suppression; HR lists are stored as hashes for a 30-day matching window then deleted; free text that looks like personal data is refused.
+5. **Leads are not benefits.** Enterprise leads (including a company referred by a provider) are tracked with an append-only history, work with the flag OFF, and create no reward, credit or fee share.
+
+**Consequences.** Corporate programmes can be offered without a new regulated balance and without any employer visibility of individuals. **Implementation:** built locally (unit 40, integration 31 + 11, ops, web and app tests; the Clinic "Refer a company" tab and staff app screen); the flag `growth.corporate` is launch-locked; the contracts kind and events are unreleased. **Not built:** Pay and checkout wiring (`CORPORATE_BENEFIT_PORT` exists and is tested but no deposit is reduced), the real-stack e2e, the employer login, the verified work-email path (Passport does not issue `email_verified`). Nothing is deployed.
+
+**Open (NEEDS_HUMAN).** Contract template, member terms, tax treatment, invoicing procedure, HR-list retention and the enterprise lead owner are counsel, CFO and CEO items (launch guide, corporate rows).

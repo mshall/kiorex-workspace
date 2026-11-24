@@ -1,6 +1,6 @@
 # KX-28 — Growth Engine System Architecture
 
-Revision: Rev 2.4 · Growth Edition, as-built verified 24 November 2026 (new volume; owner: Chief Software Architect; supersedes: Rev 2.4 draft 1 of this volume)
+Revision: Rev 2.7 · Growth Edition, Phases 2 to 4 as-built locally, updated 25 November 2026 (supersedes Rev 2.4 of 24 November 2026; owner: Chief Software Architect)
 
 Subtitle: How the Growth Engine is built inside the existing Kiorex and Kiorly systems: components, deployment, sequences, data, events, security, privacy, service levels, runbooks, markets and recovery.
 
@@ -11,8 +11,8 @@ Tags: Architecture · Components · Sequences · Data model · Contracts 1.10.0 
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-28 |
-| REVISION | Rev 2.4 · Growth Edition (24 November 2026) |
-| STATUS | Phase 1 As-built locally, not deployed (ADR-041 to ADR-047 still Proposed); Phase 2 and later Roadmap |
+| REVISION | Rev 2.7 · Growth Edition (25 November 2026) |
+| STATUS | Phase 1 As-built locally; Phases 2 to 4 As-built locally with launch-locked flags (section 2.3); not deployed; ADR-041 to ADR-057 Proposed |
 | OWNER ROLE | Chief Software Architect |
 | AUDIENCE | Engineering, build agents, security and privacy reviewers, SRE |
 | RELATED | KX-26 system architecture; KX-08; KX-09; KX-10; KX-21; KX-24; KX-27; KX-30; KX-32; KX-33 |
@@ -22,9 +22,14 @@ Tags: Architecture · Components · Sequences · Data model · Contracts 1.10.0 
 |---|---|---|---|
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue from the architecture decisions report; status legend added | Documentation agent |
 | Rev 2.4 | 24 Nov 2026 | Section 02 rebuilt from code (baseline plus as-built table); figures and tables relabelled; configuration kinds, flags, migrations, events and SLO status corrected; gaps listed | Documentation agent |
+| Rev 2.7 | 25 Nov 2026 | Phases 2 to 4 as-built status (W5 to W8 and W9 documentation pass); ADR-049 to ADR-057 registered; statuses re-read from the as-built records and the wave 8 exit gate | Documentation agent (wave 9 lane A4) |
+
+## What changed in Rev 2.7
+New section 2.3 records what Phases 2, 3 and 4 added to the architecture (modules, tables and migrations, contracts, flags, configuration kinds, events, ports, scheduled jobs, ops console); the Phase 1 'Not built' row is kept as history and superseded; the assistant and rewards sequences are relabelled from Roadmap to As-built locally; section 08 lists the unreleased contracts needs; section 13 describes market by configuration as built. Nothing is deployed.
+
 
 ## Contents
-01 Summary · 02 As-built baseline · 03 Logical components · 04 Deployment · 05 Ownership and modules · 06 Sequence diagrams · 07 Data model · 08 Events and contracts 1.10.0 · 09 Security and threat model · 10 Privacy impact assessment · 11 SLIs and SLOs · 12 Runbooks · 13 Multi-market configuration · 14 Failure modes and disaster recovery · 15 Acceptance, KPIs, risks, dependencies, cross-references
+01 Summary · 02 As-built baseline · 03 Logical components · 04 Deployment · 05 Ownership and modules · 06 Sequence diagrams · 07 Data model · 08 Events and contracts 1.10.0 · 09 Security and threat model · 10 Privacy impact assessment · 11 SLIs and SLOs · 12 Runbooks · 13 Multi-market configuration · 14 Failure modes and disaster recovery · 15 Acceptance, KPIs, risks, dependencies, cross-references · Rev 2.7: section 2.3 (Phases 2 to 4 as-built) and 8.1 (contracts status)
 
 ## Key numbers
 <!-- kpis -->
@@ -40,8 +45,8 @@ Every statement in this volume carries one of these labels, in a column, a prefi
 | Label | Meaning | Rule for readers |
 |---|---|---|
 | **As-built** | Exists in code with a passing test in the workspace, verified by reading the repositories and re-running the suites on 24 Nov 2026 (Rev 2.4). Local only: not deployed, not run against a real provider | Safe to rely on for behaviour in the local stack |
-| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. No growth ADR (ADR-041 to ADR-047) has been accepted, so this label marks only rules inherited from existing Accepted ADRs |
-| **Proposed** | Designed in the Growth reports of 24 Nov 2026 and written up here, not yet signed (ADR-041 to ADR-047) | Build only after sign-off, or inside a work package the founder released |
+| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. No growth ADR (ADR-041 to ADR-057) has been accepted, so this label marks only rules inherited from existing Accepted ADRs |
+| **Proposed** | Designed in the Growth reports of 24 Nov 2026 and written up here, not yet signed (ADR-041 to ADR-057) | Build only after sign-off, or inside a work package the founder released |
 | **Roadmap** | Phase 2 to 4 capability, scoped coarsely | Do not build; estimates are ranges |
 | **Open decision** | A founder or CEO choice with a stated default | Use the default, never decide silently |
 | **Regulatory dependency** | Needs counsel, DPO, a regulator position or a partner approval (NEEDS_HUMAN) | Flag stays OFF in production until evidence is recorded; never mark a gate satisfied |
@@ -99,7 +104,25 @@ Evidence: unit suites re-run on 24 Nov 2026 (contracts 276, Kiorex API 578, Clin
 | Config | `GrowthConfigService` with maker-checker, effective dates, rollback as a new version, propagation monitor, guardrails; ops console group with 22 sections | `growth/config`, `growth/admin`, `apps/ops` | As-built |
 | Link registry | The Clinic emits link created and revoked events and serves a signed lookup; Kiorex stores `linkStatus` and reconciles hourly | `growth/links` | As-built |
 | Erasure | `subject.deleted` consumer registered as the `growth` anonymiser; a bug that made the Passport back-channel deletion read as a plain revoke was fixed (`auth.controller.ts`, e2e 28) | `growth/erasure`, `auth` | As-built |
-| Not built | Daily decision replay job; WhatsApp assistant; campaign engine; patient referral and rewards; lifecycle journeys; real Search Console, Play Console and App Store Connect adapters; Pharmacy and Lab Growth tabs; `no-health-targeting.unit.spec.ts` (only `growth-no-phi.unit.spec.ts` exists) | | Roadmap |
+| Not built at Rev 2.4 (history; see 2.3 for what exists now) | Daily decision replay job; WhatsApp assistant; campaign engine; patient referral and rewards; lifecycle journeys; real Search Console, Play Console and App Store Connect adapters; Pharmacy and Lab Growth tabs; `no-health-targeting.unit.spec.ts` (only `growth-no-phi.unit.spec.ts` exists) | | Roadmap |
+
+### 2.3 As-built after Phases 2 to 4 (Rev 2.7, 25 Nov 2026)
+Evidence: the as-built records of waves 5 to 8 in `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md` and the wave 8 exit gate (Kiorex API integration, one ordered invocation, three consecutive runs: 87 suites passed and 1 skipped, 1,142 tests; unit 1,573; Clinic unit 1,417 and integration 534). Nothing is deployed. Every flag named here that moves money, sends marketing, calls a model, opens loyalty or corporate benefits, or shares health-adjacent signals between products is **launch-locked** (ADR-024): only a human gate record in the Super Admin opens it.
+
+| Area | As-built fact | Where | Label |
+|---|---|---|---|
+| Contracts | Published and vendored: 1.12.0 (Rev 2.6 amendment included). **Unreleased**: 1.12.1 to 1.14.0 (corporate set, fraud, SEO automation, LTV, market profile, attribution models, automation, continuity). The platform validates unreleased kinds locally and mirrors flags in its own catalogue (an unknown flag evaluates ON); see KX-33 section 05 | `kiorex-contracts`, `growth-config` | As-built (partly unpublished) |
+| Kiorex schema | Migrations `20261203090000` to `096000` (campaigns, referral and rewards, lifecycle, assistant, integrations, erase and retention v2, credit ledger v2), `20261203099100` (assistant), `20261217090000` (referral and rewards engine), `20270107090000` to `096000` (experiments; attribution models and cohorts; fraud; SEO automation; product ingest; sponsored promotions; Pay wiring), `20270128090000` to `093000` (automation and recommendations; market onboarding; cross-product; corporate). Append-only and balance rules are database triggers and CHECKs | `kiorex-platform/apps/api/prisma` | As-built |
+| Kiorex models (selection) | `RewardLot`, `RewardLedgerEntry` (append-only), `RewardApprovalRequest`, `RewardRecoverableLoss`, `ReferralShare`, `PatientLifecycle`, `AssistantSession`, `AssistantEscalation`, `AssistantConfirmation`, `AssistantLink`, `GrowthExternalMetricDaily`, `GrowthProductDecision`, `GrowthAttributionModelResult`, `GrowthPathSnapshot`, `FraudCase` with signals and an append-only decision log, `SeoVitalSnapshot`, `LifecycleJourneyDefinition`, `LifecycleJourneyRunLog`, `GrowthRecommendation`, `GrowthCohortMonthly`, `MarketOnboardingPlan`, `MarketGeography`, `CrossProductContinuity`, `CrossProductEntryPoint`, `CorporateAccount`, `CorporateCode`, `CorporateMember`, `CorporateBenefitEntry` (separate append-only ledger), `CorporateHrBatch`, `CorporateLead`, `BookingSponsoredDiscount`; five experiment tables | same | As-built |
+| Clinic schema | `20261203100000_growth_provider_marketing_v2` (share cards, recommendation state, verification update requests, statement exports), `20261217100000_growth_provider_credit_v2` (categories, append-only trigger, idempotency keys, promotion holds), `20270107120000_growth_sponsored_promotions` (promotion, versions, reviews, budget ledger, reservations), `20270128100000_growth_corporate_b2b` (`ProviderB2BReferral`) | `clinics-management/apps/api/prisma` (branch `kiorex`) | As-built |
+| Pharmacy and Lab schema | `20261203110000_growth_provider_links` and `20270107110000_growth_acquisition_fact` in each repository (links, daily counters, optional acquisition columns) | `kiorly-pharmacy`, `kiorly-lab` | As-built |
+| Modules (Kiorex API) | `growth/campaigns`, `referral`, `rewards`, `lifecycle`, `integrations`, `experiments`, `attribution-models`, `fraud`, `seo-automation`, `automation`, `recommendations`, `cohorts`, `markets`, `cross-product`, `corporate`, `products`; `ai-gateway/assistant`; `market` (registry) | `kiorex-platform/apps/api/src` | As-built |
+| Ports (module boundaries) | `REFERRAL_PORT`, `REWARDS_PORT`, `SPONSORED_DISCOUNT_PORT`, `SPONSORED_PAY_PORT`, `PRODUCT_GROWTH`, `FRAUD_SCORER`, `SEO_SITE`, `SEO_QUALITY`, `CORPORATE_BENEFIT_PORT` (ready, not called by Pay), `CROSS_PRODUCT_EVENTS`. Booking, Pay, partners and the public site reach growth through ports only; a boundary test enforces it | `growth-ports-public.ts` | As-built |
+| Scheduled jobs | Campaign scheduler, reward expiry and referral qualification (30 minutes), lifecycle evaluation, attribution models rollup (hourly), experiment evaluator (hourly), cohort job (daily), fraud calibration (daily) and fairness (weekly), SEO automation (nightly), product-decision repair (15 minutes), corporate hold release and reconciliation (hourly), credit reconciliation (daily). Each writes a `GrowthJobRun` heartbeat | `growth/*/*.job.ts` | As-built |
+| Money rules in the database | Append-only ledgers (rewards, provider credit, corporate benefit, promotion budget), balance and cap triggers, one reservation per booking, CHECKs for k >= 10 on cohort and path tables | migrations | As-built |
+| Separation guards | Patient credit never writes the Clinic wallet; corporate benefit writes neither; the commission link of products is inert; reporting models never read or write a decision; experiments cannot reach safety, money or consent surfaces (tests assert each) | tests | As-built |
+| Ops console | 34 growth sections registered up front (campaigns, approvals, referrals, rewards, review queue, lifecycle, automation, recommendations, assistant, integrations, channel performance, experiments, attribution models, cohorts, markets and wizard, fraud, SEO, cross-product, corporate, loyalty) | `apps/ops/src/pages/growth` | As-built (loyalty: wave 9) |
+| Not built | Corporate benefit in Pay and checkout; real WhatsApp interactive buttons; real model, real ad, search-console and store adapters against a vendor; second data cell; staff-app credit and promotion cards; contracts 1.12.1 to 1.14.0 publication | | Roadmap or human |
 
 ## 03 Logical components
 Figure 1 — Logical components and ownership. As-built for the Phase 1 components (Rev 2.4); nothing in it is deployed.
@@ -286,8 +309,8 @@ sequenceDiagram
   Note over U: hydrate header, search and booking island only
 ```
 
-### 6.5 WhatsApp assistant (Phase 2, Roadmap)
-Figure 7 — Tool-based assistant with a closed registry (Roadmap, Phase 2).
+### 6.5 WhatsApp assistant (As-built locally with a mock model, launch-locked; ADR-051)
+Figure 7 — Tool-based assistant with a closed registry (As-built locally, mock model; real WhatsApp buttons and a real model are not built).
 
 ```mermaid
 sequenceDiagram
@@ -310,8 +333,8 @@ sequenceDiagram
   B-->>P: confirmation
 ```
 
-### 6.6 Consent and rewards (rewards are Roadmap, counsel-gated)
-Figure 8 — Consent capture (As-built) and the delayed reward (Roadmap).
+### 6.6 Consent and rewards (As-built locally; credit mode launch-locked and counsel-gated)
+Figure 8 — Consent capture (As-built) and the delayed reward (As-built locally; amounts are zero until a human sets them).
 
 ```mermaid
 sequenceDiagram
@@ -331,7 +354,7 @@ sequenceDiagram
 ```
 
 ## 07 Data model
-Logical entities mapped to existing or new tables. Every Phase 1 row is As-built (section 2.2 lists the migrations); Phase 2 and 3 rows are Roadmap. Differences from the design: `ProviderReferralLinkDaily` and `BookingWidgetConfig` exist as designed; no `GrowthFraudReview` table (fraud review columns sit on `GrowthFraudSignal`); `GrowthRevenueFact`, `GrowthSpendEntry`, `GrowthVisitorConsent`, `GrowthConfigReader` and `WidgetRegistration` are additional. KP is the Kiorex database, CM the clinic database. All new KP tables carry `market`. Models keep the PascalCase naming of the existing schemas.
+Logical entities mapped to existing or new tables. Every Phase 1 row is As-built (section 2.2 lists the migrations). The Phase 2 and 3 rows below keep the Rev 2.4 design names; **what was built uses the table names listed in section 2.3** (for example `RewardLot` and `RewardLedgerEntry` rather than `RewardCreditLot`, `FraudCase` rather than `GrowthFraudReview`), so read 2.3 first. Differences from the design: `ProviderReferralLinkDaily` and `BookingWidgetConfig` exist as designed; no `GrowthFraudReview` table (fraud review columns sit on `GrowthFraudSignal`); `GrowthRevenueFact`, `GrowthSpendEntry`, `GrowthVisitorConsent`, `GrowthConfigReader` and `WidgetRegistration` are additional. KP is the Kiorex database, CM the clinic database. All new KP tables carry `market`. Models keep the PascalCase naming of the existing schemas.
 
 | Logical entity | Class | Home | Table or change | Phase |
 |---|---|---|---|---|
@@ -391,6 +414,9 @@ Contracts 1.10.0 and 1.11.0 are additive minors (As-built, published to the vend
 
 Internal (Kiorex outbox, not published to partners): `AttributionAssigned`, `PatientAcquisitionRecorded`, `PatientRegistered`; Phase 2: `ReferralQualified`, `RewardIssued`, `RewardRedeemed`, `RewardReversed`, `CampaignActivated`, `CampaignPaused`, `CampaignBudgetThresholdReached`; Phase 3: `ExperimentAssigned`, `ExperimentConversionRecorded`. Mapped to existing facts (no duplicate): `BookingInitiated` from the booking INTENT event, `BookingConfirmed` from `APPOINTMENT_CONFIRMED`, `BookingCompleted` from `COMPLETED`, `BookingCancelled` from the two cancel events, `CommunicationDispatched` from the KX-24 audit record.
 
+### 8.1 Rev 2.7 contracts status
+Published: 1.12.0. Used by the code but **not published** (one owner publishes with 1.12.1, 1.13.0 and 1.14.0): flags `growth.corporate`, `growth.cross_product`, `growth.experiments`, `growth.fraud_scoring`, `growth.seo_automation`, `growth.automation_journeys`, `growth.ai_recommendations`, `growth.cohorts_ltv`, `growth.market_onboarding`, `growth.attribution_models`, `growth.loyalty`; config kinds `CORPORATE_POLICY`, `FRAUD_RULES`, `SEO_AUTOMATION`, `LTV_POLICY`, `MARKET_PROFILE`, `ATTRIBUTION_MODELS`, `AUTOMATION_POLICY` and an experiment policy kind; events for experiments, recommendations, continuity, corporate and SEO; the new consent purpose `CROSS_PRODUCT_CONTINUITY`; the new Clinic routes (credits, verification updates, promotion reverse and review decision); the optional `appointmentId` on two Clinic events; funnel event names for product orders. The exact list with shapes is in the launch guide (contracts row) and in the as-built records.
+
 ## 09 Security and threat model
 | Threat | Asset | Mitigation |
 |---|---|---|
@@ -404,9 +430,9 @@ Internal (Kiorex outbox, not published to partners): `AttributionAssigned`, `Pat
 | Cache poisoning on SSR | SEO | Path-only cache key; query whitelist; canonical built from config not the Host header |
 | Thin or spam pages | Domain reputation | Thin-page guard; verified reviews only |
 | Private page indexed | Privacy | Auth plus `noindex` header; robots is not a privacy control; snapshot test of every route |
-| Reward farming (Phase 2) | Money | Reward after attended visit and refund window; phone OTP; velocity caps; payment fingerprint; review queue |
+| Reward farming | Money | Reward after attended visit and refund window; phone OTP; velocity caps; eleven fraud rules in shadow with a review queue and two-person reversal; payment fingerprint has no live feed yet |
 | Consent forgery or silent opt-in | Compliance | Unticked controls, versioned text, source, time, rotating `ipHash`, append-only |
-| WhatsApp prompt injection and tool abuse (Phase 2) | Patients, cost | Closed tool registry; schema-validated arguments; confirmation button; per-subject holds; budget caps |
+| WhatsApp prompt injection and tool abuse (As-built locally, 76-case corpus and e2e 37) | Patients, cost | Closed tool registry; schema-validated arguments; confirmation button; per-subject holds; budget caps |
 | Insider changes policy to favour a provider | Commission | Maker-checker; effective-dated versions; audit; 7-day lead for money policy |
 | Secrets in integrations | Ad accounts | `secretRef` only; none in database, logs or UI |
 | PII in URLs (UTM carrying emails) | Privacy | Keep only `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` and four click-id keys, each length-capped, pattern-checked and PHI-checked |
@@ -447,7 +473,7 @@ All targets are Proposed (ASSUMPTION to ratify). Status in Rev 2.4: decision lat
 | Widget ready time | p75 at most 1.5 s on 4G |
 | Consent propagation | Withdrawal honoured within 60 s |
 | Marketing send correctness | 0 sends without consent, 0 in quiet hours |
-| WhatsApp assistant (Phase 2) | p95 reply at most 8 s; wrong-booking incidents 0 |
+| WhatsApp assistant (built locally, mock model; not measured) | p95 reply at most 8 s; wrong-booking incidents 0 |
 | Disputes attributable to attribution | Below 3 percent of charges per month |
 | Outbox lag for growth consumers | p95 at most 60 s |
 
@@ -466,6 +492,8 @@ The levers named below exist as built (flags `growth.attribution`, `growth.ssr_p
 | RB-G8 Kiorex outage | Kiorex API down | Providers keep working: clinic links and QR work standalone; bookings through widget fail closed with a friendly message; Clinic bookings by other sources unaffected | Proposed |
 
 ## 13 Multi-market configuration
+> **Rev 2.7 (As-built locally, ADR-055):** `MARKET_PROFILE` is a versioned configuration kind read by a market registry (code map fallback for EG, SA and AE), an eight-step onboarding wizard stores ids and booleans only and never makes a market live, and a parsed unit test forbids market literals in growth code. The synthetic market ZY proves a market can be added by configuration. Several consumers still answer for EG (listed in the launch guide) and there is one data cell (Frankfurt).
+
 As-built: every growth table has `market` (ISO alpha-2) and config resolves with market isolation in every read. Every growth table has `market` (ISO alpha-2). Configuration resolves `(kind, scope MARKET cc)` with fallback to GLOBAL. No market conditionals in code. A new market is configuration plus data.
 
 | Setting | Where | Example for Egypt | Label |

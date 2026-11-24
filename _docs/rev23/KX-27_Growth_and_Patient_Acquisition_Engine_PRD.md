@@ -1,6 +1,6 @@
 # KX-27 — Growth and Patient Acquisition Engine PRD
 
-Revision: Rev 2.4 · Growth Edition, as-built verified 24 November 2026 (new volume; owner: Head of Product with the Chief Software Architect; supersedes: Rev 2.4 draft 1 of this volume)
+Revision: Rev 2.7 · Growth Edition, Phases 2 to 4 as-built locally, updated 25 November 2026 (supersedes Rev 2.4 of 24 November 2026; owner: Head of Product with the Chief Software Architect)
 
 Subtitle: What the Growth and Patient Acquisition Engine must do, for whom, in which phase, how we will know it works, and what is built today versus proposed.
 
@@ -11,28 +11,34 @@ Tags: Growth PRD · Provider links and QR · Attribution · SEO pages · Widgets
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-27 |
-| REVISION | Rev 2.4 · Growth Edition (24 November 2026) |
-| STATUS | Phase 1 As-built locally (13 of 13 packages, with named gaps); not deployed; ADR-041 to ADR-047 still Proposed; production gates open |
+| REVISION | Rev 2.7 · Growth Edition (25 November 2026) |
+| STATUS | Phase 1 As-built locally (13 of 13); Phases 2 to 4 As-built locally, mocked and launch-locked (section 04); not deployed; ADR-041 to ADR-057 Proposed; production gates open |
 | OWNER ROLE | Head of Product (requirements), Chief Software Architect (design) |
 | AUDIENCE | Founders, product, engineering, build agents, marketing, counsel and DPO, investors in due diligence |
-| RELATED | KX-28 architecture; KX-29 go-to-market; KX-30 attribution; KX-31 SEO and ASO; KX-32 analytics; KX-33 roadmap; KX-01 ADR-041 to ADR-047; KX-03; KX-05; KX-09; KX-12; KX-13; KX-14; KX-15; KX-24 |
+| RELATED | KX-28 architecture; KX-29 go-to-market; KX-30 attribution; KX-31 SEO and ASO; KX-32 analytics; KX-33 roadmap; KX-01 ADR-041 to ADR-057; KX-03; KX-05; KX-09; KX-12; KX-13; KX-14; KX-15; KX-24 |
 
 ## Revision history
 | Revision | Date | Change | Author |
 |---|---|---|---|
 | Rev 2.4 draft 1 | 24 Nov 2026 | First issue, consolidated from the four Growth reports; status legend added | Documentation agent |
 | Rev 2.4 | 24 Nov 2026 | Every requirement and capability re-verified against code and tests; each GR item and the Phase 1 exit checklist now carry a status; the token lifetime, URL and SLO statements corrected; acceptance items that are not met are listed | Documentation agent |
+| Rev 2.7 | 25 Nov 2026 | Phases 2 to 4 as-built status (W5 to W8 and W9 documentation pass); ADR-049 to ADR-057 registered; statuses re-read from the as-built records and the wave 8 exit gate | Documentation agent (wave 9 lane A4) |
+
+## What changed in Rev 2.7
+Section 04 capability map now shows what exists for Phases 2, 3 and 4 (campaigns, referral and the two credit systems, lifecycle, assistant, integrations, experiments, fraud, SEO automation, cohorts, markets, product links and ingest, cross-product, corporate) and what does not (loyalty and partner tabs are wave 9, see KX-33 section 05); section 5.7 rewritten from Roadmap to as-built status; open decisions 12 to 24 added; ADR range extended to ADR-057. Every requirement of Phases 2 to 4 is built locally behind a launch-locked flag or a default of zero; none is deployed.
+
 
 ## Contents
-01 Executive summary · 02 Goals, non-goals and principles · 03 Users and jobs to be done · 04 Capability map and phases · 05 Functional requirements · 06 Non-functional requirements · 07 Acceptance criteria · 08 KPIs · 09 Risks and mitigations · 10 Dependencies · 11 Priorities · 12 Open decisions and regulatory dependencies · 13 Cross-references
+01 Executive summary · 02 Goals, non-goals and principles · 03 Users and jobs to be done · 04 Capability map and phases · 05 Functional requirements · 06 Non-functional requirements · 07 Acceptance criteria · 08 KPIs · 09 Risks and mitigations · 10 Dependencies · 11 Priorities · 12 Open decisions and regulatory dependencies · 13 Cross-references · Rev 2.7: Phases 2 to 4 are in sections 04, 5.7 and 12
 
 ## Key numbers
 <!-- kpis -->
 - **40** capabilities inventoried in discovery (11 exist, 14 partial, 15 absent)
 - **13** Phase 1 work packages, 84 engineer-days
-- **7** proposed ADRs (ADR-041 to ADR-047)
+- **17** proposed ADRs (ADR-041 to ADR-057), none signed
 - **EGP 40** flat fee per attended new patient (ADR-007, unchanged)
 - **13 of 13** Phase 1 packages built locally; **0** deployed; **0** growth ADRs accepted by the founder
+- **Phases 2 to 4:** built locally and launch-locked (section 04); wave 8 exit gate 1,142 integration tests in three ordered runs
 
 ## Status legend (read first)
 Every statement in this volume carries one of these labels, in a column, a prefix or a callout. Phase 1 is now built locally; the labels separate what runs from what is only designed.
@@ -40,8 +46,8 @@ Every statement in this volume carries one of these labels, in a column, a prefi
 | Label | Meaning | Rule for readers |
 |---|---|---|
 | **As-built** | Exists in code with a passing test in the workspace, verified by reading the repositories and re-running the suites on 24 Nov 2026 (Rev 2.4). Local only: not deployed, not run against a real provider | Safe to rely on for behaviour in the local stack. A gap is named wherever one is known |
-| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. No growth ADR (ADR-041 to ADR-047) has been accepted, so this label marks only rules inherited from existing Accepted ADRs |
-| **Proposed** | Designed in the Growth reports of 24 Nov 2026 and written up here, not yet signed (ADR-041 to ADR-047) | Build only after sign-off, or inside a work package the founder released |
+| **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. No growth ADR (ADR-041 to ADR-057) has been accepted, so this label marks only rules inherited from existing Accepted ADRs |
+| **Proposed** | Designed in the Growth reports of 24 Nov 2026 and written up here, not yet signed (ADR-041 to ADR-057) | Build only after sign-off, or inside a work package the founder released |
 | **Roadmap** | Phase 2 to 4 capability, scoped coarsely | Do not build; estimates are ranges |
 | **Open decision** | A founder or CEO choice with a stated default | Use the default, never decide silently |
 | **Regulatory dependency** | Needs counsel, DPO, a regulator position or a partner approval (NEEDS_HUMAN) | Flag stays OFF in production until evidence is recorded; never mark a gate satisfied |
@@ -53,7 +59,7 @@ Kiorex earns EGP 40 only when an attended new patient arrives through the market
 
 **Baseline before Phase 1 (24 Nov 2026 discovery).** The clinic stamps `Appointment.bookingSource` (`FRONT_DESK, PHONE, WALK_IN, CLINIC_LINK, KIOREX_MARKETPLACE, KIOREX_WHATSAPP, INTEGRATION, IMPORT`) and `isNewPatientAtBooking` (24-month lookback). `isCommissionChargeableBooking()` returns false for `CLINIC_LINK`, for non-new patients and for any other source. The charge engine is idempotent per appointment. Booking slugs and a public page `/b/:slug` exist. A notification layer with purposes, consent and quiet hours exists (KX-24). A deterministic WhatsApp booking state machine exists. A supply-side doctor-to-doctor referral programme exists in the clinic. The patient web is a client-only Vite single-page app with no sitemap, robots, structured data or slugs.
 
-**Phase 1 (As-built locally, Rev 2.4).** Eleven Phase 1 capabilities (section 04), delivered as modules inside the two existing modular monoliths with no new service, no Redis and no Kafka, are built and tested on the local stack. They are not deployed. Open items: Lighthouse and field Web Vitals, device Universal and App Links, the real Passport popup in the widget, counsel and DPO outputs (consent wording, marketing licence), provider terms, hosts and DNS, and the signed ADRs. **Roadmap.** Phase 2 adds campaigns, patient referral and rewards (counsel-gated), lifecycle messaging, a WhatsApp assistant and the provider Growth workspace v2. Phases 3 and 4 add experiments, paid-platform adapters and the pharmacy, lab and nurse surfaces.
+**Phase 1 (As-built locally, Rev 2.4).** Eleven Phase 1 capabilities (section 04), delivered as modules inside the two existing modular monoliths with no new service, no Redis and no Kafka, are built and tested on the local stack. They are not deployed. Open items: Lighthouse and field Web Vitals, device Universal and App Links, the real Passport popup in the widget, counsel and DPO outputs (consent wording, marketing licence), provider terms, hosts and DNS, and the signed ADRs. **Phases 2 to 4 (As-built locally, Rev 2.7).** Campaigns, patient referral and rewards (coupon mode default, credit mode counsel-gated), the two separate credit systems and provider-sponsored promotions, lifecycle messaging, the WhatsApp assistant with a mock model, integrations with mock adapters, experiments, fraud scoring in shadow, reporting attribution models, SEO automation, cohorts and LTV, marketing automation and recommendations, market by configuration, Pharmacy and Lab links with the product decision, cross-product journeys and corporate partnerships are built and tested on the local stack. **Every money, messaging, model and corporate feature is launch-locked, every reward amount is zero, fraud runs in shadow, and nothing is deployed or production-verified.** Loyalty, the Pharmacy and Lab staff-app tabs and the Phase 3 and 4 regression were wave 9 work (KX-33 section 05). Open: contracts 1.12.1 to 1.14.0 unpublished, Pay wiring of the corporate benefit, all legal, accounting and copy gates (KX-33 section 06).
 
 > **Decision** Two findings change the plan. (1) Kiorex earns once per new patient per provider network, so patient-marketing return must be read against first-visit fees, not gross booking value. At EGP 40 less disputes, a patient is worth about EGP 38 on the fee alone, so paid acquisition cannot be justified by fee revenue alone (KX-32, KX-13). (2) KX-14's attended-visit targets are about 14 percent (month 6) and 34 percent (month 12) of what a bottom-up from tenants and listing rates gives for fee-bearing new patients. The series must be re-based (KX-13 section 12).
 
@@ -113,15 +119,20 @@ The Today column is the verified status in Rev 2.4 (C12 onwards are Roadmap and 
 | C8 | Deep links and market bootstrap | 1 | Partial: code and unit tests built; device verification, Team ID and SHA-256 open | GRW-P1-H | Should |
 | C9 | Consent management and preference centre | 1 | As-built (web, patient app); no banner on SSR pages; wording is a draft | GRW-P1-I | Must |
 | C10 | Super Admin versioned growth configuration | 1 | As-built | GRW-P1-K | Must |
-| C11 | Staff app Growth tab (share link, counts) | 1 | As-built for Clinic and Nurse; Pharmacy and Lab tabs not built | GRW-P1-L | Could |
-| C12 | Campaign engine, UTM builder, budgets | 2 | Absent | GRW-P2-1 | Should |
-| C13 | Patient referral and reward ledger | 2 | Absent; blocked on counsel | GRW-P2-2, 3 | Should |
-| C14 | Provider Growth workspace v2 (analytics, cap and pause) | 2 | Absent | GRW-P2-4 | Should |
-| C15 | WhatsApp booking assistant (tool-based) | 2 | Deterministic machine As-built; assistant absent | GRW-P2-5 | Should |
-| C16 | Lifecycle messaging with frequency caps | 2 | Transactional only | GRW-P2-6 | Should |
-| C17 | CAC, ROAS, MER, cohorts; store and Search Console adapters | 2 | Absent | GRW-P2-7, 8 | Should |
-| C18 | Experiments, fraud scoring, paid-platform adapters, SEO automation | 3 | Absent | GRW-P3-* | Could |
-| C19 | Pharmacy, lab and nurse acquisition pages; corporate programmes; loyalty | 4 | Absent | GRW-P4-* | Could |
+| C11 | Staff app Growth tab (share link, counts) | 1 | As-built for Clinic and Nurse; Pharmacy and Lab tabs: wave 9 (GRW-P4-B3, KX-33 section 05) | GRW-P1-L, GRW-P4-B3 | Could |
+| C12 | Campaign engine, UTM builder, budgets, approvals | 2 | As-built locally (no ad-platform spend by design, ADR-049) | GRW-P2-A | Should |
+| C13 | Patient referral and reward ledger; coupon mode default, credit mode counsel-gated; refund-as-credit option; family credit; goodwill | 2 | As-built locally, flags launch-locked, all amounts zero (ADR-046, ADR-048, ADR-050) | GRW-P2-B1, B2, B3 | Should |
+| C14 | Provider Growth workspace v2 (share cards, free-time cards, recommendations, statements, verification updates) | 2 | As-built locally | GRW-P2-C | Should |
+| C15 | WhatsApp booking assistant (tool-based, mock model) | 2 | As-built locally, launch-locked, CMO safety review open (ADR-051) | GRW-P2-D | Should |
+| C16 | Lifecycle messaging with frequency caps; marketing automation builder | 2, 3 | As-built locally; marketing sends launch-locked (ADR-052) | GRW-P2-E, P3-E | Should |
+| C17 | CAC, ROAS, MER, channel performance; integration adapters (ten kinds, mock) | 2 | As-built locally with mocks; real adapters config-only | GRW-P2-F | Should |
+| C18 | Provider credit integration (fee draw-down, dispute-win credit, statement section) and provider-sponsored promotions | 2 | As-built locally; sponsored promotions launch-locked (ADR-048) | GRW-P2-W, P2-S | Should |
+| C19 | Experiments, reporting attribution models, cohorts and LTV, fraud scoring (shadow), SEO automation, AI-assisted recommendations | 3 | As-built locally (ADR-053, ADR-054); paid adapters mock only | GRW-P3-A to P3-F | Could |
+| C20 | International market tooling (`MARKET_PROFILE`, onboarding wizard; ZY synthetic) | 3 | As-built locally; no real second market (ADR-055) | GRW-P3-G | Could |
+| C21 | Pharmacy and Lab links, QR and product decision; Nurse through the Clinic Growth tab | 4 | As-built locally; the commission link of products is inert (ADR-056) | GRW-P4-B1, B2 | Could |
+| C22 | Cross-product journeys (continuity cards, consent, funnel) | 4 | As-built locally, launch-locked (ADR-056) | GRW-P4-A | Could |
+| C23 | Corporate partnerships and enterprise acquisition | 4 | As-built locally, launch-locked; Pay wiring not built (ADR-057) | GRW-P4-C | Could |
+| C24 | Loyalty and partnership programmes | 4 | Wave 9; counsel-gated (see KX-33 section 05) | GRW-P4-D | Could |
 
 ## 05 Functional requirements
 Requirement text uses SHALL for Phase 1 Must items. Rev 2.4: each item ends with its verified status in square brackets; a deviation from the original wording is stated in the item.
@@ -171,13 +182,17 @@ Requirement text uses SHALL for Phase 1 Must items. Rev 2.4: each item ends with
 - GR-601 A Growth group in the ops console SHALL provide overview, attribution and commission evidence, links and widgets monitoring, SEO and landing pages, consent and communications, and configuration versions. [As-built: 22 sections, Phase 2 sections show Planned only]
 - GR-602 Configuration kinds SHALL be validated against JSON Schemas shared through contracts; secrets are references only. [As-built for five kinds; the other kinds ship their schema with their phase]
 
-### 5.7 Phase 2 to 4 (Roadmap)
-- Campaign lifecycle (draft, scheduled, active, paused, completed) with budget caps and threshold events; UTM builder.
-- Patient referral link; reward after the referee's attended visit and refund window; closed-loop discount credit or coupon; fraud review queue.
-- WhatsApp assistant with a closed tool registry, confirmation button and cost caps.
-- Lifecycle journeys limited to non-clinical segments.
-- Experiments with guardrails (never on safety flows, fees or consent wording); Google, Meta and TikTok adapters with anonymised conversions only.
-- Pharmacy, lab and nurse pages and links; corporate and insurer programmes (month 15 and later); loyalty if rewards clear legal review.
+### 5.7 Phases 2 to 4 (As-built locally, Rev 2.7)
+Each line says what exists; none is deployed and every money, messaging or model feature is launch-locked. Detail and evidence: KX-33 section 05, the as-built records in `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md`, and each repository's `Docs/GROWTH.md`.
+- **Campaigns (C12).** Lifecycle (draft, scheduled, active, paused, completed), budget caps and threshold events, UTM builder, two-person approval above the ceiling; spend is recorded, never executed. Not built: campaign-level reward, creative upload, landing editor.
+- **Referral and rewards (C13).** Invite, claim, qualification after the referee's attended visit and the refund window, fraud rules and a review queue; closed-loop coupon (default) or credit (locked), refund-as-credit as an option with the original method preselected, family credit with one owner, support goodwill with a second approver. All reward amounts are 0 until a human sets them.
+- **Assistant (C15).** Closed tool registry, confirm only on a button payload, every sentence from a fixed template, fallback to the deterministic machine; mock model only.
+- **Lifecycle and automation (C16).** Four message classes, eight journeys, a pure send gate, a journey builder with a dry run; every marketing send is skipped while the marketing flag is locked.
+- **Experiments and optimisation (C19).** Experiments on an allowlist of non-clinical surfaces only; seven reporting models that never touch a decision; fraud scoring in shadow; SEO automation with automatic noindex OFF; cohorts and LTV as group estimates; recommendations from aggregates only.
+- **Markets (C20).** A new market is configuration plus a human gate; the synthetic market ZY proves it.
+- **Products and cross-product (C21, C22).** A product discriminator on the same attribution decision; continuity cards behind a consent and a locked flag.
+- **Corporate (C23).** A separate sponsor-funded benefit ledger, two-person activation, hashed HR lists, aggregate-only employer reporting, enterprise leads; no deposit is reduced until Pay is wired.
+- **Not built, by design.** Remarketing, patient-list audiences, health-condition targeting, stored-value wallets, any commission change for products, per-person LTV, automatic ad-platform spend.
 
 ## 06 Non-functional requirements
 | ID | Requirement | Target | Label |
@@ -258,17 +273,30 @@ Must: C1 to C6, C9, C10. Should: C7, C8, Phase 2 items. Could: C11, Phase 3 and 
 ## 12 Open decisions and regulatory dependencies
 | # | Item | Default until decided | Label |
 |---|---|---|---|
-| 1 | Sign ADR-041 to ADR-047 | All Proposed | Open decision |
+| 1 | Sign ADR-041 to ADR-057 and confirm the assistant ADR number (ADR-051, scheme A) | All Proposed | Open decision |
 | 2 | Attribution precedence `PROVIDER_FIRST`; windows 30 days provider, 30 days referral, 7 days campaign | As built (`PROPOSED_DEFAULT`) | Open decision |
 | 3 | EGP 40 for provider-led-then-marketplace cases | No charge (built that way: provider evidence only removes a fee) | Open decision |
 | 4 | Whether `kiorly.link` serves the page or redirects | Redirect to the clinic web `/b/<slug>` | Open decision |
 | 5 | SSR role as a separate App Runner service from day one | One service, flag-controlled (built as roles of one image) | Open decision |
 | 6 | Interpretation of the 50/25/15/10 hypothesis | Flagged open, see KX-29 | Open decision |
 | 7 | PDPL consent, cookies, marketing licence, retention | Consent-gated; marketing launch-locked OFF | Regulatory dependency |
-| 8 | Reward credits legal assessment | Rewards not built; coupon fallback | Regulatory dependency |
+| 8 | Reward credits legal assessment | Built locally: coupon mode default, credit mode launch-locked, all amounts zero | Regulatory dependency |
 | 9 | Provider content licence for public pages | Terms update needed | Regulatory dependency |
 | 10 | Review markup eligibility (Google review-snippet rules) | No `aggregateRating` until verified | Regulatory dependency |
 | 11 | ADR-039 (telehealth, accepted 23 Nov 2026) is in the Clinic repository `Docs/adr`; ADR-041 numbering stands | Closed | Closed |
+| 12 | Credit mode, refund-as-credit, family credit: counsel and accounting (ADR-048) | Coupon mode; flags locked | Regulatory dependency |
+| 13 | Provider-sponsored promotions: counsel, accounting, advertising rules, review procedure | Locked OFF | Regulatory dependency |
+| 14 | Reward, referral and fraud numbers; enforce or shadow | All zero; fraud in shadow | Open decision |
+| 15 | WhatsApp assistant safety review, wording, real-model vendor | Mock model; locked | Regulatory dependency |
+| 16 | Marketing licence, templates and copy for lifecycle and automation | Marketing sends skipped | Regulatory dependency |
+| 17 | Cross-product continuity consent and whether health data may seed a prompt | Locked; cards off | Regulatory dependency |
+| 18 | Corporate programme terms, tax, funding mode, enterprise lead owner | Locked; terms never defaulted | Regulatory dependency |
+| 19 | Loyalty and partnership programmes (legal form of points) | Locked (wave 9) | Regulatory dependency |
+| 20 | First real second market, regulation, residency | ZY synthetic only | Open decision |
+| 21 | Whether any product (Pharmacy, Lab, Nurse) ever pays on attribution | Inert; reporting only | Open decision |
+| 22 | Publish contracts 1.12.1 to 1.14.0 together | Local validators and flag mirrors | Open decision |
+| 23 | Experiment policy numbers and variant copy procedure | Code defaults | Open decision |
+| 24 | Per-product attribution windows | Equal to the clinic | Open decision |
 
 ## 13 Cross-references
-KX-28 (design), KX-29 (go-to-market), KX-30 (attribution and money), KX-31 (SEO and ASO), KX-32 (analytics definitions), KX-33 (roadmap and hand-off); KX-01 ADR-041 to ADR-047; KX-03 KXMBK10 (widget); KX-05 (clinic); KX-09 (contracts 1.10.0); KX-12 BR12 and the new patient-referral rule; KX-13 (inputs); KX-14 (go-to-market); KX-15 (compliance); KX-24 (notification purposes). Source reports: `_docs/growth/GROWTH_DISCOVERY.md`, `GROWTH_ARCHITECTURE_DECISIONS.md`, `GROWTH_COMPETITIVE_RESEARCH.md`, `GROWTH_PHASE1_WORK_PACKAGES.md`.
+KX-28 (design), KX-29 (go-to-market), KX-30 (attribution and money), KX-31 (SEO and ASO), KX-32 (analytics definitions), KX-33 (roadmap and hand-off); KX-01 ADR-041 to ADR-057; KX-03 KXMBK10 (widget); KX-05 (clinic); KX-09 (contracts 1.10.0); KX-12 BR12 and the new patient-referral rule; KX-13 (inputs); KX-14 (go-to-market); KX-15 (compliance); KX-24 (notification purposes). Source reports: `_docs/growth/GROWTH_DISCOVERY.md`, `GROWTH_ARCHITECTURE_DECISIONS.md`, `GROWTH_COMPETITIVE_RESEARCH.md`, `GROWTH_PHASE1_WORK_PACKAGES.md`.
