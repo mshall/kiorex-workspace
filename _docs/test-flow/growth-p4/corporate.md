@@ -12,4 +12,4 @@ Built and tested on 25 Nov 2026 in the lane A4 worktrees; mock providers only; `
 7. **Flag OFF.** Turn `growth.corporate` off: patient routes answer "unavailable", codes and activation are refused, the lead pipeline and the reports keep working.
 
 ## Automated evidence
-See the as-built record "W8 A4" in `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md`. Not run: real-stack suite 39 and Playwright layout passes (launch guide 11.90). No screenshots exist for this package.
+See the as-built record "W8 A4" in `_docs/growth/GROWTH_PHASE2_4_WORK_PACKAGES.md`. Not run: real-stack suite 39 and Playwright layout passes (launch guide 11.95, renumbered from 11.90). No screenshots exist for this package.
