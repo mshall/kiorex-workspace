@@ -17,7 +17,7 @@ Legend. **Opens screen** = click opens the exact screen (deep link, first field 
 | whatsapp_reminders | yes (`/admin?section=organization`, toggle focused) | yes | yes | yes | UI |
 | import_patients | yes (`/onboarding/import`) | yes | yes | yes | UI (CSV) |
 | first_appointment | yes (`/appointments?book=1`, wizard opens) | yes | yes | yes | wizard opened in UI; booking via API |
-| first_check_in | yes (deep link to the open appointment) | yes | not asserted | not asserted | check-in applied in the database (see gap 1) |
+| first_check_in | yes (deep link to the open appointment) | yes | yes | yes (next: doctor verification) | UI (cash check-in on the appointment page) |
 | doctor_verification | yes (`/profile/verification`) | needs platform review | n/a | n/a | open only |
 | kiorex_profile | yes (Kiorex listings card) | needs verified doctor + bookable type | n/a | n/a | open only (completion covered in the completion-state test via DB) |
 | connect_kiorex | yes (`/kiorex`; owner/admin only) | status from `kiorexConnect` | n/a | n/a | open only (page owned by the Kiorex-tab agent) |
@@ -28,7 +28,7 @@ Also verified for Clinic: persistence after reload and after sign-out/in; skip o
 
 | Step | Opens correct screen | Auto-detects done | Animation | Next highlighted | How |
 |---|---|---|---|---|---|
-| nurse_zones (solo) | yes (`/nurse/onboarding`, zones editor) | yes | state flips in place (same page) | not asserted | UI |
+| nurse_zones (solo) | yes (`/nurse/onboarding`, zones editor) | yes | yes (`data-just-done`, same page) | yes (exactly one pending row `data-next`) | UI |
 | nurse_availability (solo) | yes (availability editor) | yes | state flips in place | not asserted | UI |
 | nurse_services / nurse_prices | seeded done at sign-up (service catalogue with prices) | yes | n/a | n/a | n/a |
 | nurse_verification | yes (`/profile/verification`) | needs platform review | n/a | n/a | open only |
@@ -61,18 +61,19 @@ Also verified: two branches (CHAIN) with per-branch rows and a third reopening t
 | lab_coverage | yes (per lab) | yes | yes | yes | UI |
 | safety_contact | yes (name focused) | yes | yes | yes | UI (fixed: the settings save was rejected by the API, see inventory) |
 | first_order | yes (`/orders`) | yes | yes | yes | API |
-| first_report | yes (`/release`) | rule unit-tested | n/a | n/a | open only (full bench pipeline is in `golden-flow.spec.ts`) |
+| first_report | yes (`/release`) | yes | yes (bar), then the celebration card | n/a (last pending step) | UI: bench pipeline as in `golden-flow.spec.ts` (order by API), then Sign report + Release from the checklist; finished state asserted, Dismiss remembered |
 | connect_kiorex | yes (`/kiorex-connect`, owner only) | status from intake key | n/a | n/a | open only |
 
 Also verified: two labs (CHAIN) with per-lab rows, third lab reopens, reception view (disabled + "Ask the owner", Connect hidden, API 403/400), Arabic RTL + dark + sizes + axe, keyboard Enter, Skip for now keeps the step pending and moves the highlight, dismissal refused with pending work (400).
 
-## Honest gaps
+## Honest gaps (updated after the crash fix)
 
-1. **Appointment detail page crashes in the current working tree** ("Maximum update depth exceeded"), with or without quick setup (the existing `fs02-front-desk-check-in.spec.ts` fails the same way; verified by disabling the bar and reverting my auth-store change). It is not caused by this work and belongs to whoever is changing the front-desk/brand layer. Because of it the Clinic check-in is applied in the database and only the deep link and the detection are asserted.
-2. Steps that need an outside party (doctor verification, Kiorex approval, Lab report release pipeline) are "open only"; their completion rules are unit-tested and, for Clinic, the finished state is reached by setting verification and the Kiorex status in the database.
-3. Pharmacy prices/stock/sale, Lab first order and the Clinic booking are made through the API (their screens are large flows with their own tests); the screens opened and the checklist reacted without a reload.
-4. The Lab finished-state UI is not exercised in the browser (first report cannot be produced quickly); the same component is exercised in Pharmacy and Clinic, and the Lab rule is unit-tested.
-5. Nurse: the checklist lives on `/nurse/onboarding` (Nurse landing screens are visit/dispatch pages without a dashboard card); no card on the Nurse home. Nurse sign-up is only reachable through the public API (the Clinic sign-up page has no Nurse switch).
-6. Clinic Lite plan marks only WhatsApp as an upgrade; Pharmacy and Lab have no plan-gated steps today. Arabic strings were written by the engineer and need a native review; no screenshots were captured in this pass.
+1. **Appointment detail crash: fixed.** Root cause: `VisitCollectionFields` rebuilt its imperative handle every render (`useImperativeHandle` without deps) while `QuickCheckInPanel` stores it in state (`ref={setFieldsHandle}`); every commit re-set the state. Handle is now stable (commit 3feeebdc). The Clinic first check-in is now done through the UI, not the database. Regression: `e2e/no-update-depth.spec.ts`; full sweep `e2e/crash-sweep.spec.ts`.
+2. Steps that need an outside party (doctor verification, Kiorex approval) are still "open only"; the Lab first report is now done in the browser.
+3. Pharmacy prices/stock/sale, Lab first order and the Clinic booking are made through the API (large flows with their own tests); the screens opened and the checklist reacted without a reload.
+4. Lab: the finished-state card is exercised in the browser (first-report test). The bench pipeline before the release step is driven through the same UI steps as the golden flow; the order itself is created by API.
+5. Nurse: the checklist card now sits on the Nurse home pages (Today and Dispatch) and links to `/nurse/onboarding`. Nurse sign-up is still only reachable through the public API (the Clinic sign-up page has no Nurse switch).
+6. Clinic Lite plan marks only WhatsApp as an upgrade; Pharmacy and Lab have no plan-gated steps today. Arabic strings are in `quick-setup-arabic-review.md` for a native review. Screenshots and the design critique: `quick-setup/` and `quick-setup-design-review.md`.
 7. The staff app (Kiorly mobile) has no quick-setup list; not in scope here.
-8. Another agent's `refreshSessionFromServer` / design changes can regress the owner-role handling; the owner roles fix is covered by the Clinic journey (owner reaches Admin and clinic settings).
+8. Another agent's `refreshSessionFromServer` / design changes can regress the owner-role handling; covered by the Clinic journey.
+9. Public sign-up OTP is throttled per IP per hour in memory; repeated quick-setup runs exhaust it ("Too many requests from this network") until the Clinic API restarts.
