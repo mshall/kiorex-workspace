@@ -33,6 +33,8 @@ Tags: HMAC API · Outbox events · Idempotency · Kiorex Pay ledger · Home visi
 - **Outbox, not dual writes.** Events are written in the same DB transaction as the state change and dispatched with retries (5 s loop, exponential backoff, DEAD after 8).
 - **Authority is explicit.** The producer of a fact is its system of record; consumers keep projections with source version. Home visits are Kiorly facts.
 
+<!-- kx-diagram: contract-flow -->
+
 ## 02 Authentication between products
 
 Headers on every Kiorex → Kiorly call (scope MARKETPLACE):
@@ -49,8 +51,6 @@ X-Kiorly-Signature: base64url(HMAC-SHA256(secret, TIMESTAMP \n NONCE \n METHOD \
 Webhooks Kiorly → Kiorex: X-Kiorly-Event-Id, X-Kiorly-Signature over body {eventId,type,aggregateType,aggregateId,occurredAt,data}.
 
 Optional IP allow-list per client. Secrets rotate every 90 days with overlap (two active secrets). Platform admin UI for client issuance is a Kiorly follow-up. The same client serves both Kiorly editions (Clinic and Nurse).
-
-<!-- kx-diagram: contract-flow -->
 
 ## 03 Command catalogue (Kiorex → Kiorly Clinic)
 
@@ -247,8 +247,6 @@ Status: **As-built locally** (code plus passing tests, mock providers). Nothing 
 
 > **Decision** Founder principle, 25 Nov 2026: Kiorly provides software (orchestration, routing, reconciliation, reporting); licensed payment partners process and settle funds; **Kiorly never holds funds in the design.**
 
-<!-- kx-diagram: pay-unified -->
-
 | Phase | Delivered (local, mocked) | Not delivered |
 |---|---|---|
 | 1 One adapter contract | Shared package `@kiorex/pay-contract` 0.1.0 (repository `kiorex-pay-contract`, pure TypeScript, no network): neutral adapter, event, status and capability types wire-compatible with `PspEvent`; bank IPN adapter (signed webhook with replay window, CSV or JSON ingest, reversals, dedupe, masked payer); config-only wallet skeleton on Paymob wallet methods. Vendored tarball in Kiorex and Clinic | Bank layout (LG-INT-PAY-14), wallet ids (LG-INT-PAY-15); no direct Vodafone Cash adapter |
@@ -257,6 +255,8 @@ Status: **As-built locally** (code plus passing tests, mock providers). Nothing 
 | 4 Routing | Per-organisation preference (ordered and blocked list, audited); success-rate-aware ordering (Wilson lower bound over 30 days, `PAY_ROUTING_POLICY`); an organisation pin loses only below 50 percent lower-bound success | Fee values (LG-INT-PAY-3); the booking deposit path does not use the ordered candidates yet |
 | 5 Reporting and fraud | Payment fraud scorer in SHADOW mode (no ban, no block), review queue, thresholds in maker-checker `PAY_FRAUD_THRESHOLDS`; roll-ups by platform, organisation, PSP and day (finance only; JSON, CSV, PDF) and Clinic branch roll-ups | Kiorex PDF is Latin only (CSV carries Arabic); no Clinic payment fraud scorer |
 | POS and terminals | Design note and the `TerminalAdapter` interface only: a terminal is a payment channel and the card never touches Kiorly | No vendor, no code |
+
+<!-- kx-diagram: pay-unified -->
 
 **Commission collection (COM-1, As-built locally).** The Clinic stays the system of record for the charge and the decision. It reports `COMMISSION_CHARGE_CREATED`, `COMMISSION_CHARGE_REVERSED` and the additive `COMMISSION_CHARGE_STATUS_CHANGED` (confirmed, disputed, waived); Kiorex mirrors each as a `CommissionClaim`. A run is unique per organisation and period (idempotency key `com:<org>:<cutoff>`); older uncollected claims carry over and are never lost. Run state is pushed back to the product (`POST /commission-collections`, HMAC, outbox) so the provider sees the same figures.
 

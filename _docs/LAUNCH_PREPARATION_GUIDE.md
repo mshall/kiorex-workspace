@@ -377,3 +377,4 @@ Master runbook: `_docs/INTEGRATION_GO_LIVE_RUNBOOK.md` (companions: `INTEGRATION
 | 13.13 | Store registration and native builds. | F | Open | NH-STORE |
 | 13.14 | Decide which env-only numbers should become market config (home-visit SLA, family share limit, home gate size, waitlist offer minutes, fallback quiet hours) and whether lifecycle journey delays get a kind. | F, D | Open | |
 | 13.15 | Price-change notice days, dispute deadline and SLA stay code until counsel decides. | C | Open | |
+| 13.16 | **Decide the Lite commission listing pause (SB-05) against the collection principle (COM-1).** The Clinic dunning timeline pauses the Kiorex listing of a Lite organisation with an unpaid Kiorex commission invoice at D+30 (`Tenant.kiorexBillingPausedAt`, cleared by payment); the commission collection module and its principle say collection never pauses listing, booking, plan or care. Choose one rule, with counsel. | F, C | Open | LG-COM-3 |

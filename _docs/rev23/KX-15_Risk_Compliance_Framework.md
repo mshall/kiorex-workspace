@@ -176,3 +176,5 @@ Status: **As-built locally** (code plus passing tests, mock providers, nothing d
 <!-- kx-diagram: integration-control-center -->
 
 > **Needs human** Counsel and the DPO own the legal rows (funds flow, licensing, consent wording, credit position). No row above is a legal opinion.
+
+> **Needs human** Open decision (launch guide row 13.16): the Clinic dunning timeline pauses the Kiorex listing of a Lite organisation with an unpaid Kiorex commission invoice at D+30 (SB-05, `Tenant.kiorexBillingPausedAt`; payment clears it), while the commission collection principle (COM-1) says collection never pauses listing, booking, plan or care. The two statements conflict. The founder decides which one holds, with counsel; nothing is changed in code or in this volume.

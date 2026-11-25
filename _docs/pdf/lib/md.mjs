@@ -93,7 +93,7 @@ export function parseDoc(raw, md = makeMd()) {
     if (/\|/.test(ln) && /^[-*]?\s*[A-Z ]{4,}:\s/.test(ln) && (ln.match(/ \| [A-Z ]+:/g) || []).length >= 2) {
       for (const part of ln.replace(/^[-*]\s*/, '').split(/\s+\|\s+/)) {
         const m = /^([A-Z ]+):\s*(.*)$/.exec(part);
-        if (m) meta.kv[m[1].trim().toLowerCase()] = m[2].trim();
+        if (m && meta.kv[m[1].trim().toLowerCase()] === undefined) meta.kv[m[1].trim().toLowerCase()] = m[2].trim();
       }
       continue;
     }

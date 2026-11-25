@@ -177,3 +177,5 @@ Status: **As-built locally** (code plus passing tests, mock billing and payment 
 <!-- kx-diagram: commission-modes -->
 
 > **Needs human** PSP fee values are not set and unset fees are never ranked cheap (LG-INT-PAY-3). Whether commission collection or the plan price covers the Lite organisation's Kiorex fee minimum (SB-05, Clinic) is a founder decision. Counsel decides the funds flow of collection (LG-COM-3).
+
+> **Needs human** Open decision (launch guide row 13.16): the Clinic dunning timeline pauses the Kiorex listing of a Lite organisation with an unpaid Kiorex commission invoice at D+30 (SB-05, `Tenant.kiorexBillingPausedAt`; payment clears it), while the commission collection principle (COM-1) says collection never pauses listing, booking, plan or care. The two statements conflict. The founder decides which one holds, with counsel; nothing is changed in code or in this volume.
