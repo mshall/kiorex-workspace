@@ -20,15 +20,17 @@ const DEPOSIT = 150; // EGP, TEST VALUE ONLY
 describe('50. credit ledgers: patient credit (Kiorex) and provider credit (Clinic wallet), never mixed', () => {
   let t: Awaited<ReturnType<typeof tokens>>; let second: Awaited<ReturnType<typeof secondSuperAdmin>>; let p: Provider;
   const undo: (() => Promise<void>)[] = [];
+  let originalRules: unknown; // the raised goodwill caps of this suite must not leak into suite 52 (found by the W9 ordered run)
 
   beforeAll(async () => {
     t = await tokens(); second = await secondSuperAdmin(); p = await providerBySpecialty(t.p1, 'paediatrics');
     for (const f of FLAGS) undo.push(await unlockForRun(t.ops, f));
+    originalRules = (await kiorex(t.ops, 'GET', '/ops/growth/config/in-force?kind=REWARD_RULES&market=EG')).body?.payload;
     await activateRewardRules(t.ops, second.token, (r) => ({ ...r, mode: 'CREDIT', amounts: { referrerMinor: 5000, refereeMinor: 3000, repeatMinor: 1000, promoMinor: 2000 }, perUserAnnualCapMinor: 1_000_000, manualDailyCapPerActorMinor: 5_000_000, perCampaignCapMinor: 10_000_000, ruleBudgetCeilingMinor: 100_000_000,
       credit: { ...r.credit, goodwill: { ...r.credit.goodwill, perAgentDailyCapMinor: 5_000_000, perPatient90dCapMinor: 5_000_000 }, refundAsCredit: { ...r.credit.refundAsCredit, enabled: true }, family: { ...r.credit.family, enabled: true } } }));
     undo.push(await setDeposit(t.ops, p, DEPOSIT));
   });
-  afterAll(async () => { for (const u of undo.reverse()) await u().catch(() => undefined); await second?.drop(); });
+  afterAll(async () => { if (originalRules) await activateRewardRules(t.ops, second.token, () => JSON.parse(JSON.stringify(originalRules))).catch(() => undefined); for (const u of undo.reverse()) await u().catch(() => undefined); await second?.drop(); });
 
   /** A paid deposit booking for a fresh patient; `credit` is issued first through the reviewed manual-issue path. */
   const paid = async (pt: { token: string }, body: Record<string, unknown> = {}) => {

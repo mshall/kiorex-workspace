@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { kiorex, opsLogin, waitFor, q } from '../src/clients.js';
 import { pharmacy, pharmacyStaff, recordDevGate, releaseDevGate, setFlag, waitPartnerFlags, patientToken, payFake, rnd } from '../src/verticals.js';
 import { kiorexWebhook } from '../src/hmac.js';
-import { PH_PARTNER, PATIENT_2 } from '../src/env.js';
+import { PH_PARTNER, PATIENT_2, KIOREX } from '../src/env.js';
 import { patientLogin } from '../src/clients.js';
 
 /** EDGE 44: pharmacy orders. Hostile carts, cancel vs accept race, out-of-order / duplicate / forged partner events, envelope hardening, cross-patient ids. */
@@ -137,7 +137,7 @@ describe('R. Cancel versus accept race and partner event ordering', () => {
     // forged: wrong secret, wrong client key, unsigned
     expect((await phEvent('OrderReady', { orderId: o.id, ...signoff }, {}, 'wrong-secret')).status).toBe(401);
     expect((await phEvent('OrderReady', { orderId: o.id, ...signoff }, {}, PH_PARTNER.webhookSecret, 'not_a_client_key')).status).toBe(401);
-    const bare = await fetch(`${process.env.E2E_KIOREX_URL ?? 'http://localhost:4000'}/api/v1/webhooks/pharmacy`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    const bare = await fetch(`${KIOREX}/api/v1/webhooks/pharmacy`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
     expect(bare.status).toBe(401);
   });
 
@@ -158,7 +158,7 @@ describe('W. Webhook envelope hardening (signed but malformed bodies)', () => {
     const sendRaw = async (raw: string) => {
       const { createHmac } = await import('node:crypto'); const ts = String(Math.floor(Date.now() / 1000));
       const sig = `sha256=${createHmac('sha256', PH_PARTNER.webhookSecret).update(`${ts}.${raw}`).digest('hex')}`;
-      const res = await fetch(`${process.env.E2E_KIOREX_URL ?? 'http://localhost:4000'}/api/v1/webhooks/pharmacy`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-kiorly-timestamp': ts, 'x-kiorly-signature': sig, 'x-kiorly-client-key': PH_PARTNER.key }, body: raw });
+      const res = await fetch(`${KIOREX}/api/v1/webhooks/pharmacy`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-kiorly-timestamp': ts, 'x-kiorly-signature': sig, 'x-kiorly-client-key': PH_PARTNER.key }, body: raw });
       return res.status;
     };
     for (const raw of ['null', '[]', '7', '"str"', '{}', '{"eventId":7,"type":"OrderReady"}', '{"eventId":"a","type":7}', '{"eventId":{"x":1},"type":"OrderReady"}', `{"eventId":"${'x'.repeat(5000)}","type":"OrderReady"}`, '{"eventId":"a","type":"OrderReady","data":"oops"}', '{"eventId":"a","type":"OrderReady","data":null}', '{"eventId":"edge-null-data","type":"OrderReady","data":{"orderId":null}}']) {

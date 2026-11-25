@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorex, opsLogin, waitFor, q } from '../src/clients.js';
 import { lab, labStaff, recordDevGate, releaseDevGate, revokeDevGate, setFlag, waitPartnerFlags, patientToken, payFake, rnd } from '../src/verticals.js';
 import { partnerCall } from '../src/hmac.js';
-import { LAB_PARTNER } from '../src/env.js';
+import { LAB_PARTNER, LAB } from '../src/env.js';
 
 /**
  * REAL Kiorex <-> Kiorly Lab over HTTP: Kiorex :4000 (registration pr_lab_dev) -> Lab :3200 /api/v1/integration/v1, Lab outbox -> Kiorex /webhooks/lab
@@ -79,7 +79,7 @@ describe('l. Kiorex lab bookings against the real Kiorly Lab', () => {
     expect((await get(b.id)).tests[0]).toMatchObject({ code, nameAr: `جلوكوز اختبار ${code}` }); // the booking snapshot keeps the Arabic name
     expect((await q('kiorly_lab', `select count(*)::int c from "LabOrder" where "sourceRef" = $1`, [b.id]))[0].c).toBe(1);
     // the same intent again is a replay (idempotent on sourceRef), never a second order
-    const replay = await partnerCall('http://localhost:3200', LAB_PARTNER, 'POST', '/api/v1/integration/v1/orders', { sourceRef: b.id, labId, patient: { fullName: 'Amira Samy', externalId: 'x' }, testCodes: [code] });
+    const replay = await partnerCall(LAB, LAB_PARTNER, 'POST', '/api/v1/integration/v1/orders', { sourceRef: b.id, labId, patient: { fullName: 'Amira Samy', externalId: 'x' }, testCodes: [code] });
     expect(replay.body).toMatchObject({ orderId: o.id, created: false });
     // slot capacity consumed on the Lab side
     const hc = (await q('kiorly_lab', `select h.id, h."slotId", h.status from "HomeCollection" h where h."orderId" = $1`, [o.id]))[0];

@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto';
+import { PASSPORT } from './env.js';
 import { kiorex, q } from './clients.js';
 
 /** GRW-P3 / wave 7 helpers (add-only; a new file per phase so growth.ts and growth-p2.ts never conflict). */
@@ -17,7 +18,7 @@ export async function unlockForRun(ops: string, key: string): Promise<() => Prom
 export const b64u = (o: unknown) => Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toString('base64url');
 /** A JWT with a chosen header and claims, signed with a throw-away secret (never accepted by the real verifier: that is the point). */
 export const forgeJwt = (claims: Record<string, unknown>, alg: 'none' | 'HS256' = 'HS256', secret = 'attacker-secret') => {
-  const h = b64u({ alg, typ: 'JWT', kid: 'test-key' }); const p = b64u({ iss: 'http://localhost:4400', aud: 'kiorex-api', exp: Math.floor(Date.now() / 1000) + 600, ...claims });
+  const h = b64u({ alg, typ: 'JWT', kid: 'test-key' }); const p = b64u({ iss: PASSPORT, aud: 'kiorex-api', exp: Math.floor(Date.now() / 1000) + 600, ...claims });
   return alg === 'none' ? `${h}.${p}.` : `${h}.${p}.${createHmac('sha256', secret).update(`${h}.${p}`).digest('base64url')}`;
 };
 /** Injection corpus used by the API sweeps (AR and EN): markup, script, SQL, template, path, header, NUL and oversized values. */

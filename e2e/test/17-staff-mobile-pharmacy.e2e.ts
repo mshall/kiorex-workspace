@@ -31,7 +31,8 @@ const rnd = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const day = 86_400_000;
 const isoDate = (d: number) => new Date(Date.now() + d * day).toISOString().slice(0, 10);
 const must = (r: R, ...ok: number[]) => { expect(ok.length ? ok : [200, 201], JSON.stringify(r.body)).toContain(r.status); return r.body; };
-const mods = (b: any) => b.modules.filter((m: any) => m.enabled).map((m: any) => m.key.replace('pharmacy.', '')).sort();
+// 'growth' (GRW-P4-B3, the Growth & links tab, owner and manager roles) has its own role matrix in the Pharmacy repo tests; this suite keeps its original module list
+const mods = (b: any) => b.modules.filter((m: any) => m.enabled).map((m: any) => m.key.replace('pharmacy.', '')).filter((k: string) => k !== 'growth').sort();
 const dbq = <T = any>(sql: string, p: unknown[] = []) => q<T>('kiorly_pharmacy', sql, p);
 
 const T: Record<string, string> = {};

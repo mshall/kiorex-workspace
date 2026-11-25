@@ -16,10 +16,11 @@ import { LAB, LAB_PARTNER } from '../src/env.js';
  * Fixtures are inserted in the E2E databases only (a synthetic patient and a home visit for the seeded demo nurse); no launch gate is involved: the hand-off is
  * clinic.lab_order_handoff (a Module flag, effective by default), and nothing here records or fakes a human gate.
  */
-const NS = !!process.env.E2E_NURSE_STACK;
-const DBC = NS ? 'kiorly_e2e11' : 'kiorly';
-const DBL = NS ? 'kiorly_lab_e2e11' : 'kiorly_lab';
-const DBX = NS ? 'kiorex_e2e11' : 'kiorex_platform';
+const ISO = !!process.env.E2E_NURSE_STACK; // own e2e11 databases (npm run test:nurse)
+const NS = ISO || !!process.env.E2E_FULL_STACK; // E2E_FULL_STACK: the private full stack (scripts/w9-stack.sh) has exactly one outbox worker per database too
+const DBC = ISO ? 'kiorly_e2e11' : 'kiorly';
+const DBL = ISO ? 'kiorly_lab_e2e11' : 'kiorly_lab';
+const DBX = ISO ? 'kiorex_e2e11' : 'kiorex_platform';
 const NURSE_CLIENT = { key: 'kl_dev_nurse', secret: 'dev_nurse_secret_change_me' };
 const TENANT = 'demo_t_nsolo';
 

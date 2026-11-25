@@ -56,6 +56,8 @@ describe('WhatsApp AI assistant: search, hold, button-confirmed booking, cancel,
   });
 
   it('cancel by button: the refund consequence is shown first and the booking only changes after Confirm', async () => {
+    // the assistant lists at most five upcoming bookings by start time: the earlier suites of an ordered run leave more than five on this patient, so OUR booking could fall off the list. They are closed in Kiorex's table only (the assistant reads that table); the Clinic is not involved in this step.
+    await q('kiorex_platform', `update "BookingIntent" set status = 'CANCELLED', "terminalAt" = now() where sub = (select sub from "BookingIntent" where id = $1) and id <> $1 and status in ('CONFIRMED','PENDING_CLINIC') and "startsAt" > now()`, [bookingId]);
     let r = await inbox('cancel my booking');
     if (/Which booking do you want to cancel/.test(r.join(' '))) { // the dev patient already holds other upcoming e2e bookings: pick OUR booking by its rank in the start-time order the assistant lists
       const mine = await q('kiorex_platform', `select id from "BookingIntent" where sub = (select sub from "BookingIntent" where id = $1) and status in ('CONFIRMED','PENDING_CLINIC') and "startsAt" > now() order by "startsAt" asc limit 5`, [bookingId]);
@@ -63,7 +65,13 @@ describe('WhatsApp AI assistant: search, hold, button-confirmed booking, cancel,
     }
     expect(r.join(' ')).toContain('Cancel your visit'); expect(r.join(' ')).toMatch(/deposit|No deposit was paid/);
     expect(await kiorex(t.p1, 'GET', `/bookings/${bookingId}`).then((x) => x.body.status)).not.toBe('CANCELLED');
-    const done = await inbox(undefined, press(r, 'Confirm')); expect(done.join(' ')).toContain('cancelled');
+    const done = await inbox(undefined, press(r, 'Confirm'));
+    if (/cancellation window has closed/.test(done.join(' '))) {
+      // the first free slot is inside the clinic's cancellation window (it depends on the time of day the suite runs, e.g. at night the first slot is the next morning): the assistant must SAY so and change nothing
+      expect(done.join(' ')).toContain('Nothing was changed'); expect(await kiorex(t.p1, 'GET', `/bookings/${bookingId}`).then((x) => x.body.status)).not.toBe('CANCELLED');
+      return;
+    }
+    expect(done.join(' ')).toContain('cancelled');
     await waitStatus(t.p1, bookingId!, 'CANCELLED'); bookingId = undefined;
   });
 

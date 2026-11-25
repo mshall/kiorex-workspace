@@ -2,6 +2,17 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorex, opsLogin, waitFor, q } from '../src/clients.js';
 import { secondSuperAdmin } from '../src/growth.js';
 import { KIOREX } from '../src/env.js';
+import { pool } from '../src/db.js';
+
+/** The suite creates market ZY ONCE (the wizard refuses a second plan): on a database that already ran it (a second consecutive run on one stack) every ZY row is removed first. Append-only and immutability triggers are off for this one cleanup transaction (test databases only). */
+async function resetZy() {
+  const c = await pool('kiorex_platform').connect();
+  try {
+    await c.query('BEGIN'); await c.query('SET LOCAL session_replication_role = replica');
+    for (const [t, col] of [['GrowthCampaign', 'market'], ['GrowthEvent', 'market'], ['GrowthSlug', 'market'], ['MarketGeography', 'market'], ['MarketOnboardingPlan', 'cc'], ['GrowthConfigReader', 'scopeId'], ['GrowthConfigVersion', 'scopeId']] as const) await c.query(`delete from "${t}" where "${col}" = 'ZY'`);
+    await c.query('COMMIT');
+  } catch (e) { await c.query('ROLLBACK').catch(() => undefined); throw e; } finally { c.release(); }
+}
 
 /**
  * GRW-P3-G and GRW-GC-4b on a real Kiorex API (private instance from `scripts/w8a2-stack.sh up`, own database, Passport :4400 shared read-only): the synthetic market ZY is created ONLY through the
@@ -18,7 +29,7 @@ const regulation = { marketingLicenceRequired: true, marketingLicenceHeld: false
 
 describe('38. market ZY by configuration only (wizard, two approvers, human gate)', () => {
   let a: string; let two: Awaited<ReturnType<typeof secondSuperAdmin>>; let pub: { drafted: Record<string, { id: string }> };
-  beforeAll(async () => { a = (await opsLogin()).accessToken; two = await secondSuperAdmin(); });
+  beforeAll(async () => { await resetZy(); a = (await opsLogin()).accessToken; two = await secondSuperAdmin(); });
   afterAll(async () => { await two?.drop().catch(() => undefined); });
 
   it('every wizard endpoint needs a session and the super admin role to write', async () => {

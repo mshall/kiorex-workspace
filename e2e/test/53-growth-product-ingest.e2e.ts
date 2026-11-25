@@ -24,6 +24,8 @@ describe('53. Kiorex product ingest and decision against the real Kiorly Pharmac
     await setFlag(ops, 'kiorex.pharmacy_orders', 'ON').catch(() => undefined);
     await recordDevGate(ops, 'kiorex.pharmacy_orders'); await waitPartnerFlags();
     for (const ch of ['WHATSAPP', 'PUSH']) await kiorex(p1, 'PUT', `/me/notification-preferences/${ch}`, { quietStart: 0, quietEnd: 0 });
+    // an earlier suite of the ordered run (32 lifecycle: withdrawal) leaves the patient's analytics consent WITHDRAWN; touches of a person without it are ignored by design, so this suite states its own precondition
+    expect((await kiorex(p1, 'PUT', '/me/consents/ANALYTICS_MEASUREMENT', { granted: true })).status).toBe(200);
     // links left active by an earlier (failed) run would still be evidence for this patient: revoke them first so the suite is repeatable
     for (const l of (((await pharmacy(owner, 'GET', '/growth/links')).body as any)?.items ?? []) as any[]) if (String(l.label).startsWith('E2E 53') && l.status !== 'REVOKED') await pharmacy(owner, 'PATCH', `/growth/links/${l.id}`, { status: 'REVOKED' });
     await new Promise((r) => setTimeout(r, 3000));

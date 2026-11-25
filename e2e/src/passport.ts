@@ -41,7 +41,7 @@ async function otpFromLog(phone: string): Promise<string> {
   const { readFileSync } = await import('node:fs');
   const { resolve, dirname } = await import('node:path');
   const { fileURLToPath } = await import('node:url');
-  const file = resolve(dirname(fileURLToPath(import.meta.url)), '../../.e2e/logs/passport.log');
+  const file = process.env.E2E_PASSPORT_LOG ?? resolve(dirname(fileURLToPath(import.meta.url)), '../../.e2e/logs/passport.log');
   for (let i = 0; i < 20; i++) {
     const m = [...readFileSync(file, 'utf8').matchAll(new RegExp(`to=\\${phone} locale=\\w+ code=(\\d+)`, 'g'))].pop();
     if (m) return m[1];

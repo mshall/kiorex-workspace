@@ -37,7 +37,7 @@ export function patientLogin(phone: string, clientId = 'kiorex-web'): Promise<Lo
  * (.cache/ops-login.json, gitignored) and reused across test files while the token still works against the Kiorex API.
  */
 export async function opsLogin(): Promise<Login> {
-  const file = new URL('../.cache/ops-login.json', import.meta.url);
+  const file = new URL(process.env.E2E_OPS_CACHE ? `file://${process.env.E2E_OPS_CACHE}` : '../.cache/ops-login.json', import.meta.url);
   try {
     const c = JSON.parse(readFileSync(file, 'utf8')) as Login;
     if (c.claims?.exp * 1000 - Date.now() > 120_000 && (await kiorex(c.accessToken, 'GET', '/admin/flags?product=kiorex')).status === 200) return c;

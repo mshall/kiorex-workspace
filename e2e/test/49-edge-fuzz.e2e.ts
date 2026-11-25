@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { tokens } from '../src/fixtures.js';
-import { KIOREX_API } from '../src/env.js';
+import { KIOREX_API, KIORLY, KIORLY_API, PHARMACY, PHARMACY_API, LAB, LAB_API } from '../src/env.js';
 import { probe } from '../src/http.js';
 
 /**
@@ -69,14 +69,14 @@ async function sweep(name: string, base: string, token: string) {
 }
 
 describe('Z2. Never a 5xx on the provider SaaS APIs', () => {
-  it('Z2a Kiorly Clinic', async () => { const { staffLogin } = await import('../src/clients.js'); const r = await sweep('clinic', 'http://localhost:3010', await staffLogin('owner.na@demo.kiorex.test', 'Demo@12345')); expect(r.offenders.slice(0, 40), `${r.count} operations; ${r.offenders.length} offenders`).toEqual([]); }, 900_000);
-  it('Z2b Kiorly Pharmacy', async () => { const { pharmacyStaff } = await import('../src/verticals.js'); const r = await sweep('pharmacy', 'http://localhost:3100', await pharmacyStaff('owner')); expect(r.offenders.slice(0, 40), `${r.count} operations; ${r.offenders.length} offenders`).toEqual([]); }, 900_000);
-  it('Z2c Kiorly Lab', async () => { const { labStaff } = await import('../src/verticals.js'); const r = await sweep('lab', 'http://localhost:3200', await labStaff('owner')); expect(r.offenders.slice(0, 40), `${r.count} operations; ${r.offenders.length} offenders`).toEqual([]); }, 900_000);
+  it('Z2a Kiorly Clinic', async () => { const { staffLogin } = await import('../src/clients.js'); const r = await sweep('clinic', KIORLY, await staffLogin('owner.na@demo.kiorex.test', 'Demo@12345')); expect(r.offenders.slice(0, 40), `${r.count} operations; ${r.offenders.length} offenders`).toEqual([]); }, 900_000);
+  it('Z2b Kiorly Pharmacy', async () => { const { pharmacyStaff } = await import('../src/verticals.js'); const r = await sweep('pharmacy', PHARMACY, await pharmacyStaff('owner')); expect(r.offenders.slice(0, 40), `${r.count} operations; ${r.offenders.length} offenders`).toEqual([]); }, 900_000);
+  it('Z2c Kiorly Lab', async () => { const { labStaff } = await import('../src/verticals.js'); const r = await sweep('lab', LAB, await labStaff('owner')); expect(r.offenders.slice(0, 40), `${r.count} operations; ${r.offenders.length} offenders`).toEqual([]); }, 900_000);
 });
 
 describe('Z3. Oversized request lines never take a service down', () => {
   it('a 20 kB query string is refused by the HTTP layer (4xx, normally 431) on all four APIs, and the next request on a fresh connection still works', async () => {
-    for (const [name, base, ready] of [['kiorex', KIOREX_API, '/health/ready'], ['clinic', 'http://localhost:3010/api/v1', '/health/ready'], ['pharmacy', 'http://localhost:3100/api/v1', '/health/ready'], ['lab', 'http://localhost:3200/api/v1', '/health/ready']] as const) {
+    for (const [name, base, ready] of [['kiorex', KIOREX_API, '/health/ready'], ['clinic', KIORLY_API, '/health/ready'], ['pharmacy', PHARMACY_API, '/health/ready'], ['lab', LAB_API, '/health/ready']] as const) {
       const big = await probe(`${base}/health/live?q=${'x'.repeat(20_000)}`);
       expect(big.status, `${name}: ${big.error ?? ''}`).toBeGreaterThanOrEqual(400);
       expect(big.status, name).toBeLessThan(500); // 431 or 414, never a 5xx

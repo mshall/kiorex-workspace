@@ -3,6 +3,7 @@ import { tokens, providerBySpecialty, book, kiorlyAppointmentFor, waitStatus, sy
 import { kiorex, kiorly, staffLogin, q, waitFor } from '../src/clients.js';
 import { edgePrefix, kiorlyEvent, payLinkIntent, pspDeliver, pspEvent, registerPayLink, intentRow, ledgerBalance, purgeEdgePayments } from '../src/edge.js';
 import { randomUUID } from 'node:crypto';
+import { KIOREX } from '../src/env.js';
 
 /**
  * EDGE 40: money and payments. Sandbox-fake PSP; every payment lives under a unique clinicId prefix and is purged at the end.
@@ -61,7 +62,7 @@ describe('M. Webhook delivery: duplicate, concurrent, late, out of order, malfor
     const ev = pspEvent(p, 'payment.captured');
     expect((await pspDeliver(p.psp, ev, { badSig: true })).status).toBe(400);
     const raw = JSON.stringify(ev);
-    const res = await fetch(`${process.env.E2E_KIOREX_URL ?? 'http://localhost:4000'}/api/v1/pay/webhooks/${p.psp}`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-psp-signature': 'abc' }, body: raw });
+    const res = await fetch(`${KIOREX}/api/v1/pay/webhooks/${p.psp}`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-psp-signature': 'abc' }, body: raw });
     expect(res.status).toBe(400);
     expect((await pspDeliver(p.psp, ev, { sendRaw: raw.replace('4000', '1') })).status).toBe(400); // signed over the original, sent altered
     expect((await intentRow(p.id)).status).toBe('CREATED');
@@ -117,7 +118,7 @@ describe('N. Amounts, currency and pay-link registration', () => {
   });
   it('N4 a registration signed with the wrong secret, or replayed with the same nonce, is 401', async () => {
     const { partnerCall } = await import('../src/hmac.js');
-    const r = await partnerCall('http://localhost:4000', { key: 'ff_kiorly-clinic_dev', secret: 'wrong' }, 'POST', '/api/v1/pay/links', { token: `${PFX}_n4`, clinicId: `${PFX}_clinic`, amountMinor: 100 }, { 'x-kiorex-product-key': 'ff_kiorly-clinic_dev' });
+    const r = await partnerCall(KIOREX, { key: 'ff_kiorly-clinic_dev', secret: 'wrong' }, 'POST', '/api/v1/pay/links', { token: `${PFX}_n4`, clinicId: `${PFX}_clinic`, amountMinor: 100 }, { 'x-kiorex-product-key': 'ff_kiorly-clinic_dev' });
     expect(r.status).toBe(401);
   });
   it('N5 concurrent checkouts of one link create ONE payment intent', async () => {

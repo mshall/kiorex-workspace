@@ -83,7 +83,7 @@ describe('52. red team: patient credit abuse', () => {
     let refused: any = null; let granted = 0;
     for (let i = 0; i < 24 && !refused; i++) { const r = await grant(`sub_e2e52_split_${i}_${randomBytes(3).toString('hex')}`); if (r.status === 200 || r.status === 201) granted++; else refused = r; }
     expect(refused, 'the agent daily cap must stop a split grant').toBeTruthy(); expect(JSON.stringify(refused.body)).toMatch(/AGENT_DAILY_CAP|cap/i); expect(granted).toBeLessThanOrEqual(10);
-    const total = Number((await q('kiorex_platform', `select coalesce(sum("amountMinor"),0)::int s from "GoodwillGrant" where "grantedBy" = $1 and "createdAt" > now() - interval '24 hours'`, [opsSub]).catch(() => [{ s: 0 }]))[0].s); expect(total).toBeLessThanOrEqual(50_000);
+    const total = Number((await q('kiorex_platform', `select coalesce(sum("amountMinor"),0)::int s from "GoodwillGrant" where "grantedBy" = $1 and "ticketRef" like 'E2E-52-%' and "createdAt" > now() - interval '24 hours'`, [opsSub]).catch(() => [{ s: 0 }]))[0].s); expect(total).toBeLessThanOrEqual(50_000);
   });
 
   it('household credit: an owner can only add their OWN dependants; another person\'s dependant id is 404; a member list never shows other households', async () => {

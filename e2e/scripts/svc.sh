@@ -5,6 +5,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LOGS="$ROOT/.e2e/logs"; PIDS="$ROOT/.e2e/pids"
 DBURL() { echo "postgresql://postgres:postgres@127.0.0.1:5433/$1?schema=public"; }
 svc=$1; act=$2
+# private full stack (scripts/w9-stack.sh): NEVER touch the shared :3010
+if [ -n "${E2E_FULL_STACK:-}" ]; then exec "$(dirname "${BASH_SOURCE[0]}")/w9-stack.sh" "clinic-$act"; fi
 [ "$svc" = kiorly ] || { echo "only 'kiorly' is supported"; exit 2; }
 port_pid() { lsof -nP -iTCP:3010 -sTCP:LISTEN -t 2>/dev/null | head -1 || true; }
 case $act in

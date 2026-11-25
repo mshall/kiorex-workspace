@@ -11,7 +11,7 @@ import { WEBHOOK_SECRET } from '../src/env.js';
  * The Clinic is played by the signed webhook (as 04-pharmacy.e2e.ts does; the Clinic itself is covered by 03-booking-golden), the clinic booking and its decision are written to the lane's own database.
  * The launch-locked package flag gets the DEV-ONLY gate evidence for this database and loses it again in afterAll. Nothing here is a real approval.
  */
-const STACK = process.env.E2E_KIOREX_URL?.includes(':4103');
+const STACK = !!process.env.E2E_FULL_STACK || process.env.E2E_KIOREX_URL?.includes(':4103');
 const d = STACK ? describe : describe.skip; // never runs against the shared stack (it does not carry this lane's build)
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 d('39. Cross-product journeys: clinic visit to Pharmacy and Lab on the real private stack', () => {
@@ -61,6 +61,8 @@ d('39. Cross-product journeys: clinic visit to Pharmacy and Lab on the real priv
   });
 
   it('a shared prescription offers the pharmacy card; the order that attaches it to a REAL pharmacy order is CROSS_PRODUCT with the clinic decision as parent; the partner receives a contract-valid block that never mentions continuity', async () => {
+    const sideTables = ['RewardLot', 'RewardLedgerEntry', 'ReferralRelationship']; // other suites (31, 50) leave rows: only THIS order may add none
+    const sideBefore = await Promise.all(sideTables.map(async (t) => Number((await q('kiorex_platform', `select count(*)::int c from "${t}"`))[0].c)));
     const enc = `enc_${rnd()}`;
     expect((await webhook('PRESCRIPTION_SHARED', enc, { patientId: kpid, scope: 'PRESCRIPTIONS', encounterId: enc, clinicId, signedAt: new Date(Date.now() - 3_000_000).toISOString(), items: [{ name: 'Amoxicillin 500', dose: '1 tab' }] })).body.status).toBe('APPLIED');
     const c = await waitFor('the pharmacy card', async () => (await cards()).cards.find((x) => x.kind === 'RX_TO_PHARMACY') ?? false, 15_000, 400);
@@ -85,7 +87,7 @@ d('39. Cross-product journeys: clinic visit to Pharmacy and Lab on the real priv
     expect(JSON.stringify(await q('kiorly_pharmacy', `select * from "KiorexOrder" where "externalOrderId" = $1`, [o.body.id]))).not.toMatch(/CROSS_PRODUCT|CONTINUITY|kx_bk_e2e39/);
     expect((await cards()).cards.find((x) => x.kind === 'RX_TO_PHARMACY')).toBeUndefined(); // used
     // no reward, referral or charge side effects
-    for (const t of ['RewardLot', 'RewardLedgerEntry', 'ReferralRelationship']) expect(Number((await q('kiorex_platform', `select count(*)::int c from "${t}" where false or true`))[0].c)).toBe(0);
+    for (const [i, t] of sideTables.entries()) expect(Number((await q('kiorex_platform', `select count(*)::int c from "${t}"`))[0].c), t).toBe(sideBefore[i]);
   });
 
   it('a lab order from the Clinic offers the lab card; the REAL lab booking from the card is CROSS_PRODUCT; the same booking without the card is independent; tables hold no test names', async () => {

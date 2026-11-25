@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorex, opsLogin, waitFor, q, sleep } from '../src/clients.js';
 import { pharmacy, pharmacyStaff, recordDevGate, releaseDevGate, revokeDevGate, setFlag, waitPartnerFlags, patientToken, payFake, rnd } from '../src/verticals.js';
 import { partnerCall, kiorexWebhook } from '../src/hmac.js';
-import { PH_PARTNER, WEBHOOK_SECRET, PATIENT_1 } from '../src/env.js';
+import { PH_PARTNER, WEBHOOK_SECRET, PATIENT_1, PHARMACY } from '../src/env.js';
 import { randomUUID } from 'node:crypto';
 import { purgeE2eConsentPushes } from '../src/db.js';
 
@@ -79,7 +79,7 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     expect(inbox).toMatchObject({ status: 'RECEIVED', hasRx: false, prepaid: true, paymentRef: expect.any(String), patientRef: expect.any(String) });
     expect(inbox.lines[0]).toMatchObject({ drugId: drug.id, qtyRequested: 2, unitPrice: '40.00' });
     // idempotent: the same intent again (same orderId) is a replay, never a second order
-    const replay = await partnerCall('http://localhost:3100', PH_PARTNER, 'POST', '/marketplace/v1/orders', { orderId: o.id, branchId, lines: [{ sku: drug.id, quantity: 2, unitPrice: '40.00' }] });
+    const replay = await partnerCall(PHARMACY, PH_PARTNER, 'POST', '/marketplace/v1/orders', { orderId: o.id, branchId, lines: [{ sku: drug.id, quantity: 2, unitPrice: '40.00' }] });
     expect(replay.body).toMatchObject({ orderId: o.id, replayed: true });
     expect((await q('kiorly_pharmacy', `select count(*)::int c from "KiorexOrder" where "externalOrderId" = $1`, [o.id]))[0].c).toBe(1);
 
@@ -203,7 +203,7 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     const inbox2 = await inboxOrder(o2.id);
     await kiorexWebhook(WEBHOOK_SECRET, '/webhooks/kiorly', { eventId: `e2e_${rnd()}`, type: 'RECORD_SHARE_REVOKED', aggregateType: 'Patient', aggregateId: kpid, target: 'KIOREX', occurredAt: new Date().toISOString(), data: { patientId: kpid, scope: 'PRESCRIPTIONS', action: 'DELETE_REQUESTED' } });
     const tok = (await kiorex(p1, 'GET', '/me/prescriptions')).body.find?.((r: any) => r.id === rec.id)?.verification?.token ?? 'revoked';
-    const v = await partnerCall('http://localhost:3100', PH_PARTNER, 'POST', '/marketplace/v1/prescriptions/validate', { orderId: o2.id, prescriptionRef: rec.id, verificationToken: (await q('kiorex_platform', `select id from "SharedRecord" where id = $1`, [rec.id])).length ? tok : 'kxrx1.gone.invalid', patientRef: sub });
+    const v = await partnerCall(PHARMACY, PH_PARTNER, 'POST', '/marketplace/v1/prescriptions/validate', { orderId: o2.id, prescriptionRef: rec.id, verificationToken: (await q('kiorex_platform', `select id from "SharedRecord" where id = $1`, [rec.id])).length ? tok : 'kxrx1.gone.invalid', patientRef: sub });
     expect(v.body.status).toBe('INVALID');
     const b2 = await waitOrder(o2.id, 'REJECTED');
     expect(b2).toMatchObject({ rejectionReason: 'RX_INVALID', payment: { status: 'REFUNDED' } });
@@ -341,10 +341,10 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     const cart = await kiorex(p1, 'PUT', '/pharmacy/cart', { pharmacyId: branchId, items: [{ sku: drug.id, qty: 1 }] });
     expect(cart.status, JSON.stringify(cart.body)).toBe(422);
     expect(cart.body.code).toBe('CONTROLLED_NOT_ORDERABLE');
-    const forged = await partnerCall('http://localhost:3100', PH_PARTNER, 'POST', '/marketplace/v1/orders', { orderId: `kx_ph_forged_${rnd()}`, branchId, lines: [{ sku: drug.id, quantity: 1, unitPrice: '99.00' }], prescription: { prescriberName: 'Dr X', prescriberLicenceNo: '1' } });
+    const forged = await partnerCall(PHARMACY, PH_PARTNER, 'POST', '/marketplace/v1/orders', { orderId: `kx_ph_forged_${rnd()}`, branchId, lines: [{ sku: drug.id, quantity: 1, unitPrice: '99.00' }], prescription: { prescriberName: 'Dr X', prescriberLicenceNo: '1' } });
     expect(forged.status, JSON.stringify(forged.body)).toBe(422);
     expect(JSON.stringify(forged.body)).toContain('CONTROLLED_NOT_ORDERABLE');
-    const catalogue = await partnerCall('http://localhost:3100', PH_PARTNER, 'GET', `/marketplace/v1/catalogue?pharmacyId=${branchId}&q=${encodeURIComponent(drug.name)}`);
+    const catalogue = await partnerCall(PHARMACY, PH_PARTNER, 'GET', `/marketplace/v1/catalogue?pharmacyId=${branchId}&q=${encodeURIComponent(drug.name)}`);
     expect(JSON.stringify(catalogue.body)).not.toContain(drug.id);
   });
 

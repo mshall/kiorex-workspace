@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { randomInt } from 'node:crypto';
-import { KIOREX, KIOREX_API } from '../src/env.js';
+import { KIOREX, KIOREX_API, PASSPORT } from '../src/env.js';
 import { tokens } from '../src/fixtures.js';
 import { kiorex, q, waitFor } from '../src/clients.js';
 import { loginWithPhone } from '../src/passport.js';
@@ -97,7 +97,7 @@ describe('C. Consent, preferences and suppression edges', () => {
     const l = await loginWithPhone(phone);
     await kiorex(l.accessToken, 'PUT', '/me/profile', { nameEn: 'Erase Me Edge', preferredLocale: 'ar' });
     await kiorex(l.accessToken, 'PUT', '/me/consents/MARKETPLACE_PROCESSING', { granted: true });
-    const del = await fetch(`http://localhost:4400/api/account`, { method: 'DELETE', headers: { authorization: `Bearer ${l.accessToken}`, 'content-type': 'application/json' }, body: JSON.stringify({}) });
+    const del = await fetch(`${PASSPORT}/api/account`, { method: 'DELETE', headers: { authorization: `Bearer ${l.accessToken}`, 'content-type': 'application/json' }, body: JSON.stringify({}) });
     expect([200, 202, 204, 400, 401, 403]).toContain(del.status);
     if (![200, 202, 204].includes(del.status)) return; // the dev Passport may require step-up for deletion: covered by 28's erasure journey
     // erasure runs through the outbox worker (seconds, longer under load): wait for it instead of a fixed pause
