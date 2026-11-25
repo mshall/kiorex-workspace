@@ -1,6 +1,7 @@
 # workspace repo (coordination, docs, e2e, scripts). Product repos are separate nested git repos.
 /clinics-management/
 /kiorex-contracts/
+/kiorex-pay-contract/
 /kiorex-platform/
 /kiorex-account/
 /kiorly-pharmacy/

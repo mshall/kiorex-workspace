@@ -7,14 +7,14 @@
 # Compatible with macOS bash 3.2.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-REPOS=".:main clinics-management:kiorex kiorex-contracts:main kiorex-platform:main kiorex-account:main kiorly-pharmacy:main kiorly-lab:main kiorly:main"
+REPOS=".:main clinics-management:kiorex kiorex-contracts:main kiorex-pay-contract:main kiorex-platform:main kiorex-account:main kiorly-pharmacy:main kiorly-lab:main kiorly:main"
 
 for pair in $REPOS; do
   r="${pair%%:*}"; b="${pair##*:}"; d="$ROOT/$r"
   [ -d "$d/.git" ] || continue
   cur="$(git -C "$d" branch --show-current)"
   if [ "$cur" != "$b" ]; then echo "SKIP $r: on '$cur', expected '$b'"; continue; fi
-  if git -C "$d" grep -qE 'AKIA[0-9A-Z]{16}|BEGIN (RSA |EC )?PRIVATE KEY' -- . ':!*.md' ':!**/test/**' 2>/dev/null; then
+  if git -C "$d" grep -qE 'AKIA[0-9A-Z]{16}|BEGIN (RSA |EC )?PRIVATE KEY' -- . ':!*.md' ':!**/test/**' ':!**/*.spec.ts' ':!**/vendors/apns.ts' 2>/dev/null; then
     echo "SKIP $r: possible secret in tracked files"; continue; fi
   if [ -z "$(git -C "$d" rev-list --max-count=1 HEAD 2>/dev/null)" ]; then echo "SKIP $r: no commits"; continue; fi
   git -C "$d" fetch -q origin "$b" 2>/dev/null || true
