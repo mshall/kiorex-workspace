@@ -1,4 +1,25 @@
-# Docs sync manifest (Rev 2.7, 25 November 2026)
+# Docs sync manifest (Rev 2.7, wave 9 finishing pass, 25 November 2026)
+
+**Upload approved by the founder (25 Nov 2026); the coordinator performs the upload.** The agent that rebuilt these files uploaded nothing to Google Drive. Folder with every PDF: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/pdf/out/` (git-ignored; the five files below were overwritten there by the finishing pass, the other 30 files are the earlier Rev 2.7 and Rev 2.4 builds, unchanged).
+
+## Rebuilt in the finishing pass (5 volumes, upload these on top of the earlier Rev 2.7 files)
+
+Built on 25 Nov 2026 with `cd _docs/pdf && node build.mjs --doc KX-01,KX-27,KX-28,KX-32,KX-33` (5 built, 0 skipped, 0 failed, no warnings in `build-report.json`). Revision label stays Rev 2.7; each volume's revision history carries the finishing-pass row (KX-33) or the changed lines below.
+
+| Identifier | Name | Pages | Bytes | Exact output path | What changed |
+|---|---|---|---|---|---|
+| KX-01 | Decision Log and ADRs | 28 | 2,474,879 | `/Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/pdf/out/KX-01_Decision_Log_and_ADRs.pdf` | ADR numbering scheme A is decided (founder, 25 Nov 2026): ADR-051 everywhere, ADR-058 unused; ADRs still Proposed |
+| KX-27 | Growth and Patient Acquisition Engine PRD | 23 | 1,388,196 | `/Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/pdf/out/KX-27_Growth_and_Patient_Acquisition_Engine_PRD.pdf` | Capability map: staff-app Growth tab for all four products, loyalty built locally and locked, loyalty regulatory row |
+| KX-28 | Growth Engine System Architecture | 35 | 2,567,218 | `/Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/pdf/out/KX-28_Growth_Engine_System_Architecture.pdf` | Staff-app credit and promotion cards removed from the not-built list |
+| KX-32 | Growth Analytics and Unit Economics Reference | 16 | 1,205,790 | `/Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/pdf/out/KX-32_Growth_Analytics_and_Unit_Economics_Reference.pdf` | Revenue confirmation basis (CLINIC_FACT or INFERRED_AT_COMPLETION, G-19) |
+| KX-33 | Growth Engine Implementation Roadmap and Agent Handoff | 23 | 1,537,030 | `/Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/pdf/out/KX-33_Growth_Engine_Implementation_Roadmap_and_Agent_Handoff.pdf` | Section 05: P4-D, P4-B3 and GC-5 as-built, P3-H owned by lane A2; section 08 and 10: evidence, honest gaps, ADR decision |
+
+Not rebuilt because their text did not change in this pass: the other eleven Rev 2.7 volumes (KX-03, 05, 09, 12, 13, 14, 15, 24, 29, 30, 31) keep their Rev 2.7 build from the previous pass. Markdown-only changes in this pass (no PDF volume): `LAUNCH_PREPARATION_GUIDE.md` (rows 11.128 to 11.147, ADR row decided), `TEST_GUIDE.md` and `_docs/test-flow/index.html` (flows G33 to G37, copied to the iCloud Test Flow folder), `COMPLETENESS_MATRIX.md`, `GROWTH_PHASE2_4_WORK_PACKAGES.md` (W9 A3 as-built), `GROWTH_ARCHITECTURE_DECISIONS.md`, `kiorex-platform/Docs/NEEDS_HUMAN.md`, `kiorex-platform/Docs/adr/ADR-051`, `CLAUDE.md`, `_docs/README.md`.
+
+---
+
+## Previous manifest (Rev 2.7, 25 November 2026, documentation lane A4), kept for the unchanged volumes
+
 
 For the Drive upload step. **Not uploaded** (founder approval required; nothing was sent to Google Drive in this pass). The PDFs are in `_docs/pdf/out/` (git-ignored, rebuilt with `cd _docs/pdf && node build.mjs --doc KX-01,KX-03,...` or `--all`). The staging folder `/private/tmp/claude-501/kx-final-pdfs/` of the Rev 2.4 pass is NOT refreshed; copy from `_docs/pdf/out/` when approved.
 
