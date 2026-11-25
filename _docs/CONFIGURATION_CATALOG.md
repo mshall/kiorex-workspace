@@ -168,6 +168,20 @@ Reporting models only (GRW-P3-B): windows, half-life, position shares and the da
 
 All nine kinds: env override **none** (a stored version is the only way); who can change: super admin maker plus a different super admin checker; consumers read them live (`livePolicy`, `policyNow`).
 
+## Commission rates (COM-2, founder decision 25 Nov 2026)
+
+Fees and commission rates are set **by default per organisation type** and can be **customised per organisation** by the super admin. Stored in `CommissionRatePolicy` (not a growth config kind: it is a money table with its own maker-checker, append-only and effective-dating rules), edited in the ops console (Commissions > Rates and the per-organisation rate panel). **No number is shipped.**
+
+| Setting | Scope | Controls | Default |
+|---|---|---|---|
+| Default rate | per organisation type (`CLINIC`, `PHARMACY`, `LAB`) | `feeType` PERCENT (`percentBps` 0 to 10000) or FLAT (`flatMinor`), `minMinor`, `maxMinor`, `mode` (`NET_FROM_PAYOUT`, `AUTO_CHARGE_SAVED_METHOD`, `INVOICE_AND_COLLECT` or follow the collection settings), `effectiveFrom` | **unset = no charge, "Rate not set"** |
+| Organisation override | per organisation | the same fields, plus a mandatory `reason`; `kind` INHERIT returns the organisation to the default | none: the organisation follows its type default |
+| Collection settings (COM-1) | market, organisation | cycle, cut-off day, grace, retry days, minimum, invoice due days, mode | null = not configured |
+| Marketplace daily cap | per doctor (Clinic) | `ClinicianAvailabilityTemplate.marketplaceDailyCap`, enforced on the slot list, on holds, on bookings and on reschedules | 20 per day |
+| `PHARMACY_TAKE_RATE_BPS`, `LAB_TAKE_RATE_BPS` | environment (legacy) | the take at release when **no** rate is set | 0 |
+
+Rules: a different super admin decides every change; decided rows are never edited or deleted; a change applies from its start (never in the past); a charge, order or booking keeps the rate it was created with; the organisation sees its effective rate, the default, any override and the history read only. Humans: launch guide rows `LG-COM-11` to `LG-COM-15`.
+
 ## Deployment settings (environment, clamped; effective value visible on the Integrations Control Center where it concerns an integration)
 
 | Variable | Default | Bounds / rule | Controls | Who |
