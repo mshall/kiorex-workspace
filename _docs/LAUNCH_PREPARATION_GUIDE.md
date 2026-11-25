@@ -108,6 +108,8 @@ Every provider runs behind a `MODE=mock|real` adapter. Full checklists: `kiorex-
 
 ## 10. Go-live runbook (order)
 
+The ordered checklist with blocker ids is now in `_docs/INTEGRATION_GO_LIVE_RUNBOOK.md`; section 13 tracks owner and status.
+
 1. Decide and create the production AWS account (1.1, 1.2, 1.3). 2. Domains and certificates (section 2). 3. Apply infrastructure, staging first (1.4). 4. Secrets (section 3) and provider setup (section 5) in staging; sandbox-verify every provider. 5. Passport clients (section 4). 6. Staging soak with demo data, run all e2e suites and the HTML test guide. 7. Counsel and sign-offs (sections 6, 7). 8. Store accounts, builds, listings (section 8). 9. Record real gate evidence (6.1). 10. Production apply and deploy by the founder; smoke test with the live checklist; monitor.
 
 ## 11. Growth Engine human items (restructured 25 Nov 2026, wave 9 lane A4: deduplicated, renumbered, grouped by owner, with status)
@@ -353,3 +355,25 @@ Incident contacts (fill before launch; do not commit real phone numbers to the r
 | PSP, WhatsApp and SMS vendor security desks | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` | `[NEEDS_HUMAN]` |
 
 Cross-references: `_docs/COMPLETENESS_MATRIX.md`, `Docs/NEEDS_HUMAN.md` in each repo, `_docs/rev23/KX-17` (launch readiness), `_docs/rev23/KX-21` (AWS reference), `_docs/test-flow/index.html` (test guide).
+
+## 13. Integration control and configurability (added 25 Nov 2026, configurability sweep)
+
+Master runbook: `_docs/INTEGRATION_GO_LIVE_RUNBOOK.md` (companions: `INTEGRATION_RUNBOOK_MESSAGING.md`, `INTEGRATION_RUNBOOK_PAYMENTS.md` in `kiorex-platform/Docs/`). Catalogue of every configurable number: `_docs/CONFIGURATION_CATALOG.md`. Status values: Built (done and tested locally), Open (waiting for a person), Blocked (needs another item first). Owner letters as in the legend; blocker ids NH-* are defined in the runbook.
+
+| # | Item | Owner | Status | Blocked by |
+|---|---|---|---|---|
+| 13.1 | **Integrations Control Center** (Kiorex ops `/integrations`): mode, approved mode, drift, credential presence, last check, circuit, webhook URL, required variable names, runbook for 25 integrations. Look at it before every go-live step. | F | Built (local) | |
+| 13.2 | **Ratify the nine policy kinds** and any non-default numbers: `EXPERIMENT_POLICY`, `AUTOMATION_POLICY`, `ATTRIBUTION_MODELS`, `RECOMMENDATION_POLICY`, `REWARD_GUARDS`, `LIFECYCLE_STAGES`, `CROSS_PRODUCT_POLICY`, `REFERRAL_FRAUD_THRESHOLDS`, `INTEGRATION_RUNTIME`. All ship at today's values; nothing changes until a second super admin approves a version. | F, CMO, DPO | Open | |
+| 13.3 | **Publish contracts 1.13.0** (carries the nine kinds plus `INTEGRATION_MODES`, the flags and events). Then vendor it into the platform and delete `scripts/sync-policy-schemas.mjs` and `policy-schemas.generated.ts`. Not done by an agent. | F | Open | |
+| 13.4 | Approve each integration mode in the Control Center when its runbook steps are filed (a different super admin approves). Decide whether startup should **refuse** a real mode that was not approved (today it only shows drift). | F | Open | 13.1, runbook step 13 |
+| 13.5 | Production IdP choice confirmed (Cognito default) and client registration. | F, D | Open | NH-IDP |
+| 13.6 | Domains and DNS for `kiorex.com` and `kiorly.com` hosts; certificates; WAF rate cap. | F, A | Open | NH-DNS, NH-AWS |
+| 13.7 | Messaging providers real in staging (SMS sender, SES, WhatsApp, push). | F, V | Open | NH-SMS, NH-EMAIL, NH-WA, NH-PUSH |
+| 13.8 | Payments real in sandbox then production; fees and deposit amounts (all 0 until set). | F, V | Open | NH-PSP |
+| 13.9 | Ad, analytics and store integrations read-only credentials. | F, CMO | Open | NH-ADS, NH-STORE |
+| 13.10 | LLM vendor, DPA, residency, counsel and DPO sign-off. | F, C, DPO | Open | NH-LLM |
+| 13.11 | Cloudflare TURN token and a real two-device relay call. | F | Open | NH-TURN |
+| 13.12 | Load test on staging, restore rehearsal, alarm drill; file the reports. | A, D | Blocked | NH-AWS |
+| 13.13 | Store registration and native builds. | F | Open | NH-STORE |
+| 13.14 | Decide which env-only numbers should become market config (home-visit SLA, family share limit, home gate size, waitlist offer minutes, fallback quiet hours) and whether lifecycle journey delays get a kind. | F, D | Open | |
+| 13.15 | Price-change notice days, dispute deadline and SLA stay code until counsel decides. | C | Open | |

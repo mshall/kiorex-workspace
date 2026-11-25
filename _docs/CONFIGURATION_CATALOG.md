@@ -1,0 +1,208 @@
+# Configuration catalogue (configurability sweep, 25 Nov 2026)
+
+Status: built and tested locally; nothing pushed, published or deployed. Contracts 1.13.0 is **unpublished**: the new kinds live on branch `contracts-1.13.0` and are mirrored in the platform (`apps/api/src/growth/policy/policy-schemas.generated.ts`, refreshed by `apps/api/scripts/sync-policy-schemas.mjs`) until the founder publishes. Mirror of this file: `_docs/CONFIGURATION_CATALOG.md`.
+
+## How a number becomes configurable
+
+1. **Policy number** (a business or tuning decision): a maker-checker config kind. A super admin drafts it, a **different** super admin approves it (the database refuses self-approval), it goes live at its effective time **without a redeploy** (registry refresh every 15 s and at once after any transition, `PolicyService`). Every kind has a JSON Schema with bounds and a `default` equal to the value that shipped in code, so an empty or missing key changes nothing. A stored payload that no longer validates is ignored (the defaults keep running) and logged by kind name.
+2. **Safety control**: never a flag and never config (ADR-025). Floors are enforced in the schema (k at least 10, loss block at least 30 days, two-person rule, closed denylists that config may only extend). See "Deliberately not configurable".
+3. **Deployment setting** (infrastructure, not policy): an environment variable, parsed and clamped; the Integrations Control Center and `/health/providers` show the effective value of the integration ones. Listed below with defaults.
+4. **Per-market**: `MARKET_PROFILE`, `MARKET_GROWTH`, `CONSENT_DEFAULTS`, `ATTRIBUTION_POLICY`, `SEO` and the older kinds support MARKET scope. The nine kinds below are **GLOBAL scope only** on purpose: they are read by process-wide code, and a market row that is silently ignored is worse than a refused one (the API answers `GROWTH_INVALID_REQUEST`).
+
+Who can change what: read = `super_admin, ops_admin, finance, support, growth_admin`; draft, edit, submit = `super_admin` (the maker); approve, reject, activate = a **different** `super_admin`; roll back = a new version through the same path. Money-policy kinds (`ATTRIBUTION_POLICY`, `COMMISSION`, `SPONSORED_PROMOTION_POLICY`) need 7 days notice and an announcement. `RECOMMENDATION_POLICY` and `INTEGRATION_MODES` need an announcement of 10+ characters (no notice period: neither changes what a provider is charged). All changes are audited (`growth.config.<transition>`, checksums only). Roll-back restores a number the same way.
+
+## Kinds that already existed before the sweep (unchanged)
+
+| Kind | Controls | Scope | Notes |
+|---|---|---|---|
+| `ATTRIBUTION_POLICY` | commission windows, precedence, retention, evidence | GLOBAL, MARKET | money policy: 7 days notice, window moves at most x2 per version |
+| `COMMISSION` / `REWARDS` / `COMMS_CAPS` / `CAMPAIGN_GUARDRAILS` / `EXPERIMENT_GUARDRAILS` / `INTEGRATIONS` | legacy proposed names, kept for compatibility | | Phase 2 names below are used |
+| `SEO` (+ package F extension keys) | canonical host, locales, sitemap shard, cache, templates, thresholds | GLOBAL, MARKET | |
+| `SEO_AUTOMATION` | quality gate thresholds (thin content, similarity, parity, titles, links, vitals budgets), blocking checks, forbidden claims, alert targets | GLOBAL, MARKET | `autoNoindex` ships false |
+| `WIDGET_POLICY` | origins per org, session token TTL, active holds per phone and IP, SDK cache | GLOBAL, MARKET | |
+| `CONSENT_DEFAULTS` | regime, quiet hours, marketing per day and week, withdrawal propagation | GLOBAL, MARKET | |
+| `CAMPAIGN_POLICY`, `REFERRAL_RULES`, `REWARD_RULES` (incl. credit block), `SPONSORED_PROMOTION_POLICY` | campaign approval thresholds and ceilings; referral qualification; reward amounts and caps (all 0 until set); sponsored discounts | GLOBAL, MARKET | amounts are NEEDS_HUMAN, never invented |
+| `LIFECYCLE_POLICY` | message classes, frequency caps, quiet hours, journeys, segments, holdout bps | GLOBAL, MARKET | |
+| `ASSISTANT_POLICY` | languages, tools per state, token and cost **budgets**, **rate limits**, retention, escalation SLA, model mode | GLOBAL, MARKET | |
+| `FRAUD_RULES` | bands, diminishing, SLAs, hold days, per-rule weights, per-surface actions, touch/widget thresholds | GLOBAL, MARKET | `twoPersonOnMoney` cannot be false |
+| `LTV_POLICY`, `LOYALTY_RULES`, `CORPORATE_POLICY`, `MARKET_PROFILE`, `MARKET_GROWTH`, `INTEGRATION` | cohort LTV (k floor 10), points rules, corporate rules, market facts, per-integration mode, secretRef, schedule, rate budget, retention | GLOBAL, MARKET | |
+
+### New in this sweep
+
+#### `RECOMMENDATION_POLICY`
+
+Thresholds of the rule-based growth recommendations (GRW-P3-E). Aggregates only; k never below 10. Reporting and proposals only: a recommendation changes nothing by itself. Added in 1.13.0; defaults equal the values that shipped in code. PROPOSED_DEFAULT until ratified. Unknown keys rejected.
+
+| Key | Default | Bounds | Meaning | Safety |
+|---|---|---|---|---|
+| `k` | 10 | min 10; max 1000 | k-anonymity floor of every number a recommendation rests on. Never below 10 (ADR-007). | floor 10 (ADR-007) |
+| `spendFloorMinor` | 50000 | min 0; max 100000000 | A CAC below this spend (minor units) says nothing. Same floor as the channel performance report. |  |
+| `expiryDays` | 14 | min 1; max 90 | An unanswered proposal expires after this many days. |  |
+| `maxPerRun` | 10 | min 1; max 50 | Most proposals one nightly run may create. |  |
+| `maxShiftBp` | 2000 | min 100; max 5000 | Most a reallocation may suggest moving, in basis points of the weaker channel spend. |  |
+| `minRatioBp` | 15000 | min 10001; max 100000 | Stronger channel must beat the weaker by this ratio in basis points (15000 = 1.5 times). |  |
+| `maxAiSummariesPerDay` | 20 | min 0; max 200 | AI-written summaries per day (0 = none). Aggregates only. |  |
+
+#### `REWARD_GUARDS`
+
+Issuance guards of the reward ledger (GRW-P2-D). The block after a recoverable loss cannot go below 30 days. Added in 1.13.0; defaults equal the values that shipped in code. PROPOSED_DEFAULT until ratified. Unknown keys rejected.
+
+| Key | Default | Bounds | Meaning | Safety |
+|---|---|---|---|---|
+| `recoverableLossBlockDays` | 90 | min 30; max 365 | Days a person is blocked from new issuance after a recoverable loss (chargeback, reversed reward). Never below 30. | floor 30 |
+| `maxActiveLots` | 50 | min 10; max 500 | Most active (unexpired, unspent) reward lots one patient may hold. |  |
+
+#### `LIFECYCLE_STAGES`
+
+Day thresholds that derive a patient lifecycle stage from booking and attendance timestamps (GRW-P2-E). Non-clinical. churnedDays must exceed dormantDays (checked by the platform). Added in 1.13.0; defaults equal the values that shipped in code. PROPOSED_DEFAULT until ratified. Unknown keys rejected.
+
+| Key | Default | Bounds | Meaning | Safety |
+|---|---|---|---|---|
+| `dormantDays` | 180 | min 30; max 730 | Days without a booking before a person is DORMANT. |  |
+| `churnedDays` | 365 | min 60; max 1460 | Days without a booking before a person is CHURNED. Must be greater than dormantDays. | must exceed dormantDays |
+| `retainedAttendedMin` | 2 | min 1; max 20 | Attended visits inside the window to count as RETAINED. |  |
+| `retainedWindowDays` | 365 | min 30; max 730 | Window for retainedAttendedMin. |  |
+
+#### `CROSS_PRODUCT_POLICY`
+
+Continuity prompts between Clinic visits and Pharmacy, Lab and Nurse (GRW-P4-A): how long a prompt lives and how far back the parent visit may be. No clinical data. Added in 1.13.0; defaults equal the values that shipped in code. PROPOSED_DEFAULT until ratified. Unknown keys rejected.
+
+| Key | Default | Bounds | Meaning | Safety |
+|---|---|---|---|---|
+| `rxToPharmacy.ttlDays` | 30 | min 1; max 90 | Prompt lifetime in days. |  |
+| `rxToPharmacy.lookbackDays` | 7 | min 1; max 90 | Parent visit window in days. |  |
+| `labOrderToLab.ttlDays` | 30 | min 1; max 90 | Prompt lifetime in days. |  |
+| `labOrderToLab.lookbackDays` | 7 | min 1; max 90 | Parent visit window in days. |  |
+| `carePlanToHomeVisit.ttlDays` | 30 | min 1; max 90 | Prompt lifetime in days. |  |
+| `carePlanToHomeVisit.lookbackDays` | 30 | min 1; max 90 | Parent visit window in days. |  |
+
+#### `REFERRAL_FRAUD_THRESHOLDS`
+
+Detection thresholds of the eight referral fraud rules (GRW-P2-B). Every number is bounded on both sides so a tuning change cannot switch a rule off (a count cannot exceed its ceiling, a share cannot exceed 0.95). Rule weights, bands and actions stay in FRAUD_RULES; the two-person rule and the never-reward-fraud actions are code. Added in 1.13.0; defaults equal the values that shipped in code. PROPOSED_DEFAULT until ratified. Unknown keys rejected.
+
+| Key | Default | Bounds | Meaning | Safety |
+|---|---|---|---|---|
+| `signupsPerIpPrefix24h` | 5 | min 2; max 50 | Signups from one IP prefix in 24 hours above which the claim is held. | bounded both ways: no rule can be switched off by a number |
+| `minSecondsClaimToSignup` | 3 | min 1; max 30 | Fewer seconds than this between claim and signup looks automated. | bounded both ways: no rule can be switched off by a number |
+| `otpFailuresBot` | 5 | min 2; max 20 | OTP failures that mark a bot pattern. | bounded both ways: no rule can be switched off by a number |
+| `refereesPerReferrerWindow` | 6 | min 2; max 50 | Referees one referrer may bring in the window before a hold. | bounded both ways: no rule can be switched off by a number |
+| `refereesWithOneProvider` | 3 | min 2; max 20 | Referees of one referrer booking with the same provider before a hold. | bounded both ways: no rule can be switched off by a number |
+| `firstBookingsWithinMinutes` | 10 | min 1; max 120 | Minutes inside which a cluster of first bookings looks coordinated. | bounded both ways: no rule can be switched off by a number |
+| `firstBookingsClusterSize` | 3 | min 2; max 20 | First bookings inside that window that form a cluster. | bounded both ways: no rule can be switched off by a number |
+| `paymentFingerprintCluster` | 2 | min 2; max 20 | Referees sharing one payment fingerprint before a hold. | bounded both ways: no rule can be switched off by a number |
+| `neverBookedTwiceShare` | 0.8 | min 0.5; max 0.95 | Share of referees that never booked twice that looks like farming. | bounded both ways: no rule can be switched off by a number |
+| `neverBookedTwiceMinReferees` | 5 | min 2; max 100 | Referees needed before the never-booked-twice share is judged. | bounded both ways: no rule can be switched off by a number |
+| `minVisitMinutes` | 5 | min 1; max 60 | A visit shorter than this many minutes does not qualify. | bounded both ways: no rule can be switched off by a number |
+| `providerShareOfReferees` | 0.6 | min 0.4; max 0.9 | Share of referees one provider may account for before a collusion review. | bounded both ways: no rule can be switched off by a number |
+| `providerShareMinReferees` | 4 | min 2; max 100 | Referees needed before the provider share is judged. | bounded both ways: no rule can be switched off by a number |
+| `cancelledRedemptionsRecent` | 3 | min 2; max 20 | Recent cancelled redemptions that block further redemption. | bounded both ways: no rule can be switched off by a number |
+
+#### `INTEGRATION_RUNTIME`
+
+Circuit breaker and retry parameters shared by the growth integration jobs (GRW-P2-F). Added in 1.13.0; defaults equal the values that shipped in code. PROPOSED_DEFAULT until ratified. Unknown keys rejected.
+
+| Key | Default | Bounds | Meaning | Safety |
+|---|---|---|---|---|
+| `breakerThreshold` | 5 | min 2; max 20 | Consecutive failed runs that open the circuit. |  |
+| `breakerCooldownMinutes` | 30 | min 5; max 720 | Minutes before one probe run is allowed (HALF_OPEN). |  |
+| `maxAttempts` | 3 | min 1; max 5 | Attempts per run on timeout, 5xx and 429 (never on 4xx or parse errors). |  |
+
+#### `INTEGRATION_MODES`
+
+The mode the founder approved for each external integration (mock or real). A switch to real is a maker-checker change: it is the approval record and audit trail, and the Integrations Control Center shows any drift against the deployed environment. It never carries a credential. Added in 1.13.0. PROPOSED_DEFAULT until ratified. Unknown keys rejected.
+
+| Key | Default | Bounds | Meaning | Safety |
+|---|---|---|---|---|
+| `modes.<INTEGRATION_KEY>` | mock | one of mock, real | Approved mode per integration; keys: PAYMOB, FAWRY, INSTAPAY, SMS, EMAIL, WHATSAPP_CLOUD, PUSH_FCM, PUSH_APNS, PUSH_EXPO, GOOGLE_ADS, GA4, SEARCH_CONSOLE, META_ADS, TIKTOK, PLAY_CONSOLE, APP_STORE_CONNECT, CRUX, LLM_ASSISTANT, LLM_RECOMMENDATIONS, LLM_AI_GATEWAY, TURN_VIDEO, PASSPORT_IDP, MAPS_GEOCODING, OBJECT_STORAGE, ERROR_MONITORING | approval record only; carries no credential |
+
+### Existing in contracts 1.13.0, now read by the platform
+
+#### `EXPERIMENT_POLICY`
+
+Experiment guardrails (GRW-P3-A): run length, SRM alpha, concurrency, k-anonymity. First-party funnel facts only; no health surface, no money surface. Added in 1.13.0. PROPOSED_DEFAULT until ratified. Unknown keys rejected.
+
+| Key | Default | Bounds | Meaning | Safety |
+|---|---|---|---|---|
+| `minRunDays` | 7 | min 1; max 90 | Shortest run. PROPOSED_DEFAULT 7. |  |
+| `srmAlpha` | 0.001 | > 0; max 0.05 | p-value under which results are hidden. PROPOSED_DEFAULT 0.001. |  |
+| `maxConcurrentPerSurface` | 1 | min 1; max 5 | PROPOSED_DEFAULT 1 |  |
+| `maxVariants` | 5 | min 2; max 8 | PROPOSED_DEFAULT 5 |  |
+| `kAnonymity` | 10 | min 10; max 1000 | Smallest cell a result may show; never below 10. | floor 10 |
+| `assignmentTtlSeconds` | 600 | min 60; max 86400 | Cacheable assignment time |  |
+| `maxRunFactor` | 2 | min 1; max 10 | An experiment short of its sample at this multiple of its planned days is stopped |  |
+| `guardrailMinEvents` | 20 | min 5; max 1000 | Events in the treatment arm before a guardrail breach can be declared |  |
+| `conversionWindowDays` | 7 | min 1; max 30 | Conversions are attributed within this many days after exposure |  |
+| `maxCookieExperiments` | 3 | min 0; max 10 | Experiments a single visitor key may be in |  |
+| `deniedTags` | — | list, max 50 | Surface tags that may never be experimented on (health, price, fees) | list can only ADD to the code deny list |
+
+#### `AUTOMATION_POLICY`
+
+Journey builder limits (GRW-P3-E extension). Frequency caps for custom journeys; they sit on top of COMMS_CAPS and LIFECYCLE_POLICY and can only tighten them. Holdout 0 until set. Added in 1.13.0. PROPOSED_DEFAULT until ratified. Unknown keys rejected.
+
+| Key | Default | Bounds | Meaning | Safety |
+|---|---|---|---|---|
+| `maxNodes` | 12 | min 2; max 50 | PROPOSED_DEFAULT 12 |  |
+| `minWaitMinutes` | 15 | min 1; max 1440 | PROPOSED_DEFAULT 15 |  |
+| `maxWaitMinutes` | 129600 | min 60; max 525600 | PROPOSED_DEFAULT 129600 (90 days) |  |
+| `cycleMinWaitMinutes` | 1440 | min 60; max 525600 | A loop needs at least this wait. PROPOSED_DEFAULT 1440. |  |
+| `maxSendsPerJourney` | 3 | min 1; max 10 | PROPOSED_DEFAULT 3 |  |
+| `maxSendsPer30Days` | 4 | min 1; max 30 | Across every builder journey for one person. PROPOSED_DEFAULT 4 |  |
+| `maxCompiledSteps` | 24 | min 1; max 100 | PROPOSED_DEFAULT 24 |  |
+| `maxBranchArms` | 3 | min 2; max 5 | PROPOSED_DEFAULT 3 |  |
+| `holdoutPercent` | 0 (reserved, not consumed yet) | min 0; max 50 | Share of eligible people never messaged by builder journeys, for measurement. PROPOSED_DEFAULT 0. |  |
+
+#### `ATTRIBUTION_MODELS`
+
+Reporting models only (GRW-P3-B): windows, half-life, position shares and the data-driven gate. NEVER read by the money decision (ATTRIBUTION_POLICY owns that); no model changes a commission. Added in 1.13.0. PROPOSED_DEFAULT until ratified. Unknown keys rejected.
+
+| Key | Default | Bounds | Meaning | Safety |
+|---|---|---|---|---|
+| `windows.webAppDays` | 30 | min 1; max 90 | Web and app touch window. PROPOSED_DEFAULT 30. |  |
+| `windows.campaignDays` | 7 | min 1; max 90 | Campaign window. PROPOSED_DEFAULT 7. |  |
+| `windows.providerLinkDays` | 30 | min 1; max 90 | Provider link window. PROPOSED_DEFAULT 30. |  |
+| `halfLifeDays` | 7 | > 0; max 90 | Time-decay half-life. PROPOSED_DEFAULT 7. |  |
+| `positionFirstBp` | 4000 | min 0; max 10000 | Position-based first-touch share in basis points. PROPOSED_DEFAULT 4000. |  |
+| `positionLastBp` | 4000 | min 0; max 10000 | Position-based last-touch share. positionFirstBp + positionLastBp must not exceed 10000. PROPOSED_DEFAULT 4000. |  |
+| `dataDriven.minConversions` | 1000 | min 100; max 10000000 | Attended new patients needed in the lookback before the data-driven model runs. PROPOSED_DEFAULT 1000. |  |
+| `dataDriven.minNodeK` | 10 | min 10; max 10000 | Paths a node must occur in before it is shown; smaller nodes are folded. Never below 10. | floor 10 |
+
+All nine kinds: env override **none** (a stored version is the only way); who can change: super admin maker plus a different super admin checker; consumers read them live (`livePolicy`, `policyNow`).
+
+## Deployment settings (environment, clamped; effective value visible on the Integrations Control Center where it concerns an integration)
+
+| Variable | Default | Bounds / rule | Controls | Who |
+|---|---|---|---|---|
+| `GROWTH_CONFIG_CACHE_TTL_MS` | 5000 (0 in tests) | integer >= 0 | cache of config reads | deployer |
+| `GROWTH_CONFIG_DAILY_VERSION_BUDGET` | 10 | integer >= 1 | versions per kind per day (a guard on the config system itself, so not config) | deployer |
+| `RATE_LIMIT_STORE` | postgres | `memory` only for throw-away runs | cross-instance limiter store | deployer |
+| `DB_POOL_MAX` | per service | integer | connection pool | deployer |
+| `DEFAULT_MARKET` | EG | ISO code | default market | deployer |
+| `SAFETY_SLO_SECONDS`, `SAFETY_ACK_ESCALATE_MINUTES` | 60, 10 | numbers | safety alert delivery and escalation (KX-09 section 08) | deployer; **safety** |
+| `ADDRESS_MASK_HOURS` | 24 | number | home-visit address hidden after the visit (KXMHV10) | deployer; **privacy** |
+| `HOME_COMPLAINT_SLA_MINUTES`, `FAMILY_SHARE_MAX`, `HOME_GATE_MIN_PROVIDERS` | 60, 3, 50 | numbers | home-visit complaint SLA, family share limit, home gate | deployer (candidate for a market kind, owner decision) |
+| `WHATSAPP_SESSION_MINUTES`, `WAITLIST_OFFER_MINUTES`, `WAITLIST_HORIZON_DAYS` | 30, 15, 30 | numbers | assistant session, waitlist offer, horizon | deployer |
+| `QUIET_HOURS_START`, `QUIET_HOURS_END`, `MARKET_TZ_OFFSET_HOURS` | 22, 8, 2 | hours | fallback quiet hours (the market profile and `CONSENT_DEFAULTS` win where set) | deployer |
+| `HOLD_MINUTES`, `SLOT_CACHE_TTL_MS`, `SLOT_INDEX_TTL_MS`, `SLOT_INDEX_DEADLINE_MS` | 5, 60000, 300000, 6000 | numbers | Kiorex slot hold and slot caches | deployer |
+| `INTAKE_RATE_IP_PER_MIN`, `INTAKE_STATUS_RATE_IP_PER_MIN`, `INTAKE_RATE_ORG_PER_HOUR`, `INTAKE_RATE_FAILED_PER_10MIN` | 30, 120, 20, 12 | numbers | partner intake rate limits (abuse protection) | deployer; **security** |
+| `AI_DAILY_QUOTA` | 20 | number | AI gateway calls per user per day | deployer |
+| `ANALYTICS_MAX_BATCH`, `POLICY_CACHE_SECONDS`, `VAULT_MAX_BYTES` | 20, 30, 5 MiB | numbers | batch size, policy cache, vault upload limit | deployer |
+| `PSP_FEE_BPS`, `DEPOSIT_DEFAULT_MINOR`, `HOME_DEPOSIT_DEFAULT_MINOR`, `PHARMACY_TAKE_RATE_BPS`, `LAB_TAKE_RATE_BPS`, `TELE_CONSULT_FEE_MINOR`, `FEE_STATEMENT_VAT_BPS`, `PHARMACY_DELIVERY_FEE_MINOR` | 0 | numbers | **prices and fees: all 0 until the founder sets them (KX-12). Never invented.** | founder decision |
+| `SMS_MODE`, `EMAIL_MODE`, `WHATSAPP_MODE`, `PUSH_MODE`, `PAYMENT_MODE`, `MAPS_MODE`, `VIDEO_MODE`, `AI_PROVIDER`, `RECOMMENDATION_MODEL_MODE` | mock | mock or real | integration modes; approval recorded in `INTEGRATION_MODES`, drift shown | deployer after approval |
+| `<KIND>_TIMEOUT_MS`, `<KIND>_MAX_RETRIES` | 8000, 2 | integers | provider HTTP timeout and retries | deployer |
+| Clinic: `CLINIC_SLOT_HOLD_MINUTES` | 5 | 2 to 15, else default | marketplace slot hold | deployer |
+| Clinic: `CLINIC_TELEHEALTH_JOIN_OPENS_BEFORE_MINUTES`, `CLINIC_TELEHEALTH_JOIN_CLOSES_AFTER_END_MINUTES` | 10, 60 | 5 to 30, 15 to 180, else default | telehealth join window (ADR-039) | deployer |
+| Clinic: market config | n/a | validated by market-pack validation | `Market.providerConfig`, `taxConfig`, `paymentMethods`, weekend days, currency, timezone, commercial config (PA02), legal config (SC01); changed by the platform super admin | platform super admin |
+
+## Deliberately not configurable (safety, privacy, legal or abuse controls)
+
+Consent gates and quiet hours enforcement; PHI and health-targeting filters (`assertAdSafe`, aggregate-only recommendation inputs, the experiment and journey deny lists, which config may only **extend**); k-anonymity floors (10); the two-person rule and maker-checker itself; launch locks and gate evidence (ADR-024); the never-reward-fraud actions and fraud rule ids; no-tax-authority guard; OTP send and verify limits, MFA grace, HMAC skew windows, upload and body size limits (`TOUCH_MAX_BODY_BYTES` 4096, intake body, 8 MB JSON, 52 MB raw), price-change notice days (contractual), secret handling. Changing these is a code change reviewed as a security change.
+
+## Honest gaps
+
+1. The nine policy kinds cannot be **created** through the vendored contracts 1.12.0 client; they are validated locally and the schemas are byte-copies of the contracts branch. When 1.13.0 is vendored, delete the sync script and generated file and import from `@kiorex/contracts`.
+2. `AUTOMATION_POLICY.holdoutPercent` exists in the contract but nothing consumes it yet (reserved).
+3. `EXPERIMENT_POLICY.deniedTags` can only add tags; the registry still ships the code list.
+4. Lifecycle journey step delays (for example the 30 day second re-engagement step) and the per-journey frequency parameters remain code; `LIFECYCLE_POLICY` has no place for them. Candidate for a later kind.
+5. Rate limits, body-size limits and OTP limits stay deployment settings or code (abuse controls). Reserve and queue sizes (`GrowthLimiter`, batch sizes `CHUNK`, `BULK_MAX`) are engineering constants, not policy.
+6. Clinic policy settings are env-only: the Clinic has no maker-checker console. Price-change notice days, dispute deadline days and dispute SLA are contractual and remain code until counsel decides.
+7. The mode switch is an approval record plus drift display. Adapters still read `<KIND>_MODE` from the environment; nothing yet **blocks** a real mode that was not approved (enforcement at startup is a go-live decision).
