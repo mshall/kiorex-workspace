@@ -74,3 +74,7 @@ A document whose source is missing is skipped with a clear message (`SKIP KX-24 
 - Arabic strings that were extracted from a PDF with reversed presentation-form glyphs (see the KX-19 extraction note) are reproduced as written; fix them in the Markdown.
 - Paged.js is patched in memory to repeat table headers (`lib/pdf.mjs`); pin or re-check the patch when upgrading `pagedjs`.
 - Header and footer of a landscape page use the same strings as portrait pages; page sizes are mixed (A4 portrait and A4 landscape) in one PDF, which every viewer handles but some print dialogs ask about.
+
+## Design system (Rev 2.7 rebuild)
+
+Shared styling lives in `lib/design/`: `base.css`, `components.css`, `diagrams.css` (loaded by `index.mjs`), `svg.mjs` (inline SVG primitives, brand tokens), `diagrams.mjs` (18 diagrams) and `chrome.js` (running header with the verbatim Kiorex micro mark, footer, page x of y, injected after Paged.js layout). Use a diagram from any Markdown source with `<!-- kx-diagram: money-flow -->` (names: `node -e "import('./lib/design/diagrams.mjs').then(m=>console.log(m.diagramNames()))"`). `> **Needs human** ...` and `NEEDS_HUMAN:` render as a callout; headings stranded at a page foot are moved to the next page automatically (extra layout pass). Headings use Plus Jakarta Sans (brand), body Inter.

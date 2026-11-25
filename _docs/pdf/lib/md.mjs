@@ -2,6 +2,7 @@
 import MarkdownIt from 'markdown-it';
 import taskLists from 'markdown-it-task-lists';
 import hljs from 'highlight.js';
+import { renderDiagram, hasDiagram } from './design/diagrams.mjs';
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -44,9 +45,27 @@ const OWN = /Owner(?: role)?:\s*(.+?)(?=\.\s+(?:Audience|Supersedes|Tags|Owner|E
 const AUD = /Audience:\s*(.+?)(?=\.\s+(?:Owner|Supersedes|Tags|Extraction|Written)\b|\.\s*$|$)/;
 const KV = /^[-*]?\s*(Source|Revision|Subtitle|Tags|Topics|Owner role|Owner|Audience|Status|Supersedes|Date|Document)\s*:\s*(.*)$/i;
 
+// Some sources put the lede, role line, tags and Field/Value table after the "What changed" heading.
+// Move everything from the first preamble marker back in front of that heading, so only the change text stays in the panel.
+function hoistPreamble(lines) {
+  const wc = lines.findIndex((l) => /^## what changed\b/i.test(l));
+  if (wc < 0) return lines;
+  let end = lines.findIndex((l, i) => i > wc && /^## /.test(l)); if (end < 0) end = lines.length;
+  let cut = -1;
+  for (let i = wc + 1; i < end; i++) if (/^(Authored in the role|Tags:\s|\|\s*Field\s*\|)/.test(lines[i])) { cut = i; break; }
+  if (cut < 0) return lines;
+  // include the lede paragraph that sits directly before the role line (but never the first paragraph = the change text)
+  let start = cut;
+  let j = cut - 1; while (j > wc && !lines[j].trim()) j--;
+  let k = j; while (k > wc && lines[k].trim()) k--;
+  if (k > wc && j >= k) start = k + 1;
+  const moved = lines.slice(start, end);
+  return [...lines.slice(0, wc), ...moved, '', ...lines.slice(wc, start), '', ...lines.slice(end)];
+}
+
 export function parseDoc(raw, md = makeMd()) {
-  raw = raw.replace(/\r\n/g, '\n').replace(/<!--\s*kpis\s*-->/gi, '\nKXMARK-KPIS\n');
-  const lines = normalizeLines(raw).split('\n').filter((l) => !/^Contents:\s/.test(l));
+  raw = raw.replace(/\r\n/g, '\n').replace(/<!--\s*kpis\s*-->/gi, '\nKXMARK-KPIS\n').replace(/<!--\s*kx-diagram:\s*([\w-]+)\s*-->/gi, '\n\nKXDIAGRAM:$1\n\n');
+  const lines = hoistPreamble(normalizeLines(raw).split('\n').filter((l) => !/^Contents:\s/.test(l)));
   const meta = { tags: [], kv: {}, extraction: '', whatChanged: '', eyebrow: '', authored: '' };
   let title = '';
   // split preamble / body at first H2 (outside fences)
@@ -69,7 +88,7 @@ export function parseDoc(raw, md = makeMd()) {
       const cells = ln.split('|').slice(1, -1).map((c) => c.trim());
       if (/^[-: ]+$/.test(cells[0] || '')) continue;
       if (/^field$/i.test(cells[0])) { tableState = 1; continue; }
-      if (cells.length >= 2) { meta.kv[cells[0].toLowerCase()] = cells[1]; continue; }
+      if (cells.length >= 2) { const k0 = cells[0].toLowerCase(); if (meta.kv[k0] === undefined) meta.kv[k0] = cells[1]; continue; }
     }
     if (/\|/.test(ln) && /^[-*]?\s*[A-Z ]{4,}:\s/.test(ln) && (ln.match(/ \| [A-Z ]+:/g) || []).length >= 2) {
       for (const part of ln.replace(/^[-*]\s*/, '').split(/\s+\|\s+/)) {
@@ -127,7 +146,7 @@ export function parseDoc(raw, md = makeMd()) {
     if (/^```/.test(ln)) fence = !fence;
     if (!fence && /^## /.test(ln)) {
       skipping = /^## (what changed|contents)\b/i.test(ln);
-      if (skipping && /what changed/i.test(ln)) { skipping = 'wc'; continue; }
+      if (skipping && /what changed/i.test(ln)) { skipping = 'wc'; if (!meta.wcRev) { const wr = /rev\s*(\d+(?:\.\d+)?)/i.exec(ln); if (wr) meta.wcRev = 'Rev ' + wr[1]; } continue; }
       if (skipping) continue;
     }
     if (skipping === 'wc') { whatChangedMd += ln + '\n'; continue; }
@@ -148,9 +167,11 @@ export function parseDoc(raw, md = makeMd()) {
   meta.revisionNote = (/(?:—|-)\s*(NOTE:.*|not (?:re-issued|revised).*|cover.*)$/i.exec(rev) || ['', ''])[1];
   meta.revisionNote = meta.revisionNote.replace(/^NOTE:\s*/i, '').slice(0, 360);
 
+  let n = 0;
+  const bodyHtml = md.render(bodyMd).replace(/<p>KXDIAGRAM:([\w-]+)<\/p>/g, (m0, name) => { if (!hasDiagram(name)) throw new Error('Unknown kx-diagram: ' + name); return renderDiagram(name, ++n, meta.fam); });
   return {
     meta,
-    bodyHtml: md.render(bodyMd),
+    bodyHtml,
     whatChangedHtml: whatChangedMd.trim() ? md.render(whatChangedMd.trim()) : '',
   };
 }

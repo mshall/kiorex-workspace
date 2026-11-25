@@ -1,0 +1,40 @@
+/* Kiorex document design system, components layer (loaded after base.css).
+   Brand: coral #E8735E appears only as lines, dividers and large highlights; text on coral tints uses the darker coral-600. */
+
+/* ---------- running header and footer (injected by chrome.js) ---------- */
+.pagedjs_sheet{ position:relative }
+.kx-run{ position:absolute; left:0; top:0; right:0; bottom:0; pointer-events:none; font-family:var(--f-body) }
+.kx-head{ position:absolute; left:17mm; right:17mm; top:10.5mm; height:7.4mm; display:flex; align-items:center; gap:2.6mm; border-bottom:.6pt solid var(--n200); padding-bottom:1.8mm }
+.kx-head::after{ content:""; position:absolute; left:0; bottom:-.8pt; width:16mm; height:1.7pt; background:var(--pulse); border-radius:1pt }
+.kx-mark{ width:6.2mm; height:6.2mm; flex:0 0 auto; display:block } .kx-mark svg{ width:100%; height:100%; display:block }
+.kx-doc{ font:600 7.4pt/1 var(--f-body); color:var(--n700); display:flex; gap:1.8mm; align-items:center; white-space:nowrap; overflow:hidden; max-width:112mm }
+.kx-doc b{ color:var(--ink); font-weight:700; letter-spacing:.05em } .kx-doc i{ width:.9mm; height:.9mm; border-radius:50%; background:var(--n300); flex:0 0 auto }
+.kx-sec{ margin-left:auto; font:500 7.4pt/1 var(--f-body); color:var(--acc-text); max-width:62mm; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.kx-foot{ position:absolute; left:17mm; right:17mm; bottom:9.2mm; display:flex; justify-content:space-between; align-items:center; font:500 6.8pt/1 var(--f-body); color:var(--n500); border-top:.6pt solid var(--n200); padding-top:2.4mm }
+.kx-foot .kx-rev{ font-weight:600; color:var(--n700); letter-spacing:.03em } .kx-foot .kx-pg{ color:var(--n700) } .kx-foot .kx-pg b{ color:var(--ink); font-weight:700 }
+.kx-run.wide .kx-head,.kx-run.wide .kx-foot{ left:14mm; right:14mm }
+
+/* ---------- callouts: NEEDS_HUMAN and inline badge ---------- */
+.c-needs{ --c:#B75C50; --cs:#FDF0EC; border-left-color:var(--coral) !important }
+.c-needs .c-title{ color:#8F4944 }
+.nhb{ display:inline-block; font:700 .74em/1.35 var(--f-mono); padding:0 .45em; border-radius:1mm; border:.7pt solid var(--coral); background:#FDF0EC; color:#8F4944; white-space:nowrap; vertical-align:.03em }
+
+/* ---------- contents page: at-a-glance tiles ---------- */
+.glance{ display:grid; grid-template-columns:repeat(6,1fr); gap:2.4mm; margin:0 0 6mm }
+.glance>div{ border:.7pt solid var(--n200); border-top:1.3mm solid var(--acc); border-radius:2.4mm; padding:2.4mm 2.6mm 2.2mm; background:#fff }
+.glance b{ display:block; font:700 15pt/1 var(--f-head); color:var(--ink); margin-bottom:1.2mm }
+.glance span{ font:700 5.9pt/1.25 var(--f-body); letter-spacing:.11em; text-transform:uppercase; color:var(--n600) }
+
+/* ---------- pagination helpers ---------- */
+.kx-pb{ break-before:page !important }
+.banner,h3,h4,.figcap,.kxfig-head{ break-after:avoid }
+p,li{ orphans:3; widows:3 }
+
+/* ---------- tables: header reads as sticky, numbers tabular ---------- */
+th{ position:relative }
+td.num,td.stat{ font-variant-numeric:tabular-nums }
+.tablewrap table caption{ caption-side:top; text-align:left; font:600 8pt/1.3 var(--f-body); color:var(--n600); padding:0 0 1.6mm }
+
+/* ---------- print safety ---------- */
+*{ -webkit-print-color-adjust:exact; print-color-adjust:exact }
+svg text{ text-rendering:geometricPrecision }

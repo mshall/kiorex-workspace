@@ -27,7 +27,6 @@ Tags: SEO · ASO · Organic · SSR · hreflang · JSON-LD · Sitemaps · Core We
 ## What changed in Rev 2.7
 New section 2.3: Phase 3 SEO automation (quality gate, internal-link graph, vitals, indexation snapshots, automatic noindex OFF by default), lab Lighthouse scores on the SSR pages, the experiment SSR slots and the thin-page finding on district pages. App-store optimisation is unchanged (blocked on store accounts).
 
-
 ## Contents
 01 Summary · 02 As-built baseline · 03 Strategy · 04 URL and slug rules · 05 Rendering and caching · 06 Technical SEO · 07 Structured data · 08 Thin-page guard and content · 09 Maps and Business Profile · 10 ASO · 11 Measurement · 12 Acceptance, KPIs, risks, dependencies, open decisions · Rev 2.7: section 2.3 (after Phase 3)
 
@@ -136,6 +135,8 @@ Rules (As-built unless noted):
 ## 05 Rendering and caching
 Chosen design (ADR-043 is Proposed; the design is As-built): a Vite SSR bundle served by the existing Kiorex API image in `ROLE=site`, cached by CloudFront. The logged-in SPA stays a SPA.
 
+<!-- kx-diagram: seo-path -->
+
 | Aspect | Design |
 |---|---|
 | Code | Second entry `entry-server.tsx`, `vite build --ssr`; a single shared route table for server and client entries; React 19 streaming |
@@ -213,3 +214,16 @@ Search Console (manual in Phase 1, API in Phase 2; the Phase 1 adapter returns l
 - Dependencies: slugs and thin-page guard (GRW-P1-F), SSR infrastructure (GRW-P1-E), `kiorex.com` host in the domain table, CDN module (`modules/aws/cdn-edge`, validate only), district list (NH-040), consent for any analytics.
 - Open decisions: SSR as a separate service from day one; Kiorex Business Profile owner; patient store name; indexation of care-type pages before GKN2.
 - Cross-references: KX-14 section 05, KX-19 section 03, KX-24 (previews and sends), KX-28 sections 04 and 05.
+
+## Rev 2.7 finishing update: what measurement depends on (25 Nov 2026)
+
+Status: **As-built locally**, mock integrations, not deployed. The strategy, URL rules, structured data and the thin-page guard above are unchanged.
+
+| Measurement input | State | Needs a human |
+|---|---|---|
+| Search Console and CrUX | Adapters exist and run mock; targets in section 05 are NOT MEASURED | Domain delegation and property ownership (NH-DNS) |
+| App-store analytics | Mock adapter; ASO plan unchanged | Apple Developer and Google Play accounts (NH-STORE) |
+| Ad and web analytics | Channel performance reads daily external metrics from mock adapters | Ad accounts and read-only credentials (NH-ADS) |
+| CDN purge on listing events | Designed and validated, not applied; the real purge sender is not built | `tofu apply` by the founder (NH-AWS) |
+
+Every integration is shown in the Integrations Control Center with its mode, approved mode, drift and last check; none has a real credential.

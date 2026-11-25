@@ -153,3 +153,26 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 | 8 | New market: direct-marketing licence, consent regime, health-advertising rules, data residency per country | Wizard stores ids and booleans only; ZY synthetic | Counsel, CTO |
 | 9 | Retention periods for new growth tables (assistant, lifecycle decisions, ledgers, fraud, experiments, cohorts) and the record of processing and PIA update | PROPOSED_DEFAULT | DPO |
 Nothing here records a gate; gate evidence is entered only by a human in the Super Admin (ADR-024).
+
+## Rev 2.7 finishing update: payment, messaging and integration controls (25 Nov 2026)
+
+Status: **As-built locally** (code plus passing tests, mock providers, nothing deployed). This update records controls that now exist; it does not decide any legal question.
+
+<!-- kx-diagram: money-flow -->
+
+| Obligation or risk | Control now built | Status and owner |
+|---|---|---|
+| Funds flow, licensing and settlement accounts | **Kiorly never holds funds in the design.** Licensed payment partners process and settle; the Pay layer is orchestration, routing, reconciliation and reporting only | Design rule in force; legal review is NEEDS_HUMAN (counsel, Central Bank rules; LG-INT-PAY-19, LG-COM-3) |
+| Card data | Every card is typed on the vendor's hosted page (PCI SAQ-A scope); Kiorex stores a vendor reference, brand, last four digits, the 3-D Secure result and an HMAC-hashed fingerprint; a card number is refused by the subscription endpoints | As-built |
+| Forged, replayed or tampered callbacks | Signature checks with a replay window; amount-tampered callbacks refused; double refund and refund-during-dispute blocked | As-built, tested with recorded-shape fixtures |
+| Payment fraud | Shadow scorer and review queue; no enforcement mode exists (no ban, no block); thresholds are maker-checker and clamped to safety bounds | Owner and calibration open (LG-INT-PAY-17) |
+| Premature real vendor calls | Three switches in three places; every real adapter answers NEEDS_HUMAN_REAL_MODE_NOT_APPROVED without approval; the exemption flag is ignored in production and reported as a problem | In force |
+| Secrets | By reference only (`/{product}/{env}/{purpose}`); never in chat, tickets, git or the console | In force |
+| Commission collection harming providers | The collection module pauses no listing, booking, plan or care (a test scans the sources); failure ends as an open invoice | As-built; the Clinic SB-05 listing pause at D+30 needs a founder decision |
+| Subscription lapse | Lite instead of lockout; clinical records never blocked; data never deleted | As-built |
+| Messaging consent | Consent gate, quiet hours and STOP; marketing never fails over. Gap: unsubscribe adds a suppression but does not yet withdraw the marketing consent record | As-built; gap open |
+| Tax authority reporting | None, by founder decision (ADR-011): products show tax lines and export data only | In force |
+
+<!-- kx-diagram: integration-control-center -->
+
+> **Needs human** Counsel and the DPO own the legal rows (funds flow, licensing, consent wording, credit position). No row above is a legal opinion.

@@ -35,6 +35,8 @@ Home visits — Planned v2.3: Home visit types, coverage zones, travel buffers, 
 ## 03 Plans and entitlements
 Commercial gating is enforced by @RequiresEntitlement on API controllers and <Gate> in the web app (PL03/04). Scope of practice (§06) is a separate guard and never a plan feature.
 
+<!-- kx-diagram: subscription-lifecycle -->
+
 | Entitlement | Lite | Pro | Clinic | Enterprise |
 |---|---|---|---|---|
 | Clinicians / branches / assistant seats | 2 / 1 / 2 | 10 / 5 / 10 | 50 / 25 / 30 | Unlimited |
@@ -90,6 +92,8 @@ What Kiorly exposes to the marketplace — all shipped and contract-tested (QA04
 | Reviews | POST /reviews/aggregate; REVIEW_INVITATION_ELIGIBLE, REVIEW_REPLY_POSTED | KX08 |
 | Booking link | GET /api/v1/public/booking-pages/:slug; channel=CLINIC_LINK | KX09 |
 | Kiorex tab | Settings, per-clinician listing toggles, caps, performance overview | KX10 |
+
+<!-- kx-diagram: commission-modes -->
 
 ## 06 Professions and scope of practice
 Every clinician has a profession (ADR-029). It decides how they are verified, what they may do and how Kiorex lists them. Scope of practice is a safety control, never a feature flag (ADR-025).
@@ -301,3 +305,28 @@ Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned)
 | Not allowed | Patients' money (deposits stay in Kiorex Pay until the visit), provider-to-provider transfer, cash-out of promotional credit |
 | Statements | The monthly statement shows opening balance, grants, consumption by use, expiry and closing balance, and the promotion expense as its own line |
 **Sponsored promotions (Proposed).** In the Kiorex tab the clinic can create a promotion for its own doctors and services (discount, budget cap, dates, eligibility). It goes through advertising review (high value needs two approvers), the patient sees "sponsored by <clinic>", the budget is reserved at booking, the wallet is debited when the visit completes (or invoiced if the credit is insufficient, per setting) and the amount is released or reversed on cancel or refund. Commission is computed on the fee before the sponsored discount, so the fee does not change. Scope is the visit fee only, never a drug, test or procedure, and never a health-targeted audience.
+
+## Rev 2.7 finishing update: subscription, dunning, Lite and Pay collections (25 Nov 2026)
+
+Status: **As-built locally** (SUB-01, SB-03, COM-1 views and Pay collections; mock billing gateway, nothing deployed). **Founder rule: a paid subscription renews automatically by default; switching renewal off, or a lapse that dunning cannot fix, moves the organisation to the free Lite plan, never to lockout. Data is never deleted.** The staff app that carries the Clinic and Nurse modules is **Kiorly**.
+
+| Topic | How it works | Default or setting |
+|---|---|---|
+| Auto-renew | ON by default; after the trial the activation keeps it ON. Only the owner or an organisation admin switches it off, after a confirmation that carries the downgrade impact (`AUTO_RENEW_CONFIRMATION_REQUIRED`). The plan stays until the period end | Market pack `kiorlyBilling.subscription.autoRenewDefault` |
+| Renewal charge | The monthly settlement issues the invoice and the saved card token is charged through the billing gateway interface; retries on D+1, D+3 and D+7, then dunning | Mock gateway; real charge is go-live (LG-SUB-5) |
+| Period end | Auto-renew ON rolls the period (optimistic lock: concurrent runs roll once). OFF or a scheduled cancel moves to Lite; a scheduled cancel no longer ends in CANCELLED. The month in which a paid term ends is still billed; a dunning downgrade is not billed forward | Daily lifecycle job |
+| Dunning | Reminders D-3 and D0, PAST_DUE from D+1, GRACE with full access to the downgrade day. `lapseAction` DOWNGRADE_TO_LITE (default) moves to Lite 15 days after the oldest unpaid invoice due date, with a warning the day before. The older READ_ONLY (D+15) then SUSPENDED (D+45) path stays available as `READ_ONLY_SUSPEND`. Clinical records are never blocked | `downgradeAfterDays` 15 |
+| Lite | A normal catalogue plan with its own limits. Seats above the Lite cap become read-only and nothing is removed; modules Lite does not include stay readable for a grace window (GET and HEAD only), writes answer 402; after the grace the module needs an upgrade and the data returns on upgrade | `liteReadOnlyGraceDays` 30 |
+| Reactivate | `POST /billing/subscription/reactivate` (previous plan by default, same legal acceptance and PDPC launch gates as a plan change) | Needs an active price |
+| Reminders | Renewal, renewal-off, payment-method-missing, payment-failed, downgrade-warning and downgraded notices, one reminder per offset and period, held outside owner quiet hours. They are account-holder transactional notices, not marketing | `reminderQuietHours` |
+| Configuration | The block is changed only through a maker proposal and a different platform admin's decision (`SUBSCRIPTION_POLICY_REQUIRES_APPROVAL` refuses the plain PUT) | Market pack, maker-checker |
+
+| Money collected through Pay (Clinic side) | Detail |
+|---|---|
+| Payment links | `POST /billing/pay/links` for invoices, home visits and the front desk: signed, expiring, amount-locked, consumed by the first payment of exactly the locked amount |
+| Front-desk collections | `POST /billing/pay/collections/prepare` returns the rail, reference and the tenant channel instructions through the Pay contract |
+| Bank IPN matching | Rows are matched to invoices (`ClinicPayMatch`) with a confidence score; a finance-only review queue (`FINANCE_OFFICER`, `GROUP_ADMIN`, `PLATFORM_SUPER_ADMIN`) decides the rest |
+| Reports | `GET /billing/pay/reports/rollup` by branch or organisation, JSON, CSV and Arabic and English PDF |
+| Kiorex commissions | Page Admin, Billing, Kiorex commissions: finance-only by default, CSV, bilingual PDF. The Clinic stays the system of record for every charge and decision; Kiorex collects in one of three modes (diagram in section 05) |
+
+> **Needs human** Proration (`creditUnusedOnDowngrade` is stored but not applied, LG-SUB-3), the tax display line (market pack, NEEDS_HUMAN), the real charge and hosted card capture (LG-SUB-5), and one reconciliation for the founder: the Clinic dunning timeline pauses the Kiorex listing of a Lite organisation with an unpaid commission invoice at D+30 (SB-05), while the commission collection principle says collection never pauses listing. Neither is changed in this volume.

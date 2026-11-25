@@ -90,6 +90,8 @@ Monthly revenue by engine — base case, EGP thousands per month. Figure 1 (stac
 ## 06 Customers and the 'Kiorly is free' effect
 Figure 2: Active provider locations (base) — Active clinic tenants, Paying clinics, Pharmacies, Labs (M6, M12, M24, M36; y axis to ~4,000). Same figures as the KX14 funnel targets.
 
+<!-- kx-diagram: revenue-engines -->
+
 Share of listed paid clinics where commission exceeds subscription ('Kiorly is free'): 10% at M12, 19% at M24, 25% at M36 (base). Attended Kiorex visits reach 109,430 per month by M36.
 
 ## 07 P&L and cash
@@ -235,3 +237,17 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - Marketing spend lines are entered manually or by mock adapters; no real ad spend is executed by code. CAC, ROAS and LTV views exist locally and withhold ratios below k = 10 or an EGP 500 spend floor.
 - Per-product commission is inert; do not model Pharmacy, Lab or Nurse fee revenue from attribution until a founder and CFO decision (KX-12).
 - Re-basing of the series per KX-32 section 08 and the EGP 150,000 illustration remain open founder and finance decisions.
+
+## Rev 2.7 finishing update: product behaviour the model does not yet carry (25 Nov 2026; facts only, no new number)
+
+The model outputs and every assumption above are unchanged. The Kiorly Pay layer, automatic renewal with a free Lite fallback, and commission collection are now built locally (mock providers, nothing deployed). They change how revenue is collected, not how much, so each is a **driver to add** with a value a human must set.
+
+| Behaviour now in the product | Where it enters the model | Value |
+|---|---|---|
+| Auto-renew is the default and a lapse ends in the free Lite plan, never lockout | Churn and downgrade input of the customer build (a downgraded organisation keeps its data and can reactivate) | Not set (NEEDS_HUMAN) |
+| Commission collection in three modes (net from payout, saved-method charge, invoice); an unpaid invoice ages on the console and pauses nothing in the collection module | Collection lag and bad-debt line on commission revenue | Not set |
+| Reversals after collection become `CREDIT_DUE`; dispute-win returns and waivers come back as provider credit once | Credit offset line of the Kiorly invoice | Not set |
+| Payment partner fees: ordering by cost exists, fee values are not entered | PSP fee in cost of revenue | Not set (LG-INT-PAY-3) |
+| Patient credit, refund credit and provider-sponsored discounts are never Kiorex revenue | Revenue definition (KX-32): stays commission and fees only | Rule, no value |
+
+> **Needs human** The founder or finance owns each value. The base case, the three scenarios and the funding gates are not re-run in this update.

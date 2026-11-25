@@ -28,7 +28,6 @@ Tags: Attribution · Commission · Evidence · Disputes · Referrals · Rewards 
 ## What changed in Rev 2.7
 Sections 09, 10 and 11 relabelled from Roadmap to As-built locally; the section 14 as-built note is superseded by the new section 15, which says exactly what exists (patient and provider credit, refund-as-credit, family credit, goodwill, sponsored promotions with Pay wiring, fraud v2 in shadow, seven reporting models, the separate corporate ledger) and what does not. The money promise is unchanged: evidence can remove a fee, never add one; no downstream product fact, reward or model changes a commission.
 
-
 ## Contents
 01 Summary · 02 As-built commission engine · 03 Concepts · 04 Identity and consent · 05 Windows and policy · 06 Decision algorithm · 07 Chargeability and the charge · 08 Evidence, disputes and audit · 09 Patient referral · 10 Rewards, ledger and configuration · 11 Fraud · 12 Worked examples and tests · 13 Acceptance, KPIs, risks, dependencies, open decisions · 14 Two separate credit systems and provider-sponsored promotions · 15 Rev 2.7 as-built: Phases 2 to 4 money, fraud, models and corporate
 
@@ -224,6 +223,8 @@ Status: **Proposed** (ADR-048, founder-approved product design of 24 Nov 2026; n
 | Ledger | append-only entries, idempotent, expiring lots, reversal, daily reconcile | the same pattern, implemented independently |
 Rules: **no conversion in either direction**, no shared balance row, no shared runtime code, no entry in one that references an object of the other; they share only the ledger pattern and a file of numeric test vectors. Neither is a general-purpose money wallet: no withdrawal, no peer-to-peer or provider-to-provider transfer, no cash conversion, no top-up by the holder.
 
+<!-- kx-diagram: credits-ledgers -->
+
 ### 14.2 Patient credit (Kiorex, closed loop)
 | Source | Trigger and rule |
 |---|---|
@@ -286,7 +287,19 @@ Eleven rules (self, duplicate, bot, farm, fake booking, collusion, cancel, redee
 
 ### 15.6 Products, continuity and corporate
 - **Products (ADR-056).** The same `decide()` decides Pharmacy, Lab and Nurse orders on their own evidence; the commission link of products is inert; counters on the partner side only.
-- **Corporate (ADR-057).** A separate append-only `CorporateBenefitEntry` ledger with database caps; never patient credit, never provider credit; terms never defaulted; employer reports aggregate-only (k >= 10 with secondary suppression); HR lists hashed with a 30-day matching window; enterprise leads from the Clinic with no reward or fee share. **Not wired into Pay and checkout: no deposit is reduced today.** Funding mode defaults to `SPONSOR_CREDIT`; `PLATFORM_PROMO` needs CFO and counsel.
+- **Corporate (ADR-057).** A separate append-only `CorporateBenefitEntry` ledger with database caps; never patient credit, never provider credit; terms never defaulted; employer reports aggregate-only (k >= 10 with secondary suppression); HR lists hashed with a 30-day matching window; enterprise leads from the Clinic with no reward or fee share. **Wired into Kiorex Pay (tender order: sponsored discount, corporate benefit, patient credit, card; payments runbook section 10, suite 39b); `growth.corporate` stays launch-locked, so no live deposit is reduced.** Funding mode defaults to `SPONSOR_CREDIT`; `PLATFORM_PROMO` needs CFO and counsel.
 
 ### 15.7 Not verified
 Any of this running against real money, a real PSP, real clinics or real patients; the legal position of any credit balance, sponsored discount or corporate benefit in Egypt; accounting and VAT treatment; Arabic copy by a native reviewer.
+
+### 15.8 Commission collection and the Kiorly Pay layer (Rev 2.7 finishing update, 25 Nov 2026)
+Status: **As-built locally**, mock collector by default, not deployed. The Clinic stays the system of record for the charge and the decision (sections 06 and 07). Kiorex mirrors each `COMMISSION_CHARGE_*` event as a claim and collects what it is owed **through the provider each organisation chose**; **Kiorly never holds funds in the design.**
+
+<!-- kx-diagram: commission-modes -->
+
+- **Modes.** `NET_FROM_PAYOUT`, `AUTO_CHARGE_SAVED_METHOD` and `INVOICE_AND_COLLECT`, set per market and per organisation by maker-checker configuration (proposer and approver differ, enforced in code and by a database check).
+- **Safety.** No pause of listing, booking, plan or care exists in the collection module; a failure ends as an open invoice that ages on the console.
+- **Credit interaction.** Provider credit is drawn first, then the invoice (the higher-of rule is unchanged). A reversal after collection becomes `CREDIT_DUE`; a dispute win on an already billed charge returns as provider credit once.
+- **Configuration record.** The shared dev stack's `REWARD_RULES` was restored to version 15 on 25 Nov 2026 (see KX-33 section 10); the payment-side reward posting stays off (`postToPayLedger` false, finance decision H-25).
+
+> **Needs human** Counsel decides the funds flow of collection (LG-COM-3) and the vendor collection API is not wired (LG-COM-4). No rate, fee or amount is set in this section.

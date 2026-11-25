@@ -27,7 +27,6 @@ Tags: Go-to-market · Egypt · 30/60/90 · 6 and 12 months · Playbooks · Geogr
 ## What changed in Rev 2.7
 Status refresh only: the engine behind the playbooks (campaigns, referral, lifecycle, assistant, integrations, experiments, recommendations) is now built locally and launch-locked (KX-33 section 05). The strategy, budgets and scenarios are unchanged and remain hypotheses. No number, price or fee was added.
 
-
 ## Contents
 01 Summary · 02 Principles and constraints · 03 The 50/25/15/10 hypothesis · 04 Geography · 05 Specialties · 06 Playbooks · 07 30, 60 and 90 days · 08 Six and twelve months · 09 Budget hypotheses · 10 Scenarios · 11 Guardrails · 12 KPIs, risks, dependencies, open decisions
 
@@ -72,6 +71,8 @@ The patient side of the marketplace is the expensive side. Kiorex only earns EGP
 
 ## 03 The 50/25/15/10 hypothesis
 The founder supplied a four-way split of patient acquisition. The interpretation below is the discovery agent's reading and is **not confirmed**.
+
+<!-- kx-diagram: acquisition-ladder -->
 
 > **Open question** Is 50/25/15/10 (a) the share of attended new patients by acquisition channel group, (b) the share of the patient-marketing budget, or (c) both? Default until the founder answers: (a) for the patient mix and an independently justified budget (section 09), with (b) shown as an alternative so finance can see the literal reading.
 
@@ -208,3 +209,14 @@ All of these exist in code on the local stack only, mocked, with money, messagin
 - **Paid:** campaign records, spend entry and mock adapters; no real ad-platform call and no spend by code.
 - **Measurement:** reporting attribution models, cohorts and LTV estimates (group level), experiments on non-clinical surfaces.
 Not changed by this revision: the 50/25/15/10 interpretation, the illustrative EGP 150,000 monthly budget and every scenario number.
+
+## Rev 2.7 finishing update: wave 9 and what the playbooks can use (25 Nov 2026)
+
+Status refresh only. The strategy, the scenarios and every budget hypothesis above are unchanged, and **no budget, price or fee is set here**. Since the last status note: loyalty is built locally and launch-locked; Pharmacy and Lab partners have Growth tabs in the staff app **Kiorly**; corporate benefit now reaches Kiorex Pay (locked); and the final close-out gate of the whole engine (three consecutive green full runs, 552 tests passed in each) is recorded in KX-33 section 10.
+
+| Playbook channel | Ready in the product (local, mocked) | Needs a human before real use |
+|---|---|---|
+| Provider-led links, QR and widgets | Yes | Providers must activate them (supply tooling) |
+| Organic search and maps | Server-rendered pages, structured data, quality gate | Search Console and DNS ownership (NH-DNS) |
+| Referral and WhatsApp | Referral in coupon mode (amounts zero); assistant with a mock model | Meta verification and templates (NH-WA); amounts are set by a human |
+| Paid and partnerships | Campaign records, UTM builder, corporate programmes (locked) | Ad accounts (NH-ADS); terms by contract only |

@@ -6,6 +6,7 @@ const cssStr = (s) => '"' + String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"'
 
 const FONTS = [
   ['Inter', 400, 'inter-latin-400-normal'], ['Inter', 500, 'inter-latin-500-normal'], ['Inter', 600, 'inter-latin-600-normal'], ['Inter', 700, 'inter-latin-700-normal'],
+  ['Plus Jakarta Sans', 500, 'plus-jakarta-sans-latin-600-normal'], ['Plus Jakarta Sans', 600, 'plus-jakarta-sans-latin-600-normal'], ['Plus Jakarta Sans', 700, 'plus-jakarta-sans-latin-600-normal'], ['Plus Jakarta Sans', 800, 'plus-jakarta-sans-latin-600-normal'],
   ['Jost', 500, 'jost-latin-500-normal'], ['Jost', 600, 'jost-latin-600-normal'], ['Jost', 700, 'jost-latin-700-normal'],
   ['JetBrains Mono', 400, 'jetbrains-mono-latin-400-normal'], ['JetBrains Mono', 600, 'jetbrains-mono-latin-600-normal'],
   ['IBM Plex Sans Arabic', 400, 'ibm-plex-sans-arabic-arabic-400-normal'], ['IBM Plex Sans Arabic', 500, 'ibm-plex-sans-arabic-arabic-500-normal'],
@@ -54,7 +55,7 @@ export function buildHtml({ doc, fam, parsed, brandDir, fontsDir, css, js, built
   const cells = kvRows.map(([k, v, w]) => `<div class="cell${w ? ' wide' : ''}"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join('');
   const tags = m.tags.length ? `<div class="tags">${m.tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div>` : '';
   const wc = parsed.whatChangedHtml
-    ? `<div class="whatchanged"><aside class="callout c-changed"><div class="c-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></div><div class="c-body"><div class="c-title">What changed in ${esc(rev)}</div><div class="c-text">${parsed.whatChangedHtml}</div></div></aside></div>` : '';
+    ? `<div class="whatchanged"><aside class="callout c-changed"><div class="c-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></div><div class="c-body"><div class="c-title">What changed in ${esc(m.wcRev || rev)}</div><div class="c-text">${parsed.whatChangedHtml}</div></div></aside></div>` : '';
   const ex = [m.extraction && `<b>Extraction note.</b> ${esc(m.extraction)}`, m.revisionNote && `<b>Revision note.</b> ${esc(m.revisionNote)}`].filter(Boolean).join('<br><br>');
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${esc(code + ' ' + title)}</title>

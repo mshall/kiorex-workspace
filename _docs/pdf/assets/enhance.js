@@ -22,6 +22,7 @@ window.kxEnhance = async function kxEnhance(cfg) {
     chart: svg('<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>'),
     check: svg('<path d="M20 6 9 17l-5-5"/>', 'ic tick'),
     cross: svg('<path d="M18 6 6 18M6 6l12 12"/>', 'ic crossx'),
+    needs: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>'),
     arrow: svg('<path d="M5 12h14M13 6l6 6-6 6"/>', 'ic'),
   };
 
@@ -97,7 +98,7 @@ window.kxEnhance = async function kxEnhance(cfg) {
 
   /* ---------- 3. blockquotes -> callouts / pull-quotes ---------- */
   const CALL = [
-    [/^open questions?\b/i, 'question', 'Open question'], [/^decision\b/i, 'decision', 'Decision'], [/^rule\b/i, 'rule', 'Rule'],
+    [/^needs[_ ]human\b/i, 'needs', 'Needs human'], [/^open questions?\b/i, 'question', 'Open question'], [/^decision\b/i, 'decision', 'Decision'], [/^rule\b/i, 'rule', 'Rule'],
     [/^(warning|caution|important)\b/i, 'warning', null], [/^watch\b/i, 'warning', 'Watch'], [/^risk\b/i, 'risk', 'Risk'],
     [/^extraction note\b/i, 'meta', 'Extraction note'], [/^note\b/i, 'note', 'Note'], [/^evidence\b/i, 'note', 'Evidence'], [/^tip\b/i, 'tip', 'Tip'],
   ];
@@ -122,8 +123,8 @@ window.kxEnhance = async function kxEnhance(cfg) {
   }
 
   /* ---------- 4. paragraph-level callouts, KPI tiles, diagrams, captions ---------- */
-  const PCALL = /^(RULE|WATCH|NOTE|WARNING|CAUTION|IMPORTANT|DECISION|RISK|OPEN QUESTIONS?|EVIDENCE|TIP)\s*[:—–]\s*/;
-  const PCALL2 = /^(Note|Warning|Decision|Rule|Risk|Open questions?|Extraction note|Evidence|Tip)\s*:\s+/;
+  const PCALL = /^(RULE|WATCH|NOTE|WARNING|CAUTION|IMPORTANT|DECISION|RISK|NEEDS_HUMAN|OPEN QUESTIONS?|EVIDENCE|TIP)\s*[:—–]\s*/;
+  const PCALL2 = /^(Note|Warning|Decision|Rule|Risk|Open questions?|Extraction note|Evidence|Tip|Needs human)\s*:\s+/;
   for (const p of $$('p')) {
     if (p.closest('.callout,.kpis,.lede,.flow,td,th,li')) continue;
     const t = txt(p);
@@ -287,8 +288,8 @@ window.kxEnhance = async function kxEnhance(cfg) {
 
   /* ---------- 10. text-node pass: ID badges, check marks, Arabic ---------- */
   const AR = '\\u0600-\\u06FF\\u0750-\\u077F\\uFB50-\\uFDFF\\uFE70-\\uFEFF';
-  const RX = new RegExp(`(«?[${AR}]+(?:[\\s\\u200c\\u200d\\u060C\\u061B\\u061F\\u0640.,:()/«»\\-]*[${AR}\\d]+)*»?)|(\\bADR-?\\d{3}(?:\\s?[.…]{2,3}\\s?\\d{3})?\\b|\\bKX-?\\d{2}(?:-\\d{2})?\\b)|([✓✔✕✗✘])|(#[0-9A-Fa-f]{6}\\b)`, 'g');
-  const skip = (n) => n.parentElement && n.parentElement.closest('pre,code,svg,script,style,.mermaid-out,h1,.no-enhance,.pill');
+  const RX = new RegExp(`(«?[${AR}]+(?:[\\s\\u200c\\u200d\\u060C\\u061B\\u061F\\u0640.,:()/«»\\-]*[${AR}\\d]+)*»?)|(\\bADR-?\\d{3}(?:\\s?[.…]{2,3}\\s?\\d{3})?\\b|\\bKX-?\\d{2}(?:-\\d{2})?\\b)|([✓✔✕✗✘])|(#[0-9A-Fa-f]{6}\\b)|(\\bNEEDS_HUMAN\\b)`, 'g');
+  const skip = (n) => n.parentElement && n.parentElement.closest('pre,code,svg,script,style,.mermaid-out,h1,.no-enhance,.pill,.nhb,.c-needs .c-title,.kxfig');
   const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT); const nodes = []; for (let n; (n = walker.nextNode());) nodes.push(n);
   for (const n of nodes) {
     if (skip(n)) continue; const s = n.nodeValue; RX.lastIndex = 0; if (!RX.test(s)) continue; RX.lastIndex = 0;
@@ -297,6 +298,7 @@ window.kxEnhance = async function kxEnhance(cfg) {
       if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
       if (m[1]) { const sp = mk('span', 'ar'); sp.setAttribute('dir', 'rtl'); sp.setAttribute('lang', 'ar'); sp.textContent = m[1]; frag.appendChild(sp); }
       else if (m[2]) { const b = mk('span', 'idb ' + (/^ADR/.test(m[2]) ? 'adr' : 'kx')); b.textContent = m[2].replace(/^(ADR|KX)(\d)/, '$1-$2'); frag.appendChild(b); }
+      else if (m[5]) { const b = mk('span', 'nhb'); b.textContent = 'NEEDS_HUMAN'; frag.appendChild(b); }
       else if (m[4]) { const sw = mk('span', 'swatch'); sw.style.background = m[4]; frag.appendChild(sw); frag.appendChild(document.createTextNode(m[4].toUpperCase())); }
       else { const ok = /[✓✔]/.test(m[3]); frag.appendChild(mk('span', ok ? 'yes' : 'no', ok ? ICON.check : ICON.cross)); }
       last = m.index + m[0].length;
@@ -376,7 +378,14 @@ window.kxEnhance = async function kxEnhance(cfg) {
       html += `<li class="${lv}"><a href="#${h.id}">${num}<span class="tt">${esc(txt(h))}</span><span class="tl"></span></a></li>`;
     }
     toc.innerHTML = html;
+    const gl = mk('div', 'glance');
+    const stat = (n, l) => `<div><b>${n}</b><span>${l}</span></div>`;
+    const nCh = $$('section.chapter').length, nSec = $$('h3').length, nTab = $$('.tablewrap').length, nDia = $$('figure.kxfig,.mermaid-out').length, nCall = $$('.callout').length, nNh = $$('.nhb').length;
+    const tiles = [[nCh, 'Chapters'], [nSec, 'Sections'], [nTab, 'Tables'], [nDia, 'Diagrams'], [nCall, 'Callouts'], [nNh, 'Needs human']].filter((t) => t[0] > 0);
+    gl.style.gridTemplateColumns = `repeat(${Math.max(tiles.length, 1)},1fr)`; gl.innerHTML = tiles.map((t) => stat(t[0], t[1])).join('');
+    toc.parentNode.insertBefore(gl, toc);
   }
+  for (const id of cfg.breakIds || []) { const h = document.getElementById(id); if (h) (h.closest('.banner') || h).classList.add('kx-pb'); }
   main.style.width = '';
   return { warnings, wideCount, chapters: chapters.length };
 };

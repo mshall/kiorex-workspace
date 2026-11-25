@@ -27,7 +27,6 @@ Tags: Growth PRD · Provider links and QR · Attribution · SEO pages · Widgets
 ## What changed in Rev 2.7
 Section 04 capability map now shows what exists for Phases 2, 3 and 4 (campaigns, referral and the two credit systems, lifecycle, assistant, integrations, experiments, fraud, SEO automation, cohorts, markets, product links and ingest, cross-product, corporate) and what does not (loyalty and partner tabs are wave 9, see KX-33 section 05); section 5.7 rewritten from Roadmap to as-built status; open decisions 12 to 24 added; ADR range extended to ADR-057. Every requirement of Phases 2 to 4 is built locally behind a launch-locked flag or a default of zero; none is deployed.
 
-
 ## Contents
 01 Executive summary · 02 Goals, non-goals and principles · 03 Users and jobs to be done · 04 Capability map and phases · 05 Functional requirements · 06 Non-functional requirements · 07 Acceptance criteria · 08 KPIs · 09 Risks and mitigations · 10 Dependencies · 11 Priorities · 12 Open decisions and regulatory dependencies · 13 Cross-references · Rev 2.7: Phases 2 to 4 are in sections 04, 5.7 and 12
 
@@ -56,6 +55,8 @@ Every statement in this volume carries one of these labels, in a column, a prefi
 
 ## 01 Executive summary
 Kiorex earns EGP 40 only when an attended new patient arrives through the marketplace (ADR-007). Providers are never charged for patients they bring themselves. Today the money half of that promise exists and is well tested, but everything upstream of the booking is missing: no evidence of where a patient came from, no provider link tracking, no indexable pages, no embeddable booking, no consent-gated analytics. The Growth Engine closes that gap so that Kiorex can (a) prove why a fee was or was not charged, (b) win local search demand in Arabic and English, (c) give every provider a free, measurable way to bring their own patients, and (d) measure acquisition cost against what Kiorex actually earns.
+
+<!-- kx-diagram: growth-engine-flow -->
 
 **Baseline before Phase 1 (24 Nov 2026 discovery).** The clinic stamps `Appointment.bookingSource` (`FRONT_DESK, PHONE, WALK_IN, CLINIC_LINK, KIOREX_MARKETPLACE, KIOREX_WHATSAPP, INTEGRATION, IMPORT`) and `isNewPatientAtBooking` (24-month lookback). `isCommissionChargeableBooking()` returns false for `CLINIC_LINK`, for non-new patients and for any other source. The charge engine is idempotent per appointment. Booking slugs and a public page `/b/:slug` exist. A notification layer with purposes, consent and quiet hours exists (KX-24). A deterministic WhatsApp booking state machine exists. A supply-side doctor-to-doctor referral programme exists in the clinic. The patient web is a client-only Vite single-page app with no sitemap, robots, structured data or slugs.
 
@@ -106,6 +107,8 @@ Kiorex earns EGP 40 only when an attended new patient arrives through the market
 
 ## 04 Capability map and phases
 The Today column is the verified status in Rev 2.4 (C12 onwards are Roadmap and absent). IDs are the proposed requirement IDs (`GRW-P1-x` are the work packages of KX-33).
+
+<!-- kx-diagram: roadmap-waves -->
 
 | # | Capability | Phase | Today | Work package | Priority |
 |---|---|---|---|---|---|
@@ -300,3 +303,13 @@ Must: C1 to C6, C9, C10. Should: C7, C8, Phase 2 items. Could: C11, Phase 3 and 
 
 ## 13 Cross-references
 KX-28 (design), KX-29 (go-to-market), KX-30 (attribution and money), KX-31 (SEO and ASO), KX-32 (analytics definitions), KX-33 (roadmap and hand-off); KX-01 ADR-041 to ADR-057; KX-03 KXMBK10 (widget); KX-05 (clinic); KX-09 (contracts 1.10.0); KX-12 BR12 and the new patient-referral rule; KX-13 (inputs); KX-14 (go-to-market); KX-15 (compliance); KX-24 (notification purposes). Source reports: `_docs/growth/GROWTH_DISCOVERY.md`, `GROWTH_ARCHITECTURE_DECISIONS.md`, `GROWTH_COMPETITIVE_RESEARCH.md`, `GROWTH_PHASE1_WORK_PACKAGES.md`.
+
+## Rev 2.7 finishing update: wave 9 close-out and the money path (25 Nov 2026)
+
+Status: **As-built locally**, mock providers, launch-locked where money, marketing or a model is involved, **not deployed**. The capability map in section 04 and the requirements in section 05 are unchanged by this update.
+
+- **Wave 9 is closed.** Hardening (P3-H), loyalty (P4-D), the Pharmacy and Lab tabs in the staff app **Kiorly** (P4-B3), the credit and promotion cards in the staff app, and the gap closure (GC-5) are recorded in KX-33 sections 05 and 10. The final close-out gate: three consecutive full ordered end-to-end runs (suites 01 to 56, runs G2 to G4) on one freshly cloned and built private stack, 552 tests passed, 0 failed, 37 skipped by design in each run (the first run of that stack failed once on a typo in the lane's own test change; the 30-security suite has its own production-mode stack).
+- **Where a patient's money moves.** The checkout order is sponsored discount, corporate benefit, patient credit, held deposit, then card, and the card keeps at least one minor unit. Payment itself runs through the Kiorly Pay layer (KX-09): licensed payment partners process and settle funds and Kiorly never holds funds in the design. Corporate benefit is wired into Kiorex Pay (payments runbook section 10, suite 39b); `growth.corporate` stays launch-locked, so no live deposit is reduced.
+- **Commission collection** is a separate flow from attribution: attribution decides whether a fee exists, the Clinic charges it, and Kiorex collects it in one of three modes (KX-30 section 15.8).
+
+> **Needs human** Every gate in KX-33 section 06 still needs a human record before any money, messaging or model feature opens: counsel for credit, referral and promotions; accounting for VAT and `postToPayLedger`; the DPO for consent and the assistant.

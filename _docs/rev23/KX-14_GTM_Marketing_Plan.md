@@ -47,6 +47,8 @@ Two audiences, two promises, one proof point.
 ## 03 Beachhead: density beats coverage
 A marketplace is liquid neighbourhood by neighbourhood. We launch in two Cairo/Giza micro-clusters and only expand when liquidity thresholds are met.
 
+<!-- kx-diagram: gtm-sequence -->
+
 | Cluster (candidates) | Why |
 |---|---|
 | Nasr City + Heliopolis | Highest lab and clinic density in Cairo (POI data: Nasr City and Heliopolis lead lab counts) |
@@ -165,3 +167,17 @@ Rev 2.4 verification (24 Nov 2026): this volume was re-read against the reposito
 
 ## Rev 2.7 channel tooling update (25 Nov 2026; plan and budgets unchanged)
 The channel plan above is unchanged. Tooling that now exists locally (mocked, not deployed): campaign records with UTM builder and budgets, provider share cards and free-time cards, Pharmacy and Lab links, referral invites (coupon mode, amounts zero), lifecycle journeys and an automation builder (sends locked), the WhatsApp assistant (mock model), channel performance and cohort views, experiments on non-clinical surfaces, and corporate programmes (locked, terms by contract only). No budget, price or target number in this volume was changed.
+
+## Rev 2.7 finishing update: channel readiness (25 Nov 2026; plan and budgets unchanged)
+
+The plan, the clusters and the budgets above are unchanged. What a channel needs before it can run for real, from the integration go-live runbook and the messaging runbook (all channels are mock today and no vendor has been called):
+
+| Channel in the plan | Needs before real use | Owner |
+|---|---|---|
+| WhatsApp (assistant, reminders, campaigns) | Meta business verification, a WhatsApp Business account, Arabic and English templates, webhook secret (NH-WA); marketing templates are a separate approval | Founder, vendor |
+| SMS (OTP, reminders) | Egyptian sender registration or Twilio (NH-SMS); the Egyptian aggregator is a configurable shape, not a tested integration | Founder |
+| E-mail | Domain verification, DKIM, SPF, DMARC and leaving the SES sandbox (NH-EMAIL) | Founder, engineering |
+| Push | Firebase project, APNs key and EAS credentials (NH-PUSH) | Founder |
+| Payments for deposits | Paymob, Fawry and InstaPay onboarding and settlement rails; fee values (NH-PSP) | Founder, counsel |
+
+Rules that shape the channel plan: marketing never fails over to another channel; quiet hours apply per market (default 21:00 to 09:00 Cairo); a real send needs three switches (environment mode, a second person's approval in the Integrations Control Center, credentials by reference).

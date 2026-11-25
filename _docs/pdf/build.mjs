@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { parseDoc, makeMd } from './lib/md.mjs';
 import { buildHtml } from './lib/template.mjs';
 import { launch, renderPdf } from './lib/pdf.mjs';
+import { designCss } from './lib/design/index.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '../..');
@@ -36,7 +37,8 @@ jobs = jobs.filter((d, i, a) => a.findIndex((x) => x.code === d.code && x.file =
 fs.mkdirSync(opt.out, { recursive: true });
 const tmp = path.join(opt.out, '.tmp'); fs.mkdirSync(tmp, { recursive: true });
 
-const css = fs.readFileSync(path.join(here, 'assets/style.css'), 'utf8');
+const css = designCss();
+const micro = fs.readFileSync(path.join(repo, '_brand/kiorex-micro.svg'), 'utf8').replace(/<\?xml[^>]*\?>/, '').trim();
 const js = fs.readFileSync(path.join(here, 'assets/enhance.js'), 'utf8');
 const md = makeMd();
 const d0 = new Date(); const built = `${d0.getFullYear()}-${String(d0.getMonth() + 1).padStart(2, '0')}-${String(d0.getDate()).padStart(2, '0')}`;
@@ -56,11 +58,12 @@ for (const doc of jobs) {
     const outFile = path.join(opt.out, doc.file + '.pdf');
     const r = await renderPdf(browser, {
       htmlFile, outFile, enhanceCfg: { code: doc.code, dividers: opt.dividers },
+      chrome: { code: doc.code, title: doc.title, rev: parsed.meta.revisionLabel || 'Rev 2.3', mark: micro },
       meta: { title: `${doc.code} ${doc.title}`, subject: doc.subtitle || doc.title, keywords: [doc.code, doc.group, 'Kiorex', ...(parsed.meta.tags || [])] },
     });
     if (!opt.keepHtml) fs.rmSync(htmlFile, { force: true });
     const kb = (r.bytes / 1024).toFixed(0);
-    console.log(`OK    ${doc.code}  ${String(r.pages).padStart(3)} pages  ${kb.padStart(5)} KB  ${((Date.now() - t0) / 1000).toFixed(1)}s  ${doc.file}.pdf${r.warnings.length ? `  [${r.warnings.length} warning(s)]` : ''}`);
+    console.log(`OK    ${doc.code}  ${String(r.pages).padStart(3)} pages  ${kb.padStart(5)} KB  ${((Date.now() - t0) / 1000).toFixed(1)}s  ${doc.file}.pdf${r.breaks ? `  (${r.breaks} heading break(s))` : ''}${r.warnings.length ? `  [${r.warnings.length} warning(s)]` : ''}`);
     for (const w of r.warnings) console.log('      warn: ' + w);
     results.push({ code: doc.code, status: 'ok', pages: r.pages, kb: +kb, warnings: r.warnings, source: srcRel, file: doc.file + '.pdf' });
   } catch (e) {

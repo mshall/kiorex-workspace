@@ -41,6 +41,8 @@ Figure 1 (chart): Payable vs Kiorex patients (EGP/month). Pro plan, EGP 999 annu
 - For Kiorex: commission revenue replaces subscription revenue only when we deliver; our revenue per provider rises with marketplace performance.
 - For competitors: a stacked model cannot match it without cannibalising its own subscription line.
 
+<!-- kx-diagram: revenue-engines -->
+
 ## 03 Price ladders by product
 ### Kiorly Clinic (as built, Egypt) — doctors, dentists, physiotherapists
 
@@ -157,3 +159,21 @@ Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned)
 | Add-ons and usage (section 06) | A prepaid pack bought from credit consumes currency from the wallet and grants units in a separate unit ledger; prices need a CEO decision (H-30); nothing is priced here |
 | Governance (section 07) | Credit grants above the dual-approval threshold need two Super Admins (CR-05, As-built); high-value sponsored promotions need maker-checker; money-policy changes take effect at least 7 days after approval |
 Open decisions: maximum open patient balance, expiry months, goodwill limits, onboarding and bonus amounts, bundle prices, accounting for breakage. Regulatory dependency: counsel on patient CREDIT mode and refund credit (launch guide 11.24).
+
+## Rev 2.7 finishing update: subscription behaviour, commission collection and Kiorly Pay (25 Nov 2026)
+
+Status: **As-built locally** (code plus passing tests, mock billing and payment providers). **No price, fee or amount is set or changed in this update.** The higher-of rule, the fee design and every price ladder above are as before; the ladders stay Proposed until the founder confirms them.
+
+<!-- kx-diagram: subscription-lifecycle -->
+
+| Topic | Behaviour that now exists in all three products | Effect on pricing |
+|---|---|---|
+| Renewal | A paid plan renews automatically by default and the saved token is charged; failure retries on D+1, D+3 and D+7, then dunning | None on the price; it makes the monthly invoice automatic |
+| Lite instead of lockout | Switching renewal off, or a lapse that dunning cannot fix (default 15 days after the due date), moves the organisation to the free Lite plan. Nothing is deleted; modules of the previous plan stay readable for a grace window (default 30 days) | The free Lite plan is part of the ladder; its limits are catalogue rows, not code |
+| No catalogue price yet | Where the catalogue has no price, the period rolls without a charge and the event `renewed_without_charge` records it; reactivation needs an active price (`NO_ACTIVE_PRICE`, "price to be confirmed") | Prices must be entered by a human before any real renewal charge (NEEDS_HUMAN) |
+| Proration | Upgrade timing defaults exist; `creditUnusedOnDowngrade` is stored but no credit is granted until the founder decides (LG-SUB-3) | Open decision |
+| Commission collection | Kiorex collects the per-attended-new-patient fee through the provider's chosen payment partner in one of three modes: net from payout, saved-method charge, or invoice. Provider credit is drawn first, then the invoice; the higher-of rule is unchanged | None on the fee; the mode is configuration, approved by a second person |
+
+<!-- kx-diagram: commission-modes -->
+
+> **Needs human** PSP fee values are not set and unset fees are never ranked cheap (LG-INT-PAY-3). Whether commission collection or the plan price covers the Lite organisation's Kiorex fee minimum (SB-05, Clinic) is a founder decision. Counsel decides the funds flow of collection (LG-COM-3).

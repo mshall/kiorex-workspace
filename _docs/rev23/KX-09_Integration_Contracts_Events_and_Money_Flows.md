@@ -50,6 +50,8 @@ Webhooks Kiorly → Kiorex: X-Kiorly-Event-Id, X-Kiorly-Signature over body {eve
 
 Optional IP allow-list per client. Secrets rotate every 90 days with overlap (two active secrets). Platform admin UI for client issuance is a Kiorly follow-up. The same client serves both Kiorly editions (Clinic and Nurse).
 
+<!-- kx-diagram: contract-flow -->
+
 ## 03 Command catalogue (Kiorex → Kiorly Clinic)
 
 | Command | Endpoint | Idempotency | Errors to handle |
@@ -143,6 +145,8 @@ Timeout path: query by reference before any retry; never mint a new key.
 
 Three separate ledgers, never commingled: Kiorly SaaS billing, provider patient revenue, Kiorex Pay; the credit ledgers below are additional and separate (Proposed for the patient side).
 
+<!-- kx-diagram: money-flow -->
+
 Figure — Deposits flow through Kiorex Pay to providers; Kiorly's own revenue comes from the monthly higher-of invoice.
 
 - Patient deposit (deposits · prepayments) → capture via PSP (Paymob · Fawry) → Kiorex Pay → payout (weekly) → Provider (Kiorly patient revenue; postRevenue)
@@ -182,6 +186,8 @@ RULE: Commission charges are created by Kiorly, not Kiorex — the provider syst
 - Consumer-driven contract tests: Kiorex's expectations file runs in Kiorly CI (already shipped: kiorex-consumer-contract.json) and Kiorly's spec in Kiorex CI (NH019).
 - Event schema registry in kiorex-contracts/events/*.schema.json; payloads validated at dispatch in non-production.
 - Deprecations announced in the Kiorly Docs hub and the ops console banner.
+
+<!-- kx-diagram: repo-map -->
 
 ## 08 Contract versions and the notify entry (23 Nov 2026)
 `@kiorex/contracts` is consumed by all products from a vendored tarball until publishing to GitHub Packages is approved (FD-20).
@@ -234,3 +240,31 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Telehealth (gap).** The additive `telehealth` block on Clinic events and the `VIDEO` location are consumed by Kiorex but are not in `@kiorex/contracts` 1.11.0; Kiorex tolerates missing and extra fields. Open: publish the schemas.
 - **Money flows are unchanged.** Evidence can only remove a fee; the fee, the dispute window and the monthly billing rule are as in KX-12.
 - Not verified: per-organisation partner credentials for evidence and lookup calls (a shared Clinic secret is used).
+
+## Rev 2.7 finishing update: Kiorly Pay unified layer and commission collection (25 Nov 2026)
+
+Status: **As-built locally** (code plus passing tests, mock providers). Nothing is deployed and no payment vendor has ever been called. Sources: `kiorex-platform/Docs/PAYMENTS_UNIFIED_LAYER.md`, `INTEGRATION_RUNBOOK_PAYMENTS.md` (section 11 and "Commission collection (COM-1)"), `_docs/INTEGRATION_GO_LIVE_RUNBOOK.md`. Section 06 above is unchanged: the three ledgers stay separate and Kiorex never takes a share of provider patient revenue.
+
+> **Decision** Founder principle, 25 Nov 2026: Kiorly provides software (orchestration, routing, reconciliation, reporting); licensed payment partners process and settle funds; **Kiorly never holds funds in the design.**
+
+<!-- kx-diagram: pay-unified -->
+
+| Phase | Delivered (local, mocked) | Not delivered |
+|---|---|---|
+| 1 One adapter contract | Shared package `@kiorex/pay-contract` 0.1.0 (repository `kiorex-pay-contract`, pure TypeScript, no network): neutral adapter, event, status and capability types wire-compatible with `PspEvent`; bank IPN adapter (signed webhook with replay window, CSV or JSON ingest, reversals, dedupe, masked payer); config-only wallet skeleton on Paymob wallet methods. Vendored tarball in Kiorex and Clinic | Bank layout (LG-INT-PAY-14), wallet ids (LG-INT-PAY-15); no direct Vodafone Cash adapter |
+| 2 Reconciliation, disputes, matching | IPN rows matched to Kiorex payments and Clinic invoices with a confidence score; AUTO only when reference AND remaining amount are exact and the runner-up is clearly behind (confidence 0.9, margin 0.1, `PAY_MATCHING_POLICY`); otherwise a finance-only review queue; reversals never auto-apply | Matching of vendor settlement lines to invoices; receipts as a match source (no ingest endpoint) |
+| 3 Links and QR | Signed, expiring (60 s to 7 days), amount-locked, single-use links on Kiorex and Clinic; QR plan `PROVIDER` only if an adapter supports a vendor QR, otherwise `LINK` | No vendor QR adapter (LG-INT-PAY-16); patient screens for pay links |
+| 4 Routing | Per-organisation preference (ordered and blocked list, audited); success-rate-aware ordering (Wilson lower bound over 30 days, `PAY_ROUTING_POLICY`); an organisation pin loses only below 50 percent lower-bound success | Fee values (LG-INT-PAY-3); the booking deposit path does not use the ordered candidates yet |
+| 5 Reporting and fraud | Payment fraud scorer in SHADOW mode (no ban, no block), review queue, thresholds in maker-checker `PAY_FRAUD_THRESHOLDS`; roll-ups by platform, organisation, PSP and day (finance only; JSON, CSV, PDF) and Clinic branch roll-ups | Kiorex PDF is Latin only (CSV carries Arabic); no Clinic payment fraud scorer |
+| POS and terminals | Design note and the `TerminalAdapter` interface only: a terminal is a payment channel and the card never touches Kiorly | No vendor, no code |
+
+**Commission collection (COM-1, As-built locally).** The Clinic stays the system of record for the charge and the decision. It reports `COMMISSION_CHARGE_CREATED`, `COMMISSION_CHARGE_REVERSED` and the additive `COMMISSION_CHARGE_STATUS_CHANGED` (confirmed, disputed, waived); Kiorex mirrors each as a `CommissionClaim`. A run is unique per organisation and period (idempotency key `com:<org>:<cutoff>`); older uncollected claims carry over and are never lost. Run state is pushed back to the product (`POST /commission-collections`, HMAC, outbox) so the provider sees the same figures.
+
+<!-- kx-diagram: commission-modes -->
+
+| Console and roles | Rule |
+|---|---|
+| Ops console "Commissions" | Ledger, collections, payout deductions, aging, disputes, reconciliation, organisations and configuration; API `/api/v1/admin/commissions/*` |
+| Roles | `super_admin` and `finance` read, export (audited) and operate; only `super_admin` proposes or approves configuration and chooses a provider; `ops_admin` alone sees no money |
+
+> **Needs human** Counsel decides the funds flow of commission collection (LG-COM-3) and of the whole Pay layer (LG-INT-PAY-19). Matching and fraud thresholds need calibration and an owner (LG-INT-PAY-17, LG-INT-PAY-18). The vendor collection API is not wired (LG-COM-4). `LG-COM-1` to `LG-COM-10` must be answered before any live run.

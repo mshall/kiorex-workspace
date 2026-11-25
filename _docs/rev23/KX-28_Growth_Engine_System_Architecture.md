@@ -27,7 +27,6 @@ Tags: Architecture · Components · Sequences · Data model · Contracts 1.10.0 
 ## What changed in Rev 2.7
 New section 2.3 records what Phases 2, 3 and 4 added to the architecture (modules, tables and migrations, contracts, flags, configuration kinds, events, ports, scheduled jobs, ops console); the Phase 1 'Not built' row is kept as history and superseded; the assistant and rewards sequences are relabelled from Roadmap to As-built locally; section 08 lists the unreleased contracts needs; section 13 describes market by configuration as built. Nothing is deployed.
 
-
 ## Contents
 01 Summary · 02 As-built baseline · 03 Logical components · 04 Deployment · 05 Ownership and modules · 06 Sequence diagrams · 07 Data model · 08 Events and contracts 1.10.0 · 09 Security and threat model · 10 Privacy impact assessment · 11 SLIs and SLOs · 12 Runbooks · 13 Multi-market configuration · 14 Failure modes and disaster recovery · 15 Acceptance, KPIs, risks, dependencies, cross-references · Rev 2.7: section 2.3 (Phases 2 to 4 as-built) and 8.1 (contracts status)
 
@@ -55,6 +54,8 @@ Every statement in this volume carries one of these labels, in a column, a prefi
 
 ## 01 Summary
 Growth is a module family inside the two modular monoliths, not a new system. Kiorex owns demand-side evidence (touchpoints, visitor identity under consent, the attribution decision, SEO pages, campaigns, referral, rewards, lifecycle messaging, analytics). Kiorly Clinic owns provider-owned assets and the money outcome (links, QR, widget settings, appointment attribution fields, the commission decision, charges and disputes). The two exchange one signed attribution block on the existing booking call. Queues are the existing Postgres outbox; rate limiting is the existing Postgres limiter.
+
+<!-- kx-diagram: system-context -->
 
 | Principle | Design consequence | Source |
 |---|---|---|
@@ -117,12 +118,12 @@ Evidence: the as-built records of waves 5 to 8 in `_docs/growth/GROWTH_PHASE2_4_
 | Clinic schema | `20261203100000_growth_provider_marketing_v2` (share cards, recommendation state, verification update requests, statement exports), `20261217100000_growth_provider_credit_v2` (categories, append-only trigger, idempotency keys, promotion holds), `20270107120000_growth_sponsored_promotions` (promotion, versions, reviews, budget ledger, reservations), `20270128100000_growth_corporate_b2b` (`ProviderB2BReferral`) | `clinics-management/apps/api/prisma` (branch `kiorex`) | As-built |
 | Pharmacy and Lab schema | `20261203110000_growth_provider_links` and `20270107110000_growth_acquisition_fact` in each repository (links, daily counters, optional acquisition columns) | `kiorly-pharmacy`, `kiorly-lab` | As-built |
 | Modules (Kiorex API) | `growth/campaigns`, `referral`, `rewards`, `lifecycle`, `integrations`, `experiments`, `attribution-models`, `fraud`, `seo-automation`, `automation`, `recommendations`, `cohorts`, `markets`, `cross-product`, `corporate`, `products`; `ai-gateway/assistant`; `market` (registry) | `kiorex-platform/apps/api/src` | As-built |
-| Ports (module boundaries) | `REFERRAL_PORT`, `REWARDS_PORT`, `SPONSORED_DISCOUNT_PORT`, `SPONSORED_PAY_PORT`, `PRODUCT_GROWTH`, `FRAUD_SCORER`, `SEO_SITE`, `SEO_QUALITY`, `CORPORATE_BENEFIT_PORT` (ready, not called by Pay), `CROSS_PRODUCT_EVENTS`. Booking, Pay, partners and the public site reach growth through ports only; a boundary test enforces it | `growth-ports-public.ts` | As-built |
+| Ports (module boundaries) | `REFERRAL_PORT`, `REWARDS_PORT`, `SPONSORED_DISCOUNT_PORT`, `SPONSORED_PAY_PORT`, `PRODUCT_GROWTH`, `FRAUD_SCORER`, `SEO_SITE`, `SEO_QUALITY`, `CORPORATE_BENEFIT_PORT` (called by Kiorex Pay since the Pay lane; payments runbook section 10), `CROSS_PRODUCT_EVENTS`. Booking, Pay, partners and the public site reach growth through ports only; a boundary test enforces it | `growth-ports-public.ts` | As-built |
 | Scheduled jobs | Campaign scheduler, reward expiry and referral qualification (30 minutes), lifecycle evaluation, attribution models rollup (hourly), experiment evaluator (hourly), cohort job (daily), fraud calibration (daily) and fairness (weekly), SEO automation (nightly), product-decision repair (15 minutes), corporate hold release and reconciliation (hourly), credit reconciliation (daily). Each writes a `GrowthJobRun` heartbeat | `growth/*/*.job.ts` | As-built |
 | Money rules in the database | Append-only ledgers (rewards, provider credit, corporate benefit, promotion budget), balance and cap triggers, one reservation per booking, CHECKs for k >= 10 on cohort and path tables | migrations | As-built |
 | Separation guards | Patient credit never writes the Clinic wallet; corporate benefit writes neither; the commission link of products is inert; reporting models never read or write a decision; experiments cannot reach safety, money or consent surfaces (tests assert each) | tests | As-built |
 | Ops console | 34 growth sections registered up front (campaigns, approvals, referrals, rewards, review queue, lifecycle, automation, recommendations, assistant, integrations, channel performance, experiments, attribution models, cohorts, markets and wizard, fraud, SEO, cross-product, corporate, loyalty) | `apps/ops/src/pages/growth` | As-built (loyalty: wave 9) |
-| Not built | Corporate benefit in Pay and checkout; real WhatsApp interactive buttons; real model, real ad, search-console and store adapters against a vendor; second data cell; contracts 1.12.1 to 1.14.0 publication | | Roadmap or human |
+| Not built | The Clinic reading `tender` from Kiorex; real WhatsApp interactive buttons; real model, real ad, search-console and store adapters against a vendor; second data cell; contracts 1.12.1 to 1.14.0 publication | | Roadmap or human |
 
 ## 03 Logical components
 Figure 1 — Logical components and ownership. As-built for the Phase 1 components (Rev 2.4); nothing in it is deployed.
@@ -218,6 +219,8 @@ Module boundaries: growth imports only `*-public.ts` barrels of other modules; `
 
 ## 06 Sequence diagrams
 Labels per diagram (Rev 2.4): 6.1 to 6.4 As-built; 6.5 Roadmap; 6.6 consent As-built, rewards Roadmap.
+
+<!-- kx-diagram: growth-engine-flow -->
 
 ### 6.1 Referral-to-booking attribution
 Figure 3 — A patient arrives through a provider link and books through the widget (As-built; e2e 25 and 27).
@@ -530,3 +533,16 @@ Backup and restore targets are those of KX-21; growth adds no new storage tier. 
 - Risks: schema bottleneck (single owner for the Kiorex growth migration `20261128100000_growth_core` and the clinic migration `20261128110000_growth_links_attribution`), SSR on the shared image affecting API latency (mitigation: role split and flag), CDN cost, thin-page abuse, legal drift.
 - Dependencies: contracts 1.10.0; hosts and DNS; counsel; store accounts.
 - Cross-references: KX-08 §host security (amend with the widget exception), KX-09 (contracts), KX-10 (security), KX-19 (hosts), KX-21 (CDN module), KX-24 (consent and sends), KX-26 (system diagrams).
+
+## Rev 2.7 finishing update: Pay wiring, collection and operations control (25 Nov 2026)
+
+Status: **As-built locally**, mock providers, not deployed.
+
+| Area | As-built fact | Where | Label |
+|---|---|---|---|
+| Corporate benefit in Pay | `CORPORATE_BENEFIT_PORT` is called by Kiorex Pay. Tender order: sponsored discount, corporate benefit (bounded by the account ceiling, the member cap and the per-visit maximum), patient credit, then card (never below one minor unit). Refund and cancel return the corporate share pro rata; a forfeited deposit returns it unless `PAYMENT_CORPORATE_FORFEIT=keep`. Own append-only ledger, own reconciliation | `INTEGRATION_RUNBOOK_PAYMENTS.md` section 10; e2e suite 39b | As-built locally; `growth.corporate` launch-locked |
+| Commission collection | A claim ledger mirrored from the Clinic, one run per organisation and period, three collection modes, append-only timeline, reconciliation; no pause of listing, booking, plan or care | `INTEGRATION_RUNBOOK_PAYMENTS.md` "Commission collection (COM-1)" | As-built locally; counsel LG-COM-3 |
+| Kiorly Pay layer | One neutral adapter contract (`@kiorex/pay-contract` 0.1.0, vendored tarball), per-organisation routing, matching, links, fraud scorer in SHADOW mode | `PAYMENTS_UNIFIED_LAYER.md`; KX-09 | As-built locally |
+| Integrations Control Center | Ops page `/integrations`: mode, approved mode, drift, credentials present, last check, circuit, webhook URL, variable names, runbook link; a real call needs environment mode, a second person's approval and credentials by reference | `INTEGRATION_GO_LIVE_RUNBOOK.md` | As-built locally |
+
+> **Needs human** Real vendor access for payments, messaging, ads, search console, stores and the language model needs accounts and approvals that only humans can create (go-live runbook, blocking items NH-PSP, NH-WA, NH-SMS, NH-EMAIL, NH-PUSH, NH-ADS, NH-LLM, NH-STORE).

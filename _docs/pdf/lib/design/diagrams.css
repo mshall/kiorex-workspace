@@ -1,0 +1,8 @@
+/* Diagram frame (figure.kxfig) and inline SVG text. */
+figure.kxfig{ margin:4mm 0 5mm; border:.7pt solid var(--n200); border-radius:3mm; background:#fff; padding:0; overflow:hidden; break-inside:avoid }
+.kxfig-head{ display:flex; align-items:center; gap:3mm; padding:2.4mm 4mm; background:var(--acc-soft); border-bottom:1.2pt solid var(--acc); break-after:avoid }
+.kxfig-head .tag{ font:700 6.6pt/1 var(--f-body); letter-spacing:.14em; text-transform:uppercase; color:#fff; background:var(--acc); padding:1.3mm 2.4mm; border-radius:20mm }
+.kxfig-title{ font:600 10.6pt/1.2 var(--f-head); color:var(--ink) }
+.kxfig-body{ padding:3.2mm 3mm 1mm }
+.kxfig-body svg.kxd{ display:block; width:100%; height:auto; max-height:218mm }
+.kxfig-cap{ font:400 7.8pt/1.45 var(--f-body); color:var(--n600); padding:1.2mm 4mm 3mm; border-top:0 }

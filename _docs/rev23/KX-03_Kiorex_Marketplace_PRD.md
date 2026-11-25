@@ -117,6 +117,9 @@ IDs are stable. Priority: M = MVP, P2 = phase 2, P3 = later.
 | KXMPAY07 | Unsafe-aborted home visit: deposit held for ops review, never auto-forfeited. | P2 |
 | KXMPAY08 | (Proposed, ADR-048, not built) Refund destination chosen by the patient at refund time: "refund to original payment method" preselected by default, or "keep as credit" as an option, never forced; irreversible once executed; only when the credit flags are on. | P2 |
 | KXMPAY09 | (Proposed, not built) Checkout shows every line in the order sponsored discount (if any), credit, deposit held, card; credit applies to a deposit or prepayment. | P2 |
+
+<!-- kx-diagram: money-flow -->
+
 ### Notifications (KXMNT)
 | ID | Requirement | Pri |
 |---|---|---|
@@ -260,6 +263,8 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 ## 10 Patient credit, coupons and sponsored discounts (Proposed, 24 Nov 2026)
 Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned), **As-built**, **Regulatory dependency**. **As-built note (Rev 2.7, 25 Nov 2026):** the patient credit ledger, coupon mode (default), credit mode, refund-as-credit with the original payment method preselected, family credit and goodwill are **built locally in the Kiorex platform and launch-locked** (flags `growth.patient_credit`, `growth.refund_as_credit`, `growth.family_credit`, `growth.support_goodwill`; all amounts zero until a human sets them); the Clinic wallet is untouched by them. Not deployed; counsel and accounting gates open (KX-30 section 15). Design: KX-30 section 14, ADR-048, packages P2-B2 and P2-S. Patient CREDIT mode (any stored balance) is **launch-locked and counsel-gated; coupon mode is the default.**
 
+<!-- kx-diagram: credits-ledgers -->
+
 | Capability | Behaviour the patient sees |
 |---|---|
 | Rewards | After a friend's first completed visit (or your own first completed visit) you receive a voucher (default) or credit with an expiry date; nothing on sign-up or an unfinished booking |
@@ -270,3 +275,19 @@ Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned)
 | Campaign credit | Time-limited credit usable for certain visit types (and an allowlisted set of specialties) |
 | Provider-sponsored discount | Some clinics fund a discount on their own visit fee; it is labelled "sponsored by <clinic>" with an end date, never a Kiorex discount, and never applies to drugs, tests or procedures |
 Rules: closed loop; no withdrawal, transfer, cash conversion or top-up; expiry and caps on every grant; issuance only after a verified completed visit; reversal when the qualifying booking is refunded or cancelled; never Kiorex revenue. Status of each: Proposed.
+
+## Rev 2.7 finishing update: the Kiorly Pay layer under Kiorex Pay (25 Nov 2026)
+
+Status: **As-built locally** (code plus passing tests, mock providers). Nothing is deployed and no payment vendor has been called. Detail and the five phases: KX-09 (Kiorly Pay unified layer); the money-flow diagram above shows who moves money. **Kiorly provides software; licensed payment partners process and settle funds; Kiorly never holds funds in the design.**
+
+| Marketplace payment capability | What exists now | Not delivered or open |
+|---|---|---|
+| Bank IPN as a payment partner | `bank_ipn` with its own integration key `BANK_IPN`, signed webhook `/pay/webhooks/bank_ipn` with a replay window, or a daily CSV or JSON file upload; reversals, dedupe, masked payer | The bank's real layout and signature (NEEDS_HUMAN LG-INT-PAY-14) |
+| Wallets | Paymob wallet methods through `rail: wallet` and wallet integration ids; without an id the checkout is refused with NEEDS_HUMAN | The ids are created at Paymob by the founder (LG-INT-PAY-15); no direct Vodafone Cash adapter |
+| Payment links | Signed, expiring (60 s to 7 days), amount-locked, single-use links; public page `/pay/l/:token`; a failed checkout gives the link back | No vendor QR adapter: a QR carries our hosted link and is never presented as a bank-app QR (LG-INT-PAY-16) |
+| Routing | Per-organisation order and block list; strategy preference, success or cost on a 30-day Wilson lower bound | The unified link checkout uses the ordered candidates; the booking deposit path still uses the plain candidate list. Fee values are not set (LG-INT-PAY-3) |
+| Matching and review | IPN rows matched to Kiorex payments with a confidence score; AUTO only when reference and remaining amount are exact; otherwise a finance-only review queue | Matching of vendor settlement lines to invoices is the exact reconciliation, not the fuzzy queue |
+| Fraud scoring | A scorer in SHADOW mode (velocity, card testing, amount anomaly, repeated failures, fingerprint reuse); modes SHADOW and FLAG only | No ban and no block exists; thresholds need calibration (LG-INT-PAY-17) |
+| Corporate benefit in checkout | Tender order: sponsored discount, corporate benefit, patient credit, then card (never below one minor unit); the Clinic is told the gross deposit and the split; refund and cancel return the corporate share pro rata | `tender.corporateBenefitMinor` is an additive contract change that needs the contracts bump (LG-INT-PAY-9); the Clinic does not read `tender` yet |
+
+> **Needs human** Funds flow, licensing and the settlement account of the whole layer are for counsel and the Central Bank rules (LG-INT-PAY-19). This volume decides none of them.

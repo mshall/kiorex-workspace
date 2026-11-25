@@ -26,7 +26,8 @@ export async function launch() {
   return chromium.launch({ executablePath: findChromium(), headless: true, args: ['--font-render-hinting=none', '--disable-lcd-text', '--allow-file-access-from-files'] });
 }
 
-export async function renderPdf(browser, { htmlFile, outFile, meta, enhanceCfg, log }) {
+// One layout pass: load, enhance, paginate with Paged.js. Returns the live page and the heading ids that ended a page with nothing after them.
+async function layout(browser, { htmlFile, enhanceCfg }) {
   const ctx = await browser.newContext({ viewport: { width: 1000, height: 1400 } });
   const page = await ctx.newPage();
   const consoleErrors = [];
@@ -37,7 +38,6 @@ export async function renderPdf(browser, { htmlFile, outFile, meta, enhanceCfg, 
   if (hasMermaid) await page.addScriptTag({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '../node_modules/mermaid/dist/mermaid.min.js') });
   const enh = await page.evaluate((cfg) => window.kxEnhance(cfg), enhanceCfg);
   await page.evaluate(() => document.fonts.ready);
-  // paginate with Paged.js
   await page.evaluate(() => { window.PagedConfig = { auto: false }; });
   await page.addScriptTag({ content: pagedSource() });
   const pages = await page.evaluate(async () => {
@@ -46,17 +46,53 @@ export async function renderPdf(browser, { htmlFile, outFile, meta, enhanceCfg, 
     await document.fonts.ready;
     return flow.total;
   });
+  // headings (and Diagram frames' captions) stranded at the foot of a page: nothing of their section follows on the same page
+  const orphans = await page.evaluate(() => {
+    const out = [];
+    const pgs = [...document.querySelectorAll('.pagedjs_page')];
+    pgs.forEach((pg, pi) => {
+      if (pi === pgs.length - 1 || pg.querySelector('.cover,.divider')) return;
+      const area = pg.querySelector('.pagedjs_page_content'); if (!area) return;
+      const ar = area.getBoundingClientRect();
+      const heads = [...area.querySelectorAll('h2,h3,h4')]; if (!heads.length) return;
+      const last = heads[heads.length - 1];
+      const unit = last.closest('.banner') || last;
+      const r = unit.getBoundingClientRect();
+      if (r.top - ar.top < 24) return;                       // already first on its page: moving it cannot help
+      const after = [...area.querySelectorAll('p,li,tr,figure,pre,.callout,.kpi,.caprow,.adrcard,svg,img,.flow,.edge')].filter((e) => !unit.contains(e) && e.getBoundingClientRect().top >= r.bottom - 2 && e.getBoundingClientRect().height > 2);
+      if (!after.length && last.id) out.push(last.id);
+    });
+    return out;
+  });
+  return { ctx, page, pages, enh, orphans, consoleErrors };
+}
+
+export async function renderPdf(browser, { htmlFile, outFile, meta, enhanceCfg, chrome }) {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const breakIds = [];
+  let L = null;
+  for (let pass = 0; pass < 4; pass++) {
+    if (L) await L.ctx.close();
+    L = await layout(browser, { htmlFile, enhanceCfg: { ...enhanceCfg, breakIds } });
+    const fresh = L.orphans.filter((id) => !breakIds.includes(id));
+    if (!fresh.length) break;
+    breakIds.push(...fresh);
+  }
+  const { ctx, page, pages, enh, consoleErrors } = L;
+  const chromeJs = fs.readFileSync(path.join(here, 'design/chrome.js'), 'utf8');
+  await page.addScriptTag({ content: chromeJs });
+  await page.evaluate((cfg) => window.kxChrome(cfg), chrome);
   const checks = await page.evaluate(() => {
-    const out = { overflow: [], blank: [] };
+    const out = { overflow: [], blank: [], orphan: [] };
     document.querySelectorAll('.pagedjs_page').forEach((pg, i) => {
       if (pg.querySelector('.cover,.divider')) return;
       const area = pg.querySelector('.pagedjs_page_content'); if (!area) return;
       const ar = area.getBoundingClientRect();
       area.querySelectorAll('table,figure,pre,.kpis,.callout,.flow,svg:not(.cover svg)').forEach((e) => {
         const r = e.getBoundingClientRect(); if (r.width && r.right > ar.right + 3) out.overflow.push(`p${i + 1}: <${e.tagName.toLowerCase()}> exceeds right margin by ${Math.round(r.right - ar.right)}px`);
+        if (r.width && r.bottom > ar.bottom + 3) out.overflow.push(`p${i + 1}: <${e.tagName.toLowerCase()}> exceeds bottom margin by ${Math.round(r.bottom - ar.bottom)}px`);
       });
       const t = (area.textContent || '').trim();
-      const named = pg.className;
       if (t.length < 3 && !area.querySelector('svg,img,.divider,.cover')) out.blank.push(i + 1);
     });
     return out;
@@ -74,7 +110,7 @@ export async function renderPdf(browser, { htmlFile, outFile, meta, enhanceCfg, 
   pdf.setCreationDate(new Date()); pdf.setModificationDate(new Date());
   const out = await pdf.save({ useObjectStreams: true });
   fs.writeFileSync(outFile, out);
-  return { pages: pdf.getPageCount(), bytes: out.length, warnings: [...(enh.warnings || []), ...checks.overflow, ...(checks.blank.length ? [`blank pages: ${checks.blank.join(',')}`] : []), ...consoleErrors.map((e) => 'page error: ' + e)], enh };
+  return { pages: pdf.getPageCount(), bytes: out.length, warnings: [...(enh.warnings || []), ...checks.overflow, ...(checks.blank.length ? [`blank pages: ${checks.blank.join(',')}`] : []), ...consoleErrors.map((e) => 'page error: ' + e)], enh, breaks: breakIds.length };
 }
 
 // Paged.js 0.4.3 does not repeat <thead> on continuation pages: patch rebuildAncestors to clone it into the continued table.

@@ -77,6 +77,8 @@ flowchart TB
 ```
 Rules: the layer performs no I/O; each product injects adapters, preference store, audit sink, dispatch store and clock; products share a package and schemas, never a service or a database. No product calls another product to send a message (cross-product facts travel as HMAC webhooks, KX-09).
 
+<!-- kx-diagram: messaging-channels -->
+
 | Layer | Owns | Does not own |
 |---|---|---|
 | Notification layer (package) | intent, templates and allowed params, PHI guard, routing and fallback, consent / opt-out / quiet-hours / WhatsApp-window gate, idempotency and dedupe, normalized status, audit shape | sending, vendor wire formats, queues, tables |
@@ -284,3 +286,25 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **WhatsApp assistant (ADR-051).** Built with a mock model and mock WhatsApp; interactive buttons are listed as text in the mock inbox; the Meta adapter must send real interactive messages (launch guide). Consent purpose `AI_PROCESSING` is needed; the deterministic machine does not yet invite the patient to grant it.
 - **Referral and reward notices** are not sent by the reward engine (it emits events the lifecycle layer can read). **Growth messaging stays in Kiorex Engagement only** (patient-delivery owner rule).
 - **Not verified:** real providers, Meta marketing template approval, the marketing licence, native-speaker review of the assistant templates.
+
+## Rev 2.7 finishing update: real-provider runbook, the Control Center and channel configuration (25 Nov 2026)
+
+Status: **built and tested against fakes only; no vendor has ever been called.** Fixtures are written from the vendors' published documentation, not recorded from a live account. Source: `kiorex-platform/Docs/INTEGRATION_RUNBOOK_MESSAGING.md` and `_docs/INTEGRATION_GO_LIVE_RUNBOOK.md`.
+
+<!-- kx-diagram: integration-control-center -->
+
+**Behaviour that is configuration, not code** (maker-checker kind `MESSAGING_CHANNELS`, ops console, Growth, Configuration; announcement text required; global payload with per-market overrides): provider order per channel (first is primary, the rest are tried on a provider-level failure), sender id and from address per market, secret references (paths only), retry and backoff, rate budgets, cross-channel failover order per message class, quiet hours per market, WhatsApp template names and categories, push channels, deep-link schemes and TTL. An empty configuration means "environment contract plus defaults".
+
+| Setting | Where | Default |
+|---|---|---|
+| Provider order within a channel | `channels.<CH>.providers` | the single environment provider |
+| Cross-channel order per class | `failoverOrder` | transactional: WhatsApp, SMS, e-mail; security: SMS, WhatsApp; reminder: WhatsApp, SMS; marketing: none |
+| Retry and backoff | `channels.<CH>.retry` | 2 retries, 250 ms to 5 s with jitter |
+| Rate budget | `channels.<CH>.rateBudget` | WhatsApp 40 per second and 1,000 new people a day, SMS 10 per second, e-mail 14 per second, push 200 per second |
+| Quiet hours | `quietHours`, global and per market | environment `QUIET_HOURS_*`; marketing uses `CONSENT_DEFAULTS` |
+
+**Ops tools** (Kiorex ops, Messaging, Channels and test send): status with missing variable names only, the webhook URL and verify token to register, **test send** (only to an address in `MESSAGING_TEST_ALLOWLIST`, five per hour, always audited), a read-only **connection check** (never a message), the WhatsApp template list. Webhook URLs: WhatsApp `/api/v1/messaging/webhooks/whatsapp`, SMS `.../webhooks/sms`, e-mail `.../webhooks/email`, one-click unsubscribe `.../messaging/unsubscribe/<token>`.
+
+> **Needs human** The blocking items are NH-SMS, NH-EMAIL, NH-WA and NH-PUSH in the go-live runbook (launch guide rows 5.1 to 5.4).
+
+**Honest gaps.** Meta, SES, SNS, Twilio, the aggregator, FCM, APNs and Expo behaviour is implemented from documentation; error codes, field names and limits are VERIFY items on the day. Cross-channel failover exists in the hub but the engagement dispatcher still sends one channel per row. The WhatsApp tier cap and rate budgets are counted per process. Unsubscribe adds a suppression but does not yet withdraw the patient's marketing consent record. Authentication (OTP) WhatsApp templates and the Clinic's own Meta number belong to their products.

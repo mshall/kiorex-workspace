@@ -28,7 +28,6 @@ Tags: Metrics · Definitions · Denominators · Revenue vs GBV · CAC · LTV · 
 ## What changed in Rev 2.7
 New section 4.2 (Phase 2 and 3 as-built: channel performance and blended CAC formulas, reporting models, cohorts and LTV estimates, experiment metrics, recommendation thresholds); section 07 cohort method now has an implementation; revenue definition unchanged from the Rev 2.7 amendment of W7 A4 (credits, sponsored amounts, corporate benefit and product decisions are not Kiorex revenue).
 
-
 ## Contents
 01 Summary · 02 Principles · 03 Data sources · 04 Definitions and denominators · 05 Formulas · 06 Funnel and canonical events · 07 Cohort method · 08 Bottom-up pressure test · 09 LTV and CAC guardrails · 10 Privacy and k-anonymity · 11 Acceptance, KPIs, risks, dependencies, open decisions · Rev 2.7: section 4.2 (Phases 2 and 3 as-built)
 
@@ -95,6 +94,8 @@ Under ADR-007 Kiorex earns EGP 40 only on an attended new patient, once per pati
 | ROAS | Kiorex revenue attributed to a campaign over its spend; not GBV | Click window per policy | Decisions |
 | MER | Total Kiorex revenue over total marketing spend in the period | All spend lines | Finance |
 | Cohort retention | Share of a registration-month cohort that books again within 30, 90 and 180 days | Retention is a product measure; it does not earn fees by itself | Events |
+
+<!-- kx-diagram: revenue-vs-gbv -->
 
 ### 4.1 As-built implementation notes (Rev 2.4)
 | Item | What the code does | Label |
@@ -214,3 +215,9 @@ Reading: the bottom-up of attended new patients is about 14 percent (month 6) an
 - Dependencies: Phase 1 rollups; Phase 2 spend entry and integrations; KX-13 re-base.
 - Open decisions: Pay margin per patient; who owns spend entry; confirmation of c2 and r from pilot.
 - Cross-references: KX-13 section 13, KX-28 (events), KX-30 (origin), KX-29 (scenarios).
+
+## Rev 2.7 finishing update: collection modes do not change a definition (25 Nov 2026)
+
+The definitions above are unchanged. Commission collection (KX-30 section 15.8) decides **how** the fee is collected: netted from a payout, charged to a saved method, or invoiced. Revenue stays "commission charges in CONFIRMED or BILLED, net of reversals and waivers"; collection lag and invoice aging are cash-flow items, and a reversal after collection (`CREDIT_DUE`) is a reversal.
+
+> **Needs human** Whether finance recognises revenue on the charge, the invoice or the collected cash is a finance decision. This reference does not choose it.
