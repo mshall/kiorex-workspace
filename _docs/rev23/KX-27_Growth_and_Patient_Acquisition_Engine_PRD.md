@@ -119,7 +119,7 @@ The Today column is the verified status in Rev 2.4 (C12 onwards are Roadmap and 
 | C8 | Deep links and market bootstrap | 1 | Partial: code and unit tests built; device verification, Team ID and SHA-256 open | GRW-P1-H | Should |
 | C9 | Consent management and preference centre | 1 | As-built (web, patient app); no banner on SSR pages; wording is a draft | GRW-P1-I | Must |
 | C10 | Super Admin versioned growth configuration | 1 | As-built | GRW-P1-K | Must |
-| C11 | Staff app Growth tab (share link, counts) | 1 | As-built for Clinic and Nurse; Pharmacy and Lab tabs: wave 9 (GRW-P4-B3, KX-33 section 05) | GRW-P1-L, GRW-P4-B3 | Could |
+| C11 | Staff app Growth tab (share link, counts) | 1 | As-built locally for Clinic, Nurse, Pharmacy and Lab (wave 9, GRW-P4-B3), with credit and promotion cards and a QR image save in the Clinic tab; device proof open (KX-33 section 05) | GRW-P1-L, GRW-P4-B3 | Could |
 | C12 | Campaign engine, UTM builder, budgets, approvals | 2 | As-built locally (no ad-platform spend by design, ADR-049) | GRW-P2-A | Should |
 | C13 | Patient referral and reward ledger; coupon mode default, credit mode counsel-gated; refund-as-credit option; family credit; goodwill | 2 | As-built locally, flags launch-locked, all amounts zero (ADR-046, ADR-048, ADR-050) | GRW-P2-B1, B2, B3 | Should |
 | C14 | Provider Growth workspace v2 (share cards, free-time cards, recommendations, statements, verification updates) | 2 | As-built locally | GRW-P2-C | Should |
@@ -132,7 +132,7 @@ The Today column is the verified status in Rev 2.4 (C12 onwards are Roadmap and 
 | C21 | Pharmacy and Lab links, QR and product decision; Nurse through the Clinic Growth tab | 4 | As-built locally; the commission link of products is inert (ADR-056) | GRW-P4-B1, B2 | Could |
 | C22 | Cross-product journeys (continuity cards, consent, funnel) | 4 | As-built locally, launch-locked (ADR-056) | GRW-P4-A | Could |
 | C23 | Corporate partnerships and enterprise acquisition | 4 | As-built locally, launch-locked; Pay wiring not built (ADR-057) | GRW-P4-C | Could |
-| C24 | Loyalty and partnership programmes | 4 | Wave 9; counsel-gated (see KX-33 section 05) | GRW-P4-D | Could |
+| C24 | Loyalty and partnership programmes | 4 | As-built locally, `growth.loyalty` launch-locked, every amount 0 (wave 9, KX-33 section 05) | GRW-P4-D | Could |
 
 ## 05 Functional requirements
 Requirement text uses SHALL for Phase 1 Must items. Rev 2.4: each item ends with its verified status in square brackets; a deviation from the original wording is stated in the item.
@@ -291,7 +291,7 @@ Must: C1 to C6, C9, C10. Should: C7, C8, Phase 2 items. Could: C11, Phase 3 and 
 | 16 | Marketing licence, templates and copy for lifecycle and automation | Marketing sends skipped | Regulatory dependency |
 | 17 | Cross-product continuity consent and whether health data may seed a prompt | Locked; cards off | Regulatory dependency |
 | 18 | Corporate programme terms, tax, funding mode, enterprise lead owner | Locked; terms never defaulted | Regulatory dependency |
-| 19 | Loyalty and partnership programmes (legal form of points) | Locked (wave 9) | Regulatory dependency |
+| 19 | Loyalty and partnership programmes (legal form of points) | Built, locked; counsel and finance gate (launch guide 11.130 to 11.138) | Regulatory dependency |
 | 20 | First real second market, regulation, residency | ZY synthetic only | Open decision |
 | 21 | Whether any product (Pharmacy, Lab, Nurse) ever pays on attribution | Inert; reporting only | Open decision |
 | 22 | Publish contracts 1.12.1 to 1.14.0 together | Local validators and flag mirrors | Open decision |

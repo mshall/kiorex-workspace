@@ -122,7 +122,7 @@ Evidence: the as-built records of waves 5 to 8 in `_docs/growth/GROWTH_PHASE2_4_
 | Money rules in the database | Append-only ledgers (rewards, provider credit, corporate benefit, promotion budget), balance and cap triggers, one reservation per booking, CHECKs for k >= 10 on cohort and path tables | migrations | As-built |
 | Separation guards | Patient credit never writes the Clinic wallet; corporate benefit writes neither; the commission link of products is inert; reporting models never read or write a decision; experiments cannot reach safety, money or consent surfaces (tests assert each) | tests | As-built |
 | Ops console | 34 growth sections registered up front (campaigns, approvals, referrals, rewards, review queue, lifecycle, automation, recommendations, assistant, integrations, channel performance, experiments, attribution models, cohorts, markets and wizard, fraud, SEO, cross-product, corporate, loyalty) | `apps/ops/src/pages/growth` | As-built (loyalty: wave 9) |
-| Not built | Corporate benefit in Pay and checkout; real WhatsApp interactive buttons; real model, real ad, search-console and store adapters against a vendor; second data cell; staff-app credit and promotion cards; contracts 1.12.1 to 1.14.0 publication | | Roadmap or human |
+| Not built | Corporate benefit in Pay and checkout; real WhatsApp interactive buttons; real model, real ad, search-console and store adapters against a vendor; second data cell; contracts 1.12.1 to 1.14.0 publication | | Roadmap or human |
 
 ## 03 Logical components
 Figure 1 — Logical components and ownership. As-built for the Phase 1 components (Rev 2.4); nothing in it is deployed.

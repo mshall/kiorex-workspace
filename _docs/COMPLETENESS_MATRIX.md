@@ -475,7 +475,7 @@ Status values as above. Growth requirement ids are those of KX-27 (GR-xxx) and w
 | Concurrent confirm of one booking (Kiorex expired a booking the Clinic had confirmed) | FIXED + TESTED | `booking.int.spec.ts`, e2e 41 B6 |
 | CI for security, edge, bundle, browser, SEO and Lighthouse suites outside Clinic | WRITTEN (not executed on GitHub); Clinic's `.github` left to the founder (`Docs/CI_PATCH_security_edge.md`) | `kiorex-platform`, `kiorly-pharmacy`, `kiorly-lab`, `kiorex-account`, `kiorly`, workspace `.github/workflows/e2e.yml` |
 | Phase 2 to 4 (campaigns, referral, rewards, assistant, lifecycle, experiments, ads, ecosystem) | Superseded by the Phases 2 to 4 section below (Rev 2.7) | |
-| Daily decision replay job; Pharmacy and Lab Growth tabs; real Search Console, Play Console, App Store Connect adapters | Replay job built in wave 5 (GC-1); Pharmacy and Lab links built (P4-B1); app tabs wave 9; real adapters MISSING (config-only, no vendor) | KX-33 section 05 |
+| Daily decision replay job; Pharmacy and Lab Growth tabs; real Search Console, Play Console, App Store Connect adapters | Replay job built in wave 5 (GC-1); Pharmacy and Lab links built (P4-B1); app tabs built in wave 9 (P4-B3); real adapters MISSING (config-only, no vendor) | KX-33 section 05 |
 | PDPL consent, marketing licence, reward-credit legal assessment, provider terms, store accounts, hosts and DNS | BLOCKED-HUMAN | See KX-33 section 06 and `LAUNCH_PREPARATION_GUIDE.md` section 11 |
 
 ## Growth Engine Phases 2 to 4 (25 Nov 2026, Rev 2.7)
@@ -498,6 +498,10 @@ Status values as above. Source: KX-33 section 05 (package table) and the as-buil
 | Pharmacy and Lab links and product ingest (P4-B1, B2) | DONE+TESTED locally; commission inert | e2e 53 |
 | Cross-product journeys (P4-A) | DONE+TESTED locally; real Clinic and care-plan flow not in e2e | e2e 39 |
 | Corporate partnerships (P4-C) | DONE+TESTED locally; Pay and checkout wiring MISSING; real-stack e2e not run | integration 31 and 11 |
-| Loyalty (P4-D), partner staff-app tabs (P4-B3), Phase 3 and 4 regression (P3-H), gap closure (GC-5) | NOT DELIVERED when this Rev 2.7 was written (wave 9 lanes A1 to A3 in progress); see the as-built records | KX-33 section 05 |
+| Loyalty and partnership programs (P4-D) | DONE+TESTED locally; `growth.loyalty` launch-locked, every amount 0; counsel, finance and founder rules BLOCKED-HUMAN; loyalty-specific fraud rules MISSING | `growth-loyalty`, `growth-p4-loyalty-schema` integration, web `loyalty.test.tsx`, Playwright `loyalty.spec.ts`; launch guide 11.130 to 11.138 |
+| Pharmacy and Lab staff-app Growth tabs and partner web pages (P4-B3) | DONE+TESTED locally (jest, Expo web, Playwright, iOS simulator for Pharmacy); Lab tab on a device, Android and Arabic review PARTIAL | staff app `partner-growth-*` tests, `e2e-web/pharmacy-growth.spec.ts`, `lab-growth.spec.ts`; launch guide 11.128, 11.129 |
+| Kiorex credit and sponsored promotion cards in the Clinic Growth tab of the staff app | DONE+TESTED locally (jest 7, Expo web against the real Clinic API) | `growth-credit-cards.test.tsx`, `e2e-web/clinic-growth-credit.spec.ts` |
+| Gap closure G-16 (QR image save), G-18 (landing editor API), G-19 (revenue basis), G-20 (consent island), G-21 (withdraw approved config), G-22 (CDN purge port), G-24 (session idle limit), G-25 (lint), G-27 (alarms and WAF, validate only), G-38 (bundle check) | DONE+TESTED locally; landing editor ops page, Clinic web lint (40 warnings), Android image save, CDN purge real sender, `tofu apply` MISSING or BLOCKED-HUMAN | launch guide 11.139 to 11.147; `GROWTH_PHASE2_4_WORK_PACKAGES.md` W9 A3 record |
+| Phase 3 and 4 end-to-end, performance and security regression (P3-H) | Run by a separate lane (A2), not recorded in this pass | its as-built section and the security report |
 | Contracts 1.12.1 to 1.14.0 | MISSING (unpublished; local validators) | launch guide, engineering group |
 | Suite 35 `growth-attribution-cohorts` | MISSING | work packages section 12 |

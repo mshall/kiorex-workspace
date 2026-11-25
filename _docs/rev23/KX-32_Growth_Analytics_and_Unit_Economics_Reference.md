@@ -122,7 +122,7 @@ Under ADR-007 Kiorex earns EGP 40 only on an attended new patient, once per pati
 | Cohorts and LTV | Acquisition cohort by first attended month; retention at 30, 90 and 180 days; LTV as a group ESTIMATE with n, a 90 percent interval from a seeded bootstrap (1,000 resamples), horizon 12 months, geometric tail, rewards cost subtracted; payback and LTV:CAC against approved spend only; cells below k = 10 stored suppressed; no per-person LTV | As-built locally |
 | Experiments | Primary and guardrail metrics are first-party funnel facts joined by the same unit key; conversions count within 7 days of exposure; arms under 10 show "<10"; no segment breakdown (ADR-053) | As-built locally |
 | Recommendations | Aggregate-only inputs with k 10 and a spend floor of EGP 500; a channel must be 1.5 times better to propose a move, at most 20 percent shifted, pause only after 14 days; all PROPOSED_DEFAULT and human-approved | As-built locally, numbers unconfirmed |
-| Open caveats | Revenue confirmation is still inferred at COMPLETED unless the settlement-facts item of wave 9 closed it (see KX-33 section 05); per-source reward cost is not a metric column; language cohort cut and repeat rate are not built | Open |
+| Open caveats | Revenue confirmation is inferred at COMPLETED until the Clinic reports a charge status: wave 9 (G-19) records the basis of every confirmed charge (`CLINIC_FACT` or `INFERRED_AT_COMPLETION`), upgrades inferred rows when a Clinic CONFIRMED or BILLED fact arrives and shows the inferred share in the overview (launch guide 11.144); per-source reward cost is not a metric column; language cohort cut and repeat rate are not built | Open |
 
 ## 05 Formulas
 ```
