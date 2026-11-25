@@ -29,7 +29,7 @@ describe('52. red team: patient credit abuse', () => {
   /** A voucher straight into the tables for a person (the same two rows the issuance service writes), so the abuse tests do not depend on a completed visit. */
   async function lot(sub: string, amountMinor: number, o: { mode?: string; coupon?: string } = {}) {
     const id = `rwl_e2e52${randomBytes(4).toString('hex')}`;
-    await q('kiorex_platform', `insert into "RewardLot" (id, market, sub, kind, mode, "amountMinor", "ruleVersionId", "expiresAt", status, funding, scope, "issuedBy") values ($1,'EG',$2,'PROMO',$3,$4,'rv-e2e', now() + interval '30 days','ACTIVE','PLATFORM_MARKETING','{}'::jsonb,'e2e')`, [id, sub, o.mode ?? 'CREDIT', amountMinor]);
+    await q('kiorex_platform', `insert into "RewardLot" (id, market, sub, kind, mode, "amountMinor", "ruleVersionId", "expiresAt", status, funding, scope, "issuedBy", "createdAt") values ($1,'EG',$2,'PROMO',$3,$4,'rv-e2e', timezone('UTC', now()) + interval '30 days','ACTIVE','PLATFORM_MARKETING','{}'::jsonb,'e2e', timezone('UTC', now()))`, [id, sub, o.mode ?? 'CREDIT', amountMinor]);
     await q('kiorex_platform', `insert into "RewardLedgerEntry" (id, "lotId", type, "amountMinor", "idempotencyKey", "ruleVersionId", "reasonCode", actor, "createdAt") values ($1,$2,'ISSUE',$3,$4,'rv-e2e','REFERRER_QUALIFIED','system', now())`, [`rwe_e2e52${randomBytes(4).toString('hex')}`, id, amountMinor, `rwd:issue:${id}`]);
     return id;
   }

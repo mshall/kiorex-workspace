@@ -43,6 +43,9 @@ describe('f. Cancellation by patient (within policy) and by clinic; deposit refu
     // policy max is 168 h: take the earliest free slot (>= 3 days out, < 7 days) so it falls inside a 168 h window
     const b = await book(t.p1, p, (await freeSlots(t.p1, p))[0]);
     const apt = await kiorlyAppointmentFor(b.id);
+    // The near days of a long-lived database sit at the doctor's marketplace cap (completed visits of earlier runs stay for good), so the earliest FREE slot can be more than the policy's maximum of 168 h away.
+    // The appointment of this test is a fixture: put it 100 h from now at the Clinic (the system of record the policy reads), which is inside the window whatever the calendar looks like.
+    await q('kiorly', `update "Appointment" set "startsAt" = (now() at time zone 'utc') + interval '100 hours', "endsAt" = (now() at time zone 'utc') + interval '100 hours 30 minutes' where id = $1`, [apt.id]);
     await q('kiorly', `update "Clinic" set "kiorexCancellationPolicy" = '{"patientCancelMinHours": 168}'::jsonb where id = $1`, [apt.clinicId]);
     try {
       const r = await kiorex(t.p1, 'POST', `/bookings/${b.id}/cancel`, {});

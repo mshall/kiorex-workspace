@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorex, opsLogin, q } from '../src/clients.js';
 import { patientToken, payFake, rnd } from '../src/verticals.js';
+import { unlockForRun } from '../src/growth-p3.js';
 
 /**
  * PAY-READY suite 39b on a PRIVATE real stack (`scripts/pay-stack.sh up`: Kiorex :4398 built from the lane worktree, own database, the shared Passport read only; no Clinic, no PSP: the sandbox-fake PSP).
@@ -11,7 +12,7 @@ import { patientToken, payFake, rnd } from '../src/verticals.js';
 const STACK = !!process.env.E2E_FULL_STACK || process.env.E2E_KIOREX_URL?.includes(':4398');
 const d = STACK ? describe : describe.skip;
 d('39b. Corporate benefit in Kiorex Pay on the real private stack', () => {
-  let ops: string, p1: string, sub: string, accountId = '', code = ''; const bookings: string[] = [];
+  let ops: string, p1: string, sub: string, accountId = '', code = ''; let undoGate: () => Promise<void> = async () => undefined; const bookings: string[] = [];
   const A = '/admin/growth/corporate'; const P = '/growth/v1/corporate';
   const acct = async (a: string) => Number((await q('kiorex_platform', `select coalesce(sum("debitMinor"-"creditMinor"),0)::int n from "LedgerEntry" where account = $1`, [a]))[0].n);
   const booking = async (deposit = 50_000) => {
@@ -22,17 +23,17 @@ d('39b. Corporate benefit in Kiorex Pay on the real private stack', () => {
 
   beforeAll(async () => {
     ops = (await opsLogin()).accessToken; p1 = await patientToken(); sub = (await kiorex(p1, 'GET', '/me/profile')).body.sub;
-    await q('kiorex_platform', `insert into "FlagGateEvidence" (id, "flagKey", "gateId", approver, "approvedOn", "documentUrl", "recordedBy") values ($1,'growth.corporate','DEV-TEST-FIXTURE-NOT-A-REAL-GATE','e2e fixture', now(), 'https://dev.invalid/fixture','TEST_FIXTURE') on conflict do nothing`, [`ge_${rnd()}`]).catch(async () => { await q('kiorex_platform', `insert into "FlagGateEvidence" ("flagKey", "gateId", approver, "approvedOn", "documentUrl", "recordedBy") values ('growth.corporate','DEV-TEST-FIXTURE-NOT-A-REAL-GATE','e2e fixture', now(), 'https://dev.invalid/fixture','TEST_FIXTURE') on conflict do nothing`); }); // DEV-ONLY gate evidence on this private database
+    undoGate = await unlockForRun(ops, 'growth.corporate'); await new Promise((r) => setTimeout(r, 3500)); // DEV-ONLY gate evidence and the switch ON, through the same path as the other suites (the flag cache needs a moment)
     await q('kiorex_platform', `delete from "CorporateMember" where "accountId" in (select id from "CorporateAccount" where "displayName" like 'E2E39B%')`);
-    const acc = await kiorex(ops, 'POST', `${A}/accounts`, { displayName: `E2E39B ${rnd()}` }); expect(acc.status).toBe(201); accountId = acc.body.id;
+    const acc = await kiorex(ops, 'POST', `${A}/accounts`, { displayName: `E2E39B ${rnd()}` }); expect(acc.status, JSON.stringify(acc.body)).toBe(201); accountId = acc.body.id;
     expect((await kiorex(ops, 'PUT', `${A}/accounts/${accountId}/terms`, { contractRef: 'CTR-E2E', sponsorCeilingMinor: 100_000, perMemberCapMinor: 50_000, perVisitMaxMinor: 20_000, coverBp: 5000, endsAt: new Date(Date.now() + 60 * 86_400_000).toISOString(), emailDomains: ['e2e39b.example'] })).status).toBe(200);
     await q('kiorex_platform', `update "CorporateAccount" set status = 'ACTIVE', "activatedBy" = 'e2e_second_super_admin', "activatedAt" = now() where id = $1`, [accountId]); // the second person of the two-person rule (the DB constraint still checks it differs from the editor)
-    const c = await kiorex(ops, 'POST', `${A}/accounts/${accountId}/codes`, { label: 'E2E', maxRedemptions: 5 }); expect(c.status).toBe(201); code = c.body.code;
+    const c = await kiorex(ops, 'POST', `${A}/accounts/${accountId}/codes`, { label: 'E2E', maxRedemptions: 5 }); expect(c.status, JSON.stringify(c.body)).toBe(201); code = c.body.code;
     expect((await kiorex(p1, 'POST', `${P}/join`, { code })).status).toBe(200);
   });
   afterAll(async () => {
     for (const id of bookings) await q('kiorex_platform', `delete from "CorporateBenefitEntry" where "bookingId" = $1`, [id]).catch(() => undefined);
-    await kiorex(p1, 'POST', `${P}/leave`).catch(() => undefined); await q('kiorex_platform', `delete from "FlagGateEvidence" where "flagKey" = 'growth.corporate' and "recordedBy" = 'TEST_FIXTURE'`);
+    await kiorex(p1, 'POST', `${P}/leave`).catch(() => undefined); await undoGate().catch(() => undefined);
   });
 
   it('checkout: the employer covers 200 of the 500 deposit, the card is charged 300, the lines add up, the benefit is HELD until the capture', async () => {
@@ -53,7 +54,7 @@ d('39b. Corporate benefit in Kiorex Pay on the real private stack', () => {
   });
   it('ops: the payments connection check and the settings answer mock-safe, with references and no secret value', async () => {
     const chk = await kiorex(ops, 'GET', '/admin/payments/connection-check'); expect(chk.status).toBe(200);
-    expect(chk.body.mode).toBe('mock'); expect(chk.body.psps.map((x: any) => x.psp)).toEqual(['paymob', 'fawry', 'instapay', 'card']);
+    expect(chk.body.mode).toBe('mock'); expect(chk.body.psps.map((x: any) => x.psp)).toEqual(['paymob', 'fawry', 'instapay', 'card', 'bank_ipn']) /* bank_ipn: the Kiorly Pay unified layer's bank / IPN adapter */;
     expect(JSON.stringify(chk.body)).not.toMatch(/sk_(test|live)_|whsec_/); expect(chk.body.psps[0].webhook.url).toContain('/pay/webhooks/paymob');
     expect((await kiorex(ops, 'GET', '/admin/payments/test-scenarios')).body.length).toBeGreaterThanOrEqual(14);
     expect((await kiorex(p1, 'GET', '/admin/payments/connection-check')).status).toBe(403);

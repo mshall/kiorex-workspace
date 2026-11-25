@@ -36,7 +36,7 @@ export async function activatePromotion(owner: string, ops: string, body: Record
 /** A patient-credit voucher straight into the tables (the same two rows the issuance service writes), so the money-flow test does not depend on a completed referral visit. CREDIT mode needs REWARD_RULES.mode CREDIT and the credit flags. */
 export async function creditLot(sub: string, amountMinor: number) {
   const id = `rwl_e2e51${randomBytes(4).toString('hex')}`;
-  await q('kiorex_platform', `insert into "RewardLot" (id, market, sub, kind, mode, "amountMinor", "ruleVersionId", "expiresAt", status, funding, scope, "issuedBy") values ($1,'EG',$2,'PROMO','CREDIT',$3,'rv-e2e', now() + interval '30 days','ACTIVE','PLATFORM_MARKETING','{}'::jsonb,'e2e')`, [id, sub, amountMinor]);
+  await q('kiorex_platform', `insert into "RewardLot" (id, market, sub, kind, mode, "amountMinor", "ruleVersionId", "expiresAt", status, funding, scope, "issuedBy", "createdAt") values ($1,'EG',$2,'PROMO','CREDIT',$3,'rv-e2e', timezone('UTC', now()) + interval '30 days','ACTIVE','PLATFORM_MARKETING','{}'::jsonb,'e2e', timezone('UTC', now()))`, [id, sub, amountMinor]);
   await q('kiorex_platform', `insert into "RewardLedgerEntry" (id, "lotId", type, "amountMinor", "idempotencyKey", "ruleVersionId", "reasonCode", actor, "createdAt") values ($1,$2,'ISSUE',$3,$4,'rv-e2e','PROMO_CAMPAIGN','system', now())`, [`rwe_e2e51${randomBytes(4).toString('hex')}`, id, amountMinor, `rwd:issue:${id}`]);
   return id;
 }

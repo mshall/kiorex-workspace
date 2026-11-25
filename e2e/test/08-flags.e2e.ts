@@ -48,7 +48,7 @@ describe('g. Feature-flag control plane across Kiorex and Kiorly', () => {
   });
 
   it('clinic.kiorex_listing OFF for market EG -> Kiorly picks the snapshot up and its effective value is OFF; ON restores', async () => {
-    expect((await kiorlyEffective('clinic.kiorex_listing')).effective).toBe(true);
+    await waitFor('Kiorly starts from clinic.kiorex_listing effective ON (the previous test just switched kiorex.marketplace back ON and the snapshot is still travelling)', async () => (await kiorlyEffective('clinic.kiorex_listing'))?.effective === true, 60_000, 1000);
     expect((await set('clinic.kiorex_listing', 'MARKET', 'OFF', 'E2E: EG listing pause', 'EG')).status).toBe(200);
     const off = await waitFor('Kiorly effective OFF', async () => { const f = await kiorlyEffective('clinic.kiorex_listing'); return f?.effective === false ? f : undefined; }, 60_000, 1000);
     expect(off.source).toMatch(/market/i);

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { kiorly, q } from '../src/clients.js';
+import { DB } from '../src/env.js';
 import { daySlots, uniqueFutureDay, ymdIn } from '../src/slots.js';
 
 /**
@@ -196,7 +197,7 @@ describe('c. Clinic day (Nile Care, PRO): front desk -> nurse -> doctor -> lab a
     // the critical lab order is part of the mobile demo seed; re-open it (and its alert) so the approve flow is repeatable
     if (!(await q('kiorly', `select 1 from "ClinicalOrder" where id = 'demo_co_mobile_crit'`)).length) {
       const { execSync } = await import('node:child_process');
-      execSync('npm run db:seed:mobile', { cwd: new URL('../../clinics-management/apps/api', import.meta.url).pathname, env: { ...process.env, DATABASE_URL: 'postgresql://postgres:postgres@127.0.0.1:5433/kiorly?schema=public' }, stdio: 'pipe' });
+      execSync('npm run db:seed:mobile', { cwd: new URL('../../clinics-management/apps/api', import.meta.url).pathname, env: { ...process.env, DATABASE_URL: `${DB('kiorly')}?schema=public` }, stdio: 'pipe' });
     }
     await q('kiorly', `delete from "MobileResultReview" where "tenantId" = 'demo_t_na' and "orderId" in ('demo_co_mobile_crit','demo_co_mobile_norm')`);
     await q('kiorly', `delete from "MobileAlertAck" where "tenantId" = 'demo_t_na'`);

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { tokens, providerBySpecialty, book, confirm, freeSlots, kiorlyAppointmentFor, waitStatus, type Provider } from '../src/fixtures.js';
 import { kiorex, staffLogin, q, waitFor } from '../src/clients.js';
 
@@ -16,9 +16,26 @@ describe('n. Waitlist autofill against the real Kiorly (KXM-BK-12)', () => {
     // isolation: join is idempotent per patient+doctor+type, and an entry left by an aborted earlier run (or an overlapping suite) would absorb the offer this file waits for
     for (const e of ((await kiorex(t.p1, 'GET', '/waitlist')).body as any[]) ?? []) if (['WAITING', 'OFFERED'].includes(e.status)) await kiorex(t.p1, 'DELETE', `/waitlist/${e.id}`);
   });
-  afterAll(async () => {
-    for (const id of entries) await kiorex(t.p1, 'DELETE', `/waitlist/${id}`).catch(() => undefined);
-  });
+  // after EVERY test, not only at the end: join is idempotent per patient+doctor+type, so an entry that a failed test left behind would be returned to the next test (with the wrong window) and absorb its offer
+  afterEach(async () => { for (const id of entries.splice(0)) await kiorex(t.p1, 'DELETE', `/waitlist/${id}`).catch(() => undefined); });
+  afterAll(async () => { for (const e of ((await kiorex(t.p1, 'GET', '/waitlist')).body as any[]) ?? []) if (['WAITING', 'OFFERED'].includes(e.status)) await kiorex(t.p1, 'DELETE', `/waitlist/${e.id}`).catch(() => undefined); });
+
+
+  /**
+   * The Clinic caps the marketplace slots of a doctor per local day (`marketplaceDailyCap`, default 20, counted over every non-cancelled Kiorex booking of that day, COMPLETED and NO_SHOW included).
+   * Earlier suites and earlier runs leave such appointments for good, so a day can be at its cap while a 60 s per-day cache still lists its slots: booking works (holds do not check the cap), but when
+   * the booking is cancelled the Clinic recomputes the day and correctly offers NOTHING back. A waitlist scenario needs a slot whose day still has room for the cancelled booking, so it picks one.
+   */
+  async function slotWithRoom(token: string, fraction: number) {
+    const slots = await freeSlots(token, p, 27, { fresh: true }); // 27 days (the types allow 30): the first two weeks of a long-lived dev database are usually at the cap
+    const clinician = (await q('kiorex_platform', `select "clinicianId" from "Provider" where id = $1`, [p.id]))[0].clinicianId;
+    const cap = Number((await q('kiorly', `select coalesce(max("marketplaceDailyCap"), 20) c from "ClinicianAvailabilityTemplate" where "clinicianId" = $1`, [clinician]).catch(() => [{ c: 20 }]))[0]?.c ?? 20);
+    const counts = new Map<string, number>((await q('kiorly', `select ("startsAt" at time zone 'UTC' at time zone 'Africa/Cairo')::date::text d, count(*)::int c from "Appointment" where "clinicianId" = $1 and status <> 'CANCELLED' and "bookingSource" in ('KIOREX_MARKETPLACE','KIOREX_WHATSAPP') and "startsAt" > now() group by 1`, [clinician])).map((r: any) => [r.d as string, Number(r.c)]));
+    const day = (iso: string) => new Date(new Date(iso).getTime() + 2 * 3600_000).toISOString().slice(0, 10); // Cairo (UTC+2 in winter); the margin of two below absorbs a DST edge
+    const roomy = slots.filter((s) => (counts.get(day(s.startsAt)) ?? 0) <= cap - 3);
+    if (!roomy.length) throw new Error(`no day of the next 27 has room below the marketplace cap (${cap}); counts ${JSON.stringify([...counts])}`);
+    return roomy[Math.floor(roomy.length * fraction)] ?? roomy[0];
+  }
 
   async function joinForSlot(slot: { startsAt: string; endsAt: string }) {
     const from = new Date(new Date(slot.startsAt).getTime() - 60_000).toISOString();
@@ -35,8 +52,7 @@ describe('n. Waitlist autofill against the real Kiorly (KXM-BK-12)', () => {
   });
 
   it('full slot -> join -> the other patient cancels -> offer -> accept -> confirm -> Kiorly appointment (offer accepted, entry BOOKED)', async () => {
-    const slots = await freeSlots(t.p2, p, 12, { fresh: true });
-    const slot = slots[Math.floor(slots.length / 2)];
+    const slot = await slotWithRoom(t.p2, 0.5);
     const taken = await book(t.p2, p, slot);
     await waitStatus(t.p2, taken.id, 'CONFIRMED');
 
@@ -78,8 +94,7 @@ describe('n. Waitlist autofill against the real Kiorly (KXM-BK-12)', () => {
   });
 
   it('declining an offer returns the entry to WAITING and never re-offers the same slot', async () => {
-    const slots = await freeSlots(t.p2, p, 12, { fresh: true });
-    const slot = slots[Math.max(0, Math.floor(slots.length / 3))];
+    const slot = await slotWithRoom(t.p2, 0.33);
     const taken = await book(t.p2, p, slot);
     await waitStatus(t.p2, taken.id, 'CONFIRMED');
     const joined = await joinForSlot(slot);

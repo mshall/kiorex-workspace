@@ -8,7 +8,7 @@
     "down": "scripts/down.sh",
     "test": "vitest run",
     "test:nurse": "scripts/nurse-lab-stack.sh up && E2E_NURSE_STACK=1 E2E_KIORLY_URL=http://localhost:3012 E2E_KIOREX_URL=http://localhost:4002 E2E_LAB_URL=http://localhost:3202 vitest run test/11-nurse-lab.e2e.ts; rc=$?; scripts/nurse-lab-stack.sh down; exit $rc",
-    "test:security": "scripts/sec-stack.sh up --prod && E2E_SEC_STACK=1 E2E_KIORLY_URL=http://localhost:4301 E2E_KIOREX_URL=http://localhost:4300 E2E_PHARMACY_URL=http://localhost:4302 E2E_LAB_URL=http://localhost:4303 vitest run test/30-security.e2e.ts; rc=$?; scripts/sec-stack.sh down; exit $rc",
+    "test:security": "scripts/sec-stack.sh up --prod && eval \"$(scripts/sec-stack.sh env)\" && vitest run test/30-security.e2e.ts; rc=$?; scripts/sec-stack.sh down; exit $rc",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

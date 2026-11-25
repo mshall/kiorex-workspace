@@ -103,8 +103,12 @@ describe.skipIf(!NS)('m. Kiorly Nurse -> Kiorex -> Kiorly Lab -> result back to 
     const chain = await q(DBL, `select type, "actorId", "occurredAt", "temperatureC" from "CustodyEvent" where "specimenId" = $1 order by "occurredAt"`, [sp[0].id]);
     expect(chain.map((c: any) => c.type)).toEqual(['COLLECTED', 'TRANSPORT_STARTED']);
     expect(chain[0].actorId).toMatch(/^nurse:/);
-    // the clinic hears ACCEPTED through the Kiorex outbox -> marketplace API push
-    const seen = await waitFor('clinic mirror ACCEPTED', async () => { const c = await kiorly(nurse, 'GET', `/nurse/lab-orders/${orderId}/custody`); return c.status === 200 && c.body.labStatus === 'ACCEPTED' ? c.body : undefined; }, 45_000);
+    // the clinic hears ACCEPTED through the Kiorex outbox -> marketplace API push. A nurse's order reaches the lab already COLLECTED, so the lab announces ACCEPTED and COLLECTED within the same
+    // millisecond and the clinic's mirror is monotonic: ACCEPTED is a transient headline that a 500 ms poll cannot be expected to see. What must hold: the mirror is at ACCEPTED OR LATER, and the clinic
+    // really RECEIVED the ACCEPTED push (its audit log says so, whatever the headline is by now).
+    const AT_LEAST_ACCEPTED = ['ACCEPTED', 'COLLECTED', 'IN_LAB', 'PARTIALLY_RESULTED', 'AWAITING_VALIDATION', 'VALIDATED', 'RELEASED'];
+    const seen = await waitFor('clinic mirror ACCEPTED (or later)', async () => { const c = await kiorly(nurse, 'GET', `/nurse/lab-orders/${orderId}/custody`); return c.status === 200 && AT_LEAST_ACCEPTED.includes(c.body.labStatus) ? c.body : undefined; }, 45_000);
+    await waitFor('clinic audit LAB_STATUS_RECEIVED ACCEPTED', async () => (await q(DBC, `select 1 from "AuditLog" where action = 'LAB_STATUS_RECEIVED' and "resourceId" = $1 and metadata->>'status' = 'ACCEPTED'`, [orderId])).length > 0 || undefined, 45_000);
     expect(seen.labOrderNumber).toBeTruthy();
     expect(JSON.stringify(seen)).not.toContain(patientName); // custody shown to the nurse carries tube labels and events only: no PHI
     expect(JSON.stringify(seen)).not.toContain(patientPhone);

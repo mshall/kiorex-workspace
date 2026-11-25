@@ -52,7 +52,7 @@ describe('50. credit ledgers: patient credit (Kiorex) and provider credit (Clini
       const a = await freshPatient('Credit E50 A');
       const r = await issue(a.sub, 5000); expect(r.status).toBe('ISSUED');
       const c = await credit(a.token); expect(c.openBalanceMinor).toBe(5000);
-      const lr = await kiorex(t.ops, 'GET', `${ADM}/rewards/lots?take=20`); expect(lr.status, JSON.stringify(lr.body)).toBe(200); const lots = lr.body as any[]; expect(JSON.stringify(lots)).not.toContain(a.sub);
+      const lr = await kiorex(t.ops, 'GET', `${ADM}/rewards/lots?take=200`); expect(lr.status, JSON.stringify(lr.body)).toBe(200); const lots = lr.body as any[]; expect(JSON.stringify(lots)).not.toContain(a.sub);  // newest first by createdAt: fixtures written by raw SQL carried the database clock (UTC+4) in earlier runs and sorted ahead of this lot; the API's maximum page is 200
       expect(lots.find((l) => l.id === r.lotId)).toMatchObject({ mode: 'CREDIT', amountMinor: 5000, availableMinor: 5000 });
     });
 

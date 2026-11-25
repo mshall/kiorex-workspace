@@ -37,10 +37,13 @@ export async function growthRoutes(): Promise<RouteSpec[]> {
   const files = [...walk(join(root, 'growth')), ...walk(join(root, 'widget'))].filter((f) => f.endsWith('.controller.ts'));
   const out: RouteSpec[] = [];
   for (const f of files) {
-    const src = readFileSync(f, 'utf8'); const base = /@Controller\('([^']*)'\)/.exec(src)?.[1]; if (base === undefined) continue;
-    const classPublic = /@Public\(\)\s*(?:\n\s*)?(?:@\w+\([^)]*\)\s*)*@Controller/.test(src);
-    for (const line of src.split('\n')) {
-      const m = /@(Get|Post|Put|Patch|Delete)\((?:'([^']*)')?\)/.exec(line); if (!m) continue;
+    const src = readFileSync(f, 'utf8'); if (!/@Controller\('([^']*)'\)/.test(src)) continue;
+    // a file can hold several controllers (cross-product.controller.ts: the patient routes and the ops funnel): every route takes the base of the @Controller that PRECEDES it
+    let base: string | undefined; let classPublic = false; const lines = src.split('\n');
+    for (let n = 0; n < lines.length; n++) {
+      const line = lines[n]!; const c = /@Controller\('([^']*)'\)/.exec(line);
+      if (c) { base = c[1]; classPublic = false; for (let k = n; k >= 0 && (k === n || lines[k]!.trim().startsWith('@')); k--) if (/@Public\(\)/.test(lines[k]!)) classPublic = true; continue; } // the decorators of the class: the lines directly above (and on) its @Controller
+      const m = /@(Get|Post|Put|Patch|Delete)\((?:'([^']*)')?\)/.exec(line); if (!m || base === undefined) continue;
       const path = `/${[base, m[2] ?? ''].filter(Boolean).join('/')}`.replace(/\/:[A-Za-z]+/g, '/x');
       out.push({ method: m[1]!.toUpperCase() as RouteSpec['method'], path, public: classPublic || /@Public\(\)/.test(line), file: f.split('/src/')[1]! });
     }

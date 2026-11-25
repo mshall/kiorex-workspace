@@ -22,11 +22,23 @@ describe('growth analytics v1: numbers reconcile to bookings and commission char
   });
 
   it('rollup is idempotent and the overview reconciles to BookingIntent facts and commission charges', async () => {
-    const snap = async () => JSON.stringify((await q('kiorex_platform', `select day::text, metric, "sourceKind", origin, "careType", city, specialty, "providerRef", value from "GrowthMetricDaily" order by day, metric, "sourceKind", origin, "careType", city, specialty, "providerRef"`)));
-    expect((await kiorex(ops, 'POST', '/ops/growth-analytics/rollup', { days: 2 })).status).toBe(200);
-    const a = await snap();
-    expect((await kiorex(ops, 'POST', '/ops/growth-analytics/rollup', { days: 2 })).status).toBe(200);
-    expect(await snap()).toBe(a);
+    // every column of the table's unique key (GrowthMetricDaily_dim2_key) is selected AND ordered by: a snapshot that left doctorRef, branchRef, campaign ... out compared rows in the arbitrary order the database
+    // returned the ties in, which differed between two identical reads (the repeat-run failure of this test)
+    const DIMS = `market, day, metric, "sourceKind", "landingKind", "careType", origin, city, district, specialty, "providerRef", "doctorRef", "branchRef", campaign, channel, platform, product, "campaignId"`;
+    const snap = async () => JSON.stringify((await q('kiorex_platform', `select ${DIMS.replace(' day,', ' day::text as day,')}, value from "GrowthMetricDaily" order by ${DIMS}`)));
+    // Idempotent means: the SAME input gives the SAME output. The facts this rollup reads keep arriving from the stack's own workers for a while after the earlier suites (outbox handlers, lifecycle
+    // jobs), so the pair of rollups is compared only when no fact changed between them (a fingerprint of the input tables); a pair that straddled new facts is repeated, a pair over unchanged facts must be identical.
+    const facts = async () => JSON.stringify((await q('kiorex_platform', `select (select count(*) from "GrowthEvent") e, (select max("occurredAt") from "GrowthEvent") et, (select count(*) from "GrowthRevenueFact") r, (select count(*) from "BookingIntent") b, (select max("updatedAt") from "BookingIntent") bu`))[0]);
+    let compared = false;
+    for (let attempt = 0; attempt < 6 && !compared; attempt++) {
+      const f0 = await facts();
+      expect((await kiorex(ops, 'POST', '/ops/growth-analytics/rollup', { days: 2 })).status).toBe(200);
+      const a = await snap(); const f1 = await facts();
+      expect((await kiorex(ops, 'POST', '/ops/growth-analytics/rollup', { days: 2 })).status).toBe(200);
+      const b = await snap(); const f2 = await facts();
+      if (f0 === f1 && f1 === f2) { expect(b).toBe(a); compared = true; } else await new Promise((r) => setTimeout(r, 4000)); // facts moved between the two rollups: wait for the stack to settle and repeat
+    }
+    expect(compared, 'the input facts never settled long enough to compare two rollups').toBe(true);
     const o = (await kiorex(ops, 'GET', `/ops/growth-analytics/overview?${Q()}`)).body;
     const confirmed = (await q('kiorex_platform', `select count(*)::int c from "GrowthEvent" e join "BookingIntent" b on b.id = e."bookingId" where e.name = 'BookingConfirmed' and b."dependantId" is null and e."occurredAt" >= $1::date and e."occurredAt" < ($2::date + 1)`, [from(), today()]))[0].c;
     expect(o.bookings).toBe(mask(confirmed));

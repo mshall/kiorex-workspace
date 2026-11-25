@@ -80,7 +80,10 @@ export const KXDEV_ADMIN = { id: 'e2e_growth_admin', email: 'e2e.growth.admin@ki
 export async function kxdevGrowthTenant(providerId: string) {
   const row = (await q('kiorex_platform', `select "tenantId", "clinicId" from "Provider" where id = $1`, [providerId]))[0];
   const clinicId = row.clinicId as string;
-  const oldSlug = (await q('kiorly', `select "bookingSlug" from "Clinic" where id = $1`, [clinicId]))[0]?.bookingSlug ?? null;
+  const found = (await q('kiorly', `select "bookingSlug" from "Clinic" where id = $1`, [clinicId]))[0]?.bookingSlug ?? null;
+  const oldSlug = found === KXDEV_ADMIN.slug ? null : found; // a slug left behind by an interrupted run is not "the original": restoring it would leave the fixture in place for the next suite
+  // idempotent and self-cleaning: the slug is unique, so any OTHER clinic still holding the fixture slug (a suite that did not restore) is freed first
+  await q('kiorly', `update "Clinic" set "bookingSlug" = null where "bookingSlug" = $1 and id <> $2`, [KXDEV_ADMIN.slug, clinicId]);
   await q('kiorly', `update "Clinic" set "bookingSlug" = $2 where id = $1`, [clinicId, KXDEV_ADMIN.slug]);
   await q('kiorly', `delete from "User" where id = $1`, [KXDEV_ADMIN.id]);
   await q('kiorly', `insert into "User" select (jsonb_populate_record(null::"User", to_jsonb(u) || $1::jsonb)).* from "User" u where email = 'kxdev.mona.fahmy@kiorly.dev'`, [JSON.stringify({ id: KXDEV_ADMIN.id, email: KXDEV_ADMIN.email, role: 'CLINIC_ADMIN', additionalRoles: [], isTenantOwner: false, phone: null, displayName: 'E2E Growth Admin' })]);

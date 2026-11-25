@@ -248,8 +248,9 @@ describe.skipIf(!ON)('30. security (production-mode boot, throw-away databases)'
         '',
       ].join('\n');
       const before = (await q('kiorly', `select "passwordHash" from "User" where id = 'demo_u_df_owner'`))[0].passwordHash;
+      const t0 = ((await q('kiorly', `select (now() at time zone 'utc') as t`))[0].t as Date).toISOString(); // an ISO string: the driver would shift a Date into local time for a timestamp-without-zone column; // the job of THIS upload, not one a run a few seconds earlier left (a second run within a minute matched that one and read the new job before it finished)
       const r = await upload(attacker, sql); expect(r.status).toBeLessThan(300);
-      await waitFor('import job finished', async () => (await q('kiorly', `select 1 from "TenantExportJob" where scope = 'ORG_IMPORT' and status in ('READY','FAILED') and "createdAt" > now() at time zone 'utc' - interval '1 minute' limit 1`))[0], 30_000);
+      await waitFor('import job finished', async () => (await q('kiorly', `select 1 from "TenantExportJob" where scope = 'ORG_IMPORT' and status in ('READY','FAILED') and "createdAt" >= $1::timestamp and "rowCounts" is not null limit 1`, [t0]))[0], 30_000);
       expect((await q('kiorly', `select "passwordHash" from "User" where id = 'demo_u_df_owner'`))[0].passwordHash).toBe(before);
       expect(await q('kiorly', `select 1 from "Patient" where id in ('sec_x_patient','sec_y_patient')`)).toHaveLength(0);
       expect(await q('kiorly', `select 1 from "FeatureFlag" where key = 'sec.planted'`)).toHaveLength(0);

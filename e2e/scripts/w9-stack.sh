@@ -39,7 +39,7 @@ EOF
   clinic-start)
     [ -n "$(port_pid $P_CLINIC)" ] && exit 0
     ENTRY="$DIST/main.js"; [ -f "$ROOT/clinics-management/apps/api/$DIST/src/main.js" ] && ENTRY="$DIST/src/main.js"
-    (cd "$ROOT/clinics-management/apps/api" && nohup env NODE_ENV=development SIGNIN_DEFAULT_METHOD=PASSPORT PORT=$P_CLINIC APP_WEB_URL=http://localhost:5174 DATABASE_URL="$(DB ${TAG}_kiorly)" \
+    (cd "$ROOT/clinics-management/apps/api" && nohup env NODE_ENV=development SIGNIN_DEFAULT_METHOD=PASSPORT PORT=$P_CLINIC OUTBOX_POLL_INTERVAL_MS=1000 APP_WEB_URL=http://localhost:5174 DATABASE_URL="$(DB ${TAG}_kiorly)" \
       KIOREX_OUTBOX_WEBHOOK_URL="http://localhost:$P_KIOREX/api/v1/webhooks/kiorly" KIOREX_OUTBOX_WEBHOOK_SECRET=kx_dev_webhook_secret KIOREX_CONTROL_PLANE_URL="http://localhost:$P_KIOREX" \
       KIOREX_FLAGS_PRODUCT_KEY=ff_kiorly-clinic_dev KIOREX_FLAGS_SECRET=ff_dev_secret_change_me KIOREX_OIDC_ISSUER="http://localhost:$P_PASSPORT" node --enable-source-maps "$ENTRY" < /dev/null >> "$LOGS/$TAG-clinic.log" 2>&1 &)
     for i in $(seq 1 90); do curl -fs -m3 "http://localhost:$P_CLINIC/api/v1/health/ready" >/dev/null 2>&1 && exit 0; sleep 1; done; exit 1 ;;
@@ -100,12 +100,12 @@ start() { local name=$1 cwd=$2; shift 2; (cd "$cwd" && exec nohup "$@" > "$LOGS/
 start passport "$ROOT/kiorex-account/apps/dev-idp" env NODE_ENV=development PORT=$P_PASSPORT KX_FAKE_UPSTREAM_PORT=$P_UPSTREAM KX_IDP_CONFIG="$IDP_CFG" DATABASE_URL="$(DB ${TAG}_kiorex_account)" npx tsx src/index.ts
 
 # ---- 4. the four APIs (wiring as scripts/up.sh, ports moved)
-start clinic "$ROOT/clinics-management/apps/api" env NODE_ENV=development SIGNIN_DEFAULT_METHOD=PASSPORT PORT=$P_CLINIC APP_WEB_URL=http://localhost:5174 DATABASE_URL="$(DB ${TAG}_kiorly)" \
+start clinic "$ROOT/clinics-management/apps/api" env NODE_ENV=development SIGNIN_DEFAULT_METHOD=PASSPORT PORT=$P_CLINIC OUTBOX_POLL_INTERVAL_MS=1000 APP_WEB_URL=http://localhost:5174 DATABASE_URL="$(DB ${TAG}_kiorly)" \
   KIOREX_OUTBOX_WEBHOOK_URL="http://localhost:$P_KIOREX/api/v1/webhooks/kiorly" KIOREX_OUTBOX_WEBHOOK_SECRET=kx_dev_webhook_secret \
   KIOREX_CONTROL_PLANE_URL="http://localhost:$P_KIOREX" KIOREX_FLAGS_PRODUCT_KEY=ff_kiorly-clinic_dev KIOREX_FLAGS_SECRET=ff_dev_secret_change_me \
   KIOREX_OIDC_ISSUER="http://localhost:$P_PASSPORT" node --enable-source-maps "$(entry clinics-management)"
 ( set -a; . "$ROOT/kiorex-platform/apps/api/.env.example"; set +a
-  export NODE_ENV=development PORT=$P_KIOREX DATABASE_URL="$(DB ${TAG}_kiorex_platform)" JOBS_ENABLED=true PSP_MODE=sandbox-fake MESSAGING_MODE=log AI_PROVIDER=fake IMPORT_TARGET_MODE=kiorly SANDBOX_PAYMENTS_ALLOWED=true \
+  export NODE_ENV=development PORT=$P_KIOREX OUTBOX_POLL_INTERVAL_MS=1000 DATABASE_URL="$(DB ${TAG}_kiorex_platform)" JOBS_ENABLED=true PSP_MODE=sandbox-fake MESSAGING_MODE=log AI_PROVIDER=fake IMPORT_TARGET_MODE=kiorly SANDBOX_PAYMENTS_ALLOWED=true \
     OIDC_ISSUER="http://localhost:$P_PASSPORT" KIORLY_BASE_URL="http://localhost:$P_CLINIC/marketplace/v1" KIORLY_PHARMACY_BASE_URL="http://localhost:$P_PHARMACY" KIORLY_LAB_BASE_URL="http://localhost:$P_LAB" \
     KIOREX_PAY_LINK_BASE_URL="http://localhost:$P_KIOREX/api/v1/pay/links" PUBLIC_BASE_URL="http://localhost:$P_KIOREX"
   start kiorex "$ROOT/kiorex-platform/apps/api" node "$(entry kiorex-platform)" )
