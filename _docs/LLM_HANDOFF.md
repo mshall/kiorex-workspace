@@ -154,7 +154,7 @@ Legend: [H] needs the founder, finance, counsel or a vendor; [E] engineering an 
 - [ ] [E] Confirm the `growth.product_ingest` flag decision and doctor-created links (G-17).
 
 ### E. Housekeeping
-- [x] `mshall/clinics-management` made private on 27 Nov 2026.
+- [x] `mshall/clinics-management`: made private 27 Nov 2026, then set back to PUBLIC the same day by the founder to keep unlimited Actions minutes; to be made private again later (check Actions minutes first). The other seven repos were always private. Contracts registry: founder chose to do nothing for now (vendored tarballs).
 - [x] Local scratch DBs kept by founder decision (27 Nov 2026); not an open item.
 - [ ] [E] Remove the merged old worktrees `kiorex-v2-w9fin-*`, `kiorex-v2-w9a1` and about 30 merged local branches (`git cherry` first); delete `com-collect-onpay` (content is in main).
 - [ ] [E] Contracts branch `w9-a1` (one old commit, superseded by 1.13.0) can be dropped.
