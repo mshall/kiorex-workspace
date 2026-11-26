@@ -182,6 +182,19 @@ Fees and commission rates are set **by default per organisation type** and can b
 
 Rules: a different super admin decides every change; decided rows are never edited or deleted; a change applies from its start (never in the past); a charge, order or booking keeps the rate it was created with; the organisation sees its effective rate, the default, any override and the history read only. Humans: launch guide rows `LG-COM-11` to `LG-COM-15`.
 
+## Commission policy (COM-3, founder decisions 26 Nov 2026)
+
+Everything that was a "numbers and counsel" decision is **configurable in the Ops console (Commission policy, `/commission-policy`, linked from Commissions > Rates and from the Integrations Control Center)** and is never hardcoded. **No number and no wording is shipped**; every default below is empty or the safe state. A different super admin approves every change (append-only, effective-dated, audited); super admin and finance read, only a super admin proposes.
+
+| Setting | Scope | Controls | Default |
+|---|---|---|---|
+| Rate parameters | per organisation type (`CommissionRatePolicy` default) and per organisation (override) | on top of the COM-2 fields: `currency`, `rounding` (HALF_UP, DOWN, UP), `minCollectMinor` (minimum to collect in a period), `graceDays`, `retryDays` (dunning), `invoiceDueDays`, `reminderDays` (cadence relative to the due date, negative = before), `disputeWindowDays` (days after confirmation; replaces the deadline the product reported), `savedMethodChargeAllowed` (provider token charge permitted; false falls back to an invoice with reason `SAVED_METHOD_NOT_PERMITTED`). An override row states its own full set; a null field follows the collection settings (COM-1) | all null: follow the collection settings; rounding null = half up (what always shipped) |
+| `COMMISSION_COUNSEL_SIGNOFF` | growth config kind, MARKET scope (`scopeId` = country) | `status` NOT_REVIEWED / APPROVED_WITH_CONDITIONS / APPROVED / REJECTED, `reviewerName`, `documentId`, `reviewedOn`, `conditions`, `collectionModes[]`, `payoutRoutes[]` (PAYMOB, FAWRY, INSTAPAY, CARD_GATEWAY, BANK_IPN). Gates which collection modes and payout / settlement routes may run in REAL mode; mock is always allowed. A blocked run creates nothing, claims wait, the reason is shown in Ops and in the Integrations Control Center | NOT_REVIEWED: every real-money mode and route blocked |
+| `COMMISSION_DISCLOSURE` | growth config kind, MARKET scope | `rateDisclosure` and `termsSummary` (free text, `en` and `ar`, 4000 characters, no markup), `showOverrideReason` (boolean). Pushed read only to Clinic, Pharmacy and Lab with the rate view (`disclosure`, `counsel.status`; additive fields) | all texts empty ("wording not set": the provider page hides the text block and still shows the numbers); override reason hidden |
+| `tender` on a commission charge | per charge, reported by the product | `CASH` or `ONLINE`. A commission on a cash visit is accrued, shown to both sides and netted in the next bank-transfer settlement (or invoiced when no payout is due) | null = not reported |
+
+Still in code (not business numbers): the 15-minute job interval, the dunning bounds (retry days 1..60, at most 6), grace 0..30, invoice due 1..90, dispute window 0..365, the aging buckets 30/60/90 days in the console, the 7-day notice before a money policy takes effect (counsel decides, 13.15), the one-minute clock skew for effective dates. Clinic-side constants are listed in the COM-3 report, not changed here.
+
 ## Deployment settings (environment, clamped; effective value visible on the Integrations Control Center where it concerns an integration)
 
 | Variable | Default | Bounds / rule | Controls | Who |
