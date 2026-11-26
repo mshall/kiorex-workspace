@@ -59,12 +59,12 @@ Parent folder: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/` (workspace repo
 - Edge viewports covered by Playwright: 320, 640x450, 1440, 2560, AR (RTL) and EN.
 - Running tests: one process at a time per repo, private DB, private ports.
 
-## 6. Latest founder direction (26 Nov 2026), implementation in progress when this was written
+## 6. Latest founder direction (26 Nov 2026), now built (local, not deployed)
 
 - Kiorex may collect commissions and shows them to the provider's ops/admin AND to Kiorex ops/admin (two-way visibility, same data).
 - Providers in Egypt are paid under CBE rules **only by bank transfer to the provider's bank account**; cash visits are included by accruing commission and netting it in settlement (Kiorex never holds or pays out cash). All through Reconciliation and settlement, visible to both sides.
 - Everything numeric or legal is configurable from the super admin (default per organisation type, per-organisation override, maker-checker): rates, floor/cap, mode, grace days, reminders, dispute window, a **counsel sign-off record** per market that gates real-money modes (default NOT_REVIEWED, so real money stays blocked), and versioned AR/EN disclosure text (no wording shipped). This is business direction, not legal clearance: never mark counsel sign-off APPROVED on the founder's behalf.
-- Check `git log` in `kiorex-platform` for the commit that finished this ("commission policy", cash-visit netting, settlement statement) and `LAUNCH_PREPARATION_GUIDE.md` rows `LG-COM-*`.
+- Built: platform commits 3850d45 (policy, counsel gate, disclosure, cash tender, settlement statement) and e41bc51 (signed partner statement route); Clinic 3555b2e0 and 035a566b, Pharmacy 8e0d07f and 8796925, Lab 2bf38db and fb23fa3 (provider-side statement, tender, disclosure, configurable dunning params). Launch rows `LG-COM-17..20` carry the status.
 
 ## 7. Open items and decisions (authoritative list: `LAUNCH_PREPARATION_GUIDE.md`)
 
@@ -94,3 +94,70 @@ Parent folder: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/` (workspace repo
 3. Update the relevant doc and the launch guide row in the same change.
 4. Sync with `bash scripts/push-all.sh`. Merge Clinic `kiorex` to `main` only when told, with `[skip ci]`.
 5. When unsure about money, legal wording, deploys, deletions or anything outward-facing, stop and ask the founder.
+
+## 11. Repositories: local paths and GitHub links (snapshot 26 Nov 2026)
+
+All local paths are under `/Users/shall/Documents/Peraonal/Work/`. GitHub owner is `mshall` (SSH remotes, `git@github.com:mshall/<repo>.git`; web `https://github.com/mshall/<repo>`).
+
+| Repo | Local path | GitHub | Working branch | Tip when written | Apps / packages |
+|---|---|---|---|---|---|
+| Workspace (docs, brand, e2e, scripts) | `kiorex-v2/` | https://github.com/mshall/kiorex-workspace | `main` | daa4e2e | `_docs`, `_brand`, `e2e`, `scripts` |
+| Kiorly Clinic (+ Nurse) | `kiorex-v2/clinics-management/` | https://github.com/mshall/clinics-management | **`kiorex`** (deploys from `main`) | kiorex 035a566b, main 3c1e6a04 | `apps/api`, `apps/web`, `apps/docs`, `packages/field-visit` |
+| Contracts | `kiorex-v2/kiorex-contracts/` | https://github.com/mshall/kiorex-contracts | `main` (published 1.12.0); unpublished work on branches `kiorex` and `contracts-1.13.0` (tip 125260d) | main 5685181 | package `@kiorex/contracts` |
+| Pay contract | `kiorex-v2/kiorex-pay-contract/` | https://github.com/mshall/kiorex-pay-contract (private) | `main` | 449b706 | package `@kiorex/pay-contract` 0.1.0 |
+| Kiorex platform (patients, Pay, growth, ops) | `kiorex-v2/kiorex-platform/` | https://github.com/mshall/kiorex-platform | `main` | 07c3ec1 | `apps/api`, `web`, `widget`, `mobile`, `ops` |
+| Kiorex Passport | `kiorex-v2/kiorex-account/` | https://github.com/mshall/kiorex-account | `main` | 29b9cd6 | `apps/dev-idp`, `kiorly-home`, `passport-ui`; `packages/backchannel`, `otp-sender` |
+| Kiorly Pharmacy | `kiorex-v2/kiorly-pharmacy/` | https://github.com/mshall/kiorly-pharmacy | `main` | 8796925 | `apps/api`, `apps/web`, `packages/shared` |
+| Kiorly Lab | `kiorex-v2/kiorly-lab/` | https://github.com/mshall/kiorly-lab | `main` | fb23fa3 | `apps/api`, `apps/web`, `packages/shared` |
+| Kiorly staff app | `kiorex-v2/kiorly/` | https://github.com/mshall/kiorly | `main` | 03fd7f2 | Expo app |
+| Founder's own Clinic checkout (**DO NOT TOUCH**) | `kiorly-clinics-management/` | same remote as Clinic | founder's | n/a | ports 3020/5190/5191 |
+
+Other folders in `Work/` that look related but are leftovers: `kiorex-v2-w9fin-*` and `kiorex-v2-w9a1` are old agent git worktrees (their branches are merged; remove with `git worktree remove` after checking `git cherry`). `Kiorex/` holds older material. Unrelated projects (`AIAgentPromptGenerator`, `AINomodTask`, `MAL`) are not part of this.
+
+Key doc paths (all under `kiorex-v2/`): `AGENTS.md`, `CLAUDE.md`, `README.md`, `INTEGRATION.md`, `TEST_GUIDE.md`, `_docs/LLM_HANDOFF.md` (this), `_docs/LAUNCH_PREPARATION_GUIDE.md`, `_docs/FOUNDER_DECISIONS.md`, `_docs/CLINIC_FIRST_DEPLOY_DRYRUN.md`, `_docs/INTEGRATION_GO_LIVE_RUNBOOK.md`, `_docs/INTEGRATION_RUNBOOK_PAYMENTS.md`, `_docs/INTEGRATION_RUNBOOK_MESSAGING.md`, `_docs/CONFIGURATION_CATALOG.md` (mirror of `kiorex-platform/Docs/CONFIGURATION_CATALOG.md`), `_docs/growth/*`, `_docs/rev23/KX-*.md`, `_docs/pdf/` (PDF builder; qa contact sheets in `_docs/pdf/qa/`), `_brand/`, per-repo `Docs/` and `Docs/NEEDS_HUMAN.md` in the platform. Google Drive folder "Kiorex v2" (id 1Pk__yq04TSGzWwAsiWQB--bVgu8WGd_L) holds the 16 PDFs under "00 Executive & Governance", "02 PRD", "03 Technical Documents", "04 Financial Model & GTM", "05 Risk & Compliance", "07 Roadmap & Delivery".
+
+Useful commands (run from `kiorex-v2/`): `bash scripts/push-all.sh` (sync all repos); `node _docs/pdf/build.mjs` (rebuild PDFs); `e2e/scripts/*-stack.sh` (private stacks); Postgres `~/.local/bin/psql -U postgres -h localhost -p 5433`.
+
+## 12. Remaining work checklist (update this list as items close; the launch guide rows are authoritative)
+
+Legend: [H] needs the founder, finance, counsel or a vendor; [E] engineering an agent can do; [D] decision.
+
+### A. Release gates (in order)
+- [ ] [D] Publish contracts 1.13.0 (LG-COM-15): review shapes; merge `kiorex` into contracts `main`; tag `v1.13.0`; run `publish.yml` by hand; vendor `kiorex-contracts-1.13.0.tgz` into platform, pharmacy and lab; delete their local rate-resolution copies. Not required for the Clinic deploy.
+- [ ] [E+H] First AWS deploy of Clinic `main` (LG-COM-16), only when the founder says so: manual RDS snapshot; re-run `_docs/CLINIC_FIRST_DEPLOY_DRYRUN.md` steps on Postgres 16; fix the "failed migration looks healthy" risk (R3) in the container entrypoint or health probe; decide flags (keep `clinic.provider_credit_v2`, `growth.provider_marketing_v2`, `clinic.usage_bundles` off); run Redocly lint, Playwright and `cdk synth`; deploy with a push WITHOUT `[skip ci]` (or `workflow_dispatch`); watch smoke tests; know the rollback plan in the dry-run doc.
+- [ ] [E] Rebuild and re-upload the PDFs after the final docs are settled (SB-05 now resolved, commission policy/statement/cash netting added; KX-05/12/15/30/33 and Pay docs). Use the Drive web "Manage versions > Upload new version" flow so file ids and links stay; the Drive connector cannot take large base64.
+
+### B. Commission and money (founder direction 26 Nov: two-way visibility, bank-only payouts, cash visits netted)
+- [ ] [H] Counsel/CBE funds-flow sign-off per market, recorded in Ops > Commission policy (LG-COM-18). Until then real-money modes stay blocked. Never mark approved on the founder's behalf.
+- [ ] [H] Enter the commission numbers per organisation type and any overrides (LG-COM-11..13), through the maker-checker flow with two super admins.
+- [ ] [H] Enter AR/EN disclosure texts and choose override-reason visibility (LG-COM-14).
+- [ ] [D] Does a direct bank/InstaPay transfer to the clinic or a card terminal count as CASH tender (LG-COM-20)? Clinic reports these as unknown today.
+- [ ] [D] LG-COM-7: can the Clinic "higher of subscription or commission" settlement coexist with Kiorex collection?
+- [ ] [E] Real saved-method charging for AUTO_CHARGE_SAVED_METHOD (LG-COM-4); a reconciliation finding "claim differs from the rate".
+- [ ] [E] Per-organisation Clinic credentials for the partner statement route (today one shared Clinic secret; CTO item in NEEDS_HUMAN).
+- [ ] [E] Sign the query string of the partner statement route; Pharmacy/Lab mobile staff cards for the rate and statement; statement PDF; `feesMinor` for Pharmacy/Lab; refunds/chargebacks/bank match in the Clinic's mock mirror.
+- [ ] [E] Clinic dunning: `reminderDays` after the due date are dropped (timeline counts days before due only); decide if needed. Move remaining hardcoded values to config (platform job interval, dunning bounds, aging buckets 30/60/90, 7-day notice before money policy, legacy `PHARMACY_TAKE_RATE_BPS`/`LAB_TAKE_RATE_BPS`; Clinic `DEFAULT_DUNNING_TIMELINE`, `renewalReminderDaysBefore`).
+- [ ] [E] Retire or keep the Clinic market-rate table (fallback only today); optional SB-05 entry in the Clinic `safety-controls.ts` registry if its parity test allows.
+
+### C. Real integrations (flip mock to real, one at a time, staging first; see `INTEGRATION_GO_LIVE_RUNBOOK.md`)
+- [ ] [H] Payments: Paymob, Fawry, InstaPay, card gateway, bank IPN (real file/layout), Vodafone Cash/wallets; sandbox credentials by reference; settlement import; `INTEGRATION_MODES` approval.
+- [ ] [H] Messaging: Meta WhatsApp Cloud (business verification, template approval, number), SES/SNS email, SMS aggregator, APNs/FCM/Expo push credentials.
+- [ ] [H] Passport production IdP choice (Cognito default), production OIDC clients per product, Apple/Google bundle-id registration for `com.kiorly.app`, store listings.
+- [ ] [H] Native Arabic content review, legal text, pentest by an external firm, ZAP, privacy impact assessment sign-offs, counsel/CMO gates (GHV1/2, GPR1/2, GKN1/2).
+- [ ] [D] mTLS for partners only on partner demand (today HMAC-signed requests).
+
+### D. Engineering leftovers
+- [ ] [E] Clinic web screens for matching, patient/staff Pay screens, routing in deposit checkout, Pay Playwright, Android Gradle/device checks, Passport email UI.
+- [ ] [E] Clinic daily-cap stale cache edge (cap now enforced on holds/bookings; keep watching).
+- [ ] [E] Reduce Jest memory retention in platform integration tests (needs 12 GB heap ceiling; CI runner sizing).
+- [ ] [E] Older shared-stack Playwright specs (Pharmacy/Lab `growth.spec.ts`) not re-run after the latest changes.
+- [ ] [E] Confirm the `growth.product_ingest` flag decision and doctor-created links (G-17).
+
+### E. Housekeeping
+- [ ] [H] Make `mshall/clinics-management` private? (public today; check GitHub Actions minutes first; no forks/stars). Change visibility only on the founder's word.
+- [ ] [H] Drop local scratch DBs `kiorex_pay_unified`, `kiorly_pay_unified`, `kiorly_telehealth` (port 5433; no references; permanent), only on the founder's word.
+- [ ] [E] Remove the merged old worktrees `kiorex-v2-w9fin-*`, `kiorex-v2-w9a1` and about 30 merged local branches (`git cherry` first); delete `com-collect-onpay` (content is in main).
+- [ ] [E] Contracts branch `w9-a1` (one old commit, superseded by 1.13.0) can be dropped.
+
+### F. Rules of engagement for the next agent
+Read section 2 first. Before any push to Clinic `main`, confirm `[skip ci]` and run the diff check for `.github/`, `infra/`, Docker, vite, env and port files. Use private DBs and ports; one test process at a time; ask before drops, visibility changes, deploys, publishing and anything outward-facing.
