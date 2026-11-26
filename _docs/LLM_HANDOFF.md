@@ -131,7 +131,7 @@ Legend: [H] needs the founder, finance, counsel or a vendor; [E] engineering an 
 - [ ] [H] Counsel/CBE funds-flow sign-off per market, recorded in Ops > Commission policy (LG-COM-18). Until then real-money modes stay blocked. Never mark approved on the founder's behalf.
 - [ ] [H] Enter the commission numbers per organisation type and any overrides (LG-COM-11..13), through the maker-checker flow with two super admins.
 - [ ] [H] Enter AR/EN disclosure texts and choose override-reason visibility (LG-COM-14).
-- [ ] [D] Does a direct bank/InstaPay transfer to the clinic or a card terminal count as CASH tender (LG-COM-20)? Clinic reports these as unknown today.
+- [x] LG-COM-20 decided 27 Nov 2026: direct bank/InstaPay/card terminal = cash-type tender recorded as its own kind CASH_TRANSFER, with a per-tender commission treatment (rate/min/cap/mode/grace) configurable per org type and per org, default inherits the base rate (platform d998899, 16b3746; Clinic kiorex 1d5b3956). Gap: Clinic reads tender from check-in mode/channel, not invoice payment allocations; FAWRY/wallet stay unknown.
 - [ ] [D] LG-COM-7: can the Clinic "higher of subscription or commission" settlement coexist with Kiorex collection?
 - [ ] [E] Real saved-method charging for AUTO_CHARGE_SAVED_METHOD (LG-COM-4). (Reconciliation finding `CLAIM_NE_RATE` "claim differs from the rate": DONE, local.)
 - [ ] [E] Per-organisation Clinic credentials for the partner statement route: platform part DONE (derived per-tenant secret, `COMMISSION_STATEMENT_CLINIC_AUTH`); the Clinic must hold per-tenant secrets, then flip to `per_org` (`kiorex-platform/Docs/PARTNER_STATEMENT_CLIENT_CHANGES.md`).
