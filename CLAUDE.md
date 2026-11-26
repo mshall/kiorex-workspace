@@ -1,5 +1,7 @@
 # Kiorex v2 workspace — permanent context
 
+> **New to this workspace (human or LLM)? Read `AGENTS.md` and `_docs/LLM_HANDOFF.md` first.**
+
 > ## ⛔ NO TAX-AUTHORITY REPORTING — founder decision, reaffirmed 19 Nov 2026 (ADR-011, KX-01, FD-02)
 > **No product in this ecosystem integrates with, submits to, or reports to any tax authority** (no Egyptian ETA e-invoicing/e-receipt, no ZATCA, no FTA, nothing similar — in any market).
 > Clinics, doctors, pharmacies and labs are independent businesses that file their **own** taxes with their **own** systems.
