@@ -63,7 +63,7 @@ Kiorex v2 answers with software providers want to use every day (Kiorly), demand
 |---|---|---|
 | BR13 | Non-payment never blocks viewing, printing or exporting clinical records. | SB03 |
 | BR14 | Dunning timeline: grace to day 14, read-only from day 15, suspended from day 45 (configurable). | SB03 |
-| BR15 | Unpaid Lite fees past 30 days pause the Kiorex listing; Kiorly keeps working. | SB05 |
+| BR15 | Unpaid Lite fees are reminded, aged and escalated but never pause or hide the Kiorex listing (decided 26 Nov 2026: collection never pauses listing; supersedes the earlier D+30 pause). Kiorly keeps working. | SB05 |
 | BR16 | A tenant can export all its data at any time and on offboarding. | SC05 |
 | BR17 | Clinicians over the seat cap become read-only (cannot book or sign); data retained. | PL07 |
 ### Marketplace
