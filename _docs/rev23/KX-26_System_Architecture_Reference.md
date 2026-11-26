@@ -549,3 +549,6 @@ flowchart LR
   R2 --> DB
   R3 --> DB
 ```
+
+## Environment and domain standard (27 Nov 2026, Proposed, ADR-059)
+System-wide URL architecture: two domains, five environments, one registry (`_docs/registry/service-url-registry.yaml`). Kiorex host roles: marketplace, `api`, `admin`, `passport`, `ai` (no public DNS), `webhooks`, `cdn`, widget `book`; Kiorly: marketing apex, `app` (Kiorly Home), `clinics`, `pharmacies`, `labs`, `admin`, one `api` gateway with `/clinics`, `/pharmacies`, `/labs` prefixes. International routing is `kiorex.com/{locale}/{cc}` (short entry routes `/{cc}`) for patients and tenant configuration for Kiorly. Detail: `_docs/environments/INTERNATIONAL_DOMAIN_ROUTING.md`.

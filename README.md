@@ -82,6 +82,9 @@ flowchart TB
 | **Infra** | OpenTofu only (ADR-028); nothing deployed, no AWS deploy until the founder says so |
 | **Providers** | Mock by default; real SMS, Email, WhatsApp, payments, consent, AI and storage adapters are built and need only URLs and credentials: [_docs/PROVIDER_GO_LIVE.md](_docs/PROVIDER_GO_LIVE.md) |
 
+## Environments and domains (27 Nov 2026, ADR-059 Proposed)
+Environment tags **kx-test** (test), **kx-pilot** (pilot), **kx-pro** (prod); host pattern `<service>.<env>.<domain>` (production has no environment label). The canonical host list is `_docs/registry/service-url-registry.yaml`; narrative in `_docs/environments/` and `_docs/adr/ADR-059-unified-environment-dns-subdomain-and-domain-routing.md`. Check it with `node _docs/registry/validate-registry.mjs`. Not deployed: no DNS, certificate or AWS change has been made.
+
 ## Repositories
 
 | Repo | Role | GitHub | Branch | Status | README |

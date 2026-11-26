@@ -1,3 +1,24 @@
+# Docs sync manifest, addendum 27 Nov 2026 (environment, DNS and domain standard, ADR-059 Proposed)
+
+Nothing was uploaded to Google Drive (Drive folder `1Pk__yq04TSGzWwAsiWQB--bVgu8WGd_L`, "Kiorex v2"). The markdown sources below changed and the matching Drive documents need a new version when the founder signs ADR-059 (PDF rebuild: `cd _docs/pdf && node build.mjs --doc KX-00,KX-01,KX-04,KX-10,KX-15,KX-17,KX-19,KX-21,KX-22,KX-26`; the new `_docs/environments/*.md`, `_docs/adr/` and `_docs/registry/` files have no PDF volume yet and can be added to the Drive folder as a new section "08 Environments and Domains" or as one combined PDF).
+
+| Drive document | Source changed | What changed |
+|---|---|---|
+| KX-00 Master Blueprint (master index) | `rev23/KX-00_Master_Blueprint.md` | index entry for ADR-059 and the environment documents |
+| KX-01 Decision Log and ADRs | `rev23/KX-01_Decision_Log_ADRs.md` | ADR-059 row and paragraph (Proposed) |
+| KX-04 Passport PRD | `rev23/KX-04_Kiorex_Account_Identity_PRD.md` | passport hosts, pilot uses the production issuer, cookies |
+| KX-10 Platform, DevOps and Security | `rev23/KX-10_Platform_DevOps_Security.md` | environments, certificates, non-production access control |
+| KX-15 Risk and Compliance | `rev23/KX-15_Risk_Compliance_Framework.md` | real data on the production plane, kx-test exception |
+| KX-17 Clinic Launch Readiness | `rev23/KX-17_Kiorly_Clinic_Launch_Readiness.md` | pilot to production URL transition |
+| KX-19 Brand, Domains, Store Accounts | `rev23/KX-19_Brand_Domains_Store_Accounts.md` | host table superseded |
+| KX-21 AWS Hosting and Infrastructure | `rev23/KX-21_AWS_Cloud_Hosting_Infrastructure.md` | Route 53 child-zone delegation, per-environment certificates |
+| KX-22 Repo Map and Agent Handoff (repository mapping) | `rev23/KX-22_GitHub_Repo_Map_Build_Agent_Handoff.md` | workspace owns the registry |
+| KX-26 System Architecture Reference | `rev23/KX-26_System_Architecture_Reference.md` | URL architecture and international routing |
+
+Markdown-only (not a PDF volume): `LLM_HANDOFF.md` section 13, `LAUNCH_PREPARATION_GUIDE.md` (domain note in section 2), `AWS_DEV_ENV_PLAN.md` (banner), `README.md` and `_docs/README.md` (index), `AGENTS.md`.
+
+---
+
 # Docs sync manifest (Rev 2.7, wave 9 finishing pass, 25 November 2026)
 
 **Upload approved by the founder (25 Nov 2026); the coordinator performs the upload.** The agent that rebuilt these files uploaded nothing to Google Drive. Folder with every PDF: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/pdf/out/` (git-ignored; the five files below were overwritten there by the finishing pass, the other 30 files are the earlier Rev 2.7 and Rev 2.4 builds, unchanged).
