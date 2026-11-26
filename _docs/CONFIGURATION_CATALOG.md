@@ -233,3 +233,17 @@ Consent gates and quiet hours enforcement; PHI and health-targeting filters (`as
 5. Rate limits, body-size limits and OTP limits stay deployment settings or code (abuse controls). Reserve and queue sizes (`GrowthLimiter`, batch sizes `CHUNK`, `BULK_MAX`) are engineering constants, not policy.
 6. Clinic policy settings are env-only: the Clinic has no maker-checker console. Price-change notice days, dispute deadline days and dispute SLA are contractual and remain code until counsel decides.
 7. The mode switch is an approval record plus drift display. Adapters still read `<KIND>_MODE` from the environment; nothing yet **blocks** a real mode that was not approved (enforcement at startup is a go-live decision).
+
+## Commission policy on the provider side (COM-3 provider lane, 26 Nov 2026; read only, nothing shipped)
+
+What Clinic, Pharmacy and Lab show of the commission policy above. They hold **no number and no wording of their own**: everything comes from the platform rate view (`disclosure`, `counsel.status`, the rate spec) and statement. Counsel has not signed off and real money stays blocked; this is business policy of the founder (two-way visibility, bank-transfer-only payouts, cash visits accrued and netted), not legal clearance.
+
+| Setting | Where | Controls | Default |
+|---|---|---|---|
+| `KIOREX_STATEMENT_MODE` | Clinic API env | `mock` mirrors the settlement statement from the Clinic's own rows (`source: LOCAL_MIRROR`); `real` fetches `GET {KIOREX_API_BASE_URL}/admin/commissions/settlement-statement/{orgId}` with the partner request HMAC (`KIOREX_OUTBOX_WEBHOOK_SECRET`, `KIOREX_EVIDENCE_CLIENT_KEY`). Failures are 503 `STATEMENT_UNAVAILABLE` / `STATEMENT_NOT_CONFIGURED`, never invented figures | `mock` |
+| `KIOREX_MODE` | Pharmacy and Lab API env (existing) | `real` fetches the statement with the integration client's key and webhook secret and `X-Kiorly-Org-Ref` = Kiorex's own reference (stored with the rate view); `mock` answers 503 `STATEMENT_NOT_CONNECTED` | `mock` |
+| Rate parameters read by the Clinic | pushed rate spec | `disputeWindowDays` (new charge dispute deadline, was market pack / 30), `invoiceDueDays` (due date of an invoice that collects commission, was 7), `retryDays` (auto-charge retries of such an invoice, was 1 / 3 / 7), `savedMethodChargeAllowed=false` (no saved-method auto charge of such an invoice, it stays an invoice), `graceDays` and `reminderDays` (dunning grace end and reminder offsets, were 14 and 3 / 0 days before due). Absent = the old default. No parameter can pause or hide the listing (SB-05) | all absent: defaults above |
+| `tender` on a Clinic claim | Clinic, per charge | `ONLINE` when the visit has a held / applied Kiorex Pay deposit, `CASH` when collected in cash at check-in; otherwise not reported (direct bank transfer or card terminal to the clinic: LG-COM-20) | not reported |
+| Disclosure texts, counsel status chip | provider web | texts shown only when Kiorex set wording (EN and / or AR; the other language, marked, when only one is written); the chip shows the status only, never reviewer, document or conditions | hidden / not shown |
+
+Roles that see the statement: Clinic finance, owner, group admin (and administrators when `kiorexCommissions.adminView` is on); Pharmacy owner, branch manager, chain operations; Lab owner, lab director, branch manager, finance.
