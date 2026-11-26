@@ -72,7 +72,7 @@ Parent folder: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/` (workspace repo
 - **LG-COM-16:** first AWS deploy of the merged Clinic `main`. Dry run done (`_docs/CLINIC_FIRST_DEPLOY_DRYRUN.md`). Two blockers fixed (Dockerfile copies `vendor/`, web typecheck, OpenAPI regenerated). Remaining risks: failed migration is not atomic and App Runner health can still look green, first boot downgrades past-due subscriptions to Lite, pre-deploy backup is disabled (take a manual RDS snapshot), post-deploy seed hits production, a push of this size resolves to a full deploy. Keep flags `clinic.provider_credit_v2`, `growth.provider_marketing_v2`, `clinic.usage_bundles` off.
 - Founder/finance/counsel inputs: actual commission numbers, CBE funds-flow sign-off and disclosure wording, bank IPN real layout, doctor-created links, native Arabic review, vendor sandbox credentials, Meta business verification and WhatsApp template approval, store registrations (Apple/Google bundle ids), production Passport clients, production IdP choice (Cognito default), external pentest/ZAP, mTLS only on partner demand.
 - Engineering leftovers: real saved-method charging wiring (LG-COM-4), Pharmacy/Lab mobile staff cards for the rate view, a reconciliation finding for "claim differs from the rate", Clinic market-rate table retirement, optional Clinic `safety-controls.ts` registry entry for SB-05, PDFs still say SB-05 is open until rebuilt.
-- Local housekeeping the founder has not yet approved: dropping local DBs `kiorex_pay_unified`, `kiorly_pay_unified`, `kiorly_telehealth` (scratch copies, no references).
+- Local DBs `kiorex_pay_unified`, `kiorly_pay_unified`, `kiorly_telehealth`: founder decided 27 Nov 2026 to KEEP them (no connections, no references, no conflict); do not raise dropping again.
 
 ## 8. Deployment facts (read before touching `main`)
 
@@ -123,8 +123,8 @@ Useful commands (run from `kiorex-v2/`): `bash scripts/push-all.sh` (sync all re
 Legend: [H] needs the founder, finance, counsel or a vendor; [E] engineering an agent can do; [D] decision.
 
 ### A. Release gates (in order)
-- [ ] [D] Publish contracts 1.13.0 (LG-COM-15): review shapes; merge `kiorex` into contracts `main`; tag `v1.13.0`; run `publish.yml` by hand; vendor `kiorex-contracts-1.13.0.tgz` into platform, pharmacy and lab; delete their local rate-resolution copies. Not required for the Clinic deploy.
-- [ ] [E+H] First AWS deploy of Clinic `main` (LG-COM-16), only when the founder says so: manual RDS snapshot; re-run `_docs/CLINIC_FIRST_DEPLOY_DRYRUN.md` steps on Postgres 16; (R3 "failed migration looks healthy" is fixed in the entrypoint, see the dry-run doc); decide flags (keep `clinic.provider_credit_v2`, `growth.provider_marketing_v2`, `clinic.usage_bundles` off); run Redocly lint, Playwright and `cdk synth`; deploy with a push WITHOUT `[skip ci]` (or `workflow_dispatch`); watch smoke tests; know the rollback plan in the dry-run doc.
+- [ ] [D] Contracts 1.13.0: merged and tagged `v1.13.0` (27 Nov 2026) but registry publish failed (403, scope `@kiorex` has no GitHub owner under `mshall`). Decide: GitHub org `kiorex` (recommended) or rename scope, then re-run `publish.yml`. Consumers use vendored tarballs meanwhile.
+- [ ] [E+H] First AWS deploy of Clinic `main` (LG-COM-16), HELD by the founder until WhatsApp, email and push are verified, and only when the founder says so: manual RDS snapshot; re-run `_docs/CLINIC_FIRST_DEPLOY_DRYRUN.md` steps on Postgres 16; (R3 "failed migration looks healthy" is fixed in the entrypoint, see the dry-run doc); decide flags (keep `clinic.provider_credit_v2`, `growth.provider_marketing_v2`, `clinic.usage_bundles` off); run Redocly lint, Playwright and `cdk synth`; deploy with a push WITHOUT `[skip ci]` (or `workflow_dispatch`); watch smoke tests; know the rollback plan in the dry-run doc.
 - [ ] [E] Rebuild and re-upload the PDFs after the final docs are settled (SB-05 now resolved, commission policy/statement/cash netting added; KX-05/12/15/30/33 and Pay docs). Use the Drive web "Manage versions > Upload new version" flow so file ids and links stay; the Drive connector cannot take large base64.
 
 ### B. Commission and money (founder direction 26 Nov: two-way visibility, bank-only payouts, cash visits netted)
@@ -154,8 +154,8 @@ Legend: [H] needs the founder, finance, counsel or a vendor; [E] engineering an 
 - [ ] [E] Confirm the `growth.product_ingest` flag decision and doctor-created links (G-17).
 
 ### E. Housekeeping
-- [ ] [H] Make `mshall/clinics-management` private? (public today; check GitHub Actions minutes first; no forks/stars). Change visibility only on the founder's word.
-- [ ] [H] Drop local scratch DBs `kiorex_pay_unified`, `kiorly_pay_unified`, `kiorly_telehealth` (port 5433; no references; permanent), only on the founder's word.
+- [x] `mshall/clinics-management` made private on 27 Nov 2026.
+- [x] Local scratch DBs kept by founder decision (27 Nov 2026); not an open item.
 - [ ] [E] Remove the merged old worktrees `kiorex-v2-w9fin-*`, `kiorex-v2-w9a1` and about 30 merged local branches (`git cherry` first); delete `com-collect-onpay` (content is in main).
 - [ ] [E] Contracts branch `w9-a1` (one old commit, superseded by 1.13.0) can be dropped.
 
