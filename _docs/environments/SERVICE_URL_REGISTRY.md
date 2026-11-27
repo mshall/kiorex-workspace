@@ -64,7 +64,7 @@ Hosts for `dev` and `staging` follow the same pattern (`api.dev.kiorex.com`, `cl
 | `kiorly.clinics` | web, public | `clinics.test.kiorly.com` | `clinics.pilot.kiorly.com` | `clinics.kiorly.com` | planned |
 | `kiorly.pharmacies` | web, public | `pharmacies.test.kiorly.com` | `pharmacies.pilot.kiorly.com` | `pharmacies.kiorly.com` | planned |
 | `kiorly.labs` | web, public | `labs.test.kiorly.com` | `labs.pilot.kiorly.com` | `labs.kiorly.com` | planned |
-| `kiorly.admin` | web, public | `admin.test.kiorly.com` | `admin.pilot.kiorly.com` | `admin.kiorly.com` | reserved |
+| `kiorly.admin` | web, public | `admin.test.kiorly.com` | `admin.pilot.kiorly.com` | `admin.kiorly.com` | planned (same Ops console, Kiorly edition by host) |
 | `kiorly.api` | gateway, public | `api.test.kiorly.com` | `api.pilot.kiorly.com` | `api.kiorly.com` | planned |
 | `kiorly.nurse` | alias, public | `nurse.test.kiorly.com` | `nurse.pilot.kiorly.com` | `nurse.kiorly.com` | alias |
 | `kiorly.link` | web, public | `test.kiorly.link` | `pilot.kiorly.link` | `kiorly.link` | reserved |
