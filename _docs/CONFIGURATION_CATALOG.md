@@ -282,3 +282,14 @@ Defaults are exactly the values of `config/idp.json` `passwordless.otp` (5 per p
 | Retention periods of operational logs | infra (log groups, backup timer) and the lead settings | storage-lifecycle facts; the lead retention is already a setting |
 | Hosts, URLs, registries, regions, secrets | `_docs/registry` and the secret bags | infrastructure: changing them is a deployment, never a console action |
 | Notification template wording of safety messages (OTP, safety alerts) | code | must stay reviewed and fixed-form; marketing and lifecycle wording is already managed under Messaging |
+
+## Dual sign-in and Passport binding (28 Nov 2026, ADR-061)
+
+| Setting | Where | Meaning | Default |
+|---|---|---|---|
+| `AUTH_MODE` | Pharmacy and Lab API env (from the URL registry `provider_sign_in`) | `oidc` Passport only; `both` Passport AND e-mail + password (allowed in production, privileged roles still use Passport); `local` / `dev` local only (non-production) | `oidc` on every hosted environment except test (`both`) |
+| `OIDC_PHONE_LINK` | Pharmacy and Lab API env (registry `provider_phone_link`) | first Passport sign-in binds the unique active staff row with the same OTP-verified phone | `false` hosted, `true` on test |
+| `KIOREX_PASSPORT_PHONE_LINK` | Clinic API env | same for exactly one active staff member (`Employee.phone`) | off (not set on the live Clinic) |
+| `SIGNIN_RATE_PER_MINUTE`, `SIGNIN_RATE_PER_IP_PER_MINUTE` | Pharmacy and Lab API env | password attempts per e-mail (10) and per client address (30) per minute | 10 / 30 |
+| `LAB_LOGIN_LOCK_THRESHOLD`, `LAB_LOGIN_LOCK_MINUTES` | Lab API env | wrong passwords before lockout (3 to 20) and lock minutes (1 to 240); hard ranges | 5 / 15 |
+

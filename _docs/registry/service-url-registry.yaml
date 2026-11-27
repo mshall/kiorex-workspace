@@ -56,6 +56,11 @@ environments:
     aws_account: "990597228737"
     region: eu-central-1
     access: "invitation-only accounts, noindex, no public sign-up, CDN header gate for non-allow-listed visitors"
+    # Pharmacy and Lab sign-in (founder decision 28 Nov 2026): `both` = e-mail + password AND Kiorex Passport side by side (AUTH_MODE), `oidc` = Passport only (the default when absent).
+    # OIDC_PHONE_LINK `true` = the first Passport sign-in binds a staff row recorded by an operator or the owner with the same OTP-verified phone. Pilot and prod stay on the safe defaults
+    # until the founder decides otherwise (the validator refuses `both` on prod).
+    provider_sign_in: both
+    provider_phone_link: "true"
   - id: staging
     tag: kx-staging
     label: staging
@@ -306,6 +311,8 @@ services:
       OIDC_ISSUER: "{issuer}"
       KIORLY_HOME_ORIGINS: "{url:kiorly.app}"
       KIOREX_WEBHOOK_URL: "{url:kiorex.webhooks}/api/v1/webhooks/pharmacy"
+      AUTH_MODE: "{provider_sign_in}"
+      OIDC_PHONE_LINK: "{provider_phone_link}"
   - id: kiorly.labs
     domain: kiorly
     label: labs
@@ -321,6 +328,8 @@ services:
       OIDC_ISSUER: "{issuer}"
       KIORLY_HOME_ORIGINS: "{url:kiorly.app}"
       KIOREX_WEBHOOK_URL: "{url:kiorex.webhooks}/api/v1/webhooks/lab"
+      AUTH_MODE: "{provider_sign_in}"
+      OIDC_PHONE_LINK: "{provider_phone_link}"
   - id: kiorly.admin
     domain: kiorly
     label: admin

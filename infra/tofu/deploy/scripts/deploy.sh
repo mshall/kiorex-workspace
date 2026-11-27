@@ -66,6 +66,18 @@ for k in KX_REGISTRY PLATFORM_TAG PASSPORT_TAG PHARMACY_API_TAG LAB_API_TAG; do 
 # a release that carries a previously stored registry value is checked too (the stored value could be a display name)
 case "$(sed -n 's/^KX_REGISTRY=//p' "$rel/release.env")" in *.*|*/*) ;; *) echo "release.env KX_REGISTRY is not a full registry URL" >&2; exit 65;; esac
 
+# 1b. Pharmacy and Lab sign-in mode and phone link come from the registry (provider_sign_in, provider_phone_link per environment). They travel in release.env and the compose file sets them
+# in `environment:`, which wins over the secret bag, so a stale AUTH_MODE in /kx/<env>/<product> can never silently override the registry (ADR-061). Absent = Passport only, no phone link.
+emit_all="$(node "$ws/_docs/registry/validate-registry.mjs" --emit env --env "$env_id")"
+rv() { printf '%s\n' "$emit_all" | awk -F'\t' -v s="$1" -v k="$2" '$1==s { v=$2; sub(/^[^=]*=/,"",v); split($2,a,"="); if (a[1]==k) { print v; exit } }'; }
+for pair in "PHARMACY:kiorly.pharmacies" "LAB:kiorly.labs"; do
+  pre="${pair%%:*}"; svc="${pair#*:}"
+  m="$(rv "$svc" AUTH_MODE)"; l="$(rv "$svc" OIDC_PHONE_LINK)"
+  case "$m" in oidc|both) ;; *) echo "registry gave AUTH_MODE='$m' for $svc in $env_id (oidc or both expected)" >&2; exit 65;; esac
+  case "$l" in true|false) ;; *) echo "registry gave OIDC_PHONE_LINK='$l' for $svc in $env_id" >&2; exit 65;; esac
+  upsert "${pre}_AUTH_MODE" "$m"; upsert "${pre}_PHONE_LINK" "$l"
+done
+
 # 2. URLs come from the registry, never typed: one env file per product (deployment unit)
 node "$ws/_docs/registry/validate-registry.mjs" --emit env --env "$env_id" | while IFS=$'\t' read -r svc kv; do
   case "$svc" in kiorex.api|kiorex.webhooks) f=platform;; kiorex.passport) f=passport;; kiorly.pharmacies) f=pharmacy;; kiorly.labs) f=lab;; *) continue;; esac

@@ -110,7 +110,7 @@ services:
     image: ${KX_REGISTRY}/pharmacy-api:${PHARMACY_API_TAG}
     restart: unless-stopped
     env_file: [/opt/kx/env/pharmacy.env]
-    environment: { NODE_ENV: production, PORT: "3100", LISTEN_HOST: "0.0.0.0", TRUSTED_PROXY_HOPS: "1" }
+    environment: { NODE_ENV: production, PORT: "3100", LISTEN_HOST: "0.0.0.0", TRUSTED_PROXY_HOPS: "1", AUTH_MODE: "${PHARMACY_AUTH_MODE:-oidc}", OIDC_PHONE_LINK: "${PHARMACY_PHONE_LINK:-false}" }
     depends_on:
       postgres: { condition: service_healthy, required: false }
     mem_limit: 512m
@@ -120,7 +120,7 @@ services:
     image: ${KX_REGISTRY}/lab-api:${LAB_API_TAG}
     restart: unless-stopped
     env_file: [/opt/kx/env/lab.env]
-    environment: { NODE_ENV: production, PORT: "3200", LISTEN_HOST: "0.0.0.0", TRUSTED_PROXY_HOPS: "1" }
+    environment: { NODE_ENV: production, PORT: "3200", LISTEN_HOST: "0.0.0.0", TRUSTED_PROXY_HOPS: "1", AUTH_MODE: "${LAB_AUTH_MODE:-oidc}", OIDC_PHONE_LINK: "${LAB_PHONE_LINK:-false}" }
     depends_on:
       postgres: { condition: service_healthy, required: false }
     mem_limit: 512m

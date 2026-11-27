@@ -127,6 +127,8 @@ function resolveTemplate(reg, tpl, envId) {
     if (k === "issuer") return issuerFor(reg, envId);
     if (k === "env") return envId;
     if (k === "env_tag") return env.tag;
+    if (k === "provider_sign_in") return env.provider_sign_in ?? "oidc";
+    if (k === "provider_phone_link") return String(env.provider_phone_link ?? "false");
     if (k === "plane") return env.plane;
     if (k === "cors") return "{cors}"; // resolved per service by the caller
     return `<unknown ${k}>`;
@@ -182,6 +184,7 @@ function checkAll(reg) {
   const pilot = reg.environments.find((e) => e.id === "pilot"); const prod = reg.environments.find((e) => e.id === "prod");
   if (pilot && prod && pilot.plane !== prod.plane) err("pilot must run on the prod plane (no data migration at go-live)");
   if (prod && prod.label !== "") err("prod must have an empty environment label");
+  for (const e of reg.environments) { if (e.provider_sign_in !== undefined && !["oidc", "both"].includes(e.provider_sign_in)) err(`environment ${e.id}: provider_sign_in must be oidc or both`); if (e.id === "prod" && e.provider_sign_in === "both") err("environment prod: provider_sign_in both is refused until the founder decides (safe default is oidc)"); }
   for (const e of reg.environments) if (e.id !== "prod" && !/^[a-z]+$/.test(e.label)) err(`environment ${e.id}: label must be lowercase letters`);
   if (reg.oidc.issuer_env.pilot !== "prod") err("oidc.issuer_env.pilot must be prod (accounts survive the pilot to production move)");
   for (const [k, v] of Object.entries(reg.oidc.issuer_env)) if (!envIds.includes(k) || !envIds.includes(v)) err(`oidc.issuer_env ${k}: ${v} unknown environment`);
