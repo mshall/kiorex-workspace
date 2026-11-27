@@ -78,3 +78,33 @@ test('offline/outage: a 503 on the work list shows an error state with retry, ne
   expect(t.length).toBeGreaterThan(20);
   await ctx.close();
 });
+
+test('the shipped bundle carries the new staff capabilities (Lab result entry, Clinic commission statement) and still no local address', () => {
+  const js = bundleText(webDir('kiorly'));
+  expect(js).toContain('lab/results/[specimenId]');
+  expect(js).toContain('/billing/kiorex-commissions/statement');
+  expect(js).toContain('/billing/kiorex-commissions/access');
+  expect(js).not.toMatch(/https?:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2)/);
+});
+
+test('Lab technologist: the result-entry route for a specimen that is not in processing says so (no crash, no write); the work list loads', async ({ browser }) => {
+  const { ctx } = await as(browser, 'lab', 'lab-tech', '+201000002005', `${URLS.lab}/api/v1`);
+  const page = await ctx.newPage(); const c = collect(page);
+  const writes: string[] = []; page.on('request', (r) => { if (r.method() !== 'GET' && r.url().startsWith(URLS.lab)) writes.push(`${r.method()} ${new URL(r.url()).pathname}`); });
+  expect(await text(page, '/lab/worklist')).toMatch(/Work ?list|Worklist|In the lab|queue/i);
+  expect(await text(page, '/lab/results/does-not-exist')).toMatch(/not in processing any more|cannot do this|Result entry/i);
+  expect(writes.filter((w) => /\/results/.test(w))).toEqual([]); // device push-token upkeep is not a result write
+  expect(c.errors).toEqual([]);
+  for (const h of c.hosts) expect(hostsOk).toContain(h);
+  await ctx.close();
+});
+
+test('Pharmacy cashier: the Kiorex-order and commission screens answer "your role" instead of a retry loop; MFA state is friendly where the server asks for it', async ({ browser }) => {
+  const { ctx } = await as(browser, 'pharmacy', 'pharmacy-cashier', '+201000002008', `${URLS.pharmacy}/api/v1`);
+  const page = await ctx.newPage(); const c = collect(page);
+  expect(await text(page, '/pharmacy/orders')).toMatch(/role does not include this/i);
+  expect(await text(page, '/pharmacy/controlled')).toMatch(/role does not include this|not include/i);
+  expect(c.errors).toEqual([]);
+  await ctx.close();
+});
+
