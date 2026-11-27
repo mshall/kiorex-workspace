@@ -1,0 +1,80 @@
+[
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/patients"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/appointments"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/encounters"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/clinics"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/revenue"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/expenses"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/hr"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/kiorex"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/team"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/reports"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/front-desk/board"
+},
+{
+"surface": "clinic-signed",
+"url": "https://clinics.test.kiorly.com",
+"session": "clinicOwner",
+"path": "/help"
+}
+]

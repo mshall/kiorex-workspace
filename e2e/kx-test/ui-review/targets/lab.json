@@ -1,0 +1,56 @@
+[
+{
+"surface": "lab",
+"url": "https://labs.test.kiorly.com",
+"session": "labTech",
+"path": "/"
+},
+{
+"surface": "lab",
+"url": "https://labs.test.kiorly.com",
+"session": "labTech",
+"path": "/orders"
+},
+{
+"surface": "lab",
+"url": "https://labs.test.kiorly.com",
+"session": "labTech",
+"path": "/worklist"
+},
+{
+"surface": "lab",
+"url": "https://labs.test.kiorly.com",
+"session": "labTech",
+"path": "/patients"
+},
+{
+"surface": "lab",
+"url": "https://labs.test.kiorly.com",
+"session": "labTech",
+"path": "/catalogue"
+},
+{
+"surface": "lab",
+"url": "https://labs.test.kiorly.com",
+"session": "labTech",
+"path": "/accessioning"
+},
+{
+"surface": "lab",
+"url": "https://labs.test.kiorly.com",
+"session": "labTech",
+"path": "/qc"
+},
+{
+"surface": "lab",
+"url": "https://labs.test.kiorly.com",
+"session": "labTech",
+"path": "/settings"
+},
+{
+"surface": "lab",
+"url": "https://labs.test.kiorly.com",
+"session": "labTech",
+"path": "/finance"
+}
+]

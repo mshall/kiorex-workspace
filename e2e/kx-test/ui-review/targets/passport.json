@@ -1,0 +1,62 @@
+[
+{
+"surface": "passport",
+"url": "https://passport.test.kiorex.com",
+"session": "passportOps",
+"path": "/account"
+},
+{
+"surface": "passport",
+"url": "https://passport.test.kiorex.com",
+"session": "passportOps",
+"path": "/account/security"
+},
+{
+"surface": "passport",
+"url": "https://passport.test.kiorex.com",
+"session": "passportOps",
+"path": "/account/apps"
+},
+{
+"surface": "passport",
+"url": "https://passport.test.kiorex.com",
+"session": "passportOps",
+"path": "/account/privacy"
+},
+{
+"surface": "passport",
+"url": "https://passport.test.kiorex.com",
+"session": "passportOps",
+"path": "/account/ops/links"
+},
+{
+"surface": "passport",
+"url": "https://passport.test.kiorex.com",
+"session": "passportOps",
+"path": "/account/ops/mfa"
+},
+{
+"surface": "passport",
+"url": "https://passport.test.kiorex.com",
+"session": "passportOps",
+"path": "/account/ops/limits"
+},
+{
+"surface": "passport",
+"url": "https://passport.test.kiorex.com",
+"session": "passportPatient",
+"path": "/account"
+},
+{
+"surface": "passport",
+"url": "https://passport.test.kiorex.com",
+"session": "passportPatient",
+"path": "/account/security"
+},
+{
+"surface": "passport",
+"url": "https://passport.test.kiorex.com",
+"session": "passportPatient",
+"path": "/account/family"
+}
+]

@@ -1,0 +1,56 @@
+[
+{
+"surface": "pharmacy",
+"url": "https://pharmacies.test.kiorly.com",
+"session": "pharmacyCashier",
+"path": "/"
+},
+{
+"surface": "pharmacy",
+"url": "https://pharmacies.test.kiorly.com",
+"session": "pharmacyCashier",
+"path": "/customers"
+},
+{
+"surface": "pharmacy",
+"url": "https://pharmacies.test.kiorly.com",
+"session": "pharmacyCashier",
+"path": "/catalogue"
+},
+{
+"surface": "pharmacy",
+"url": "https://pharmacies.test.kiorly.com",
+"session": "pharmacyCashier",
+"path": "/inventory"
+},
+{
+"surface": "pharmacy",
+"url": "https://pharmacies.test.kiorly.com",
+"session": "pharmacyCashier",
+"path": "/growth"
+},
+{
+"surface": "pharmacy",
+"url": "https://pharmacies.test.kiorly.com",
+"session": "pharmacyCashier",
+"path": "/pos"
+},
+{
+"surface": "pharmacy",
+"url": "https://pharmacies.test.kiorly.com",
+"session": "pharmacyCashier",
+"path": "/rx"
+},
+{
+"surface": "pharmacy",
+"url": "https://pharmacies.test.kiorly.com",
+"session": "pharmacyCashier",
+"path": "/settings"
+},
+{
+"surface": "pharmacy",
+"url": "https://pharmacies.test.kiorly.com",
+"session": "pharmacyCashier",
+"path": "/orders"
+}
+]

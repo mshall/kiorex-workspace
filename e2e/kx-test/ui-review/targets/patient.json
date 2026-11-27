@@ -1,0 +1,56 @@
+[
+{
+"surface": "kiorex-web-signed",
+"url": "https://test.kiorex.com",
+"session": "patient",
+"path": "/"
+},
+{
+"surface": "kiorex-web-signed",
+"url": "https://test.kiorex.com",
+"session": "patient",
+"path": "/appointments"
+},
+{
+"surface": "kiorex-web-signed",
+"url": "https://test.kiorex.com",
+"session": "patient",
+"path": "/account"
+},
+{
+"surface": "kiorex-web-signed",
+"url": "https://test.kiorex.com",
+"session": "patient",
+"path": "/pharmacy/orders"
+},
+{
+"surface": "kiorex-web-signed",
+"url": "https://test.kiorex.com",
+"session": "patient",
+"path": "/records"
+},
+{
+"surface": "kiorex-web-signed",
+"url": "https://test.kiorex.com",
+"session": "patient",
+"path": "/notifications"
+},
+{
+"surface": "kiorex-web-signed",
+"url": "https://test.kiorex.com",
+"session": "patient",
+"path": "/loyalty"
+},
+{
+"surface": "kiorex-web-signed",
+"url": "https://test.kiorex.com",
+"session": "patient",
+"path": "/services"
+},
+{
+"surface": "kiorex-web-signed",
+"url": "https://test.kiorex.com",
+"session": "patient",
+"path": "/care-plans"
+}
+]

@@ -1,0 +1,74 @@
+[
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/providers"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/bookings"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/finance"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/commissions"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/flags"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/fees"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/growth"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/orders"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/liquidity"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/moderation"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/operations"
+},
+{
+"surface": "ops-kiorex",
+"url": "https://admin.test.kiorex.com",
+"session": "ops",
+"path": "/policy"
+}
+]

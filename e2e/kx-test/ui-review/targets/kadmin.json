@@ -1,0 +1,38 @@
+[
+{
+"surface": "ops-kiorly",
+"url": "https://admin.test.kiorly.com",
+"session": "kiorlyAdmin",
+"path": "/leads"
+},
+{
+"surface": "ops-kiorly",
+"url": "https://admin.test.kiorly.com",
+"session": "kiorlyAdmin",
+"path": "/kiorly-markets"
+},
+{
+"surface": "ops-kiorly",
+"url": "https://admin.test.kiorly.com",
+"session": "kiorlyAdmin",
+"path": "/kiorly-plans"
+},
+{
+"surface": "ops-kiorly",
+"url": "https://admin.test.kiorly.com",
+"session": "kiorlyAdmin",
+"path": "/partner-leads"
+},
+{
+"surface": "ops-kiorly",
+"url": "https://admin.test.kiorly.com",
+"session": "kiorlyAdmin",
+"path": "/partner-onboarding"
+},
+{
+"surface": "ops-kiorly",
+"url": "https://admin.test.kiorly.com",
+"session": "kiorlyAdmin",
+"path": "/providers"
+}
+]
