@@ -43,7 +43,7 @@ edge = {
   noindex     = true
 }
 
-alert_emails       = [] # set the founder's e-mail here (plain address, not a secret) to create the budget and the alarms
+alert_emails       = ["admin@kiorex.com"] # role address (Google Group), not personal; budget and alarm notifications
 monthly_budget_usd = 60
 budget_scope       = "tag" # needs the EnvTag cost allocation tag activated once in Billing (founder step), else use "account"
 
