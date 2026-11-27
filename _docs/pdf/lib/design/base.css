@@ -93,6 +93,7 @@ hr{ border:0; height:1px; background:var(--n200); margin:5mm 0 }
 .pullquote p{ margin:0; font-size:inherit }
 
 /* ---------- inline ---------- */
+code,kbd,samp,pre code{ font-family:var(--f-mono) }
 code.ic-code{ font:500 .84em var(--f-mono); background:var(--n100); color:var(--indigo-900); padding:.1em .38em; border-radius:1mm; word-break:break-word }
 .idb{ display:inline-block; font:600 .76em/1.35 var(--f-mono); padding:0 .42em; border-radius:1mm; white-space:nowrap; vertical-align:.04em; background:var(--n100); color:var(--n700) }
 .idb.adr{ background:#E4E2F7; color:#2B2589 } .idb.kx{ background:#D6E9F3; color:#064974 } .idb.risk{ background:#FBE0DA; color:#8F4944 } .idb.gen{ background:var(--n100); color:var(--indigo-900) }
@@ -106,7 +107,9 @@ code.ic-code{ font:500 .84em var(--f-mono); background:var(--n100); color:var(--
 .callout .c-body{ flex:1 1 auto; min-width:0 } .callout .c-title{ font:700 7.4pt/1 var(--f-body); letter-spacing:.14em; text-transform:uppercase; color:var(--c); margin:0 0 1.6mm }
 .callout .c-text>*:last-child{ margin-bottom:0 } .callout .c-text p{ margin:0 0 1.6mm; font-size:9.2pt } .callout .c-text ul{ margin-bottom:1mm }
 .c-warning{ --c:#B45309; --cs:#FEF6E0 } .c-decision{ --c:var(--indigo); --cs:#EFEEFA } .c-risk{ --c:#C2410C; --cs:#FDEDE7 } .c-question{ --c:#6D28D9; --cs:#F3EFFD } .c-rule{ --c:#0F766E; --cs:#E6F6F3 }
-.c-tip{ --c:#15803D; --cs:#E8F6EC } .c-changed{ --c:var(--coral-600); --cs:#FDF1EE }
+.c-tip{ --c:#15803D; --cs:#E8F6EC }
+.c-action{ --c:#075985; --cs:#E1F0FA; border-left-width:2mm } .c-action .c-icon{ border-radius:1.4mm }
+.c-status{ --c:#15803D; --cs:#E5F6EA; border-left-style:solid } .c-status .c-icon{ border-radius:1.4mm } .c-changed{ --c:var(--coral-600); --cs:#FDF1EE }
 .c-meta{ --c:var(--n500); --cs:var(--n50); border-left-style:dashed } .c-meta .c-text p{ font-size:8pt; color:var(--n600) } .c-meta .c-icon{ background:var(--n400) }
 .whatchanged .callout{ --c:var(--coral-600); --cs:#FDF1EE }
 
@@ -164,7 +167,7 @@ figure.code figcaption{ display:flex; align-items:center; gap:3mm; padding:1.8mm
 figure.code pre{ margin:0; padding:3.2mm 3.8mm; white-space:pre-wrap; overflow-wrap:anywhere; font:400 7.5pt/1.5 var(--f-mono); color:#E2E6FA; tab-size:2 }
 .hljs-comment,.hljs-quote{ color:#7F89B8 } .hljs-keyword,.hljs-selector-tag,.hljs-literal,.hljs-built_in{ color:#A5B4FC } .hljs-string,.hljs-doctag,.hljs-regexp{ color:#86EFAC }
 .hljs-number,.hljs-symbol,.hljs-bullet{ color:#F1ACA0 } .hljs-title,.hljs-section,.hljs-function .hljs-title{ color:#7DD3FC } .hljs-attr,.hljs-attribute,.hljs-name,.hljs-variable,.hljs-property{ color:#FCD34D } .hljs-type,.hljs-class .hljs-title{ color:#5EEAD4 }
-.diagram{ margin:4mm 0; padding:4mm; border:.7pt solid var(--n200); border-radius:3mm; background:#fff; text-align:center; break-inside:avoid } .mermaid-out svg{ max-width:100%; height:auto }
+.diagram{ margin:4mm 0; padding:4mm; border:.7pt solid var(--n200); border-radius:3mm; background:#fff; text-align:center; break-inside:avoid } .mermaid-out svg{ max-width:100%; height:auto } .mermaid-out svg text,.mermaid-out svg .sequenceNumber{ font-family:'Inter','IBM Plex Sans Arabic',sans-serif !important }
 .mermaid-fail{ color:var(--bad) }
 .probe{ position:absolute; visibility:hidden; left:0; top:0; width:176mm }
 

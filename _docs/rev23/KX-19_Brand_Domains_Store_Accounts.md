@@ -1,6 +1,8 @@
 # KX19 · Brand Architecture, Domains & Store Accounts
 Source: 1aTb7g8qsYtcLMTS1muWTRHCXfQKTluxs
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (Approved reference). Supersedes: KX19 Rev 2.3, 20 Nov 2026 · Rev 2.4 as-built section added at the end, status-labelled
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.4; ADR-059 accepted: host table superseded, URL registry and DNS delegation diagrams, domains per environment)
+
+WHAT CHANGED IN REV 2.8: ADR-059 accepted (27 Nov 2026): the host table is superseded by the URL registry; new diagrams for the registry and the DNS delegation and certificate flow; domain roles for kiorex.com and kiorly.com per environment.
 
 > Extraction note: symbols restored by inference; Arabic names for Kiorly Nurse came out as scrambled presentation-form glyphs (text layer reversed); the PDF shows the Arabic product name "كيورلي نرس" (Proposed; alternative "كيورلي للتمريض" — per scrambled glyphs; confirm in PDF).
 
@@ -109,10 +111,26 @@ The domain table of section 03 is stale against the as-built `kiorex-account/con
 Other rules kept: host-only cookies, never `Domain=.kiorex.com` or `.kiorly.com`; HSTS on every host. App-link files for the patient app move to the `kiorex.com` host (Team ID and SHA-256 are NEEDS_HUMAN). Section 04 store accounts: none created; growth ASO depends on them (KX-31 section 10).
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Domains as built (supersedes the Proposed reconciliation above).** `kiorex-account/config/domains.json` now carries, per environment, `patient` (production `https://kiorex.com`; staging `https://www.staging.kiorex.com`, a placeholder), `link` (`https://kiorly.link`; staging `https://staging.kiorly.link`), `widget` (`https://book.kiorex.com`; staging `https://book.staging.kiorex.com`), `home` (`https://www.kiorly.com`, apex `kiorly.com` redirects), `passport`, `clinic`, `nurse`, `pharmacy`, `lab` and per-product `api` hosts; `app.kiorly.com` is an alias of the clinic web. The patient app-link block (`appLinks.patient`) and association templates exist with `TODO_NEEDS_HUMAN` placeholders for the Apple Team ID and the Android SHA-256; the staff app association claims `/open/*` only. A test proves the new hosts are HTTPS in staging and production and unique.
 - **Still not true:** no host is registered, delegated or certified; `kiorly.link` has no behaviour behind it (serve or redirect is an Open decision, NH-008); the widget host and the SSR host are roles of the Kiorex API image, not separate services. `kiorex.com` and `kiorly.link` are Open decisions for the founder (domain ownership). Store accounts: none created; the Kiorly store title is `Kiorly: Clinic, Pharmacy & Lab` (ADR-037).
 
-## Environment and domain standard (27 Nov 2026, Proposed, ADR-059)
-The founder's environment, DNS and subdomain standard supersedes the host table above and the ADR-038 `domains.json` hosts: pattern `<service>.<env>.<domain>`, `passport.` instead of `account.`, `clinics.`, `pharmacies.`, `labs.`, `app.` (Kiorly Home) and one `api.` gateway per domain, `kiorly.com` reserved for the marketing site, `pilot` served on the production plane. Environment tags kx-test, kx-pilot, kx-pro. Canonical host list: `_docs/registry/service-url-registry.yaml`; narrative: `_docs/environments/`. The registrar steps (NS delegation of `test`, later the apex zones, DNSSEC DS, CAA) are founder actions and none has been taken. `kiorly.link` and `book.kiorex.com` are kept as non-core roles pending the founder's confirmation.
+## Rev 2.8: domains, hosts and the URL registry (27 Nov 2026, ADR-059 Accepted)
+
+The founder's environment, DNS and subdomain standard supersedes the host table above and the ADR-038 `domains.json` hosts: pattern `<service>.<env>.<domain>`, `passport.` instead of `account.`, `clinics.`, `pharmacies.`, `labs.`, `app.` (Kiorly Home) and one `api.` gateway per domain, `kiorly.com` reserved for the marketing site, `pilot` served on the production plane. Environment tags kx-test, kx-pilot, kx-pro. Canonical host list: `_docs/registry/service-url-registry.yaml`; full standard: KX-34. The registrar steps (NS delegation of `test`, later the apex zones, DNSSEC DS, CAA) are founder actions and none has been taken.
+
+<!-- kx-diagram: url-registry -->
+
+| Domain | Role | Hosts (production form) |
+|---|---|---|
+| kiorex.com | Patients, identity, platform | `kiorex.com`, `api.`, `admin.`, `passport.`, `webhooks.`, `cdn.`, `book.` (widget) |
+| kiorly.com | Providers and marketing apex | `kiorly.com`, `app.` (Kiorly Home), `clinics.`, `pharmacies.`, `labs.`, `admin.`, `api.` |
+| kiorly.link | Short links | reserved, pending the founder |
+
+<!-- kx-diagram: dns-cert-flow -->
+
+> **Needs human** Confirm `app.kiorly.com` is Kiorly Home (recommended) rather than a clinic alias; confirm `book.kiorex.com` and `kiorly.link` stay as non-core roles. Users see "Kiorex Account" for sign-in; "Passport" is an internal name.
+
+> **Warning** The staff app universal-link host moves from `www.kiorly.com` to `app.<env>.kiorly.com` before the first store build, because associated domains are fixed at compile time.
+

@@ -1,6 +1,8 @@
 # KX22 · GitHub Repository Map & Build-Agent Handoff
 Source: 17aubh5cfA7Vx_t9Wv6YXXCTQ1AawGXvx
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.4; ADR-059 accepted; workspace owns the URL registry and the OpenTofu tree; contracts 1.13.0 tagged; repository states of 27 Nov 2026)
+
+WHAT CHANGED IN REV 2.8: ADR-059 accepted. The workspace owns the URL registry, the environment documents and the OpenTofu tree. Contracts 1.13.0 tagged (registry publish deferred). Clinic deployed on AWS (main, 27 Nov 2026). Branch rules unchanged.
 
 > Extraction note: symbols restored by inference; §06 repo table and §07 two-column module map interleaved on extraction and were re-paired best-effort (cells flagged where ambiguous).
 
@@ -239,13 +241,29 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 Build-agent brief additions (section 11): follow KX-33 section 07; single owners for shared files (KX-33 section 03); never edit another package's files; growth work packages are `GRW-P1-A` to `M`. `_docs/growth/*` work-package appendices belong to the implementing agents.
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Repository map after the rename.** The staff app repository and folder are `kiorly` (renamed from `kiorly-team` on 24 Nov 2026; bundle id and scheme unchanged, legacy client and header names accepted). Other repositories: `kiorex-platform`, `kiorex-account`, `kiorex-contracts`, `clinics-management` (branch `kiorex`), `kiorly-pharmacy`, `kiorly-lab`, plus `e2e`, `_docs` and the root `CLAUDE.md`. `kiorex-account` also hosts `apps/kiorly-home`; `kiorex-platform` also hosts `apps/widget` and the patient mobile app.
 - **Single-owner files (as used in Phase 1, now free again).** Kiorex Prisma schema and `app.module.ts`, Clinic Prisma schema, the ops `App.tsx`, contracts `events/index.json`, `flags/catalogue.json`, OpenAPI and version, and `config/domains.json`; the owners of Phase 1 are listed in KX-33 section 03. Migrations are named `2026MMDDHHMM_<topic>`; the growth ones are in KX-28 section 02.
 - **Commands.** Kiorex API unit `npm run test:unit` (jest), integration `NODE_OPTIONS=--experimental-vm-modules npx jest --selectProjects integration --runInBand --testPathPatterns <pattern>` with Postgres on `:5433` (each run gets its own database); Clinic `node --import tsx --test` (`*.node.test.ts` unit, `*.integration.test.ts` with `DATABASE_URL=...kiorly_test`); contracts and Passport `npx vitest run`; security `cd e2e && npm run test:security`; edge `cd e2e && npx vitest run test/4*-edge-*.e2e.ts`. Services are restarted only through `e2e/scripts/up.sh --build --restart --only=<svc>`.
 - **Reading order for a build agent.** `CLAUDE.md`, KX-22 section 11, KX-33 and KX-28 for Growth; `_docs/growth/GROWTH_PHASE1_WORK_PACKAGES.md` sections 8 to 13 for the as-built records; `_docs/LAUNCH_PREPARATION_GUIDE.md` for human steps; `TEST_GUIDE.md` and `_docs/test-flow/index.html` for flows.
-- **Rules unchanged:** no push of the clinic `kiorex` branch without the founder (FD-18), no deploy, no `@aws-sdk/*` outside adapters, mock-first providers, Conventional Commits with requirement ids.
+- **Rules unchanged:** no push of the clinic `kiorex` branch without the founder (FD-18), no deploy without the founder in that moment (a push to Clinic `main` deploys: use `[skip ci]`), no `@aws-sdk/*` outside adapters, mock-first providers, Conventional Commits with requirement ids.
 
-## Environment and domain standard (27 Nov 2026, Proposed, ADR-059)
-The workspace repository now also owns the canonical URL registry (`_docs/registry/service-url-registry.yaml`, validated by `validate-registry.mjs`) and the environment documents in `_docs/environments/`. Each product repository will generate its host configuration from the registry (required changes per repository: `_docs/environments/ENVIRONMENT_STRATEGY.md` section 9). The ADR-038 `config/domains.json` in `kiorex-account` becomes a generated file. Nothing is deployed.
+## Rev 2.8: workspace ownership, repository states, 27 Nov 2026 (ADR-059 Accepted)
+
+The workspace repository (`kiorex-workspace`) owns the canonical URL registry (`_docs/registry/service-url-registry.yaml`, validated by `validate-registry.mjs`), the environment documents in `_docs/environments/`, the OpenTofu tree `infra/tofu` and the PDF builder. Each product repository generates its host configuration from the registry (required changes per repository: `_docs/environments/ENVIRONMENT_STRATEGY.md` section 9). The ADR-038 `config/domains.json` in `kiorex-account` becomes a generated file.
+
+> **Status** Deployment, 27 Nov 2026. Only Kiorly Clinic is deployed, on AWS (account 990597228737, eu-central-1, environment kx-test): it was deployed on 24 and 25 Nov 2026 and the deploy of `main` succeeded on 27 Nov 2026. Kiorex, Passport, Pharmacy and Lab are not deployed. Where this volume says "nothing is deployed", it describes the date it was written and those four products.
+
+| Repository | Branch rule | State on 27 Nov 2026 |
+|---|---|---|
+| `clinics-management` | work on `kiorex`; `main` is what AWS deploys; merge to `main` only on instruction, with `[skip ci]` | Deployed on AWS (24, 25 and 27 Nov 2026); GitHub repo public again to keep Actions minutes |
+| `kiorex-contracts` | `main` = published state | Merged and tagged `v1.13.0`; registry publish deferred (scope owner); vendored into platform, pharmacy and lab |
+| `kiorex-pay-contract` | `main` | 0.1.0, vendored tarballs |
+| `kiorex-platform`, `kiorex-account`, `kiorly-pharmacy`, `kiorly-lab`, `kiorly` | `main` | Local, mock providers, not deployed |
+| `kiorex-workspace` | `main` | Docs, brand, e2e, scripts, registry, OpenTofu tree |
+
+> **Rule** Never touch the founder's own checkout `kiorly-clinics-management`. No deploys, `tofu apply` or AWS changes unless the founder says so in that moment. Mock providers by default; never invent prices or legal wording.
+
+> **Needs human** Contracts registry: create the GitHub organisation that owns the `@kiorex` scope (recommended) or rename the scope, then re-run the manual publish workflow. The founder chose to do nothing for now.
+

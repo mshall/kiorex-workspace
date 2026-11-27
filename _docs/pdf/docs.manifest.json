@@ -1,5 +1,5 @@
 {
-  "revisionDefault": "Rev 2.4",
+  "revisionDefault": "Rev 2.8",
   "families": {
     "platform": {
       "label": "Platform",
@@ -461,6 +461,39 @@
       "group": "Growth Engine",
       "sources": [
         "_docs/rev23/KX-33_Growth_Engine_Implementation_Roadmap_and_Agent_Handoff.md"
+      ]
+    },
+    {
+      "code": "KX-34",
+      "file": "KX-34_Environment_Domain_and_Routing_Standard",
+      "title": "Environment, Domain and Routing Standard",
+      "subtitle": "kx-test, kx-pilot and kx-pro, one host pattern and URL registry, DNS and certificates, Passport single sign-on, OpenTofu with an AWS or Huawei Cloud switch, and the promotion rule.",
+      "family": "platform",
+      "group": "Architecture and platform",
+      "sources": [
+        "_docs/rev23/KX-34_Environment_Domain_and_Routing_Standard.md"
+      ]
+    },
+    {
+      "code": "PAY-01",
+      "file": "PAY-01_Kiorly_Pay_Unified_Layer",
+      "title": "Kiorly Pay: the Phased Unified Layer",
+      "subtitle": "Adapters, reconciliation, links, routing, fraud in shadow mode and the commission funds flow by tender; licensed partners settle funds.",
+      "family": "platform",
+      "group": "Payments",
+      "sources": [
+        "_docs/rev23/PAY-01_Kiorly_Pay_Unified_Layer.md"
+      ]
+    },
+    {
+      "code": "PAY-02",
+      "file": "PAY-02_Payments_Integration_Runbook",
+      "title": "Payments Integration Runbook",
+      "subtitle": "Accounts, secrets, webhooks, first sandbox payment, refunds, reconciliation, go-live checklist and rollback.",
+      "family": "platform",
+      "group": "Payments",
+      "sources": [
+        "_docs/rev23/PAY-02_Payments_Integration_Runbook.md"
       ]
     }
   ]

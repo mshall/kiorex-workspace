@@ -1,6 +1,8 @@
 # KX-05 — Kiorly Clinic PRD (as built)
 Source: 1JIhEl6TDzm69GR9lZLFpwUTH66mMtrVY
-Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.7; Clinic deployed on AWS (24, 25 and 27 Nov 2026); provider-side commission statement, tender kinds and defaults; real organisation Dr Ahmed Shall)
+
+WHAT CHANGED IN REV 2.8: Kiorly Clinic is deployed on AWS (24 and 25 Nov 2026; deploy of `main` succeeded 27 Nov 2026) and hosts the real organisation Dr Ahmed Shall in kx-test. New section on the provider side of the commission policy: settlement statement, tender kinds including cash transfer, disclosure, counsel status chip, editable seeded default rates. Demo data removed from the user interfaces.
 Owner role: VP Product, Kiorly. Audience: Product, engineering, sales, support.
 Extraction note: PDF text extraction; check/cross glyphs and some symbols lost (inferred where obvious).
 
@@ -235,7 +237,7 @@ RULE: Not flags — never switchable: Rx safety checks (interactions, allergies,
 ACTIVATION IN 30 DAYS ≥ 60% (20 visits checked-in) · FOUNDING TRIAL → PAID ≥ 50% · MONTHLY PAID CHURN ≤ 2.5% · ACTIVE DAYS / CLINIC / MONTH ≥ 20 · HOME VISITS WITH FULL GEOSTAMP TRAIL ≥ 98% (v2.3) · SAFETY ALERTS RESOLVED ≤ 15 MIN 100% (v2.3)
 
 ## 13 Build status and changes since 19 Nov 2026 (23 Nov 2026)
-Observed in `clinics-management` (branch `kiorex`, never `main`; 322 commits since 19 Nov, including merges from main), `kiorly` and the workspace e2e suites. Local development only; nothing deployed or pushed.
+Observed in `clinics-management` (branch `kiorex`, never `main`; 322 commits since 19 Nov, including merges from main), `kiorly` and the workspace e2e suites. Local development, except that the Clinic was deployed to AWS on 24, 25 and 27 Nov 2026 (Rev 2.8).
 
 ### 13.1 Staff mobile app: Kiorly (Clinic and Nurse entries)
 | Capability | Status | Evidence and caveat |
@@ -281,7 +283,7 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - Not verified: migration `20261128110000_growth_links_attribution` applied anywhere.
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Quick setup (As-built).** A first-run checklist in every product: Clinic 13 steps (profile, logo, hours, appointment types, availability, receptionist, WhatsApp reminders, patient import, first appointment, first check-in, doctor verification, Kiorex profile, Connect to Kiorex), Nurse edition equivalent. Rows open the exact screen, auto-detect completion, handle several clinics ("1 of 2"), disable owner-only steps for other roles and mark Lite-plan items as upgrade. Evidence: Clinic and Nurse 8 of 8 Playwright runs, rules unit and integration tests (`_docs/test-flow/quick-setup-results.md`, the implementing agents' record).
 - **Connect to Kiorex wizard and the Kiorex tab front door (As-built, ADR-040).** A standalone organisation never lists itself (`kiorexConnect = STANDALONE` adds a last-position eligibility blocker); the wizard computes a checklist from real state, sends a signed PHI-free request and waits for ops approval. The Kiorex tab shows five states (not connected, in progress, waiting, live dashboard, paused or changes requested) with "Talk to us" sending a signed lead. All marketing wording lives in one locale namespace (`kiorexMarketing`) and is NEEDS_HUMAN. Open: counsel-approved terms and fee wording.
@@ -308,7 +310,7 @@ Labels: **Proposed** (ADR-048, founder-approved design of 24 Nov 2026, unsigned)
 
 ## Rev 2.7 finishing update: subscription, dunning, Lite and Pay collections (25 Nov 2026)
 
-Status: **As-built locally** (SUB-01, SB-03, COM-1 views and Pay collections; mock billing gateway, nothing deployed). **Founder rule: a paid subscription renews automatically by default; switching renewal off, or a lapse that dunning cannot fix, moves the organisation to the free Lite plan, never to lockout. Data is never deleted.** The staff app that carries the Clinic and Nurse modules is **Kiorly**.
+Status: **As-built locally** (SUB-01, SB-03, COM-1 views and Pay collections; mock billing gateway; the Clinic itself is deployed on AWS, see Rev 2.8). **Founder rule: a paid subscription renews automatically by default; switching renewal off, or a lapse that dunning cannot fix, moves the organisation to the free Lite plan, never to lockout. Data is never deleted.** The staff app that carries the Clinic and Nurse modules is **Kiorly**.
 
 | Topic | How it works | Default or setting |
 |---|---|---|
@@ -331,4 +333,27 @@ Status: **As-built locally** (SUB-01, SB-03, COM-1 views and Pay collections; mo
 
 > **Needs human** Proration (`creditUnusedOnDowngrade` is stored but not applied, LG-SUB-3), the tax display line (market pack, NEEDS_HUMAN), the real charge and hosted card capture (LG-SUB-5), and the earlier conflict between the Clinic D+30 listing pause (SB-05) and the collection principle is resolved by decision on 26 Nov 2026 (see the Decided note below): collection never pauses listing.
 
-> **Decided 26 Nov 2026 (launch guide row 13.16, resolved; the founder delegated the choice to the recommendation):** collection never pauses listing. An unpaid Kiorex commission (Lite or any plan) is reminded, aged, escalated and can be disputed, but it never pauses or hides the Kiorex listing, and never blocks booking, plan or care. The Clinic code no longer pauses the listing at D+30 (SB-05 superseded; `Tenant.kiorexBillingPausedAt` is legacy, never set, and cleared by the daily dunning job where an old value remains). The listing still follows the subscription state (READ_ONLY or SUSPENDED for a non-commission subscription lapse) and verification. The rule is a code rule, not a feature flag: safety controls are never flags, so reversing it is a code change only (and a new founder decision).
+> **Decision** Decided 26 Nov 2026 (launch guide row 13.16, resolved; the founder delegated the choice to the recommendation): collection never pauses listing. An unpaid Kiorex commission (Lite or any plan) is reminded, aged, escalated and can be disputed, but it never pauses or hides the Kiorex listing, and never blocks booking, plan or care. The Clinic code no longer pauses the listing at D+30 (SB-05 superseded; `Tenant.kiorexBillingPausedAt` is legacy, never set, and cleared by the daily dunning job where an old value remains). The listing still follows the subscription state (READ_ONLY or SUSPENDED for a non-commission subscription lapse) and verification. The rule is a code rule, not a feature flag: safety controls are never flags, so reversing it is a code change only (and a new founder decision).
+
+## Rev 2.8: deployment, commission policy on the provider side (27 Nov 2026)
+
+> **Status** Deployment, 27 Nov 2026. Only Kiorly Clinic is deployed, on AWS (account 990597228737, eu-central-1, environment kx-test): it was deployed on 24 and 25 Nov 2026 and the deploy of `main` succeeded on 27 Nov 2026. Kiorex, Passport, Pharmacy and Lab are not deployed. Where this volume says "nothing is deployed", it describes the date it was written and those four products.
+
+> **Note** The real organisation Dr Ahmed Shall runs on the AWS Clinic (kx-test). The live CloudFront address stays valid permanently; the custom name `clinics.test.kiorly.com` is added to the same distribution later, after the founder approves. Demo (dummy) records are no longer shown in the user interfaces and are tagged so they can be removed on request.
+
+<!-- kx-diagram: funds-flow-tenders -->
+
+| Provider-side feature | Status | Note |
+|---|---|---|
+| Settlement statement tab and CSV | Done locally | Same figures the Kiorex ops console shows (two-way visibility) |
+| Tender of a visit: ONLINE, CASH, CASH_TRANSFER | Done locally | Clinic reads the tender from check-in mode and channel; unknown tender is counted as an exception, never guessed |
+| Disclosure blocks (AR and EN) | Done locally | Shown only when wording is set; draft wording stays pending counsel review |
+| Counsel status chip | Done locally | Shows NOT_REVIEWED until a human records the review |
+| Collection parameters from the rate (grace, reminders, dispute window) | Done locally | Defaults unchanged where no rate is set |
+| Per-organisation credentials for the Kiorex statement route | Done locally (platform side) | The Clinic must hold per-tenant secrets, then flip to per-organisation mode |
+| Signed query string on the statement route | Partly done | Platform verifies it; Clinic client has to send it |
+| First collection with real money | Blocked | Counsel sign-off NOT_REVIEWED |
+
+> **Decision** SB-05 is resolved: an unpaid Kiorex commission never pauses the Kiorex listing, booking, plan or care (decided 26 Nov 2026).
+
+> **Decision** LG-COM-20 (27 Nov 2026): a direct bank, InstaPay or card terminal payment at the clinic counts as a cash-type tender (accrued and netted in the next bank payout) and is recorded as its own kind, CASH_TRANSFER, with a configurable commission treatment.

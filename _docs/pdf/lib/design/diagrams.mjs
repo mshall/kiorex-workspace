@@ -399,6 +399,157 @@ def('adr-lifecycle', 'How a decision becomes binding', 'ADR numbering scheme A w
   return d;
 });
 
+/* ------------------------------------------------------------------ 19. environment and domain map (ADR-059, KX-34) */
+def('env-domain-map', 'Environments, domains and cloud providers', 'Three provisioned environments, one host pattern and one provider switch. kx-test runs on AWS today (account 990597228737, eu-central-1) and includes the live Clinic. kx-pilot is hostnames and a tenant cohort on the production plane. kx-pro is the major release for Egypt; the founder’s initial hosting decision is Huawei Cloud, with region availability, Egypt data residency and CBE rules still to be verified by the founder and counsel. Every environment can run on either cloud: one variable, provider_name = aws | huawei.', () => {
+  const d = new Dia(W, 560, 'Environment and domain map');
+  d.box(14, 12, 732, 50, { tone: 'dark', t: 'Host pattern:  <service>.<environment>.<domain>', s: 'Production omits the environment label. kiorex.com = patients, identity, platform. kiorly.com = providers and the marketing apex. One wildcard level always covers an environment.', ts: 12.5, ss: 9.6, align: 'center' });
+  const cols = [
+    { x: 14, tone: 'ocean', tag: 'kx-test', id: 'test', head: 'passport.test.kiorex.com', plane: 'test plane', cloud: 'AWS now', note: ['Real data at small scale: the real organisation Dr Ahmed Shall on the AWS Clinic, plus tagged dummy data.', 'Live Clinic cloudfront.net host stays valid.', 'Single cost-minimal host, private database, daily backups.'] },
+    { x: 266, tone: 'indigo', tag: 'kx-pilot', id: 'pilot', head: 'clinics.pilot.kiorly.com', plane: 'production plane', cloud: 'AWS or Huawei', note: ['Controlled production release: invitation-only tenant cohort.', 'Same databases, same IdP as prod; uses issuer passport.kiorex.com.', 'Moves to prod URLs with no data migration.'] },
+    { x: 518, tone: 'coral', tag: 'kx-pro', id: 'prod', head: 'passport.kiorex.com', plane: 'production plane', cloud: 'Huawei Cloud', note: ['Major release for Egypt, HA-capable.', 'Region, Egypt residency and CBE position: founder and counsel to verify.', 'Indexable once public.'] },
+  ];
+  cols.forEach((c) => {
+    const w = 228;
+    d.lane(c.x, 82, w, 326, '', { tone: c.tone === 'coral' ? 'ground' : c.tone });
+    d.tag(c.x + 14, 92, c.tag, { tone: c.tone === 'ocean' ? 'ocean' : 'indigo' });
+    d.text(c.x + w - 14, 103, 'id: ' + c.id, { size: 9.5, weight: 700, fill: COL.n600, anchor: 'end', head: true });
+    d.box(c.x + 12, 124, w - 24, 44, { t: c.head, s: c.plane, tone: 'neutral', ts: 10.4, ss: 9.2, bar: true });
+    d.box(c.x + 12, 178, w - 24, 46, { t: c.cloud, s: c.id === 'prod' ? 'initial decision, switchable' : 'provider_name switch', tone: c.tone === 'ocean' ? 'solidOcean' : c.tone === 'indigo' ? 'solid' : 'dark', ts: 11, ss: 9, align: 'center' });
+    d.box(c.x + 12, 236, w - 24, 140, { tone: 'neutral', s: c.note, ss: 9.2, valign: 'top', fill: '#fff' });
+  });
+  d.text(130, 400, 'REAL data, small', { size: 9, weight: 700, fill: COL.n600, anchor: 'middle', upper: true, spacing: 1 });
+  d.text(380, 400, 'REAL data, larger', { size: 9, weight: 700, fill: COL.n600, anchor: 'middle', upper: true, spacing: 1 });
+  d.text(632, 400, 'REAL data, public', { size: 9, weight: 700, fill: COL.n600, anchor: 'middle', upper: true, spacing: 1 });
+  d.box(14, 420, 354, 66, { tone: 'ground', t: 'Reserved names (no cost)', s: 'dev and staging follow the same pattern and are not provisioned. Egypt is the only live market; country is configuration, never a host.', ss: 9.2, dash: true });
+  d.box(380, 420, 366, 66, { tone: 'warn', t: 'Promotion rule (founder)', s: 'Before moving to the next environment, ask: carry the previous one over, or keep the two separate? Never promote data without the answer.', ss: 9.2 });
+  d.box(14, 496, 732, 56, { tone: 'coral', t: 'Not asserted here', s: 'Huawei Cloud region availability for Egypt, data residency and Central Bank of Egypt rules are for the founder to verify. The Huawei region variable is a deliberate placeholder so a plan cannot run by accident.', ss: 9.4 });
+  return d;
+});
+
+/* ------------------------------------------------------------------ 20. URL registry layout (ADR-059) */
+def('url-registry', 'URL registry: one source, many generated files', 'The registry is the only host list. Hostnames, CORS allow-lists, OIDC redirect and back-channel URIs, certificate names and DNS records are generated from it by the validator; application code never contains a domain. A CI job runs the validator in strict mode.', () => {
+  const d = new Dia(W, 520, 'URL registry layout');
+  d.box(14, 14, 250, 190, { tone: 'solid', t: 'service-url-registry.yaml', s: ['domains: kiorex, kiorly, link', 'environments[]: id, tag, label, plane, data_class', 'oidc.issuer_env: pilot uses prod', 'services[]: id, domain, label, kind, exposure, status', 'cors, oidc_clients, native_clients', 'app_links, legacy_hosts, code_scan'], ts: 12.5, ss: 9.6, valign: 'top' });
+  d.box(14, 216, 250, 82, { tone: 'ground', t: '83 hosts, five environments', s: ['17 test, 17 pilot, 21 prod,', '14 dev, 14 staging'], ss: 9.4 });
+  d.box(312, 70, 150, 92, { tone: 'dark', t: 'validate-registry.mjs', s: 'naming rules, cert coverage, no localhost, ai has no DNS', ts: 11.5, ss: 9.2, align: 'center' });
+  d.arrow([[264, 116], [312, 116]], { tone: 'indigo' });
+  d.chip(288, 94, 'read', { size: 8.6 });
+  const outs = [['--emit cors', 'browser allow-list per service'], ['--emit redirects', 'OIDC redirect and back-channel URIs'], ['--emit env', 'KX_ENV, issuer, public URLs per app'], ['--emit certs', 'ACM names per environment and domain'], ['--emit dns', 'records per zone'], ['--scan', 'hard-coded host literals in code']];
+  outs.forEach((o, i) => {
+    const y = 14 + i * 52;
+    d.box(520, y, 226, 44, { tone: i === 5 ? 'warn' : 'indigo', t: o[0], s: o[1], ts: 10.4, ss: 9.2 });
+    d.arrow([[462, 116], [490, 116], [490, y + 22], [520, y + 22]], { tone: 'indigo', r: 5, w: 1.4 });
+  });
+  d.lane(14, 334, 732, 176, 'Consumers (never type a host)');
+  const con = [['Passport', 'idp.json clients, domains.json, app-link files'], ['Platform, Clinic, Pharmacy, Lab', 'CORS, public base URL, OIDC issuer from env'], ['OpenTofu', 'modules/registry: zones, certificates, aliases'], ['CI', 'validate --strict, then deploy per environment']];
+  con.forEach((c, i) => d.box(30 + i * 178, 364, 166, 78, { tone: 'neutral', t: c[0], s: c[1], ts: 11, ss: 9, bar: true }));
+  d.box(30, 454, 700, 44, { tone: 'ground', t: 'Frozen identifiers: https://schemas.kiorex.com/event/... are never resolved or changed and need no DNS record', ss: 9.4, ts: 10.2, dash: true, align: 'center' });
+  return d;
+});
+
+/* ------------------------------------------------------------------ 21. DNS delegation and certificate flow (ADR-059) */
+def('dns-cert-flow', 'DNS delegation and certificate flow', 'Route 53 (or the Huawei DNS equivalent) is introduced by delegating only the test child zones: the founder adds one NS record set per registrar and nothing else at the registrars changes. Certificates are one per environment and domain, validated by CNAMEs that live in that environment’s own zone, so renewal is automatic. Apex delegation, DNSSEC DS and CAA come before pilot. No record, certificate or zone has been created yet.', () => {
+  const d = new Dia(W, 560, 'DNS delegation and certificate flow');
+  d.lane(14, 12, 732, 92, 'Registrars (founder edits records; agents never do)');
+  d.box(30, 40, 330, 52, { tone: 'neutral', t: 'domain.com / namecheap.com', s: 'kiorex.com and kiorly.com; website, mail and verification records stay untouched', ss: 9.2 });
+  d.box(380, 40, 350, 52, { tone: 'warn', t: 'Founder action: NS record set "test"', s: 'one per domain, four name servers each; apex NS, DNSSEC DS and CAA later, before pilot', ss: 9.2 });
+  d.arrow([[545, 92], [545, 128]], { tone: 'warn', label: '1 NS delegation of test', lx: 545, ly: 112, ls: 8.8 });
+  d.lane(14, 128, 732, 128, 'DNS hosting (one zone per environment and domain)');
+  d.box(30, 156, 210, 88, { tone: 'indigo', t: 'test.kiorex.com', s: 'child zone: explicit records only, no wildcard record, TTL 300', ss: 9.2 });
+  d.box(256, 156, 210, 88, { tone: 'ocean', t: 'test.kiorly.com', s: 'child zone, same rules; mail records never in a delegated child', ss: 9.2 });
+  d.box(482, 156, 248, 88, { tone: 'ground', t: 'Apex zones before pilot', s: 'kiorex.com, kiorly.com with CAA and DNSSEC; NS for test kept', ss: 9.2, dash: true });
+  d.arrow([[135, 244], [135, 296]], { tone: 'indigo', label: '2 CNAME validation', lx: 135, ly: 270, ls: 8.8 });
+  d.arrow([[361, 244], [361, 296]], { tone: 'ocean' });
+  d.lane(14, 296, 732, 112, 'Certificates (never one shared wildcard)');
+  d.box(30, 324, 210, 70, { tone: 'ok', t: 'Cert for test.kiorex.com', s: 'and *.test.kiorex.com (us-east-1 for CloudFront)', ss: 9.2 });
+  d.box(256, 324, 210, 70, { tone: 'ok', t: 'Cert for test.kiorly.com', s: 'and *.test.kiorly.com', ss: 9.2 });
+  d.box(482, 324, 248, 70, { tone: 'neutral', t: 'Pilot has its own cert', s: 'pilot.<domain> + *.pilot.<domain>, so pilot names retire without touching prod', ss: 9.2 });
+  d.arrow([[135, 394], [135, 440]], { tone: 'ok' }); d.arrow([[361, 394], [361, 440]], { tone: 'ok' });
+  d.lane(14, 440, 732, 100, 'Serving');
+  d.box(30, 466, 210, 60, { tone: 'neutral', t: 'CDN alias per host', s: 'CloudFront or Huawei CDN; HSTS, noindex in non-prod', ss: 9 });
+  d.box(256, 466, 210, 60, { tone: 'neutral', t: 'Host :80 behind Caddy', s: 'origin reachable from the CDN only', ss: 9 });
+  d.box(482, 466, 248, 60, { tone: 'neutral', t: 'Live Clinic keeps its host', s: 'custom name added to the same distribution, cloudfront.net kept', ss: 9 });
+  d.arrow([[240, 496], [256, 496]], { tone: 'grey' });
+  d.arrow([[466, 496], [482, 496]], { tone: 'grey', dash: true, noHead: true });
+  return d;
+});
+
+/* ------------------------------------------------------------------ 22. Passport SSO across Kiorly modules (KX-04) */
+def('passport-sso', 'Passport single sign-on across the Kiorly modules', 'Kiorex Passport is the only identity provider. Kiorly Home shows the product tiles; the chosen product (Clinic, Nurse edition, Pharmacy, Lab) completes its own silent authorization-code flow with PKCE, so the user types a password at most once. Passport tells every product about a logout by a signed back-channel call. The issuer is passport.test.kiorex.com in kx-test and passport.kiorex.com for pilot and prod. The production-capable IdP product is still an open decision; kx-test runs the hardened dev IdP.', () => {
+  const d = new Dia(W, 560, 'Passport SSO flow');
+  const cx = [82, 236, 390, 544, 688];
+  const names = [['User', 'browser or Kiorly app', 'indigo'], ['Kiorly Home', 'app.<env>.kiorly.com', 'ocean'], ['Product', 'Clinic, Nurse, Pharmacy, Lab', 'ocean'], ['Kiorex Passport', 'OIDC issuer', 'solid'], ['Other products', 'back-channel receivers', 'neutral']];
+  names.forEach((n, i) => { d.box(cx[i] - 66, 12, 132, 46, { tone: n[2], t: n[0], s: n[1], ts: 11, ss: 8.6, align: 'center' }); d.line(cx[i], 58, cx[i], 428, { stroke: COL.n300, w: 1.2, dash: true }); });
+  const step = (n, y, a, b, label, tone = 'indigo', dash = false) => {
+    d.arrow([[cx[a], y], [cx[b], y]], { tone, dash, w: 1.7 });
+    d.chip((cx[a] + cx[b]) / 2, y - 12, `${n}  ${label}`, { stroke: tone === 'ocean' ? COL.ocean : COL.indigo, size: 8.8 });
+  };
+  step(1, 92, 0, 1, 'opens Kiorly Home, picks a product tile', 'ocean');
+  step(2, 124, 1, 2, 'login?sso=passport&from=kiorly-home', 'ocean');
+  step(3, 156, 2, 3, 'authorize (code + PKCE), silent', 'indigo');
+  step(4, 188, 3, 0, 'no session: sign in once (OTP or password)', 'indigo');
+  step(5, 220, 0, 3, 'credentials', 'indigo');
+  step(6, 252, 3, 2, 'code to the registered redirect URI', 'indigo');
+  step(7, 284, 2, 3, 'code exchange, tokens (aud = product)', 'indigo');
+  step(8, 316, 2, 0, 'product session, host-only __Host- cookie', 'ocean');
+  step(9, 372, 0, 3, 'sign out (any product)', 'indigo');
+  d.arrow([[cx[3], 404], [cx[2], 404]], { tone: 'indigo', dash: true });
+  d.arrow([[cx[3], 404], [cx[4], 404]], { tone: 'indigo', dash: true });
+  d.chip((cx[2] + cx[3]) / 2, 392, '10  signed logout_token', { stroke: COL.indigo, size: 8.8 });
+  d.chip((cx[3] + cx[4]) / 2, 416, 'back-channel to every product', { stroke: COL.indigo, size: 8.8 });
+  d.box(14, 440, 560, 34, { tone: 'ground', t: 'Password route: single-use handoff code, 30 seconds, bound to the product', ts: 9.4, align: 'center', fill: '#fff', dash: true });
+  d.box(14, 484, 236, 64, { tone: 'indigo', t: 'kx-test issuer', s: 'passport.test.kiorex.com', ss: 9.4 });
+  d.box(262, 484, 236, 64, { tone: 'indigo', t: 'pilot and prod issuer', s: 'passport.kiorex.com; pilot adds no second account', ss: 9.2 });
+  d.box(510, 484, 236, 64, { tone: 'warn', t: 'Open decision', s: 'production-capable IdP (Cognito default); kx-test identities may not carry over', ss: 9.2 });
+  return d;
+});
+
+/* ------------------------------------------------------------------ 23. commission funds flow with cash and tenders (COM-1, LG-COM-17..20) */
+def('funds-flow-tenders', 'Commission funds flow: online, cash and cash-transfer tenders', 'Kiorex may collect a commission and shows the same ledger to the provider’s ops and admin and to Kiorex ops and admin. Providers in Egypt are paid by bank transfer to their bank account only; cash visits are included by accruing commission and netting it in the next settlement. Kiorex never holds or pays out cash. Each tender kind can have its own configurable commission treatment (LG-COM-20); the recommended default values are editable seeded defaults. Counsel sign-off is NOT_REVIEWED, so every real-money mode stays blocked (mock runs).', () => {
+  const d = new Dia(W, 604, 'Commission funds flow by tender');
+  const rows = [
+    { y: 14, tone: 'indigo', k: 'ONLINE', t: 'Patient pays online (card, wallet, bank) through a licensed payment partner', a: 'Deposit held in the Kiorex Pay ledger, PAYABLE after the visit', b: 'Commission deducted from the bank payout (NET_FROM_PAYOUT)' },
+    { y: 140, tone: 'ocean', k: 'CASH', t: 'Patient pays the clinic cash at the visit', a: 'Kiorex never sees the money: commission is accrued from the claim', b: 'Netted in the next bank payout, or invoiced when no payout is due' },
+    { y: 266, tone: 'warn', k: 'CASH_TRANSFER', t: 'Direct bank, InstaPay or card terminal at the clinic (own kind)', a: 'Recorded as its own tender kind with a detail (BANK_TRANSFER, INSTAPAY, CARD_TERMINAL)', b: 'Same netting as cash; own configurable rate, floor, cap, mode and grace' },
+  ];
+  rows.forEach((r) => {
+    d.box(14, r.y, 118, 112, { tone: r.tone === 'warn' ? 'warn' : r.tone, t: r.k, s: 'tender', ts: 11, ss: 9, align: 'center' });
+    d.box(150, r.y, 226, 112, { tone: 'neutral', t: r.t, ts: 10.6, bar: true });
+    d.box(400, r.y, 170, 112, { tone: 'ground', t: 'Accrual', s: r.a, ss: 9, ts: 10 });
+    d.box(594, r.y, 152, 112, { tone: 'ground', t: 'Collection', s: r.b, ss: 8.8, ts: 10 });
+    d.arrow([[132, r.y + 56], [150, r.y + 56]], { tone: 'grey' });
+    d.arrow([[376, r.y + 56], [400, r.y + 56]], { tone: 'grey' });
+    d.arrow([[570, r.y + 56], [594, r.y + 56]], { tone: 'grey' });
+  });
+  d.box(14, 400, 732, 62, { tone: 'dark', t: 'Settlement statement: one ledger, two views (provider ops/admin and Kiorex ops/admin)', s: 'Rate in force, tender kind, dispute window, status timeline, exceptions (unknown tender is never guessed). CSV export. Payout to the provider = bank transfer only.', ts: 11.5, ss: 9.4, align: 'center' });
+  d.box(14, 474, 354, 62, { tone: 'ok', t: 'Seeded defaults, editable in Ops', s: 'Percent rate per organisation type with floor and cap; maker-checker; no deploy to change', ss: 9.2 });
+  d.box(380, 474, 366, 62, { tone: 'warn', t: 'Counsel sign-off: NOT_REVIEWED', s: 'Real-money collection and payout routes are blocked until a human records APPROVED. Never set on anyone’s behalf', ss: 9.2 });
+  d.box(14, 548, 732, 42, { tone: 'coral', t: 'Collection never pauses listing, booking, plan or care (SB-05 resolved, 26 Nov 2026)', ts: 10.6, align: 'center' });
+  return d;
+});
+
+/* ------------------------------------------------------------------ 24. CI/CD and OpenTofu provider switch (KX-10, KX-21, KX-34) */
+def('cicd-provider-switch', 'CI/CD and the OpenTofu provider switch', 'One immutable image per commit is promoted test, then pilot, then prod; environments differ by configuration only, generated from the registry. Each environment root in OpenTofu has one switch, provider_name = aws | huawei, and the modules take identical inputs and return identical outputs on both clouds. Nothing here has been applied; every apply and deploy is the founder’s decision.', () => {
+  const d = new Dia(W, 580, 'CI/CD and provider switch');
+  d.box(14, 14, 150, 66, { tone: 'dark', t: 'Commit', s: 'GitHub, per repository', ts: 11.5, ss: 9.2, align: 'center' });
+  d.box(194, 14, 170, 66, { tone: 'neutral', t: 'CI gates', s: 'lint, typecheck, tests, validate-registry --strict', ts: 11, ss: 8.8, bar: true });
+  d.box(394, 14, 170, 66, { tone: 'neutral', t: 'Build once', s: 'one image digest, one web build', ts: 11, ss: 9, bar: true });
+  d.box(594, 14, 152, 66, { tone: 'neutral', t: 'Registry', s: 'ECR or SWR', ts: 11, ss: 9, bar: true });
+  d.arrow([[164, 47], [194, 47]], { tone: 'indigo' }); d.arrow([[364, 47], [394, 47]], { tone: 'indigo' }); d.arrow([[564, 47], [594, 47]], { tone: 'indigo' });
+  const envs = [['kx-test', 'automatic after the founder presses deploy', 'ocean'], ['kx-pilot', 'required reviewers', 'indigo'], ['kx-pro', 'required reviewers', 'indigo']];
+  envs.forEach((e, i) => { const x = 14 + i * 252; d.box(x, 112, 226, 52, { tone: e[2] === 'ocean' ? 'solidOcean' : 'solid', t: e[0], s: e[1], ts: 12, ss: 9, align: 'center' }); if (i) d.arrow([[x - 26, 138], [x, 138]], { tone: 'coral' }); });
+  d.arrow([[670, 80], [670, 96], [127, 96], [127, 112]], { tone: 'indigo', r: 6, label: 'same digest promoted', lx: 400, ly: 96, ls: 8.8 });
+  d.chip(253, 190, 'ask first: carry over or keep separate?', { stroke: COL.warn, size: 9 });
+  d.chip(505, 190, 'ask first: carry over or keep separate?', { stroke: COL.warn, size: 9 });
+  d.lane(14, 214, 732, 346, 'OpenTofu: envs/test, envs/pilot, envs/prod, one switch');
+  d.box(30, 246, 700, 44, { tone: 'dark', t: 'provider_name = "aws"   |   "huawei"', s: 'thin env roots call modules/stack; the idle provider gets dummy settings, so a plan needs credentials for one cloud only', ts: 12, ss: 9.2, align: 'center' });
+  const mods = [['registry', 'hosts, zones, cert names from the YAML'], ['network', 'VPC, subnets, security groups'], ['compute_host', 'one host, ARM, no SSH, docker compose'], ['database', 'private PostgreSQL, host volume or managed'], ['dns_zone', 'child zones, then apex'], ['certificate', 'per environment and domain'], ['static_site + cdn_api_edge', 'web and APIs behind the CDN'], ['secrets, budget, alarms', 'containers only, no values in state']];
+  mods.forEach((m, i) => d.box(30 + (i % 4) * 177, 304 + Math.floor(i / 4) * 66, 166, 56, { tone: 'neutral', t: m[0], s: m[1], ts: 10, ss: 8.6, bar: true }));
+  d.box(30, 444, 340, 98, { tone: 'ocean', t: 'AWS (kx-test now)', s: ['S3 + CloudFront, ECR, Secrets Manager, KMS', 'deploy: SSM Run Command', 'live Clinic is only read, never managed here'], ts: 11, ss: 9, valign: 'top' });
+  d.box(390, 444, 340, 98, { tone: 'indigo', t: 'Huawei Cloud (kx-pro initial decision)', s: ['ECS, EVS, OBS, CDN, SWR, DNS, SCM, CSMS', 'deploy: the host polls object storage', 'validated only, never applied; region placeholder'], ts: 11, ss: 9, valign: 'top' });
+  return d;
+});
+
 /* ------------------------------------------------------------------ public API */
 export const hasDiagram = (n) => !!reg[n];
 export const diagramNames = () => Object.keys(reg);

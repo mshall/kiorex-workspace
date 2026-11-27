@@ -29,6 +29,7 @@
 .kx-pb{ break-before:page !important }
 .banner,h3,h4,.figcap,.kxfig-head{ break-after:avoid }
 p,li{ orphans:3; widows:3 }
+.keep-next{ break-after:avoid !important }
 
 /* ---------- tables: header reads as sticky, numbers tabular ---------- */
 th{ position:relative }

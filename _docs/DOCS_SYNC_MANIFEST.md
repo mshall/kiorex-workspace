@@ -1,3 +1,36 @@
+# Docs sync manifest, addendum 2 of 27 Nov 2026 (Rev 2.8 rebuild with the upgraded design, KX-34 and the Pay volumes)
+
+Nothing was uploaded to Google Drive and nothing was pushed. ADR-059 is ACCEPTED (founder, 27 Nov 2026), so the earlier addendum below (written while ADR-059 was Proposed) is superseded where it says Proposed. Folder with every PDF: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/pdf/out/` (git-ignored). Built with `cd _docs/pdf && node build.mjs --doc KX-00,KX-01,KX-04,KX-05,KX-09,KX-10,KX-12,KX-15,KX-17,KX-19,KX-21,KX-22,KX-26,KX-30,KX-33,KX-34,PAY-01,PAY-02` (18 built, 0 skipped, 0 failed). Every page was rendered to an image and inspected (PyMuPDF at 0.55 to 1.3 zoom); see the build notes in the hand-off report. Revision label is Rev 2.8 on all of them.
+
+| Identifier | Pages | Bytes | File (in the out folder) | What changed |
+|---|---|---|---|---|
+| KX-00 | 21 | 615,113 | `KX-00_Master_Blueprint_and_Reading_Guide.pdf` | master index lists KX-34, PAY01, PAY02 (35 volumes), status board of 27 Nov, environment map, ADR-059 accepted |
+| KX-01 | 29 | 872,076 | `KX-01_Decision_Log_and_ADRs.pdf` | ADR-059 Accepted; table of founder decisions of 26 and 27 Nov 2026 |
+| KX-04 | 12 | 418,978 | `KX-04_Kiorex_Account_Identity_PRD.pdf` | Passport SSO diagram, issuers per environment, production IdP open |
+| KX-05 | 32 | 822,889 | `KX-05_Kiorly_Clinic_PRD.pdf` | Clinic deployed on AWS, provider-side commission statement, tender kinds, funds-flow diagram |
+| KX-09 | 23 | 699,905 | `KX-09_Integration_Contracts_Events_and_Money_Flows.pdf` | commission funds flow by tender, signed statement route, contracts 1.13.0 |
+| KX-10 | 16 | 463,935 | `KX-10_Platform_DevOps_and_Security_Engineering.pdf` | environments, OpenTofu provider switch (aws or huawei), kx-test plan, CI/CD diagram |
+| KX-12 | 16 | 456,529 | `KX-12_Monetization_and_Pricing_Architecture.pdf` | recommended editable commission defaults, SB-05 note fixed |
+| KX-15 | 16 | 457,666 | `KX-15_Risk_and_Compliance_Framework.pdf` | ADR-059 accepted, new risk rows (kx-test real org, Huawei verification, counsel gate) |
+| KX-17 | 13 | 420,420 | `KX-17_Kiorly_Clinic_Launch_Readiness_and_Go_Live.pdf` | environment ladder, promotion rule, gate board |
+| KX-19 | 12 | 434,529 | `KX-19_Brand_Architecture_Domains_and_Store_Accounts.pdf` | registry and DNS diagrams, host roles per domain |
+| KX-21 | 34 | 885,354 | `KX-21_AWS_Cloud_Hosting_and_Infrastructure_Reference.pdf` | DNS and certificate flow, Huawei Cloud option, kx-test plan, estimates marked |
+| KX-22 | 21 | 588,571 | `KX-22_GitHub_Repository_Map_and_Build_Agent_Handoff.pdf` | workspace owns registry and OpenTofu tree, repository states, contracts v1.13.0 |
+| KX-26 | 32 | 837,381 | `KX-26_System_Architecture_Reference.pdf` | four new diagrams (environment map, SSO, DNS and certificates, CI/CD) |
+| KX-30 | 32 | 892,032 | `KX-30_Attribution_Referrals_Rewards_and_Commission_Architecture.pdf` | section 16 commission policy as built |
+| KX-33 | 29 | 724,681 | `KX-33_Growth_Engine_Implementation_Roadmap_and_Agent_Handoff.pdf` | status board and remaining work of 27 Nov 2026 |
+| **KX-34 (new)** | 21 | 689,310 | `KX-34_Environment_Domain_and_Routing_Standard.pdf` | new volume: Environment, Domain and Routing Standard (source `rev23/KX-34_Environment_Domain_and_Routing_Standard.md`) |
+| **PAY-01 (new)** | 11 | 352,345 | `PAY-01_Kiorly_Pay_Unified_Layer.pdf` | Kiorly Pay unified layer plus funds flow by tender (source `rev23/PAY-01_Kiorly_Pay_Unified_Layer.md`, copied from `kiorex-platform/Docs/PAYMENTS_UNIFIED_LAYER.md`) |
+| **PAY-02 (new)** | 13 | 417,256 | `PAY-02_Payments_Integration_Runbook.pdf` | payments runbook (source `rev23/PAY-02_Payments_Integration_Runbook.md`, copied from `kiorex-platform/Docs/INTEGRATION_RUNBOOK_PAYMENTS.md`) |
+
+Numbering: KX-34 is the next free number after KX-33. The Pay documents use the supplementary codes PAY-01 and PAY-02 so the KX numbering stays reserved for the reference set. New Drive folder suggestion: "08 Environments and Domains" for KX-34, "03 Technical" for PAY-01 and PAY-02. The two PAY sources are copies: when the repository documents change, refresh the copies in `_docs/rev23/`.
+
+Design system changes in this pass (all in `_docs/pdf/lib/design` and `assets/enhance.js`): six new diagrams (`env-domain-map`, `url-registry`, `dns-cert-flow`, `passport-sso`, `funds-flow-tenders`, `cicd-provider-switch`), two new callout types (`> **Action needed**` and `> **Status**`), numbered-step lead-ins keep with their list, brand mono font for inline code and code blocks (no Courier fallback), Mermaid labels in Inter. Docs that were not rebuilt keep their earlier look until their next build.
+
+Not corrected in this pass because they are outside the volumes: `LAUNCH_PREPARATION_GUIDE.md` row LG-COM-16 still says the first Clinic deploy is HELD and `LLM_HANDOFF.md` sections 4, 7 and 8 still say nothing has been deployed since the founder's last deploy; reconcile them with the 24, 25 and 27 Nov 2026 deploys.
+
+---
+
 # Docs sync manifest, addendum 27 Nov 2026 (environment, DNS and domain standard, ADR-059 Proposed)
 
 Nothing was uploaded to Google Drive (Drive folder `1Pk__yq04TSGzWwAsiWQB--bVgu8WGd_L`, "Kiorex v2"). The markdown sources below changed and the matching Drive documents need a new version when the founder signs ADR-059 (PDF rebuild: `cd _docs/pdf && node build.mjs --doc KX-00,KX-01,KX-04,KX-10,KX-15,KX-17,KX-19,KX-21,KX-22,KX-26`; the new `_docs/environments/*.md`, `_docs/adr/` and `_docs/registry/` files have no PDF volume yet and can be added to the Drive folder as a new section "08 Environments and Domains" or as one combined PDF).

@@ -1,6 +1,8 @@
 # KX-17 Kiorly Clinic Launch Readiness & Go-Live Plan
 Source: 1acyKWJ3OZS1XvlgzOnzMZq6eGVvdthKi
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.4; ADR-059 accepted; environment ladder kx-test, kx-pilot, kx-pro; promotion rule; Clinic deployed on AWS; gates refreshed)
+
+WHAT CHANGED IN REV 2.8: ADR-059 accepted. New: the environment ladder with the promotion rule, the pilot to production transition, the 27 Nov 2026 gate board (Clinic on AWS, contracts 1.13.0, commission gates) and the real organisation Dr Ahmed Shall in kx-test.
 
 > Extraction note: symbols (>=, <=, arrows, ranges) dropped; table columns reconstructed best-effort.
 
@@ -30,7 +32,7 @@ Engineering is ahead of operations. The remaining work is approvals, accounts, p
 Tiles: STOP ITEMS 6 (block GA); OTHER HUMAN ITEMS 17 (parallelisable); PILOT LENGTH 4 wks (20 clinics); TARGET GA Apr 2027 (month 4).
 
 ## 01a Done versus open, 23 Nov 2026
-Engineering moved further ahead of operations. Everything below is observed in the repositories; nothing is deployed and no launch gate is recorded by code.
+Engineering moved further ahead of operations. Everything below is observed in the repositories; at 23 Nov 2026 nothing was deployed (the Clinic reached AWS on 24 and 25 Nov 2026, see Rev 2.8) and no launch gate is recorded by code.
 
 | Area | Status | Evidence | Remaining (needs a human unless noted) |
 |---|---|---|---|
@@ -127,12 +129,41 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - **Scorecard (section 01)**: growth readiness is Open: nothing built at 24 Nov 2026 beyond the commission engine and booking slug page (As-built).
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Launch preparation guide.** `_docs/LAUNCH_PREPARATION_GUIDE.md` is the single human checklist: sections 1 to 9 (accounts, domains, secrets, identity, providers, launch-locked gates, business and legal, apps and stores, data and hardening), 10 (go-live runbook), 11 (Growth Engine human items) and 12 (Security from the pentest). Pilot go or no-go reads that guide, not this section, for the human steps.
-- **Readiness against the Growth scorecard (As-built locally).** Links, QR kit, widget, attribution, commission decisions, SSR pages, consent, analytics and Super Admin configuration exist and pass their tests; nothing is deployed. The pilot success measures above (link activation, provider-led share, dispute rate, replay equality) cannot be measured until deployment and there is no scheduled replay job yet.
+- **Readiness against the Growth scorecard (As-built locally).** Links, QR kit, widget, attribution, commission decisions, SSR pages, consent, analytics and Super Admin configuration exist and pass their tests; only the Clinic is deployed (AWS, kx-test). The pilot success measures above (link activation, provider-led share, dispute rate, replay equality) cannot be measured until deployment and there is no scheduled replay job yet.
 - **Added go or no-go blockers from Rev 2.4:** the external penetration test; `TRUSTED_PROXY_HOPS`, `CORS_ORIGINS`, WAF attachment and real secrets; Lighthouse and device deep-link checks; the real Passport popup for the widget; counsel and DPO outputs; the Apple Team ID and Play SHA-256; DNS for `kiorex.com`, `kiorly.link` and the widget host.
 - **Verified test baseline (24 Nov 2026):** Clinic unit 1,222, Kiorex API unit 578, Passport 314, contracts 276, staff app 276, patient app 251; the full e2e run (01 to 49) was recorded as 374 passed and 33 skipped by the edge sweep.
 
-## Environment and domain standard (27 Nov 2026, Proposed, ADR-059)
-Pilot and production launch: pilot is a controlled production release on the production plane (invitation-only cohort, same data stores and issuer as production), so pilot customers move to canonical production URLs with no data migration, no account re-creation and one silent sign-in redirect. The cutover runbook, the 12-month web redirect and the six-month API and webhook alias window are in `_docs/environments/PILOT_ENVIRONMENT_STRATEGY.md`. The live Clinic in kx-test (`https://d92iz83i79c05.cloudfront.net/`, organisation Dr Ahmed Shall) keeps its default CloudFront host permanently; its custom name `clinics.test.kiorly.com` is added to the same distribution after founder approval. Open: counsel position on real data in kx-test and on the pilot rule.
+## Rev 2.8: environment ladder, promotion rule and gate board (27 Nov 2026, ADR-059 Accepted)
+
+> **Status** Deployment, 27 Nov 2026. Only Kiorly Clinic is deployed, on AWS (account 990597228737, eu-central-1, environment kx-test): it was deployed on 24 and 25 Nov 2026 and the deploy of `main` succeeded on 27 Nov 2026. Kiorex, Passport, Pharmacy and Lab are not deployed. Where this volume says "nothing is deployed", it describes the date it was written and those four products.
+
+<!-- kx-diagram: env-domain-map -->
+
+Timeline of the ladder:
+
+1. kx-test (now): the real organisation Dr Ahmed Shall on the AWS Clinic plus tagged dummy data; small scale; the live CloudFront address stays valid.
+2. Founder approvals: NS delegation of the `test` child zones, certificates, provisioning of the other products, each deploy.
+3. kx-pilot: a controlled production release on the production plane; invitation-only tenant cohort; production issuer; no second stack.
+4. Counsel and finance gates recorded by a person: funds flow per market (CBE), disclosure wording, commission numbers.
+5. kx-pro: the major release for Egypt; the founder's initial hosting decision is Huawei Cloud (region and residency verification open).
+6. Cutover from pilot URLs to canonical URLs: no data migration, no account re-creation, one silent sign-in redirect; web 301 for at least 12 months; API and webhook aliases for at least six months.
+
+> **Rule** Promotion rule: whenever the founder asks to move to the next environment, stop and ask: carry the previous environment over (identities, organisations, patients, bookings, files) or keep the two separate? Carry over needs a data-class choice, a dry-run report, a backup and a rollback first, and identity carry-over needs a production-capable IdP. Demo records are excluded unless the founder says otherwise.
+
+| Gate | Status | Owner |
+|---|---|---|
+| Clinic on AWS, deploy of `main` | Done (27 Nov 2026) | Founder |
+| Contracts 1.13.0 tagged | Done; registry publish deferred | Founder |
+| Counsel funds-flow sign-off per market (LG-COM-18) | Open | Counsel |
+| Commission numbers and disclosure wording confirmed | Open | Founder, counsel |
+| WhatsApp, e-mail and push verified before the next deploy | Open | Founder |
+| Production identity provider | Open | Founder |
+| Huawei Cloud region, residency, CBE | Open | Founder, counsel |
+| Counsel position on the real organisation in kx-test and on the pilot rule | Open | Counsel |
+| External penetration test | Open | Founder |
+
+> **Action needed** Founder: record the answer to the carry-over question each time an environment is promoted, in the launch guide and the handoff.
+

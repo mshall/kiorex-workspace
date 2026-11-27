@@ -1,6 +1,8 @@
 # KX-26 — System Architecture Reference
 
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (owner: Chief Software Architect; supersedes: KX-26 Rev 2.3, 23 Nov 2026; consolidates KX-08, KX-09, KX-10, KX-21, KX-24 and KX-25 into one picture; Rev 2.4 as-built section with final diagrams added at the end)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.4; ADR-059 accepted; URL architecture, DNS and certificate flow, Passport single sign-on diagram, environment map)
+
+WHAT CHANGED IN REV 2.8: ADR-059 accepted. Four new diagrams in the last section: environment and domain map, DNS and certificate flow, Passport single sign-on across the Kiorly modules, CI/CD and provider switch. Hosting remains AWS in the reference; Huawei Cloud is the founder's initial production option.
 
 Subtitle: The whole Kiorex and Kiorly system on one set of diagrams: context, containers, components, data, identity, integration, notifications, storage, hosting, security, mobile and resilience, with what is built and what is planned.
 
@@ -11,7 +13,7 @@ Tags: C4 context and containers · Components · Data and storage · Identity ·
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-26 |
-| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
+| REVISION | Rev 2.8 · Reference Edition (27 Nov 2026) |
 | STATUS | Architecture as built locally; hosting and real vendors Planned |
 | OWNER ROLE | Chief Software Architect |
 | AUDIENCE | Engineering, build agents, security reviewers, technical due diligence, new joiners |
@@ -458,7 +460,7 @@ flowchart TB
 - **Status (section 17)**: growth Phase 1 is As-built locally since Rev 2.4 (see the final section of this volume); ADR-041 to ADR-047 stay Proposed. Full diagrams: KX-28.
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Containers and components.** Growth adds modules inside the Kiorex and Clinic APIs, the `apps/widget` workspace and the two extra roles of the Kiorex image. No new database, service, Redis or Kafka (ADR-041, built that way). Kiorly Home is a static app in `kiorex-account`. Telehealth media is browser to browser; only STUN and TURN are external.
 - **Integration (section 07).** Contracts 1.10.0 and 1.11.0 are vendored in the platform, pharmacy and lab; the partner intake is published, the lead and funnel endpoints are not (KX-09).
@@ -550,5 +552,19 @@ flowchart LR
   R3 --> DB
 ```
 
-## Environment and domain standard (27 Nov 2026, Proposed, ADR-059)
-System-wide URL architecture: two domains, five environments, one registry (`_docs/registry/service-url-registry.yaml`). Kiorex host roles: marketplace, `api`, `admin`, `passport`, `ai` (no public DNS), `webhooks`, `cdn`, widget `book`; Kiorly: marketing apex, `app` (Kiorly Home), `clinics`, `pharmacies`, `labs`, `admin`, one `api` gateway with `/clinics`, `/pharmacies`, `/labs` prefixes. International routing is `kiorex.com/{locale}/{cc}` (short entry routes `/{cc}`) for patients and tenant configuration for Kiorly. Detail: `_docs/environments/INTERNATIONAL_DOMAIN_ROUTING.md`.
+## Rev 2.8: URL architecture, environments and sign-on (27 Nov 2026, ADR-059 Accepted)
+
+System-wide URL architecture: two domains, five environments, one registry (`_docs/registry/service-url-registry.yaml`). Kiorex host roles: marketplace, `api`, `admin`, `passport`, `ai` (no public DNS), `webhooks`, `cdn`, widget `book`; Kiorly: marketing apex, `app` (Kiorly Home), `clinics`, `pharmacies`, `labs`, `admin`, one `api` gateway with `/clinics`, `/pharmacies`, `/labs` prefixes. International routing is `kiorex.com/{locale}/{cc}` (short entry routes `/{cc}`) for patients and tenant configuration for Kiorly. Full standard: KX-34.
+
+> **Status** Deployment, 27 Nov 2026. Only Kiorly Clinic is deployed, on AWS (account 990597228737, eu-central-1, environment kx-test): it was deployed on 24 and 25 Nov 2026 and the deploy of `main` succeeded on 27 Nov 2026. Kiorex, Passport, Pharmacy and Lab are not deployed. Where this volume says "nothing is deployed", it describes the date it was written and those four products.
+
+<!-- kx-diagram: env-domain-map -->
+
+<!-- kx-diagram: passport-sso -->
+
+<!-- kx-diagram: dns-cert-flow -->
+
+<!-- kx-diagram: cicd-provider-switch -->
+
+> **Decision** Hosting: AWS for kx-test; Huawei Cloud is the founder's initial production decision, behind one OpenTofu provider switch. Region availability, Egypt residency and CBE rules are for the founder and counsel to verify.
+

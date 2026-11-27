@@ -1,7 +1,9 @@
 # KX10 — Platform, DevOps & Security Engineering
 
 Source: 14qj8qS2R5Q4rtAJyhIs-fajHPKSKA9-0
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.4; ADR-059 accepted; environments, OpenTofu provider switch (aws or huawei), kx-test infrastructure plan, CI/CD promotion)
+
+WHAT CHANGED IN REV 2.8: ADR-059 accepted. New: environments and tags, CI/CD promotion of one digest, the OpenTofu provider switch for AWS and Huawei Cloud, the kx-test infrastructure plan (single cost-minimal host, private database, backups), and the deployment status of 27 Nov 2026.
 
 How every Kiorex and Kiorly product is built, shipped, observed and defended — controls already in Kiorly become the standard for the whole ecosystem.
 
@@ -12,7 +14,7 @@ Tags: OpenTofu IaC · CI/CD gates · Observability & on-call · Security control
 | Field | Value |
 |---|---|
 | DOCUMENT | KX10 (03 — Technical documents) |
-| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
+| REVISION | Rev 2.8 · Reference Edition (27 Nov 2026) |
 | DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Engineering, security reviewers, auditors, enterprise customers |
@@ -175,7 +177,7 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - Not verified: any control implemented.
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Internal penetration test, 24 Nov 2026 (`_docs/security/PENTEST_2026-11_REPORT.md`).** White-box, local stack only, synthetic data; it does not replace the external test (NH017). 14 findings, all fixed with regression tests: 1 Critical (KX-PT-01 org backup restore executed uploaded SQL), 5 High (SSRF through tenant webhooks; dev auth helpers honoured in production; Kiorex starting on published dev secrets; unauthenticated sandbox PSP capture; `sharp` CVEs), 7 Medium (X-Forwarded-For spoofing, missing per-account throttle, OpenAPI exposed in production, missing security headers, reflected CORS, XLSX zip bomb, SES bounce webhook failing open), 1 Low (500 on array payloads, unescaped title, non-constant-time compare). Verification: `e2e/test/30-security.e2e.ts` 28 of 28, production-mode boot of all four APIs, `npm audit --omit=dev` clean in every repo.
 - **Controls now in the code (As-built).** `assertProductionSecrets()` refuses to start on published dev values (names only in the message; `ALLOW_INSECURE_DEFAULT_SECRETS=true` is for staging bring-up); sandbox payments closed in production unless `SANDBOX_PAYMENTS_ALLOWED=true`; Swagger off in production unless `SWAGGER_ENABLED=true`; `TRUSTED_PROXY_HOPS` (client IP from the Nth entry from the right, `trust proxy` set from the same value); CORS allow-list (`CORS_ORIGINS` plus configured product URLs); `safe-outbound.ts` for webhooks (https only, public addresses only, validated inside the socket lookup, no redirects); 20 login attempts per e-mail per 15 minutes; security headers on all four APIs; restore refuses marketplace appointment rows and audit rows.
@@ -185,5 +187,25 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Edge-case sweep (`_docs/test-flow/EDGE_CASE_REPORT_2026-11.md`).** 24 defects fixed (PSP retries, booking races, hostile input, untyped bodies answering 500); 374 e2e passed in the full run. Residual risks: untyped Clinic bodies, `lt` not bound to a person, a DST edge in `quietUntil`, the Lab cancel race, no 410 for delisted profiles.
 - **Not verified:** WAF behaviour, the CloudFront header chain, the external penetration test, load.
 
-## Environment and domain standard (27 Nov 2026, Proposed, ADR-059)
-Environments are `dev`, `test`, `staging`, `pilot`, `prod` (tags kx-test, kx-pilot, kx-pro); only test, pilot and prod are provisioned. Certificates are per environment and domain; a production wildcard never covers a non-production host. Non-production access control is real (invitation-only accounts, edge gate, noindex), not robots.txt alone. CORS and OIDC redirect lists are generated from the registry. Hardcoded production host defaults found in code (platform 23, Clinic 10, Passport 2, staff app 2 on 27 Nov 2026) are tracked in `_docs/environments/DNS_AND_DOMAIN_ARCHITECTURE.md` section 9. Pilot runs on the production plane. See `_docs/environments/`.
+## Rev 2.8: environments, OpenTofu and the provider switch (27 Nov 2026, ADR-059 Accepted)
+
+Environments are `dev`, `test`, `staging`, `pilot` and `prod` (tags kx-test, kx-pilot, kx-pro); only test, pilot and prod are provisioned. Certificates are per environment and domain; a production wildcard never covers a non-production host. Non-production access control is real (invitation-only accounts, edge gate, noindex), not robots.txt alone. CORS and OIDC redirect lists are generated from the registry. Hardcoded production host defaults found in code (platform 23, Clinic 10, Passport 2, staff app 2 on 27 Nov 2026) are tracked in `_docs/environments/DNS_AND_DOMAIN_ARCHITECTURE.md` section 9.
+
+> **Status** Deployment, 27 Nov 2026. Only Kiorly Clinic is deployed, on AWS (account 990597228737, eu-central-1, environment kx-test): it was deployed on 24 and 25 Nov 2026 and the deploy of `main` succeeded on 27 Nov 2026. Kiorex, Passport, Pharmacy and Lab are not deployed. Where this volume says "nothing is deployed", it describes the date it was written and those four products.
+
+<!-- kx-diagram: cicd-provider-switch -->
+
+> **Decision** Every environment is configured through OpenTofu behind one switch, `provider_name = aws | huawei`. The founder's initial production decision is Huawei Cloud; kx-test is on AWS. Modules have identical inputs and outputs on both clouds, so a move is a variable file plus a data migration, not a rewrite.
+
+> **Risk** The Huawei modules are validated with `tofu validate` only and have never been applied. The Huawei region, Egypt residency and CBE position are for the founder and counsel to verify; the region variable is a placeholder on purpose.
+
+| kx-test plan | Detail |
+|---|---|
+| Compute | One cost-minimal host (ARM) running docker compose: platform API and jobs, Passport, Pharmacy API, Lab API, Caddy; no SSH rule; SSM access on AWS |
+| Database | PostgreSQL never publicly reachable; data on a separate encrypted volume (or a private managed instance), one database per product |
+| Backups | Daily snapshot policy plus a daily dump to an encrypted bucket with lifecycle; restore drill documented |
+| Deploy | AWS: SSM Run Command. Huawei: the host polls object storage. Same digest promoted test, pilot, prod |
+| Live Clinic | Read-only reference, never managed by this tree |
+
+> **Action needed** Founder: state bucket, `tofu plan` review and `tofu apply` for test; GitHub Environments renamed to test, pilot and prod with required reviewers on pilot and prod; least-privilege OIDC roles before pilot (the administrator role is acceptable for kx-test only).
+

@@ -1,7 +1,9 @@
 # KX-12 Monetization & Pricing Architecture
 
 Source: 1hTRK4WdabuUHyCHl8NvsTWfpXADeOMyA
-Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; supersedes KX12 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.7; recommended commission defaults (editable seeded defaults), cash-transfer treatment, SB-05 note fixed)
+
+WHAT CHANGED IN REV 2.8: Recommended commission default values now ship as editable seeded defaults (counsel sign-off still NOT_REVIEWED); per-tender treatment (LG-COM-20); SB-05 note corrected to resolved. No other price changed.
 
 > Extraction note: text from Drive read_file_content; a few symbols (>=, <=, ~, arrows) lost in the PDF text layer, gaps marked "[?]".
 
@@ -139,7 +141,7 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - **Revenue reporting**: GBV is never revenue; Kiorex revenue is confirmed or billed charges net of reversals (KX-32).
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Commission attribution as built (As-built).** The fee amount, the attended-new-patient trigger, the 24-month lookback and the monthly "higher of subscription or commission, never both" rule are unchanged (ADR-007). The only addition is one more way to be non-chargeable: acquisition origin `PROVIDER_LED` (a provider link, QR, widget or prior provider touch of the same organisation inside its window). Evidence can only remove a fee: a test proves a provider touch never adds one and `MARKETPLACE` and `UNATTRIBUTED` behave exactly like today.
 - **Defaults built, money decisions open.** `PROVIDER_FIRST` precedence, windows of 30, 30 and 7 days and "no charge for provider-led-then-marketplace" are built as `PROPOSED_DEFAULT`; the CEO has not signed them (KX-33 section 06 items 4 and 5). A change to any money policy needs two super admins and takes effect at least 7 days after approval with a provider announcement.
@@ -176,6 +178,32 @@ Status: **As-built locally** (code plus passing tests, mock billing and payment 
 
 <!-- kx-diagram: commission-modes -->
 
-> **Needs human** PSP fee values are not set and unset fees are never ranked cheap (LG-INT-PAY-3). Whether commission collection or the plan price covers the Lite organisation's Kiorex fee minimum (SB-05, Clinic) is a founder decision. Counsel decides the funds flow of collection (LG-COM-3).
+> **Needs human** PSP fee values are not set and unset fees are never ranked cheap (LG-INT-PAY-3). SB-05 (the Clinic listing pause for an unpaid commission) is resolved: collection never pauses listing (decided 26 Nov 2026, see below). Counsel decides the funds flow of collection (LG-COM-3).
 
-> **Decided 26 Nov 2026 (launch guide row 13.16, resolved; the founder delegated the choice to the recommendation):** collection never pauses listing. An unpaid Kiorex commission (Lite or any plan) is reminded, aged, escalated and can be disputed, but it never pauses or hides the Kiorex listing, and never blocks booking, plan or care. The Clinic code no longer pauses the listing at D+30 (SB-05 superseded; `Tenant.kiorexBillingPausedAt` is legacy, never set, and cleared by the daily dunning job where an old value remains). The listing still follows the subscription state (READ_ONLY or SUSPENDED for a non-commission subscription lapse) and verification. The rule is a code rule, not a feature flag: safety controls are never flags, so reversing it is a code change only (and a new founder decision).
+> **Decision** Decided 26 Nov 2026 (launch guide row 13.16, resolved; the founder delegated the choice to the recommendation): collection never pauses listing. An unpaid Kiorex commission (Lite or any plan) is reminded, aged, escalated and can be disputed, but it never pauses or hides the Kiorex listing, and never blocks booking, plan or care. The Clinic code no longer pauses the listing at D+30 (SB-05 superseded; `Tenant.kiorexBillingPausedAt` is legacy, never set, and cleared by the daily dunning job where an old value remains). The listing still follows the subscription state (READ_ONLY or SUSPENDED for a non-commission subscription lapse) and verification. The rule is a code rule, not a feature flag: safety controls are never flags, so reversing it is a code change only (and a new founder decision).
+
+## Rev 2.8: recommended commission defaults (27 Nov 2026)
+
+> **Warning** These are recommended starting points, not legal advice and not pricing advice. They are editable seeded defaults: a super admin proposes a change, a different super admin approves it, it applies from its start date and never rewrites a recorded charge. Counsel sign-off stays NOT_REVIEWED, so no real money moves.
+
+<!-- kpis -->
+- **3.00 %** Clinic default rate (min EGP 10, cap EGP 75)
+- **2.00 %** Pharmacy default rate (min EGP 5, cap EGP 100)
+- **3.00 %** Lab default rate (min EGP 10, cap EGP 100)
+- **Pending** Counsel sign-off, NOT_REVIEWED (real-money modes blocked)
+
+| Value | Clinic | Pharmacy | Lab |
+|---|---|---|---|
+| Fee type and rate | percent, 300 basis points | percent, 200 basis points | percent, 300 basis points |
+| Minimum per charge | EGP 10 | EGP 5 | EGP 10 |
+| Cap per charge | EGP 75 | EGP 100 | EGP 100 |
+| Mode | NET_FROM_PAYOUT | NET_FROM_PAYOUT | NET_FROM_PAYOUT |
+| Minimum to collect in a period | EGP 50 | EGP 50 | EGP 50 |
+| Grace days, retry days | 3; 3, 7, 14 | same | same |
+| Dispute window | 14 days | same | same |
+| Saved-method charge | not allowed | not allowed | not allowed |
+
+- **Why these numbers.** Deliberately low for adoption in the first months: Pharmacy carries the lowest rate because its goods carry thin margins. A worked example for the Clinic: a 1,000 EGP visit gives 30 EGP, a 100 EGP visit gives the 10 EGP floor, a 5,000 EGP visit gives the 75 EGP cap.
+- **Per tender kind.** ONLINE, CASH and CASH_TRANSFER can each carry a treatment (rate, floor, cap, mode, grace) per organisation type and per organisation. The seeded defaults carry none, so CASH_TRANSFER is priced like the base rate until an operator sets otherwise.
+- **Disclosure.** AR and EN draft wording is seeded as DRAFT (never live by itself, names no figure, makes no legal claim); the override reason is hidden from the organisation by default.
+- **Switch.** `COMMISSION_DEFAULTS_SEED=false` skips the install; nothing already installed is removed.

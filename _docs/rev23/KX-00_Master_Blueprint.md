@@ -1,6 +1,8 @@
 # KX00 — Master Blueprint & Reading Guide
 Source: 1PCtr6eLZsin2wRXCw6MiC0YikOBrvSFV
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (first issued 20 November 2026; supersedes KX00 Rev 2.3, 23 Nov 2026; this update lists all 34 volumes KX-00 to KX-33, adds the Rev 2.4 build status and records that the Growth Engine Phase 1 is built locally)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.4; adds KX-34 Environment, Domain and Routing Standard, the supplementary Pay volumes, the 27 Nov 2026 status board and ADR-059 accepted)
+
+WHAT CHANGED IN REV 2.8: ADR-059 is accepted. New volume KX-34 (35 volumes, KX-00 to KX-34) and two supplementary Pay volumes PAY-01 and PAY-02. Status board of 27 Nov 2026: Clinic deployed on AWS (24, 25 and 27 Nov), Huawei Cloud as the initial production hosting decision behind an OpenTofu provider switch, the promotion rule, commission defaults and the cash-transfer tender. Unchanged: strategy, brands, business model, financial figures.
 
 > Cleaned from Drive text extraction; symbols dropped by extractor (≥ ≤ × → bullets) restored where obvious; headers/footers removed. Owner role: CEO. Supersedes: KX00 Rev 2.2 (19 Nov 2026). Audience: Founders, investors, engineering & operations leads.
 
@@ -8,7 +10,7 @@ Subtitle: One ecosystem, two brands, five products — how Kiorex and Kiorly dec
 
 ## WHAT CHANGED IN REV 2.4
 - Volumes KX-25 to KX-33 are in the reading order below: **34 volumes, KX-00 to KX-33** (KX-25 storage and KX-26 architecture were missing from the table; KX-27 to KX-33 are the Growth Engine set).
-- A Rev 2.4 build status table (24 Nov 2026) replaces the claim that Growth is only designed. Growth Phase 1 is built and tested locally; nothing is deployed; the gates are open.
+- A Rev 2.4 build status table (24 Nov 2026) replaces the claim that Growth is only designed. Growth Phase 1 is built and tested locally; nothing was deployed at that date (Kiorly Clinic reached AWS on 24 and 25 Nov 2026, see the Rev 2.8 update); the gates are open.
 - Key numbers refreshed: contracts 1.11.0, ADR-001 to ADR-047 (ADR-039 and ADR-040 Accepted; ADR-041 to ADR-047 Proposed), the verified test baseline of 24 Nov 2026.
 - Volumes changed in Rev 2.4: KX-01 to KX-10, KX-12 to KX-15, KX-17 to KX-19, KX-21 to KX-24, KX-26 to KX-33 (see `_docs/DOCS_SYNC_MANIFEST.md`). Unchanged: KX-11, KX-16, KX-20, KX-25.
 - Unchanged: strategy, brands, business model, governance, every financial figure.
@@ -17,7 +19,7 @@ Subtitle: One ecosystem, two brands, five products — how Kiorex and Kiorly dec
 Kiorly suite adds Kiorly Nurse (an edition of Kiorly Clinic, ADR-031; providers now include physiotherapists and nurses, ADR-029). Home visits by doctors, physiotherapists and nurses become part of the ecosystem (ADR-030); new principle P12. Document map adds KX-23 Kiorly Nurse PRD (24 volumes).
 
 ## Key numbers (verified 23 Nov 2026; Rev 2.4 changes marked)
-- Reference set: **34 volumes** (KX-00 to KX-33); decision log ADR-001 to ADR-047 (ADR-039 and ADR-040 Accepted, ADR-041 to ADR-047 Proposed, see KX-01). Counts below were last recomputed on 23 Nov 2026 except where marked Rev 2.4.
+- Reference set: **35 volumes** (KX-00 to KX-34) plus the supplementary Pay volumes PAY-01 and PAY-02; decision log ADR-001 to ADR-059 (ADR-058 unused; ADR-059 Accepted 27 Nov 2026; ADR-041 to ADR-057 Proposed, see KX-01). Counts below were last recomputed on 23 Nov 2026 except where marked Rev 2.4.
 - Code: **7 repositories** plus the workspace (contracts, platform, account, clinic, pharmacy, lab, kiorly). Commits since 19 Nov 2026 (git log of the local clones): contracts 23, platform 112, account 48, clinics-management 322 (branch kiorex, includes merges from main), pharmacy 60, lab 69, kiorly 19, workspace 34.
 - Contracts `@kiorex/contracts` **1.11.0** (Rev 2.4; 1.10.0 and 1.11.0 are the additive Growth minors; 71 flag keys, 56 event schemas); notification layer tests 60, 100 % coverage of `src/notify`.
 - Provider adapters: **8 kinds** (SMS, Email, WhatsApp, Payment, Push, Storage, Consent, AI), mock by default, real by configuration; **0** real vendors contacted.
@@ -46,7 +48,7 @@ Tiles: BRANDS 2 (Kiorex (patients) · Kiorly (providers)); PRODUCTS 5 (Marketpla
 
 **What we ask of the reader.** Treat this set as the single reference. Where it disagrees with the 2025 PRD/BRD, the 2025 roadmap or the Kiorex v2 draft volumes of 19 Nov 2026, this set wins. Where it disagrees with the Kiorly repository, the repository wins for what is already built and this set wins for what is planned.
 
-> **Note** Current status, 23 Nov 2026. All five backends, the patient app and the staff app run locally against mock providers and seeded demo data; nothing is deployed, no real vendor has been contacted and no launch gate is recorded by code. The staff mobile app is now one app, "Kiorly" (final name, ADR-037), covering Clinic, Nurse, Pharmacy and Lab sign-in entries (ADR-033, Proposed). Every outbound provider (SMS, email, WhatsApp, payments, push, storage, consent, AI) is ready for real URLs and credentials, and a shared notification layer (contracts 1.7.0) sits above the channel adapters (KX24). What remains is human: credentials, template approvals, PSP onboarding, push keys, store accounts, counsel and clinical sign-offs.
+> **Note** Current status, 23 Nov 2026. All five backends, the patient app and the staff app run locally against mock providers and seeded demo data; nothing was deployed at that date (Kiorly Clinic reached AWS on 24 and 25 Nov 2026, see the Rev 2.8 update), no real vendor has been contacted and no launch gate is recorded by code. The staff mobile app is now one app, "Kiorly" (final name, ADR-037), covering Clinic, Nurse, Pharmacy and Lab sign-in entries (ADR-033, Proposed). Every outbound provider (SMS, email, WhatsApp, payments, push, storage, consent, AI) is ready for real URLs and credentials, and a shared notification layer (contracts 1.7.0) sits above the channel adapters (KX24). What remains is human: credentials, template approvals, PSP onboarding, push keys, store accounts, counsel and clinical sign-offs.
 
 **DECISION** Strategic thesis: win the provider's daily workflow first (Kiorly Clinic, free to start), then route patient demand to those providers through Kiorex, and charge only when a new patient actually attends. Each new vertical (nursing, pharmacy, lab) repeats the pattern: software first, marketplace second.
 
@@ -143,7 +145,7 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 
 | Real push delivery (APNs, FCM, EAS project id) | Blocked | Human: keys and accounts; never observed |
 | Store submissions (Apple, Google) | Blocked | Store accounts (KX-19); ADR-033 still Proposed |
-| AWS deployment and secret injection | Blocked | Founder instruction: no deploy; Passport Lambda secrets route missing |
+| AWS deployment and secret injection | Blocked at 23 Nov 2026 (the Clinic was deployed on 24, 25 and 27 Nov) | Other products: founder approval; Passport Lambda secrets route missing |
 
 ### Build status at 24 Nov 2026 (Rev 2.4)
 | Area | Status | Evidence / what remains |
@@ -157,7 +159,7 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 | Staff app renamed Kiorly (repo `kiorly`) | Done | store registration NEEDS_HUMAN |
 | Growth ADR-041 to ADR-047 | Proposed | no founder signature recorded |
 | Legal gates (PDPL opinion, consent wording, marketing licence, provider terms) | Blocked, human | KX-33 §06; none recorded as satisfied |
-| AWS deployment, DNS, store submissions | Blocked | founder instruction: no deploy |
+| AWS deployment, DNS, store submissions | Clinic deployed on AWS (24, 25 and 27 Nov 2026); other products, DNS and store submissions blocked | founder approval for each step |
 
 ## 07 Lean governance and decision rights
 | Decision class | Decides | Consulted | Evidence required |
@@ -172,7 +174,7 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 **NOTE** When headcount passes 40 (KX18), split the CEO's architecture and security rights to a hired CTO and security lead; until then, three founders' signatures replace five councils.
 
 ## 08 Document map
-34 volumes (KX00 to KX33) in eleven folders mirroring the Kiorex Drive structure (the Growth Engine set is folder 10). KX24 Notifications & Messaging Architecture was added on 23 Nov 2026; KX23 Kiorly Nurse PRD in Rev 2.3; KX25 and KX26 on 23 Nov 2026; KX27 to KX33 on 24 Nov 2026.
+35 volumes (KX00 to KX34) in eleven folders mirroring the Kiorex Drive structure (the Growth Engine set is folder 10). KX24 Notifications & Messaging Architecture was added on 23 Nov 2026; KX23 Kiorly Nurse PRD in Rev 2.3; KX25 and KX26 on 23 Nov 2026; KX27 to KX33 on 24 Nov 2026.
 
 | ID | Folder | Document | Written as |
 |---|---|---|---|
@@ -210,6 +212,9 @@ Figure 3 (critical path, month 1 = January 2027; detail KX18), rows: Kiorly Clin
 | KX31 | 10 | SEO, ASO & Organic Growth Strategy | Head of Growth and SEO |
 | KX32 | 10 | Growth Analytics & Unit Economics Reference | Head of Finance |
 | KX33 | 10 | Growth Engine Implementation Roadmap & Agent Handoff | Chief Software Architect |
+| KX34 | 03 | Environment, Domain & Routing Standard (ADR-059) | Chief Software Architect |
+| PAY01 | 03 | Kiorly Pay: the phased unified layer (supplementary) | Chief Software Architect |
+| PAY02 | 03 | Payments integration runbook (supplementary) | Chief Software Architect |
 
 Reading paths: Growth (1.5 h) KX27 §01 to §04 · KX30 §02 and §06 · KX28 §02 to §06 · KX33 §04 and §06 · KX29 §03 and §09 · KX32 §04 and §4.1. Security and launch (1 h) KX10 Rev 2.4 section · KX15 Rev 2.4 section · KX17 · _docs/LAUNCH_PREPARATION_GUIDE.md §11 and §12 · _docs/security/PENTEST_2026-11_REPORT.md. Messaging and providers (1 h) KX24 · KX09 · KX10 §08 · _docs/PROVIDER_GO_LIVE.md. Staff and patient mobile apps (1 h) KX01 ADR033 · KX05 §13 · KX23 · _docs/mobile/. Investor (30 min) KX20 · KX13 · KX14 · KX15. Engineer joining (2 h) KX08 · KX21 · KX09 · KX10 · KX05. Clinical/compliance (1 h) KX16 · KX15 · KX11 · KX17 go-live gates · KX23 nursing scope. Commercial team (1 h) KX12 · KX14 · KX19 · KX05 and KX23 capabilities. Build agent: KX22 · KX01 · KX08 · KX09 · KX21 · Product PRD for the repo.
 
@@ -253,5 +258,38 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - **Glossary additions:** Provider-led (a booking credited to a provider's own link, QR or widget; no Kiorex fee). Origin (`PROVIDER_LED`, `MARKETPLACE`, `UNATTRIBUTED`). Touchpoint, attribution decision, `lt` token, thin-page guard (see KX-30, KX-31).
 - Rev 2.4: Phase 1 is built and tested locally; see the build status table in section 06 and KX-33 §04. Not verified: founder sign-off of any growth ADR; anything running outside the local stack.
 
-## Environment and domain standard (27 Nov 2026, Proposed, ADR-059)
-Master index entry: the environment, DNS, subdomain and domain routing standard is ADR-059 (Proposed, unsigned) with documents in `_docs/environments/` (strategy, DNS and domain architecture, service URL registry, pilot, international routing, configuration standard) and the canonical machine-readable host list `_docs/registry/service-url-registry.yaml`. Environment tags: kx-test = test, kx-pilot = pilot, kx-pro = prod. Pattern `<service>.<env>.<domain>`, production without the environment label. Nothing is deployed; DNS, certificates and provisioning need the founder's approval.
+## Rev 2.8 status and environment standard (27 Nov 2026, ADR-059 Accepted)
+
+<!-- kpis -->
+- **35** Volumes (KX-00 to KX-34) plus 2 Pay volumes
+- **ADR-059** Accepted by the founder, 27 Nov 2026
+- **1.13.0** Contracts tagged (registry publish deferred)
+- **1** Product deployed (Kiorly Clinic, AWS, kx-test)
+
+> **Status** Deployment, 27 Nov 2026. Only Kiorly Clinic is deployed, on AWS (account 990597228737, eu-central-1, environment kx-test): it was deployed on 24 and 25 Nov 2026 and the deploy of `main` succeeded on 27 Nov 2026. Kiorex, Passport, Pharmacy and Lab are not deployed. Where this volume says "nothing is deployed", it describes the date it was written and those four products.
+
+<!-- kx-diagram: env-domain-map -->
+
+> **Decision** ADR-059 is ACCEPTED by the founder (27 Nov 2026). Environment tags: kx-test = test, kx-pilot = pilot, kx-pro = prod. Pattern `<service>.<env>.<domain>`, production without the environment label. Canonical host list: `_docs/registry/service-url-registry.yaml`. Full standard: KX-34.
+
+> **Decision** Hosting. The founder's initial decision for production is Huawei Cloud (Egypt data residency). Every environment is configurable through OpenTofu with a `provider_name = aws | huawei` switch, so test or pilot can move at any time. Huawei region availability for Egypt, residency and CBE rules are for the founder and counsel to verify; this set does not assert them.
+
+> **Rule** Promotion rule (founder, 27 Nov 2026): before moving to the next environment, ask whether to carry the previous one over (identities, organisations, patients, bookings, files) or keep the two separate. Never promote data without that answer.
+
+### Status board, 27 Nov 2026
+
+| Area | Status | Evidence / what remains |
+|---|---|---|
+| Kiorly Clinic on AWS (kx-test) | Done | Deployed 24 and 25 Nov 2026; deploy of `main` succeeded 27 Nov 2026; real organisation Dr Ahmed Shall |
+| Other products deployed | Blocked | Founder approval; OpenTofu tree validated, never applied |
+| Environment, DNS and URL standard | Accepted | ADR-059; DNS, certificates and provisioning need the founder |
+| Contracts 1.13.0 | Done | Tagged v1.13.0; registry publish deferred (scope owner); consumers use vendored tarballs |
+| Commission policy, defaults, cash-transfer tender (LG-COM-20) | Done locally | Recommended default values are editable seeded defaults; counsel sign-off still NOT_REVIEWED |
+| SB-05 listing pause | Resolved | Collection never pauses listing (26 Nov 2026) |
+| Per-organisation partner credentials, signed statement query | Done locally | Platform side built; Clinic, Pharmacy and Lab clients still to send the query signature |
+| Demo data | Done | Removed from the user interfaces and tagged for removal on request |
+| Production-capable Passport IdP | Open | Cognito is the default; undecided |
+| Counsel sign-off per market (CBE) | Open | Real-money modes blocked |
+
+> **Needs human** Open founder decisions: production IdP, `app.kiorly.com` role, `book.*` and `kiorly.link`, real identities in the kx-test Passport, the contracts registry owner, Huawei region verification, NS delegation at the registrars.
+

@@ -1,6 +1,8 @@
 # KX04 — Kiorex Account — Identity & Organizations PRD
 Source: 1yBWJ39HQkbeYBohg41bvLBMGyGeSKK6s
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.4; ADR-059 accepted; Passport single sign-on diagram; issuers per environment; production IdP still open)
+
+WHAT CHANGED IN REV 2.8: ADR-059 accepted (27 Nov 2026). New diagram of the single sign-on flow across Kiorly Home and the Kiorly modules, the issuer per environment (test, pilot and prod), and the open production IdP decision. Unchanged: protocol, clients, requirements.
 
 > Cleaned from Drive text extraction; symbols restored where obvious; headers/footers removed. Owner: Principal Identity Architect. Audience: Founders, investors, engineering & operations leads. Tags: OIDC + PKCE · Patients first · Provider federation · Account linking · Build vs buy.
 
@@ -119,7 +121,7 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - Not verified: any growth consumer of `subject.deleted` implemented.
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Passport clients (As-built, `config/idp.json`):** `kiorex-web`, `kiorex-widget` (public PKCE popup client of the booking widget), `kiorex-ops`, `kiorex-mobile`, `kiorly` (the staff app, scheme `kiorly://`), `kiorly-team` (legacy name, still accepted), `kiorex-passport-web`, `kiorly-clinic`, `kiorly-pharmacy-web`, `kiorly-lab-web`, and `kiorly-home` (public PKCE client of the one web sign-in at `www.kiorly.com/signin`, ADR-038). Staging and production registrations are config only.
 - **Back-channel logout (As-built).** Passport posts a signed `logout_token` to the Clinic (`/api/v1/auth/kiorex/backchannel-logout`), Pharmacy and Lab (`/api/v1/auth/oidc/backchannel-logout`) and Kiorex. Receivers verify signature, issuer, audience, `typ`, events, `sid` or `sub`, store the `jti` against replay and end the matching sessions. **Defect found and fixed in Rev 2.4 work:** the Kiorex handler read every logout token as a plain session revoke, so `subject.deleted` never ran the patient and growth anonymisers after a Passport account deletion; the Kiorex event is now checked first (unit spec and e2e 28).
@@ -130,5 +132,21 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Domains used by identity:** the staff app association claims `/open/*` only, so a Passport redirect to the web callback `/signin/callback` is never captured by the app.
 - Tests: Passport 314 passing; real-stack specs for Kiorly Home and the staff app exist. Not verified: production Passport client, DNS and certificates.
 
-## Environment and domain standard (27 Nov 2026, Proposed, ADR-059)
-Passport hosts follow the pattern: `passport.test.kiorex.com` (kx-test), `passport.kiorex.com` (production issuer). **Pilot clients use the production issuer** so pilot accounts, subjects and sessions carry into production with no migration; `passport.pilot.kiorex.com` is a redirect only. Redirect, post-logout and back-channel URIs of every client are generated from `_docs/registry/service-url-registry.yaml` (replacing the `TODO_NEEDS_HUMAN` values and the `account.kiorex.com` host of ADR-038). Passport session and CSRF cookies are host-only with the `__Host-` prefix; `Domain=.kiorex.com` is forbidden in every environment. Open: the production IdP product (Cognito default) is undecided; identities created in kx-test on the dev IdP may not carry over (ADR-059 gap G-IDP).
+## Rev 2.8: environments, issuers and single sign-on (27 Nov 2026, ADR-059 Accepted)
+
+Passport hosts follow the pattern `passport.<env>.kiorex.com`: `passport.test.kiorex.com` for kx-test and `passport.kiorex.com` for production. **Pilot clients use the production issuer**, so pilot accounts, subjects and sessions carry into production with no migration; `passport.pilot.kiorex.com` is a redirect only. Redirect, post-logout and back-channel URIs of every client are generated from `_docs/registry/service-url-registry.yaml` (replacing the `TODO_NEEDS_HUMAN` values and the `account.kiorex.com` host of ADR-038). Session and CSRF cookies are host-only with the `__Host-` prefix; `Domain=.kiorex.com` is forbidden in every environment.
+
+<!-- kx-diagram: passport-sso -->
+
+| Environment | Issuer | Identity provider | State |
+|---|---|---|---|
+| kx-test | `passport.test.kiorex.com` | hardened dev IdP | Planned |
+| kx-pilot | `passport.kiorex.com` | production IdP | Planned |
+| kx-pro | `passport.kiorex.com` | production IdP | Planned |
+
+> **Needs human** The production-capable identity provider is still an open decision (Cognito is the default). Identities created in kx-test on the dev IdP may not carry over to pilot or production (ADR-059 gap G-IDP).
+
+> **Risk** The AWS dev plan puts the Passport test database in a public, SSL-only, password-protected shared RDS. That is not acceptable for real staff identities: either move it to the private network (a small cost) or keep real staff off the kx-test Passport until pilot. Founder decision pending.
+
+> **Rule** Passport is called "Kiorex Account" in user-facing text; "Passport" stays an internal product name. Single sign-on across Kiorly Home, Clinic (and Nurse edition), Pharmacy and Lab uses the standard authorization code flow with PKCE; products never share a cookie.
+

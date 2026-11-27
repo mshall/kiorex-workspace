@@ -22,6 +22,8 @@ window.kxEnhance = async function kxEnhance(cfg) {
     chart: svg('<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>'),
     check: svg('<path d="M20 6 9 17l-5-5"/>', 'ic tick'),
     cross: svg('<path d="M18 6 6 18M6 6l12 12"/>', 'ic crossx'),
+    action: svg('<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>'),
+    status: svg('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'),
     needs: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>'),
     arrow: svg('<path d="M5 12h14M13 6l6 6-6 6"/>', 'ic'),
   };
@@ -98,6 +100,7 @@ window.kxEnhance = async function kxEnhance(cfg) {
 
   /* ---------- 3. blockquotes -> callouts / pull-quotes ---------- */
   const CALL = [
+    [/^action needed\b/i, 'action', 'Action needed'], [/^status\b/i, 'status', 'Status'],
     [/^needs[_ ]human\b/i, 'needs', 'Needs human'], [/^open questions?\b/i, 'question', 'Open question'], [/^decision\b/i, 'decision', 'Decision'], [/^rule\b/i, 'rule', 'Rule'],
     [/^(warning|caution|important)\b/i, 'warning', null], [/^watch\b/i, 'warning', 'Watch'], [/^risk\b/i, 'risk', 'Risk'],
     [/^extraction note\b/i, 'meta', 'Extraction note'], [/^note\b/i, 'note', 'Note'], [/^evidence\b/i, 'note', 'Evidence'], [/^tip\b/i, 'tip', 'Tip'],
@@ -123,8 +126,8 @@ window.kxEnhance = async function kxEnhance(cfg) {
   }
 
   /* ---------- 4. paragraph-level callouts, KPI tiles, diagrams, captions ---------- */
-  const PCALL = /^(RULE|WATCH|NOTE|WARNING|CAUTION|IMPORTANT|DECISION|RISK|NEEDS_HUMAN|OPEN QUESTIONS?|EVIDENCE|TIP)\s*[:—–]\s*/;
-  const PCALL2 = /^(Note|Warning|Decision|Rule|Risk|Open questions?|Extraction note|Evidence|Tip|Needs human)\s*:\s+/;
+  const PCALL = /^(ACTION NEEDED|RULE|WATCH|NOTE|WARNING|CAUTION|IMPORTANT|DECISION|RISK|NEEDS_HUMAN|OPEN QUESTIONS?|EVIDENCE|TIP)\s*[:—–]\s*/;
+  const PCALL2 = /^(Action needed|Note|Warning|Decision|Rule|Risk|Open questions?|Extraction note|Evidence|Tip|Needs human)\s*:\s+/;
   for (const p of $$('p')) {
     if (p.closest('.callout,.kpis,.lede,.flow,td,th,li')) continue;
     const t = txt(p);
@@ -223,7 +226,7 @@ window.kxEnhance = async function kxEnhance(cfg) {
     if (ol.closest('table,.callout')) continue;
     const prev = ol.previousElementSibling; const ptxt = prev ? txt(prev) : '';
     const li = ol.children.length;
-    if (li >= 3 && /(steps?|flow|sequence|procedure|timeline|process|runbook|walk-?through|stages?)\b/i.test(ptxt.slice(-140)) ) ol.classList.add('timeline');
+    if (li >= 3 && /(steps?|flow|sequence|procedure|timeline|process|runbook|walk-?through|stages?)\b/i.test(ptxt.slice(-140)) ) { ol.classList.add('timeline'); if (prev) prev.classList.add('keep-next'); }
     else ol.classList.add('numbered');
   }
 

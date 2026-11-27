@@ -1,7 +1,9 @@
 # KX09 — Integration Contracts, Events & Money Flows
 
 Source: 1p5Hwgw5gCg7L3A6gsIVxYcN2p6WZKUl7
-Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; previous: Rev 2.3, 23 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.7; money flow with tender kinds, settlement statement and counsel gate; Clinic deployed on AWS)
+
+WHAT CHANGED IN REV 2.8: New section: the commission funds flow by tender (online, cash, cash transfer), two-way settlement statement, bank-only payouts, signed partner statement route with per-organisation credentials, contracts 1.13.0 tagged. No fee value or legal wording is invented.
 
 ## What changed in Rev 2.3
 Additive (minor) contract version: provider sync adds profession, edition, service locations and coverage districts; slots accept serviceLocation=HOME; holds carry visitAddress. New events HOME_VISIT_ASSIGNED / _EN_ROUTE / _ABORTED_UNSAFE, SAFETY_ALERT_RAISED, CARE_PLAN_*, ReferralIssued, MedicationOrderShared. Money flows: home surcharge, cash at home, agency nurse pay, deposit hold on unsafe abort.
@@ -15,7 +17,7 @@ Tags: HMAC API · Outbox events · Idempotency · Kiorex Pay ledger · Home visi
 | Field | Value |
 |---|---|
 | DOCUMENT | KX09 (03 — Technical documents) |
-| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
+| REVISION | Rev 2.8 · Reference Edition (27 Nov 2026) |
 | DATE | 23 November 2026 (first issued 20 November 2026) |
 | STATUS | Approved reference |
 | AUDIENCE | Engineering, finance operations, auditors |
@@ -231,7 +233,7 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 Money flows (section 06): the reward ledger would be a **fourth** ledger, never commingled with Kiorex Pay, held deposits or the clinic SaaS credit ledger (Roadmap, counsel-gated). Fee amount and charge lifecycle are unchanged. Detail: KX-28 section 08 and KX-30.
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Contracts 1.10.0 and 1.11.0 (As-built, both additive).** Marketplace OpenAPI 1.5.0 (30 paths): optional `acquisition` block and `attribution` on `POST /bookings` (400 `ACQUISITION_BLOCK_INVALID`, `ACQUISITION_EVIDENCE_HASH_INVALID`), optional `lt`, signed lookup `GET /referral-links/{code}` and feed `GET /referral-links`. New `kiorex-growth.v1` (1.0.0): `POST /growth/v1/touch`, `POST /growth/v1/events`, `GET /growth/v1/evidence/{bookingId}`, `GET /bootstrap`. Partner intake `kiorex-partner-intake.v1` (1.0.0): `connection-requests`; the lead and funnel endpoints are NOT published (follow-up). Webhooks `kiorex-webhooks.v1` 1.1.0 includes `/auth/backchannel-logout`. 56 event schemas.
 - **Events (As-built).** `CommissionAdjusted` (clinic), `PatientConsentUpdated` (kiorex), `ReferralLinkCreated` (now with `orgRef` and `clinicRef`), `ReferralLinkRevoked` (new), internal `AttributionAssigned` and `PatientAcquisitionRecorded`; additive optional `decisionRef`, `origin`, `policyVersion` on `COMMISSION_CHARGE_CREATED` and `COMMISSION_CHARGE_REVERSED`, `widgetOrigins[]` on `PROVIDER_PROFILE_UPDATED`, `acquisitionOrigin` on appointment status events, and `isNewPatientAtBooking` on the Clinic's appointment events. The acquisition block is covered by the existing request HMAC; the evidence hash is canonical JSON v1.
@@ -243,7 +245,7 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 
 ## Rev 2.7 finishing update: Kiorly Pay unified layer and commission collection (25 Nov 2026)
 
-Status: **As-built locally** (code plus passing tests, mock providers). Nothing is deployed and no payment vendor has ever been called. Sources: `kiorex-platform/Docs/PAYMENTS_UNIFIED_LAYER.md`, `INTEGRATION_RUNBOOK_PAYMENTS.md` (section 11 and "Commission collection (COM-1)"), `_docs/INTEGRATION_GO_LIVE_RUNBOOK.md`. Section 06 above is unchanged: the three ledgers stay separate and Kiorex never takes a share of provider patient revenue.
+Status: **As-built locally** (code plus passing tests, mock providers). Only Kiorly Clinic is deployed (AWS, kx-test) and no payment vendor has ever been called. Sources: `kiorex-platform/Docs/PAYMENTS_UNIFIED_LAYER.md`, `INTEGRATION_RUNBOOK_PAYMENTS.md` (section 11 and "Commission collection (COM-1)"), `_docs/INTEGRATION_GO_LIVE_RUNBOOK.md`. Section 06 above is unchanged: the three ledgers stay separate and Kiorex never takes a share of provider patient revenue.
 
 > **Decision** Founder principle, 25 Nov 2026: Kiorly provides software (orchestration, routing, reconciliation, reporting); licensed payment partners process and settle funds; **Kiorly never holds funds in the design.**
 
@@ -268,3 +270,24 @@ Status: **As-built locally** (code plus passing tests, mock providers). Nothing 
 | Roles | `super_admin` and `finance` read, export (audited) and operate; only `super_admin` proposes or approves configuration and chooses a provider; `ops_admin` alone sees no money |
 
 > **Needs human** Counsel decides the funds flow of commission collection (LG-COM-3) and of the whole Pay layer (LG-INT-PAY-19). Matching and fraud thresholds need calibration and an owner (LG-INT-PAY-17, LG-INT-PAY-18). The vendor collection API is not wired (LG-COM-4). `LG-COM-1` to `LG-COM-10` must be answered before any live run.
+
+## Rev 2.8: commission funds flow with cash, cash transfer and online tenders (27 Nov 2026)
+
+Direction of the founder (26 Nov 2026, business policy and not legal clearance): Kiorex may collect commissions and shows the same ledger to the provider's ops and admin and to Kiorex ops and admin. In Egypt providers are paid under CBE rules by bank transfer to their own bank account only. Cash visits are included by accruing the commission and netting it in the next settlement. Kiorex never holds or pays out cash.
+
+<!-- kx-diagram: funds-flow-tenders -->
+
+| Tender | What the patient did | Accrual | Collection |
+|---|---|---|---|
+| ONLINE | Paid through a licensed payment partner | Held in the Kiorex Pay ledger, payable after the visit | Deducted from the bank payout |
+| CASH | Paid the clinic cash | Accrued from the claim | Netted in the next payout, or invoiced |
+| CASH_TRANSFER | Direct bank, InstaPay or card terminal at the clinic | Own kind with a detail; accrued | Same netting; own configurable treatment |
+
+- **Wire format.** The wire `tender` stays `CASH` or `ONLINE` (contracts 1.13.0 is unchanged). Two additive optional claim fields carry the kind: `tenderMethod` (`CASH` or `CASH_TRANSFER`) and `tenderDetail` (`BANK_TRANSFER`, `INSTAPAY` or `CARD_TERMINAL`). An older client sends neither, so its `CASH` reads as plain cash.
+- **Treatment per tender kind.** Each kind may carry its own rate, minimum, cap, mode and grace days inside the same maker-checker rate rows; anything left out inherits the base rate. The seeded defaults carry no per-tender entries.
+- **Statement route.** `GET /api/v1/partner/commissions/settlement-statement` serves the signed partner (own organisation only), with the same figures and CSV as ops. Credentials are derived per organisation; the query string is signed with `X-Kiorly-Query-Signature` (optional until the platform requires it).
+- **Gate.** Counsel sign-off per market is NOT_REVIEWED, so every real-money collection mode and payout route stays blocked; mock always runs.
+
+> **Needs human** Counsel and CBE funds-flow review (LG-COM-18); the founder's decision whether the Clinic "higher of subscription or commission" settlement coexists with Kiorex collection (LG-COM-7).
+
+> **Risk** A visit whose payment method is unknown is not reported and is counted as an exception in the statement; the Clinic reads the tender from check-in mode and channel rather than from invoice payment allocations, so FAWRY and wallet payments stay unknown for now.

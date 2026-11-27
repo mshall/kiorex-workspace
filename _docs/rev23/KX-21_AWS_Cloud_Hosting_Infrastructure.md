@@ -1,6 +1,8 @@
 # KX21 · AWS Cloud Hosting & Infrastructure Reference
 Source: 1CzIULGNBy-wQ5jVikoHy7JqHHv4K7QKW
-Revision: Rev 2.4 · Reference Edition, updated 24 November 2026 (previous: Rev 2.2, 19 November 2026; this update adds the Rev 2.4 as-built section at the end, status-labelled)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.4; ADR-059 accepted; DNS delegation and certificates; Huawei Cloud production option; OpenTofu provider switch; kx-test plan; Clinic deployed)
+
+WHAT CHANGED IN REV 2.8: ADR-059 accepted. New: DNS delegation and certificate flow, the OpenTofu provider switch with the Huawei Cloud production option (initial founder decision, verification open), the kx-test infrastructure plan, and the Clinic deployment status (24, 25 and 27 Nov 2026).
 
 
 > Extraction note: symbols (≥, ≤, ≈, →, ×, ·) and some chart values lost in the PDF text layer were restored by inference where obvious. Page headers/footers removed.
@@ -15,7 +17,7 @@ Every AWS component behind Kiorex and Kiorly — what runs where, how it is conf
 | Field | Value |
 |---|---|
 | DOCUMENT | KX21 |
-| REVISION | Rev 2.4 · Reference Edition (updated 24 Nov 2026) |
+| REVISION | Rev 2.8 · Reference Edition (27 Nov 2026) |
 | DATE | 19 November 2026 |
 | STATUS | Approved reference |
 | AUDIENCE | Engineering, DevOps, security reviewers, technical due diligence |
@@ -579,7 +581,7 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 - **Storage**: no new storage tier; touch and event tables use the product database and its backups (section 14).
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Infrastructure as built.** No new OpenTofu module was added in Rev 2.4. The growth work extended two existing modules and validated them with `tofu fmt` and `tofu validate` only; nothing was applied. `modules/aws/cdn-edge` gained `site_enabled`, `site_origin_domain` and `spa_noindex_header` (default off); `modules/product-stack` gained the same site variables plus two Secrets Manager containers created empty, `lead_signing_secret` and `growth_link_token_secret`, each with an `_inject` switch that must stay false until a value has been written (App Runner cannot start an instance whose secret has no value). Prod and staging `kiorex-platform` live roots wire them.
 - **SSR and widget hosts.** The public site and the widget host are roles of the same Kiorex API image (`SITE_ROLE`, `WIDGET_HOST`); a second App Runner service is an Open decision (FD-26) and is not created. `apps/api/Dockerfile` (new) builds the API, the SSR bundle and the widget; `Dockerfile.seed` seeds. CDN behaviours for `/{ar,en}/*`, `/sitemap*.xml`, `/robots.txt` and `/.well-known/*` are designed, not applied; the CDN purge adapter is a mock.
@@ -587,5 +589,34 @@ Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the s
 - **Docker.** The API image build passes (contracts lockfile integrity fixed); the final image was not run in a cloud environment.
 - Not verified: any apply, any DNS, CloudFront behaviour, WAF attachment, sizing under SSR load (the in-memory SSR index suits thousands of providers, not 50,000).
 
-## Environment, DNS and domain standard (27 Nov 2026, Proposed, ADR-059)
-HB08 (custom domains, ACM, Route 53) is refined: Route 53 is introduced first by delegating the `test.kiorex.com` and `test.kiorly.com` child zones (two NS record sets at the registrars), then the apex zones before pilot; certificates are per environment and domain (`<env>.<domain>` plus one wildcard level), the pilot environment runs on the production plane, and hostnames come from `_docs/registry/service-url-registry.yaml`. See `_docs/environments/DNS_AND_DOMAIN_ARCHITECTURE.md`. No AWS resource was created.
+## Rev 2.8: environments, DNS, certificates and the Huawei Cloud option (27 Nov 2026, ADR-059 Accepted)
+
+> **Status** Deployment, 27 Nov 2026. Only Kiorly Clinic is deployed, on AWS (account 990597228737, eu-central-1, environment kx-test): it was deployed on 24 and 25 Nov 2026 and the deploy of `main` succeeded on 27 Nov 2026. Kiorex, Passport, Pharmacy and Lab are not deployed. Where this volume says "nothing is deployed", it describes the date it was written and those four products.
+
+HB08 (custom domains, ACM, Route 53) is refined: Route 53 is introduced first by delegating the `test.kiorex.com` and `test.kiorly.com` child zones (two NS record sets at the registrars), then the apex zones before pilot; certificates are per environment and domain (`<env>.<domain>` plus one wildcard level); the pilot environment runs on the production plane; hostnames come from `_docs/registry/service-url-registry.yaml`. No new-environment AWS resource has been created.
+
+<!-- kx-diagram: dns-cert-flow -->
+
+> **Decision** The founder's initial production hosting decision is Huawei Cloud (Egypt data residency). AWS remains the cloud of kx-test. Every environment is configurable through OpenTofu behind `provider_name = aws | huawei`, so the choice is reversible per environment. This volume documents the AWS reference; the Huawei modules mirror it (ECS, EVS, OBS, CDN, SWR, DNS, SCM, CSMS) and are validated only.
+
+> **Risk** Not asserted: Huawei Cloud region availability for Egypt, Egyptian data residency, CBE requirements, ARM flavours, CDN service area, managed PostgreSQL flavours. The founder and counsel verify each before any apply.
+
+<!-- kx-diagram: cicd-provider-switch -->
+
+| Component | AWS (kx-test) | Huawei Cloud (option) |
+|---|---|---|
+| Compute | one ARM host, SSM access, no SSH | ECS and EIP, console access, pull deploy |
+| Database | private PostgreSQL, encrypted data volume, snapshots | EVS volume with KMS, CBR vault; or managed RDS for PostgreSQL |
+| Object storage and backups | S3 with SSE, versioning, lifecycle | OBS with KMS and lifecycle |
+| CDN and certificates | CloudFront and ACM | Huawei CDN and SCM (needs a custom domain) |
+| DNS | Route 53 child zones | Huawei DNS zones |
+| Registry and secrets | ECR, Secrets Manager (containers only) | SWR, CSMS |
+
+| kx-test cost line | Estimate |
+|---|---|
+| Planned resources of the single-host design | about USD 45 per month (42 to 52), an estimate to verify in Billing, not a quote |
+| Domain layer (two Route 53 child zones, certificates, aliases) | about USD 1 to 3 per month, estimate |
+| Huawei Cloud production | not priced; use the provider's calculator for the chosen region |
+
+> **Action needed** Founder: state bucket, plan review and apply per environment; NS records at the registrars; GitHub Environments test, pilot and prod; least-privilege deploy roles before pilot; a separate production account before pilot.
+

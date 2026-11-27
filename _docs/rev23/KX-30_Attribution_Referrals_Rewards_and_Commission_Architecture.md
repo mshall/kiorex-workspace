@@ -1,6 +1,8 @@
 # KX-30 — Attribution, Referrals, Rewards and Commission Architecture
 
-Revision: Rev 2.7 · Growth Edition, Phases 2 to 4 as-built locally, updated 25 November 2026 (supersedes Rev 2.4 of 24 November 2026; owner: Chief Software Architect with the CEO for money policy)
+Revision: Rev 2.8 · Growth Edition, updated 27 November 2026 (previous: Rev 2.7; commission policy: tender kinds including CASH_TRANSFER, per-tender treatment, recommended editable defaults, statement route, SB-05 resolved)
+
+WHAT CHANGED IN REV 2.8: New section 16: the commission policy as built on 26 and 27 Nov 2026 (two-way visibility, bank-only payouts, cash netted at settlement, tender kinds and per-tender treatment LG-COM-20, editable seeded defaults, counsel gate NOT_REVIEWED, signed partner statement route). SB-05 resolved. Clinic deployed on AWS.
 
 Subtitle: The rules that decide where a patient came from, whether Kiorex charges its fee, how a provider can verify it, and how referral rewards would work if counsel clears them.
 
@@ -11,7 +13,7 @@ Tags: Attribution · Commission · Evidence · Disputes · Referrals · Rewards 
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-30 |
-| REVISION | Rev 2.7 · Growth Edition (25 November 2026) |
+| REVISION | Rev 2.8 · Growth Edition (27 Nov 2026) |
 | STATUS | Engine and commission integration As-built locally; referral, rewards, credit, sponsored promotions, fraud v2, reporting models and corporate benefit As-built locally and launch-locked (section 15); defaults are `PROPOSED_DEFAULT` until the CEO signs (ADR-042 Proposed); credit blocked on legal assessment (ADR-046, ADR-048) |
 | OWNER ROLE | Chief Software Architect; CEO for any commission policy |
 | AUDIENCE | Engineering, finance, provider success, counsel |
@@ -24,6 +26,7 @@ Tags: Attribution · Commission · Evidence · Disputes · Referrals · Rewards 
 | Rev 2.4 | 24 Nov 2026 | Re-verified against code: token lifetimes (72 h provider-link token, 30 min in-session token), inclusive windows, `FIRST_TOUCH` refusal, reason codes of the commission gate, link revocation behaviour, evidence and dispute path, fraud rules actually built; status labels moved to As-built | Documentation agent |
 | Rev 2.5 | 24 Nov 2026 | Added section 14: two separate credit systems (patient credit and provider credit), refund-as-credit option, provider-sponsored promotions, commission and revenue rule; status Proposed (ADR-048); as-built note that only the Clinic CR-05 wallet exists | Documentation agent |
 | Rev 2.7 | 25 Nov 2026 | Phases 2 to 4 as-built status (W5 to W8 and W9 documentation pass); ADR-049 to ADR-057 registered; statuses re-read from the as-built records and the wave 8 exit gate | Documentation agent (wave 9 lane A4) |
+| Rev 2.8 | 27 Nov 2026 | Section 16: commission policy, tender kinds, defaults, statement route; SB-05 resolved | Documentation agent |
 
 ## What changed in Rev 2.7
 Sections 09, 10 and 11 relabelled from Roadmap to As-built locally; the section 14 as-built note is superseded by the new section 15, which says exactly what exists (patient and provider credit, refund-as-credit, family credit, goodwill, sponsored promotions with Pay wiring, fraud v2 in shadow, seven reporting models, the separate corporate ledger) and what does not. The money promise is unchanged: evidence can remove a fee, never add one; no downstream product fact, reward or model changes a commission.
@@ -44,7 +47,7 @@ Every statement in this volume carries one of these labels, in a column, a prefi
 
 | Label | Meaning | Rule for readers |
 |---|---|---|
-| **As-built** | Exists in code with a passing test in the workspace, verified by reading the repositories and re-running the suites on 24 Nov 2026 (Rev 2.4). Local only: not deployed, not run against a real provider | Safe to rely on for behaviour in the local stack |
+| **As-built** | Exists in code with a passing test in the workspace, verified by reading the repositories and re-running the suites on 24 Nov 2026 (Rev 2.4). Local only (the Clinic itself is on AWS since 24 Nov 2026; the Kiorex side is not deployed), not run against a real provider | Safe to rely on for behaviour in the local stack |
 | **Approved target** | Accepted by the founder as an ADR or founder decision (FD) | Binding. No growth ADR (ADR-041 to ADR-047) has been accepted, so this label marks only rules inherited from existing Accepted ADRs |
 | **Proposed** | Designed in the Growth reports of 24 Nov 2026 and written up here, not yet signed (ADR-041 to ADR-047) | Build only after sign-off, or inside a work package the founder released |
 | **Roadmap** | Phase 2 to 4 capability, scoped coarsely | Do not build; estimates are ranges |
@@ -303,3 +306,30 @@ Status: **As-built locally**, mock collector by default, not deployed. The Clini
 - **Configuration record.** The shared dev stack's `REWARD_RULES` was restored to version 15 on 25 Nov 2026 (see KX-33 section 10); the payment-side reward posting stays off (`postToPayLedger` false, finance decision H-25).
 
 > **Needs human** Counsel decides the funds flow of collection (LG-COM-3) and the vendor collection API is not wired (LG-COM-4). No rate, fee or amount is set in this section.
+
+## 16 Rev 2.8: commission policy as built, 26 and 27 Nov 2026 (As-built locally, counsel-gated)
+
+Provider-side and platform-side commission policy now exist as one design: two-way visibility, bank-only payouts, cash visits accrued and netted at settlement, per-tender treatment and editable seeded defaults. Counsel sign-off per market is NOT_REVIEWED, so every real-money mode stays blocked. This section is business direction, not legal clearance.
+
+<!-- kx-diagram: funds-flow-tenders -->
+
+<!-- kpis -->
+- **3** Tender kinds (ONLINE, CASH, CASH_TRANSFER)
+- **3** Organisation types with a seeded default (Clinic, Pharmacy, Lab)
+- **2** Views of one ledger (provider ops/admin, Kiorex ops/admin)
+- **Pending** Counsel sign-off per market, NOT_REVIEWED
+
+| Element | Rule | Status |
+|---|---|---|
+| Visibility | Provider ops/admin and Kiorex ops/admin see the same ledger, timeline, amounts, rate in force and disputes | Done locally |
+| Payout | Bank transfer to the provider's bank account only (CBE rules); Kiorex never holds or pays out cash | Done locally |
+| Cash visits | Commission accrued, shown to both sides, netted in the next settlement or invoiced | Done locally |
+| Tender kinds | `CASH_TRANSFER` is its own kind (detail BANK_TRANSFER, INSTAPAY, CARD_TERMINAL) with a per-tender treatment: rate, minimum, cap, mode, grace | Done locally (LG-COM-20 decided 27 Nov 2026) |
+| Default values | Recommended percent rates with floor and cap per organisation type, shipped as editable seeded defaults (values in KX-12) | Done locally |
+| Disclosure | AR and EN wording seeded as DRAFT, never live by itself; override reason hidden by default | Done locally, counsel review open |
+| Statement route | Signed partner route, own organisation only, same figures and CSV as ops; per-organisation credentials; signed query string | Platform done; client send of the query signature open |
+| SB-05 | An unpaid commission never pauses listing, booking, plan or care | Resolved (26 Nov 2026) |
+
+> **Rule** The claim records the treatment used (policy id and version, tender kind, `BASE` or `TENDER`, resolved spec). The expected commission, the reconciliation finding `CLAIM_NE_RATE` and the CSV all read this one snapshot, so they cannot disagree. A visit with an unknown tender is never guessed: it takes the base rate and is counted as an exception.
+
+> **Needs human** Counsel sign-off record per market (LG-COM-18); commission numbers confirmed by the founder and finance through the maker-checker flow; disclosure wording; whether Pharmacy and Lab need a per-tender treatment (they price an order before any tender exists, so they use the base rate today).

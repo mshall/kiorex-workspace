@@ -1,18 +1,20 @@
 # KX-33 — Growth Engine Implementation Roadmap and Agent Handoff
 
-Revision: Rev 2.7 · Growth Edition, Phases 2 to 4 as-built locally, updated 25 November 2026 (supersedes Rev 2.4 of 24 November 2026; owner: Chief Software Architect with the delivery lead)
+Revision: Rev 2.8 · Growth Edition, updated 27 November 2026 (previous: Rev 2.7; status board and remaining-work checklist of 27 Nov 2026; environment work packages; promotion rule in the agent rules)
+
+WHAT CHANGED IN REV 2.8: New closing section: the 27 Nov 2026 status board and remaining-work checklist (release gates, commission and money, real integrations, environment and URL work), the promotion rule for agents, and the deployment status (Clinic on AWS; everything else local).
 
 Subtitle: Phases 1 to 4, the 13 Phase 1 work packages with owners, dependencies, acceptance and effort, the commercial and regulatory gates, and the rules a build agent must follow.
 
 Tags: Roadmap · Work packages · Waves · Dependencies · Effort · Gates · Agent handoff · Next actions
 
-> **Note** How to read this volume. The work packages are the plan; the detail of each package lives in `_docs/growth/GROWTH_PHASE1_WORK_PACKAGES.md` (sections 8 to 12 are the as-built records of the implementing agents). Rev 2.4 re-verified the status column against the repositories on 24 Nov 2026: unit suites re-run (contracts 276, Kiorex API 578, Clinic API 1,222, Passport 314, staff app 276, patient app 251, patient web 282, ops console 84, all passing) and the growth integration suites re-run on a local Postgres (Kiorex growth, consent, public-site, widget, deep-link and link-registry suites: 278 of 279 passing; Clinic growth and kiorex suites: 55 passing, 1 live-mode test skipped on purpose). Nothing is deployed and nothing is pushed.
+> **Note** How to read this volume. The work packages are the plan; the detail of each package lives in `_docs/growth/GROWTH_PHASE1_WORK_PACKAGES.md` (sections 8 to 12 are the as-built records of the implementing agents). Rev 2.4 re-verified the status column against the repositories on 24 Nov 2026: unit suites re-run (contracts 276, Kiorex API 578, Clinic API 1,222, Passport 314, staff app 276, patient app 251, patient web 282, ops console 84, all passing) and the growth integration suites re-run on a local Postgres (Kiorex growth, consent, public-site, widget, deep-link and link-registry suites: 278 of 279 passing; Clinic growth and kiorex suites: 55 passing, 1 live-mode test skipped on purpose). Only Kiorly Clinic is deployed (AWS, since 24 Nov 2026) and nothing of this wave is pushed.
 
 | Field | Value |
 |---|---|
 | DOCUMENT | KX-33 |
-| REVISION | Rev 2.7 · Growth Edition (25 November 2026) |
-| STATUS | Phase 1 built locally; Phases 2 to 4 built locally with every money, messaging and model feature launch-locked (section 05); wave 9 hardening and documentation (section 10); nothing deployed; ADR-041 to ADR-057 Proposed; gates and production evidence open |
+| REVISION | Rev 2.8 · Growth Edition (27 Nov 2026) |
+| STATUS | Phase 1 built locally; Phases 2 to 4 built locally with every money, messaging and model feature launch-locked (section 05); wave 9 hardening and documentation (section 10); only the Clinic deployed (AWS); ADR-041 to ADR-057 Proposed; gates and production evidence open |
 | OWNER ROLE | Chief Software Architect; delivery lead |
 | AUDIENCE | Build agents, engineering leads, founders |
 | RELATED | KX-22 (repo map and hand-off); KX-27 to KX-32; KX-17; KX-18 |
@@ -24,6 +26,7 @@ Tags: Roadmap · Work packages · Waves · Dependencies · Effort · Gates · Ag
 | Rev 2.4 | 24 Nov 2026 | Status column re-verified against code and tests; Phase 1 packages relabelled; honest gaps listed per package; next actions rewritten | Documentation agent |
 | Rev 2.7 | 25 Nov 2026 | Phases 2 to 4 as-built status (W5 to W8 and W9 documentation pass); ADR-049 to ADR-057 registered; statuses re-read from the as-built records and the wave 8 exit gate | Documentation agent (wave 9 lane A4) |
 | Rev 2.7 (finishing pass) | 25 Nov 2026 | Wave 9 lanes A1 and A3 delivered and recorded: loyalty (P4-D), Pharmacy and Lab staff-app tabs (P4-B3), credit and promotion cards in the staff app, gap closure (GC-5); ADR numbering scheme A decided by the founder | Wave 9 finishing lane |
+| Rev 2.8 | 27 Nov 2026 | Closing section: status board, remaining-work checklist, environment work packages, promotion rule | Documentation agent |
 
 ## What changed in Rev 2.7
 Status of every Phase 2, 3 and 4 package re-read from the as-built records (W5 to W8, the W7 A2 follow-up and the wave 8 integration and exit gate) and shown in section 05 as built locally, built locked, or not built; new gates 21 to 33 in section 06; next actions rewritten; section 10 added with the evidence and the honest gaps. ADR-049 to ADR-057 are registered in KX-01 (all Proposed). Nothing in Phases 2 to 4 is deployed or production-verified.
@@ -56,7 +59,7 @@ Every statement in this volume carries one of these labels, in a column, a prefi
 > **Warning** Nothing in this volume has run in production, against a real ad platform, search engine, WhatsApp number or payment provider. Messaging and provider integrations stay MOCKED until the pre-launch pass (FD-04). Numbers marked ASSUMPTION are starting hypotheses, not forecasts.
 
 ## 01 Summary
-Phase 1 delivers the launch-critical set: provider links and QR, the attribution engine, commission integration, first-party analytics, SEO pages, widgets, deep links and bootstrap, consent and versioned configuration. It is built as modules in the two existing monoliths, with contracts 1.10.0 published first and 1.11.0 added in the gap-closure wave. **As-built (Rev 2.4):** all 13 packages exist in code with passing tests on the local stack (section 04 lists each gap). **Not yet true:** nothing is deployed; there is no Lighthouse lab score, no device Universal or App Link check, no real search-engine, PSP or WhatsApp run; consent wording, the PDPL opinion and the provider terms are open human items. No deploy, no push of the clinic `kiorex` branch without founder approval (FD-18), no real provider (FD-04).
+Phase 1 delivers the launch-critical set: provider links and QR, the attribution engine, commission integration, first-party analytics, SEO pages, widgets, deep links and bootstrap, consent and versioned configuration. It is built as modules in the two existing monoliths, with contracts 1.10.0 published first and 1.11.0 added in the gap-closure wave. **As-built (Rev 2.4):** all 13 packages exist in code with passing tests on the local stack (section 04 lists each gap). **Not yet true:** the Kiorex side is not deployed (only Kiorly Clinic is, on AWS); there is no Lighthouse lab score, no device Universal or App Link check, no real search-engine, PSP or WhatsApp run; consent wording, the PDPL opinion and the provider terms are open human items. No deploy, no push of the clinic `kiorex` branch without founder approval (FD-18), no real provider (FD-04).
 
 ## 02 Phases
 | Phase | Theme | Capabilities | Effort | Label |
@@ -236,3 +239,50 @@ Rev 2.7 rewrote this list after the Phases 2 to 4 documentation pass. The single
 - **Decided by the founder on 25 Nov 2026.** ADR numbering scheme A: the assistant decision is ADR-051 and ADR-058 is unused (the ADRs are still Proposed).
 - **Final close-out gate (25 Nov 2026, lane A2 and the close-out lane; the record is `_docs/growth/W9_A2_P3H_HARDENING_EVIDENCE.md`).** Runs G2, G3 and G4 are three consecutive full ordered runs of suites 01 to 56 on one freshly cloned and built private stack (`w9`, ports 4710 to 4715, never the shared ports): 0 failed, 552 passed, 37 skipped by design and 2 todo in each, about 13 minutes per run. The first run of that stack (G1) failed once on a typo in the lane's own test change; the 30-security suite (31 tests) is skipped in these runs by design and is green on its own production-mode stack. Root causes were fixed instead of waited out: the marketplace daily cap, an undeliverable internal outbox event, an arbitrary tie order in a snapshot comparison, UTC dates in raw SQL fixtures, a corporate gate unlock path. Performance and the pentest addendum (KX-PT-16 to 18) are in `_docs/security/PHASE34_PERFORMANCE.md` and `PENTEST_2026-11_REPORT.md` section 8 and are not restated here.
 - **Not verified in this volume.** Production behaviour of any kind; the legal position of any credit, promotion or corporate benefit; the real PSP, WhatsApp, ad, search-console, store and model vendors; Android and device runs. The numbers of the performance and security records are not copied into this volume.
+
+## Rev 2.8 status board and remaining work (27 Nov 2026)
+
+> **Status** Deployment, 27 Nov 2026. Only Kiorly Clinic is deployed, on AWS (account 990597228737, eu-central-1, environment kx-test): it was deployed on 24 and 25 Nov 2026 and the deploy of `main` succeeded on 27 Nov 2026. Kiorex, Passport, Pharmacy and Lab are not deployed. Where this volume says "nothing is deployed", it describes the date it was written and those four products.
+
+> **Rule** Hard rules for every agent: no deploys, no `tofu apply`, no AWS access unless the founder says so in that moment; `[skip ci]` on any push to Clinic `main`; never touch ports 3000, 5173, 5175 or the founder's checkout; mock providers by default; never invent prices, fees or legal wording; no tax-authority integration; private databases and ports for tests.
+
+> **Rule** Promotion rule: when the founder asks to move to the next environment, stop and ask whether to carry the previous one over or keep the two separate; record the answer in the launch guide and the handoff; never promote data without it.
+
+### Release gates, in order
+
+| # | Item | Owner | Status |
+|---|---|---|---|
+| A1 | Contracts 1.13.0 merged and tagged `v1.13.0`; registry publish failed (scope owner); founder: do nothing for now | Founder | Done, publish deferred |
+| A2 | First AWS deploy of Clinic `main` | Founder | Done (24, 25 and 27 Nov 2026) |
+| A3 | Rebuild and re-upload the PDFs after the docs settle | Engineering | In progress (this pass rebuilds them; upload is the founder's step) |
+
+### Commission and money
+
+| # | Item | Owner | Status |
+|---|---|---|---|
+| B1 | Counsel and CBE funds-flow sign-off per market (LG-COM-18) | Counsel | Open |
+| B2 | Commission numbers per organisation type, any overrides (two super admins) | Founder, finance | Open (defaults shipped, editable) |
+| B3 | AR and EN disclosure wording | Counsel | Open (draft only) |
+| B4 | LG-COM-20 tender kinds and per-tender treatment | Founder | Done |
+| B5 | LG-COM-7: does "higher of subscription or commission" coexist with Kiorex collection | Founder | Open |
+| B6 | Real saved-method charging (LG-COM-4); Clinic clients send the query signature and hold per-tenant secrets | Engineering | Open |
+
+### Real integrations and identity
+
+| # | Item | Owner | Status |
+|---|---|---|---|
+| C1 | Payments: Paymob, Fawry, InstaPay, card gateway, bank IPN, wallets; sandbox credentials by reference | Founder, vendors | Open |
+| C2 | Messaging: Meta WhatsApp Cloud (verification, templates), SES and SNS, SMS aggregator, push keys | Founder, vendors | Open |
+| C3 | Production IdP choice, production OIDC clients, store registrations for `com.kiorly.app` | Founder | Open |
+| C4 | Native Arabic review, external pentest, ZAP, privacy impact sign-offs | Founder, counsel | Open |
+
+### Environment and URL work (ADR-059 Accepted)
+
+| # | Item | Owner | Status |
+|---|---|---|---|
+| E1 | Generate `domains.json`, `idp.json` client URIs and app-link files from the registry; remove host literals (platform 23, Clinic 10, Passport 2, staff app 2) | Engineering | Open |
+| E2 | `__Host-` cookies and a no-`Domain=` test; Clinic Nurse edition detection and CORS allow-list | Engineering | Open |
+| E3 | Staff-app universal-link host to `app.<env>.kiorly.com` before the first store build | Engineering | Open |
+| E4 | CI job `validate-registry.mjs --strict`; GitHub Environments test, pilot, prod | Engineering | Open |
+| E5 | OpenTofu: state bucket, plan, apply for test; Huawei verification | Founder | Open (validated only) |
+| E6 | NS records, certificates, alias on the live Clinic distribution | Founder | Open |

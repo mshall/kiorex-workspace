@@ -1,7 +1,9 @@
 # KX-15 Risk & Compliance Framework
 
 Source: 189VvrWvsSTnBwRpDHdGVuXSYkjx7YXZU
-Revision: Rev 2.7 · Reference Edition, updated 25 November 2026 (Rev 2.7: Phases 2 to 4 as-built notes refreshed, see the last sections; supersedes KX15 Rev 2.3, 20 Nov 2026; Rev 2.4 as-built section added at the end, status-labelled)
+Revision: Rev 2.8 · Reference Edition, updated 27 November 2026 (previous: Rev 2.7; ADR-059 accepted; new risk rows for real data in kx-test, Huawei Cloud verification, counsel gate; deployment status)
+
+WHAT CHANGED IN REV 2.8: ADR-059 accepted. Risk register adds: Clinic on AWS with a real organisation in kx-test, Huawei Cloud region and residency verification, counsel sign-off NOT_REVIEWED blocking real-money modes, production IdP. Deployment status corrected (only the Clinic is deployed).
 
 > Extraction note: text from Drive read_file_content; multi-column obligations table partly scrambled — rows reconstructed best-effort.
 
@@ -133,7 +135,7 @@ Labels: **As-built** (in code today), **Approved target** (Accepted ADR or FD), 
 Risk register additions: GR1 to GR10 in KX-27 section 09. The full list of 26 NEEDS_HUMAN items is in `_docs/growth/GROWTH_PHASE1_WORK_PACKAGES.md` section 7. No gate is recorded as satisfied here.
 
 ## Rev 2.4 as-built update (24 Nov 2026)
-Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; nothing is deployed or pushed and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
+Rev 2.4 verification (24 Nov 2026): checked against the repositories, with the suites re-run the same day (counts in KX-33 section 04). As-built means in code with a passing test on the local stack; that verification deployed and pushed nothing, and every provider is mocked. This section wins over the Growth Engine update above wherever they differ.
 
 - **Security findings summary.** The internal white-box penetration test of 24 Nov 2026 (`_docs/security/PENTEST_2026-11_REPORT.md`) found 14 issues: 1 Critical, 5 High, 7 Medium, 1 Low; all are fixed with regression tests and re-verified (28 security e2e tests, production-mode boots, clean `npm audit --omit=dev`). Residual Low and Info items are documented (per-instance Clinic limiters, unauthenticated `/health/ready`, 500 on a few ops payloads, credentials in the tenant SQL export, restore scope, build-tool advisories). The external penetration test (NH017) is still required and is not replaced.
 - **Edge-case sweep.** 24 defects fixed (PSP capture idempotency, booking races, hostile input, contract sweeps). Remaining risks to register: untyped Clinic request bodies (115 parameters), `lt` tokens not bound to a person within 72 hours, a one-hour error on two Cairo DST nights in a quiet-hours helper, the Lab cancel race, no 410 tombstone for delisted profiles, a replayed authorization code leaves the first tokens valid.
@@ -156,7 +158,7 @@ Nothing here records a gate; gate evidence is entered only by a human in the Sup
 
 ## Rev 2.7 finishing update: payment, messaging and integration controls (25 Nov 2026)
 
-Status: **As-built locally** (code plus passing tests, mock providers, nothing deployed). This update records controls that now exist; it does not decide any legal question.
+Status: **As-built locally** (code plus passing tests, mock providers; only the Clinic is deployed, on AWS). This update records controls that now exist; it does not decide any legal question.
 
 <!-- kx-diagram: money-flow -->
 
@@ -177,7 +179,23 @@ Status: **As-built locally** (code plus passing tests, mock providers, nothing d
 
 > **Needs human** Counsel and the DPO own the legal rows (funds flow, licensing, consent wording, credit position). No row above is a legal opinion.
 
-> **Decided 26 Nov 2026 (launch guide row 13.16, resolved; the founder delegated the choice to the recommendation):** collection never pauses listing. An unpaid Kiorex commission (Lite or any plan) is reminded, aged, escalated and can be disputed, but it never pauses or hides the Kiorex listing, and never blocks booking, plan or care. The Clinic code no longer pauses the listing at D+30 (SB-05 superseded; `Tenant.kiorexBillingPausedAt` is legacy, never set, and cleared by the daily dunning job where an old value remains). The listing still follows the subscription state (READ_ONLY or SUSPENDED for a non-commission subscription lapse) and verification. The rule is a code rule, not a feature flag: safety controls are never flags, so reversing it is a code change only (and a new founder decision).
+> **Decision** Decided 26 Nov 2026 (launch guide row 13.16, resolved; the founder delegated the choice to the recommendation): collection never pauses listing. An unpaid Kiorex commission (Lite or any plan) is reminded, aged, escalated and can be disputed, but it never pauses or hides the Kiorex listing, and never blocks booking, plan or care. The Clinic code no longer pauses the listing at D+30 (SB-05 superseded; `Tenant.kiorexBillingPausedAt` is legacy, never set, and cleared by the daily dunning job where an old value remains). The listing still follows the subscription state (READ_ONLY or SUSPENDED for a non-commission subscription lapse) and verification. The rule is a code rule, not a feature flag: safety controls are never flags, so reversing it is a code change only (and a new founder decision).
 
-## Environment and domain standard (27 Nov 2026, Proposed, ADR-059)
-Environment rule and a declared exception: real patient data belongs only on the production plane (pilot and prod); kx-test holds one designated real organisation (Dr Ahmed Shall, Clinic only) as a declared exception pending counsel. Real identities must not sit in the public, shared test database. Sibling-subdomain cookie risk (non-production hosts share the registrable domain) is mitigated by host-only `__Host-` cookies and a CI check; a separate non-production domain is the documented fallback. No legal wording is written. See `_docs/environments/PILOT_ENVIRONMENT_STRATEGY.md` section 3.
+## Rev 2.8: environment rule, hosting and open compliance gates (27 Nov 2026, ADR-059 Accepted)
+
+> **Status** Deployment, 27 Nov 2026. Only Kiorly Clinic is deployed, on AWS (account 990597228737, eu-central-1, environment kx-test): it was deployed on 24 and 25 Nov 2026 and the deploy of `main` succeeded on 27 Nov 2026. Kiorex, Passport, Pharmacy and Lab are not deployed. Where this volume says "nothing is deployed", it describes the date it was written and those four products.
+
+Environment rule and a declared exception: real patient data belongs only on the production plane (pilot and prod); kx-test holds one designated real organisation (Dr Ahmed Shall, Clinic only) as a declared exception pending counsel. Real identities must not sit in the public, shared test database. Sibling-subdomain cookie risk (non-production hosts share the registrable domain) is mitigated by host-only `__Host-` cookies and a CI check; a separate non-production domain is the documented fallback. No legal wording is written.
+
+| Risk | Control | Status |
+|---|---|---|
+| Real organisation in kx-test before counsel has spoken | One organisation only, Clinic database with production-grade protection, trial visits only with people who know it | Open (counsel) |
+| Production hosting on Huawei Cloud: region, Egypt data residency, CBE position | Founder and counsel verify; nothing asserted; region variable is a placeholder | Open |
+| Real-money collection and payouts | Counsel sign-off NOT_REVIEWED blocks every real-money mode and route; mock runs | In force |
+| Production identity provider undecided | Cognito default; kx-test identities may not carry over | Open |
+| Cloud switch as a migration | Separate state, dump and restore, DNS repoint, old stack kept until healthy | Procedure written |
+| Unpaid commission harming a provider | Never pauses listing, booking, plan or care (SB-05 resolved 26 Nov 2026) | In force |
+| Demo data reaching real users | Removed from the user interfaces, tagged for removal | Done |
+
+> **Risk** The pilot rule (real people on the production plane under a cohort gate) and the real organisation in kx-test have no counsel position yet. Nothing in this volume is a legal opinion.
+
