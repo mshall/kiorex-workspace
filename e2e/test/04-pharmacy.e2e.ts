@@ -150,7 +150,9 @@ describe('p. Kiorex pharmacy orders against the real Kiorly Pharmacy', () => {
     // money path: Refund row (idempotency key per payment) + ledger release of the NET only + reconciled (nothing left HELD for this payment)
     expect(await q('kiorex_platform', `select "amountMinor", reason, "idempotencyKey" from "Refund" where "paymentId" = $1`, [o.payment.paymentId])).toEqual([{ amountMinor: 8000, reason: 'PARTIAL_FULFILMENT', idempotencyKey: `refund-partial:${o.payment.paymentId}` }]);
     const rel = await q('kiorex_platform', `select e."creditMinor"::int c from "LedgerEntry" e join "LedgerTx" t on t.id = e."txId" where t."paymentId" = $1 and t.kind like 'RELEASE_ORDER%' and e.account like 'PAYABLE:%'`, [o.payment.paymentId]);
-    expect(rel.map((r: any) => r.c)).toEqual([4000 - Number(b.platformFeeMinor ?? 0)]);
+    // the fee is the stored one (0 when no commission rate is in force, e.g. the old shared dev DB; the SEEDED_DEFAULT pharmacy rate 2% min EGP 5 gives 500 here): the API DTO does not expose it, so it is read from the order row
+    const fee = Number((await q('kiorex_platform', `select "platformFeeMinor"::int f from "PharmacyOrder" where id = $1`, [o.id]))[0].f);
+    expect(rel.map((r: any) => r.c)).toEqual([4000 - fee]);
     const held = await q('kiorex_platform', `select coalesce(sum(e."creditMinor" - e."debitMinor"),0)::int h from "LedgerEntry" e join "LedgerTx" t on t.id = e."txId" where t."paymentId" = $1 and e.account like 'HELD:%'`, [o.payment.paymentId]);
     expect(held[0].h).toBe(0);
     await waitFor('refund settled at the PSP (outbox)', async () => (await get(o.id)).refund?.status === 'SETTLED', 30_000, 500);

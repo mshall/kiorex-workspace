@@ -6,7 +6,7 @@ LOGS="$ROOT/.e2e/logs"; PIDS="$ROOT/.e2e/pids"
 DBURL() { echo "postgresql://postgres:postgres@127.0.0.1:5433/$1?schema=public"; }
 svc=$1; act=$2
 # private full stack (scripts/w9-stack.sh): NEVER touch the shared :3010
-if [ -n "${E2E_FULL_STACK:-}" ]; then exec "$(dirname "${BASH_SOURCE[0]}")/w9-stack.sh" "clinic-$act"; fi
+if [ -n "${E2E_FULL_STACK:-}" ]; then exec "$(dirname "${BASH_SOURCE[0]}")/${E2E_STACK_SCRIPT:-w9-stack.sh}" "clinic-$act"; fi
 # a suite must never stop/start the SHARED Clinic: without the private stack (E2E_FULL_STACK) this script only works when a human asks for it explicitly
 [ "${SVC_ALLOW_SHARED:-}" = 1 ] || { echo "refusing: svc.sh would touch the shared Clinic :3010 (set E2E_FULL_STACK for the private stack, or SVC_ALLOW_SHARED=1 by hand)"; exit 4; }
 [ "$svc" = kiorly ] || { echo "only 'kiorly' is supported"; exit 2; }

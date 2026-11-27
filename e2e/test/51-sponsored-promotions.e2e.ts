@@ -89,14 +89,18 @@ describe('51. provider-sponsored promotions: the money flow end to end (RC-S3, R
     expect(Number((await walletBalance(tenantId)).toFixed(2))).toBe(Number((before - S).toFixed(2))); // exactly 100, once
     const ex = await exposure(promoId); expect(ex.debit - exp0.debit).toBe(mn(S)); expect(ex.exposure - exp0.exposure).toBe(mn(S)); // reserve converted to debit: nothing counted twice
     const rate = Number((await q('kiorly', `select r.amount::float a from "KiorexCommissionRate" r join "Market" m on m.id = r."marketId" where m.code = 'EG' and r."validTo" is null order by r."validFrom" desc limit 1`))[0]?.a ?? NaN);
-    const charges = await clinicCharges(apt.id); expect(charges.map((c: any) => Number(c.amount))).toEqual([rate]); // the Kiorex fee (EGP 40 at the contract rate; this stack's rate row says otherwise) is the rate in force, NOT reduced by the sponsored amount
-    const dec = (await q('kiorly', `select decision, "feeBasisMinor"::int fb, "sponsoredDiscountMinor"::int sd, "basisPolicyVersion" from "KiorexCommissionDecision" where "appointmentId" = $1 order by "createdAt" desc limit 1`, [apt.id]))[0];
+    const dec = (await q('kiorly', `select decision, amount::float amt, "rateSource", "feeBasisMinor"::int fb, "sponsoredDiscountMinor"::int sd, "basisPolicyVersion" from "KiorexCommissionDecision" where "appointmentId" = $1 order by "createdAt" desc limit 1`, [apt.id]))[0];
+    // the Clinic decides the fee: a configured rate row when one is in force, otherwise the commission-policy default (rateSource KIOREX_DEFAULT: 3% of the fee basis between the floor and the cap; the clone's EG row of EGP 1 is a stale fixture the policy default supersedes)
+    const expectedFee = (dec as any).rateSource === 'KIOREX_DEFAULT' ? Number((dec as any).amt) : rate;
+    const charges = await clinicCharges(apt.id); expect(charges.map((c: any) => Number(c.amount))).toEqual([expectedFee]); // the fee is the one the decision records, computed on the basis BEFORE the sponsored discount, NOT reduced by the sponsored amount
+    if ((dec as any).rateSource === 'KIOREX_DEFAULT') expect(expectedFee).toBe(Math.min(75, Math.max(10, Math.round(mn(600) * 0.03) / 100))); // SEEDED_DEFAULT Clinic 3% min 10 cap 75 on EGP 600
     expect(dec).toMatchObject({ decision: 'CHARGE', fb: mn(600), sd: mn(S) }); expect(dec.basisPolicyVersion).toBeTruthy(); // the basis is the fee BEFORE the sponsored discount (GROSS_BEFORE_SPONSORED); the decision only carries the reference fields
     expect((await clinicDecision(apt.id)).length).toBe(1);
     await waitFor('the deposit is released', async () => (await intentOf(b.id)).releasedAt ? true : undefined, 30_000);
     const payout = (await kiorex(await ops(), 'POST', '/admin/payouts/run')).body; const mine = (await intentOf(b.id));
     expect(mine.payoutId).toBeTruthy(); expect(payout.payouts.find((x: any) => x.clinicId === pi.clinicId)?.amountMinor).toBeGreaterThanOrEqual(mn(K)); // card 250 (posting off): no sponsored or credit part
-    expect((await acct('MARKETPLACE_FEES')).credit).toBe(0); // Kiorex Pay books no revenue or expense for the sponsored amount
+    // Kiorex Pay books no revenue or expense for the sponsored amount: scoped to THIS payment (a stack that has shipped commission defaults books pharmacy and lab release fees to MARKETPLACE_FEES for other suites' orders)
+    expect(Number((await q('kiorex_platform', `select coalesce(sum(e."creditMinor"),0)::int n from "LedgerEntry" e join "LedgerTx" t on t.id = e."txId" where t."paymentId" = $1 and e.account = 'MARKETPLACE_FEES'`, [pi.id]))[0].n)).toBe(0);
     const unbalanced = await q('kiorex_platform', `select "txId" from "LedgerEntry" group by "txId" having sum("debitMinor") <> sum("creditMinor")`); expect(unbalanced).toHaveLength(0);
   }, 240_000);
 
