@@ -125,7 +125,7 @@ services:
       OIDC_ISSUER: "{issuer}"
       CORS_ORIGINS: "{cors}"
       WIDGET_HOST: "{host:kiorex.widget}"
-      KIORLY_BASE_URL: "{url:kiorly.api}/clinics/marketplace/v1"
+      KIORLY_BASE_URL: "{url:kiorly.clinics}/marketplace/v1" # 27 Nov 2026: the Clinic web host routes /marketplace/* to its API (signed partner API outside /api/v1), like pharmacies and labs; the gateway form stays planned
   - id: kiorex.admin
     domain: kiorex
     label: admin
@@ -278,7 +278,7 @@ services:
     core: true
     envs: [dev, test, staging, pilot, prod]
     status: planned
-    note: "The service is live today only at the legacy host d92iz83i79c05.cloudfront.net (see legacy_hosts); the canonical name is planned and is added to the SAME distribution. Same-origin /api/* behind that distribution."
+    note: "Live on kx-test since 27 Nov 2026 at clinics.test.kiorly.com (a second, OpenTofu-managed distribution that chains to the legacy distribution for the SPA and routes /api/* and /marketplace/* to the same App Runner origin; infra/tofu/modules/clinic_link) and still at the legacy host d92iz83i79c05.cloudfront.net, which never goes away (see legacy_hosts). The Clinic CDK stack owns the legacy distribution, so the alias is not added there."
     env:
       APP_WEB_URL: "{url:kiorly.clinics}"
       WEB_PUBLIC_ORIGIN: "{url:kiorly.clinics}"
@@ -286,6 +286,9 @@ services:
       KIORLY_HOME_ORIGINS: "{url:kiorly.app}"
       KIOREX_OUTBOX_WEBHOOK_URL: "{url:kiorex.webhooks}/api/v1/webhooks/kiorly"
       KIOREX_WIDGET_BASE_URL: "{url:kiorex.widget}"
+      KIOREX_API_BASE_URL: "{url:kiorex.api}/api/v1"
+      KIOREX_PATIENT_WEB_URL: "{url:kiorex.marketplace}"
+      WEB_BASE_URL: "{url:kiorly.clinics}"
   - id: kiorly.pharmacies
     domain: kiorly
     label: pharmacies
@@ -448,7 +451,7 @@ legacy_hosts:
     status: live
     cloudfront_distribution: E1DE0H2K3M17YL
     keep_until: never-without-founder-approval
-    note: "The live AWS Clinic (account 990597228737, eu-central-1) with the real organisation Dr Ahmed Shall. Stays reachable forever as the default CloudFront domain; the custom domain is ADDED to the same distribution, never replacing it. Allowed in kx-test CORS and OIDC redirect lists until retired."
+    note: "The live AWS Clinic (account 990597228737, eu-central-1) with the real organisation Dr Ahmed Shall. Stays reachable forever as the default CloudFront domain; the canonical name clinics.test.kiorly.com is served by a SECOND distribution (OpenTofu, infra/tofu/modules/clinic_link) because the CDK stack owns this one; this host is never replaced. Allowed in kx-test CORS and OIDC redirect lists until retired."
 
 superseded_hosts:
   - host: account.kiorex.com

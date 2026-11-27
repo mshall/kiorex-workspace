@@ -11,11 +11,11 @@ services = {
   "kiorex.api"         = { type = "api" }
   "kiorex.webhooks"    = { type = "api" }
   "kiorex.passport"    = { type = "api" }
-  "kiorex.marketplace" = { type = "static", with_api = true }  # the patient web calls /api/* on its own origin (apps/web has no API base URL setting)
-  "kiorex.admin"       = { type = "static", with_api = true }  # same for the ops console
+  "kiorex.marketplace" = { type = "static", with_api = true }                                 # the patient web calls /api/* on its own origin (apps/web has no API base URL setting)
+  "kiorex.admin"       = { type = "static", with_api = true }                                 # same for the ops console
   "kiorly.pharmacies"  = { type = "static", with_api = true, api_paths = ["/marketplace/*"] } # signed Kiorex partner API (outside /api/v1 by contract)
   "kiorly.labs"        = { type = "static", with_api = true, api_paths = ["/marketplace/*"] }
-  "kiorly.marketing"   = { type = "static", with_api = false, rewrite = "directory" } # apps/kiorly-site (multi-page, no API); test.kiorly.com
+  "kiorly.marketing"   = { type = "static", with_api = false, rewrite = "directory" }       # apps/kiorly-site (multi-page, no API); test.kiorly.com
   "kiorly.admin"       = { type = "static", with_api = true, api_service = "kiorex.admin" } # the same Ops console build as kiorex.admin, Kiorly edition by host; /api/* to the Kiorex API
 }
 
@@ -58,4 +58,5 @@ github_repos = [
 create_github_oidc_provider = false # the account already has token.actions.githubusercontent.com (used by the Clinic); it is only referenced
 
 # READ-ONLY reference to the live Clinic. Never managed, imported or modified here; the Clinic has its own CDK stack.
-clinic_distribution_id = "E1DE0H2K3M17YL"
+clinic_distribution_id  = "E1DE0H2K3M17YL"
+clinic_apprunner_domain = "qdmz9f29cb.eu-central-1.awsapprunner.com" # technical name of the live Clinic App Runner service (origin of /api and /marketplace for the new Clinic host)

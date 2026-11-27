@@ -41,7 +41,7 @@ test.describe.serial('patient web', () => {
     if (live) { expect(r.status).toBe(200); expect(r.body.nameEn ?? r.body.provider?.nameEn).toContain('Laila'); await page.goto(`${URLS.patientWeb}/doctors/demo_dp_3`); await expect(page.getByText(/Laila Farouk/)).toBeVisible(); await expect(page.getByText(/Dermatology/i).first()).toBeVisible(); }
     else { expect(r.status).toBe(403); expect(r.body).toMatchObject({ code: 'FEATURE_DISABLED', key: 'market.eg.live', reason: 'AWAITING_GATE' }); await page.goto(`${URLS.patientWeb}/doctors/demo_dp_3`); await expect(page.getByText(/not live in Egypt yet/i)).toBeVisible(); }
   });
-  test.fixme('book a slot: needs the market gate recorded by a human and a Clinic wired to kx-test (booking calls the Clinic, none is wired)', async () => undefined);
+  test.fixme('book a slot from the patient web: needs the market gate recorded by a HUMAN (the Clinic is wired now, see 07-clinic-wiring.spec.ts: signed providers and slots work) and a throwaway Clinic organisation', async () => undefined);
   test('appointments page loads and the Past tab lists the completed demo visit', async () => {
     await page.goto(`${URLS.patientWeb}/appointments`); await expect(page.getByRole('heading', { name: 'My appointments' })).toBeVisible();
     await page.getByRole('tab', { name: 'Past' }).or(page.getByText('Past', { exact: true })).first().click();

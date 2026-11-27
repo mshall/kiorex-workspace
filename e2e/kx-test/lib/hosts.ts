@@ -22,6 +22,8 @@ export const URLS = {
   passport: url('kiorex.passport'),
   pharmacy: url('kiorly.pharmacies'),
   lab: url('kiorly.labs'),
+  clinic: url('kiorly.clinics'),
+  clinicLegacy: `https://${(registry.legacy_hosts ?? []).find((l: { env: string; service: string; status: string; host: string }) => l.env === ENV_ID && l.service === 'kiorly.clinics' && l.status === 'live')?.host}`,
   issuer: issuerFor(registry, ENV_ID) as string,
 };
 export const HOSTS = Object.fromEntries(Object.entries(URLS).map(([k, v]) => [k, new URL(v).host]));
