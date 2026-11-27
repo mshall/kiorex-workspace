@@ -38,4 +38,4 @@ Static: patient web and ops console (platform `2958d42c`), pharmacy web (`52967f
 - `webhooks`, `book.test.kiorex.com` (widget host) are not separate CDN hosts yet.
 - Pharmacy/Lab outbox events to the platform were not driven end to end (clients registered; send an order to test).
 - Passport CORS reflects any origin (dev IdP behaviour); the Passport container logs OTP codes (mock mode), so anyone with host access sees codes.
-- Pending in git: tofu edits and the log are uncommitted in the workspace repo next to unrelated `.gitignore` changes.
+- Committed locally in the workspace repo; nothing pushed.
