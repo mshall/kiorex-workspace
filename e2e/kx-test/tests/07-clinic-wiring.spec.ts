@@ -69,9 +69,8 @@ test.describe('Sign in with Kiorex Passport is offered, organisations keep their
     const { context, page } = await openAs(browser, 'ops');
     try {
       await page.goto(`${CLINIC}/login`);
-      await expect(page.getByText('Password', { exact: true }).first()).toBeVisible(); // both methods are offered, the password stays preselected
-      await page.getByText('Kiorex Passport', { exact: true }).first().click();
-      await page.getByTestId('kiorex-passport-button').click();
+      await expect(page.getByTestId('signin-password-panel')).toBeVisible(); // both methods are offered side by side (unified login card, ADR-061)
+      await page.getByTestId('signin-passport').click();
       const passportHost = new URL(URLS.passport).host;
       await page.waitForURL((u) => u.host === passportHost || u.pathname.startsWith('/auth/kiorex/callback'), { timeout: 30_000 });
       if (new URL(page.url()).host === passportHost && (await page.locator('#phone').isVisible().catch(() => false))) await passportSignIn(page, { phone: '+201000001001' });
