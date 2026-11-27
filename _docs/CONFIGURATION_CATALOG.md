@@ -270,6 +270,16 @@ Audit of the three admin surfaces for business values that were hard-coded or en
 
 Defaults are exactly the values of `config/idp.json` `passwordless.otp` (5 per phone per hour, 20 per address per hour, 5 guesses, 300 s, 15 minutes lock-out). Nothing stored means the file applies. **The ranges are code, not settings**, re-checked when a change is applied and when a value is read (a row written by hand is clamped): codes per phone 1 to 10, per address 5 to 60, guesses 3 to 8, lifetime 60 to 600 s, lock-out 5 to 240 minutes. An abuse control can be tuned but never switched off or opened wide. Not configurable on purpose: code length, channels and the development bypass (deployment facts), the TOTP attempt limits, the baseline `mfaPolicy.requiredForRoles`. API: `GET /api/ops/signin-limits`, `POST /api/ops/signin-limits/changes` (propose; `apply: true` for a super admin), `POST /api/ops/signin-limits/changes/{id}/(approve|reject|withdraw)`; audit events `signin.limits.proposed|applied|applied_direct|rejected|withdrawn`. Code: `kiorex-account/apps/dev-idp/src/signin-limits.ts`, page `apps/passport-ui/src/pages/OpsLimits.tsx`. Tests: `apps/dev-idp/test/signin-limits.test.ts` (8), `apps/passport-ui/test/signin-limits.test.tsx` (4).
 
+## Site plans (landing page) (28 Nov 2026)
+
+| Setting | Where | Meaning | Default |
+|---|---|---|---|
+| Clinic plan names, order, public flag and effective-dated price versions | Clinic `Plan` / `PlanPrice` (edited in the Kiorly admin `/kiorly-plans`, `super_admin`; ops reads) | the Clinic plans the landing page shows; a plan without an active price shows "Pricing to be announced" | the Clinic catalogue (seeded EG list prices exist; see founder question in `KIORLY_ADMIN.md`) |
+| Pharmacy and Lab edition wording (visible, name, summary, limits, features, EN and AR) | platform table `SitePlanSetting` key `content` (edited in the same screen, `super_admin`, versioned, audited, no price key accepted) | the wording of the two products' editions; **never a price** (their `PlanPrice` tables are empty and have no editing surface yet) | the editions as defined in code (`LITE`, `PRO`, `CHAIN`) |
+| `PLANS_PUBLIC_ORIGINS` | Kiorex API env (optional) | extra origins allowed to READ `GET /api/v1/public/plans` (route-scoped CORS, GET only, no credentials) | falls back to `LEADS_PUBLIC_ORIGINS` (the site origin from the registry) |
+| `KIORLY_PLANS_ENDPOINT` | Kiorly site build (from the registry, `kiorex.api` + `/api/v1/public/plans`) | where the landing page reads the plans at load; unset = static "plans are being finalised" text only | emitted by `env:emit --env <env>` |
+| Public cache | code | platform memory 60 s (stale copy up to 24 h when the Clinic is down), `max-age=60` for browsers | not a setting |
+
 ### Found and deliberately NOT moved (with the reason)
 
 | Value | Where it is | Why it stays there |
