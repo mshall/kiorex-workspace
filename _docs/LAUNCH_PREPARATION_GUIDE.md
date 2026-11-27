@@ -6,6 +6,15 @@ Rules that apply to every row: nothing is deployed to AWS until the founder says
 
 Legend: **Owner** F = founder, C = counsel, A = AWS/org admin, D = dev team (Claude agents), V = vendor/provider.
 
+## 0. Environment promotion rule (founder, 27 Nov 2026)
+
+Environments: kx-test (= `test`, real data at small scale, includes the real Dr Ahmed Shall organisation on the AWS Clinic), kx-pilot (= `pilot`, bigger scale), kx-pro (= `prod`, major release for Egypt). Hosting: AWS for test now; the founder's initial decision for production is **Huawei Cloud** (data residency in Egypt) and test or pilot may move to Huawei at any time, so every environment is configured through OpenTofu behind a provider switch (see `infra/tofu`).
+
+**Whenever the founder asks to move to the next environment (test to pilot, pilot to prod), STOP and ask first:** "Do you want to carry the previous environment over (identities in Passport, organisations, patients, bookings, files) or keep the two separate?" Offer both:
+1. **Carry over** (promote): which data classes, a dry-run report, a backup and a rollback first; identity carry-over needs a production-capable identity provider (the dev IdP refuses production mode); demo records are excluded unless the founder says otherwise.
+2. **Keep separate**: fresh accounts in the new environment; the old one stays as it is.
+Record the answer here and in the handoff. Never promote data without that answer. Demo (dummy) records are tagged so they can be removed on request (the founder will ask when).
+
 ## 1. AWS accounts and infrastructure
 
 | # | Item | Owner | Notes |
