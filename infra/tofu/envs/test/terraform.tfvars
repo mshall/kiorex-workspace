@@ -4,7 +4,7 @@
 provider_name = "aws"
 aws_region    = "eu-central-1"
 
-enable_custom_domains = false # phase 1: default CDN host names. Flip to true after the founder adds the NS records (README, "Custom domains").
+enable_custom_domains = true # phase 2: NS delegation verified 27 Nov 2026 (test.kiorex.com and test.kiorly.com)
 create_dns_zones      = true
 
 services = {

@@ -19,8 +19,8 @@ resource "aws_ecr_repository" "this" {
 }
 
 resource "aws_ecr_lifecycle_policy" "this" {
-  for_each   = aws_ecr_repository.this
-  repository = each.value.name
+  for_each   = toset(var.images)
+  repository = aws_ecr_repository.this[each.key].name
   policy = jsonencode({
     rules = [
       { rulePriority = 1, description = "expire untagged after 7 days", selection = { tagStatus = "untagged", countType = "sinceImagePushed", countUnit = "days", countNumber = 7 }, action = { type = "expire" } },
