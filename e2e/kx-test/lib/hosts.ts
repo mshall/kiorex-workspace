@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 // The canonical host list is the URL registry (never type a host into code). The registry module is plain ESM next to the docs.
-// @ts-expect-error no types for the registry helper
+// @ts-ignore the registry helper is plain ESM without types
 import { load, hostOf, issuerFor } from '../../../_docs/registry/validate-registry.mjs';
 
 export const ENV_ID: string = process.env.KX_E2E_ENV ?? 'test';

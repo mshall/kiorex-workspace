@@ -70,7 +70,23 @@ export async function signInAndSave(browser: Browser, name: PersonaName): Promis
 }
 
 /** Signs the persona in unless a fresh saved session exists. Call from a spec's beforeAll so the tokens are fresh when the spec runs. */
-export async function ensureSession(browser: Browser, name: PersonaName): Promise<void> { if (!hasFreshSession(name)) await signInAndSave(browser, name); }
+export async function ensureSession(browser: Browser, name: PersonaName): Promise<void> {
+  if (!hasFreshSession(name) || !(await stillValid(name))) await signInAndSave(browser, name);
+}
+
+/** A saved session can be dead although it is young (a sign-out test, a back-channel logout, a restart): probe it before relying on it. */
+async function stillValid(name: PersonaName): Promise<boolean> {
+  try {
+    const p = PERSONAS[name];
+    if (p.app === 'patientWeb' || p.app === 'ops') {
+      const t = savedToken(name); if (!t) return false;
+      const exp = (JSON.parse(Buffer.from(t.split('.')[1], 'base64url').toString()) as { exp: number }).exp; return exp * 1000 > Date.now() + 120_000;
+    }
+    const t = savedLocalStorage(name, p.app === 'pharmacy' ? 'kiorly.token' : 'kiorly.lab.token'); if (!t) return false;
+    const r = await fetch(`${URLS[p.app]}/api/v1/auth/me`, { headers: { authorization: `Bearer ${t}` } });
+    return r.status !== 401; // 403 MFA_REQUIRED means alive but without an MFA claim: the caller's assertions decide
+  } catch { return false; }
+}
 
 /** A new context already signed in as the persona (restores cookies, localStorage and sessionStorage). Language is forced to English for stable selectors. */
 export async function openAs(browser: Browser, name: PersonaName): Promise<{ context: BrowserContext; page: Page; token: string | null }> {
