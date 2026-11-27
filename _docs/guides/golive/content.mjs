@@ -39,7 +39,7 @@ ${table(['Question', 'Answer'], [
   ['Who can record the gate, switch it OFF, or revoke it?', '<b>Only <code>super_admin</code></b>. The buttons are disabled for an ops-only account and the API answers 403.'],
   ['Is a second person required?', '<b>No.</b> A second approver exists in the console only for money-path flags switched OFF at global or market scope. <code>market.eg.live</code> is not a money-path flag, so one super admin acts alone and the change applies immediately. Section 3.6 explains the two-person habit we recommend.'],
   ['What evidence is required?', 'Gate id, approver name, approval date and a link (http or https) to the approval document. The console never checks the document; it only records who said what and when.'],
-  ['Does Kiorly need the same?', '<b>Partly.</b> The Kiorly Clinic has its own country switch (Platform, Market launch, "Go live"). It exists and works for Egypt, but it is a separate switch, it cannot create new markets from its screen today, and it is not linked to the Kiorex gate. Part B.'],
+  ['Does Kiorly need the same?', '<b>Yes, as a separate switch.</b> Kiorly markets are launched from the Kiorly admin (Market launch) or the Clinic platform screen. It creates markets, records who did what (audit), and shows the Kiorex state read-only. It is deliberately not linked to the Kiorex gate. Part B (updated after ADR-060).'],
 ])}
 
 ${callout('warn', 'You do this yourself', 'By founder rule the gate is never recorded by code, by an agent or by a seed. This guide was produced against a private test stack and a sample approval; <b>nothing was recorded on kx-test or anywhere shared</b>. The real Egypt gate is yours to record, with the real approval document, when counsel and the market pack are ready (NEEDS_HUMAN rows 10 and 16).')}
@@ -48,7 +48,7 @@ ${callout('warn', 'You do this yourself', 'By founder rule the gate is never rec
 <ul>
 <li><b>Before you start</b>: the checklist and exactly which account is used in which step.</li>
 <li><b>Part A, Kiorex</b>: sign in as ops, look, then as super admin record the gate, verify on the patient side, and roll back.</li>
-<li><b>Part B, Kiorly</b>: what exists for a Kiorly market go-live today, with the same level of detail, including what is missing and the smallest design to close it.</li>
+<li><b>Part B, Kiorly</b>: how a Kiorly market goes live (updated for ADR-060): the Kiorly admin and Clinic screens, the audit trail, and the rule that a provider belongs to its country for life.</li>
 <li><b>Troubleshooting</b> and a <b>reference</b> of addresses, roles and API calls.</li>
 </ul>
 ${callout('note', 'About the screenshots', 'Screenshots are real, taken with Playwright from a <b>private local test stack</b> (private ports and databases, Passport mock code, nothing shared). The screens are the same as on kx-test (<code>https://admin.test.kiorex.com</code>). Differences you will notice on kx-test: your own accounts instead of the local seed accounts, the "Development identity provider" footer is absent on hosted Passport, and the Launch gates table does not show local DEV seed rows. Sample approver names and links in the screenshots are placeholders.')}
@@ -185,21 +185,20 @@ ${fig('pat-revoked-1-home', 'After Revoke the patient site returns to the "not l
 
   // ───────────────────────── 4. Part B Kiorly
   C.push({
-    id: 'partB', num: '04', title: 'Part B: Kiorly, taking a market live', sub: ['4.1 The answer', '4.2 What exists today', '4.3 Steps for Egypt', '4.4 What is missing', '4.5 Smallest design to close it'],
+    id: 'partB', num: '04', title: 'Part B: Kiorly, taking a market live', sub: ['4.1 The answer', '4.2 What exists', '4.3 Steps for Egypt', '4.4 What changed'],
     html: `
 <h2>4.1 The answer to "Kiorly should be allowed to go live in a market as well, right?"</h2>
-<div class="verdict"><span class="pill amber">PARTIAL</span> Yes in principle, and a switch exists. It is <b>not</b> the same switch as Kiorex, it works only for markets that already exist, and its "Initiate country launch" screen cannot create a new one today.</div>
-<p>Evidence is in the code and was checked on the private stack: the Clinic has a <code>Market</code> table with a launch status (DRAFT, LIVE, SUNSET) and an operational status (ACTIVE, PAUSED, DISABLED); a platform screen to change them; and checks that stop new organisations from being created in a market that is not live and active. Egypt is a LIVE market in the Clinic database this guide was checked against (the real Clinic already serves Egyptian clinics); confirm the same row on kx-test as in section 4.3.</p>
+<div class="verdict"><span class="pill green">YES</span> Kiorly launches its own markets with a switch that is separate from the Kiorex one (ADR-060). It is built, audited and available in the Kiorly admin and in the Clinic platform screen.</div>
+<p>The Clinic owns the market table: launch status (DRAFT, LIVE, SUNSET) and operational status (ACTIVE, PAUSED, DISABLED). New organisations can only be created in a market that is LIVE and ACTIVE. Egypt is already LIVE because the real Clinic serves Egyptian clinics.</p>
 
-<h2>4.2 What exists today</h2>
+<h2>4.2 What exists</h2>
 ${table(['Product', 'Country switch', 'Who sets it, where'], [
-  ['<b>Kiorly Clinic</b> (and Nurse)', 'Yes: <code>Market.status</code> DRAFT to LIVE, plus pause, disable, enable', 'Clinic <b>platform super admin</b>, Clinic web, <b>Platform, Market launch</b> tab. API: <code>POST /admin/platform/markets/:id/launch|pause|disable|enable</code>.'],
-  ['<b>Kiorly Pharmacy</b>', 'No market status. Country comes from the tenant and its settings.', 'Nothing to set. Its Kiorex marketplace link is gated by Kiorex flags (<code>kiorex.pharmacy_orders</code>), a separate gate.'],
-  ['<b>Kiorly Lab</b>', 'No market status (same as Pharmacy).', 'Same: <code>kiorex.lab_bookings</code> on the Kiorex side.'],
-  ['<b>Kiorly admin</b> (ops console edition)', 'Not built as a market switch. The edition shows Feature flags, so the Kiorex gate can be recorded from there too (same API, same roles).', 'Not yet hosted (<code>admin.&lt;env&gt;.kiorly.com</code>, registry status planned). It has no Clinic Market launch screen.'],
+  ['<b>Kiorly Clinic</b> (and Nurse)', 'Yes: Go live, Pause, Disable, Enable, tax pack, cross-border approval. Every change needs a reason and writes an append-only audit row. Optional second approver per market.', 'Clinic platform super admin (Clinic web, Platform, Market launch) <b>or</b> the Kiorly admin, Market launch view.'],
+  ['<b>Kiorly Pharmacy and Lab</b>', 'No switch, by design. A pharmacy or lab belongs to the country it was created in, for life.', 'Nothing to set. Their Kiorex link is gated by the Kiorex flags of their own market.'],
+  ['<b>Kiorly admin</b>', 'Market launch view with full capabilities. Only <b>super admin</b> changes; Kiorly ops reads.', 'Console edition on the Kiorly admin host. It calls the Clinic through a signed, audited route; the Clinic stays the single source of truth.'],
 ])}
-<p>How a Kiorly market behaves once set (from the code): <b>new organisations</b> (self sign-up, and organisations created by the platform admin) can only be assigned to a market that is LIVE and ACTIVE; otherwise the error reads "Market is not accepting new organizations (draft / paused / disabled)". Existing organisations keep working: nothing else reads the market status. Pausing has an end date and resumes automatically (1 to 365 days).</p>
-<p>For Egypt there is an extra legal guard (data-cell registry <code>platform/data-cells.json</code>, path A: data stays in Frankfurt). A market of that kind cannot go LIVE until the cross-border transfer approval is recorded (an approval reference with an expiry date) or a legal pilot exception is active, and every market needs its tax pack (VAT and default visit fee) before LIVE.</p>
+<p><b>Country is for life.</b> No organisation (clinic, pharmacy, lab) can change market. A clinic operating in Egypt stays in Egypt, and if it is connected to Kiorex it appears only in the Kiorex Egypt market. A wrong country is a documented super-admin data fix, not a feature. The Kiorly screen shows the Kiorex state of the same country read-only, with no control.</p>
+<p>For Egypt there is an extra legal guard: a market with data path A cannot go LIVE until the cross-border transfer approval is recorded (reference and expiry) or a legal pilot exception is active, and every market needs its tax pack before LIVE.</p>
 
 <h2>4.3 Steps for Egypt</h2>
 <p>You normally do <b>nothing</b> for Egypt here: the Egypt market is expected to be LIVE already, because the Clinic is in use. The steps are to check it, and to pause it if ever needed. Sign in to the Clinic web as the <b>platform super admin</b> (kx-test: <code>https://clinics.test.kiorly.com</code>; the legacy Clinic address <code>d92iz83i79c05.cloudfront.net</code> reaches the same Clinic). The account and how it signs in are in the register (section Clinic, platform super admin). Remember the register's rule: the base-seed password must not exist on a deployment with real data.</p>
@@ -209,32 +208,23 @@ ${steps([
   'Find the row <b>EG, Egypt</b>. Check <b>Status = LIVE</b>, the green <b>active</b> badge, and that <b>Transfer approval</b> shows an approval reference (not "Missing approval").',
   'Open <b>Legal</b> to read or update the cross-border approval: reference, issued date, expiry, destination, approved sub-processors, and the closed-pilot exception. The dialog shows how many days remain before the approval expires.',
   'To stop <b>new</b> organisations in Egypt: <b>Pause</b> (asks for a number of days) or <b>Disable</b>. To reopen: <b>Enable</b>. Existing clinics are not affected.',
-  'For a market in DRAFT the row shows <b>Go live</b> (and Delete). Go live checks the tax pack and the legal approval; if a check fails the request is refused. The screen has no error message handler for this button, so the row simply stays DRAFT: read the reason in the API response or the Clinic log.',
+  'For a market in DRAFT the row shows <b>Go live</b>. Go live asks for a reason and checks the tax pack and the legal approval; if a check fails the screen now shows the reason in plain words (English and Arabic). Every change is recorded in the market history with who, when and why.',
 ])}
 ${fig('kl-3-market-launch-eg', 'Platform, Market launch: the Egypt row is LIVE and active with a transfer approval reference (a local test value here). Actions: Flags, Commercial, Legal, Pause, Disable.', {masks:[[29.8,71.8,2.6,2.8]], pins:[[60,69,1],[59.5,78,2],[88,70,3]]})}
 ${fig('kl-4-eg-legal-dialog', 'Legal: the cross-border approval (reference, dates, destination, approved sub-processors) and the legal pilot exception. These are the values the Go live check reads.', {})}
 ${callout('note', 'Country feature flags in the Clinic are not set here', 'The Clinic screen "Country feature flags" says <b>Managed in Kiorex super admin</b>. Feature switches per country are controlled from the Kiorex ops console and only mirrored in the Clinic. The Market launch status is the one switch that lives in the Clinic itself.')}
 
-<h2>4.4 What is missing</h2>
-${table(['Gap', 'Evidence', 'Consequence'], [
-  ['<b>"Initiate country launch" fails.</b> The form sends only country, names, region, currency and time zone; the API also requires locale, phone region, weekend days and enabled languages.', 'Reproduced on the private stack: pressing Save as draft for Saudi Arabia returns "defaultCurrency, defaultTimezone, defaultLocale, and defaultPhoneRegion are required" (Figure below). Code: <code>platform-markets-tab.tsx</code> versus <code>markets.service.ts create()</code>.', 'A new Kiorly market cannot be started from the screen. It needs an API call or a database change. Tax pack and payment methods cannot be set from this screen either.'],
-  ['<b>No second approver.</b> One platform super admin can launch, pause or disable a market.', '<code>MarketsService.launch</code> has only the platform-admin check.', 'Same as the Kiorex gate; the difference is that here there is not even an evidence record.'],
-  ['<b>No audit row and no evidence fields</b> for launch.', 'No audit call in <code>markets.service.ts</code>; the table stores only <code>launchedAt</code> and a provision note.', 'You cannot later see who launched a market or on what approval (the legal approval reference is stored, the launch decision is not).'],
-  ['<b>Not linked to the Kiorex gate.</b>', 'The Clinic checks no <code>market.xx.live</code>; the Kiorex side checks no Clinic market status.', 'Egypt can be live in one product and not the other. That is acceptable (the Clinic sells software to clinics even when the Kiorex marketplace is closed), but it must be a decision, and today nothing shows both states together.'],
-  ['<b>Pharmacy and Lab</b> have no market status.', 'Country is a tenant setting only.', 'No switch to flip; no way to stop new pharmacies or labs in a country other than by hand.'],
-  ['<b>Kiorly admin</b> has no market view.', '<code>edition.ts</code> view list.', 'You cannot manage the Clinic market from the Kiorly admin host (not hosted yet anyway).'],
+<h2>4.4 What changed since the first version of this guide</h2>
+${table(['Earlier gap', 'Now'], [
+  ['"Initiate country launch" failed (missing fields).', 'Fixed: locale, phone region, weekend days, languages and currency come from a per-country table and are validated; a duplicate country returns a clear conflict.'],
+  ['No audit and no reason for Go live, Pause, Disable, Enable.', 'Fixed: reason required, append-only audit with actor, source, approval reference and link.'],
+  ['No second approver.', 'Optional per market (off by default); a different person approves.'],
+  ['Go live failed silently.', 'Fixed: the reason is shown, translated.'],
+  ['Pharmacy and Lab had no market rules.', 'They have no switch by design; their country is fixed for life and enforced by the database.'],
+  ['Kiorly admin had no market view.', 'Built: Market launch view, read for ops, change for super admin.'],
+  ['Not linked to the Kiorex gate.', 'Still two independent switches by decision; the Kiorly screen shows the Kiorex state read-only.'],
 ])}
-${fig('kl-8-after-save-draft', 'The failure: Initiate country launch, Saudi Arabia (a sample), Save as draft. The red message is the API refusing the request.', {pins:[[50,73,1]]})}
-
-<h2>4.5 Smallest design to close it</h2>
-<p>Nothing was built, because the Clinic repository is being changed by other work right now and a change there must also reach the <code>main</code> branch. Smallest safe set, in this order:</p>
-${steps([
-  '<b>Fix the form (small, no schema change).</b> Make Initiate country launch send locale, phone region, weekend days and enabled languages, taken from a per-country default table (the Clinic already has a default currency per country). Add a test that creates a draft from the screen.',
-  '<b>Record the launch (small, additive).</b> On Go live, Pause, Disable and Enable write an audit row (who, when, market, old and new status) and, for Go live, require an approval reference and a document link like the Kiorex gate dialog. Same four fields, so the two products read the same way.',
-  '<b>Show the Kiorex state next to it (read-only).</b> The Clinic already polls the Kiorex flag snapshot. Show "Kiorex marketplace: awaiting gate / live" on the Market launch row so you see both switches together. Do <b>not</b> make the Clinic launch depend on it unless you decide so.',
-  '<b>Optional later:</b> a second approver for Go live (the Kiorex flag request screen already has the pattern), and a market view in the Kiorly admin edition.',
-])}
-${callout('warn', 'Decision for you', 'Should Kiorly Clinic Egypt ever be tied to the Kiorex Egypt gate? Recommendation: <b>no</b>, keep two independent switches and show both. Tell me if you want the first two steps built; they touch the Clinic, which has to be changed on both branches (kiorex and main), and deployment stays your decision.')}
+<p>Still open: a Kiorly-only role split (so Kiorly ops cannot reach Kiorex-only data) and, for a new Kiorly market outside Egypt, the cross-border approval and data-cell update. The <code>kx-test</code> live suite (spec 11) checks this screen against the live Clinic without changing anything.</p>
 `,
   });
 
@@ -253,7 +243,7 @@ ${table(['What you see', 'Likely cause', 'What to do'], [
   ['Recorded, but the patient site still shows the "not live" bar.', 'Browser or CDN cache, a product not yet synced, or an OFF override.', 'Hard refresh. Open Propagation. Open <code>/api/v1/markets?all=true</code>: state LIVE is done; <code>OFF_GLOBAL</code> means a Toggle OFF exists (Toggle, ON to clear it); <code>AWAITING_GATE</code> means no evidence is recorded.'],
   ['Egypt is live but the doctor list is empty.', 'No provider is LIVE, or provider sync has not run.', 'Open Providers in the console and check status. This is not a gate problem.'],
   ['Clinic: "Market is not accepting new organizations".', 'The market is DRAFT, paused, disabled or sunset.', 'Platform, Market launch, Enable (or wait for the pause to end). Existing clinics keep working.'],
-  ['Clinic: Initiate country launch shows a red error, or Go live does nothing.', 'Known gap (section 4.4), or the tax pack or cross-border approval is missing (the Go live button shows no message).', 'Do not retry Initiate; ask for the form fix (4.5). For Go live check Legal and Commercial of that market.'],
+  ['Clinic: Initiate country launch shows a red error, or Go live does nothing.', 'The tax pack or cross-border approval is missing; the screen shows the reason.', 'Read the message, then check Legal and Commercial of that market.'],
 ])}
 `,
   });
