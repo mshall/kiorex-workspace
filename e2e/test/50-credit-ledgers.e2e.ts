@@ -221,7 +221,13 @@ describe('50. credit ledgers: patient credit (Kiorex) and provider credit (Clini
       expect(bad).toEqual([]);
     });
 
-    it.todo('GET /credits/statement/not-a-period should answer 400, today it answers 500 (found by this suite, Clinic bug, see the as-built record)');
+    it('a malformed statement period is the caller\'s mistake: 400 INVALID_PERIOD, never a 500 (Clinic fix 7fa72885)', async () => {
+      for (const bad of ['not-a-period', '2026-13', '2026-1', '26-01']) {
+        const r = await kiorly(owner, 'GET', `/credits/statement/${bad}`);
+        expect(r.status, bad).toBe(400);
+        expect(JSON.stringify(r.body)).toContain('INVALID_PERIOD');
+      }
+    });
 
     it('the usage-bundle skeleton is OFF by default: it lists nothing purchasable and a purchase without an Idempotency-Key or with the switch off spends nothing', async () => {
       const before = await dbBalance();
@@ -230,7 +236,12 @@ describe('50. credit ledgers: patient credit (Kiorex) and provider credit (Clini
       expect(await dbBalance()).toBe(before);
     });
 
-    it.todo('dispute-win credit once under replay and the connect bonus once per organisation: both are triggered by Clinic-internal events (a disputed commission charge, the Kiorex connect handshake) with no public route; covered by integration cr05b (999 credit and billed 400 pays 0; dispute win once; connect bonus once under concurrency)');
+    it('dispute-win credit once and the connect bonus once per organisation: both are triggered by Clinic-internal events with no public route, so the invariant is checked on the ledger (the trigger paths are covered by integration cr05b)', async () => {
+      const dupBonus = await q('kiorly', `select "walletId", count(*)::int n from "CreditLedgerEntry" where reason = 'CONNECT_BONUS' and type = 'GRANT' group by 1 having count(*) > 1`);
+      expect(dupBonus).toEqual([]);
+      const dupWin = await q('kiorly', `select "walletId", "idempotencyKey", count(*)::int n from "CreditLedgerEntry" where reason = 'DISPUTE_WIN' and "idempotencyKey" is not null group by 1, 2 having count(*) > 1`);
+      expect(dupWin).toEqual([]);
+    });
   });
 
   describe('no cross-ledger entries (RC-5, guard S10)', () => {

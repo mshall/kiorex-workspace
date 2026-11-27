@@ -146,3 +146,36 @@ Private ports and databases only (reg stack 4810-4815, sec stack 4300-4305, nurs
 - Suite 50 keeps two `it.todo`: `GET /credits/statement/not-a-period` answers 500 (a Clinic bug, Clinic repo, handoff) and the dispute-win credit / connect bonus cannot be triggered through the API.
 - `clinic.pay_collections` is now in the catalogue the platform serves: the Clinic already declares it launch-locked in its own key table, so it evaluated OFF without gate evidence before and still does (no behaviour change; the Pay screens are mock-only until the LG-COM-18 sign-off).
 - Live suite after the redeploy (`npx playwright test -c e2e/kx-test`): 119 passed, 2 skipped (`test.fixme`: human market gate, throwaway Clinic organisation), 4 failed and 11 not run behind them. The failures are in other agents' new specs: `08-mfa-policy` and `10-site-leads` (locators that match two elements, spec bugs) and `11-kiorly-markets` (the live Clinic has no `GET /marketplace/v1/markets` yet: the Clinic side of ADR-060 is not deployed). Specs 01 to 07 and 09 are green.
+
+## 10. Final sweep (27 Nov 2026, late evening): every repo, honest counts
+
+Private databases and ports only (`test_sweep_clinic`, `test_sweep_ph`, `test_sweep_lab`, the reg stack 4810-4815), one test process at a time, the founder's checkout untouched (the Clinic was built and tested in a throw-away clone).
+
+| Repo | Suite | Result |
+|---|---|---|
+| Clinic (`kiorex` d03f1404, `main` c2bbf6e1) | api typecheck, web typecheck | pass |
+| | api unit | 1576 tests: 1574 pass, 2 skipped |
+| | api integration (full, private seeded DB) | 622 reported in the full run: 619 pass, 1 skipped, 2 failed; both fixed and re-run alone (SMS worker test no longer depends on an empty queue; the commission-parity file needs a `test_*` database name): the file totals are 628 tests, 627 pass, 1 skipped |
+| | telehealth integration at `DB_POOL_MAX=2`, and at the default | 13 of 13, 7 of 7, 3 of 3 in both cases |
+| | cl02 on a migrated but UNSEEDED database | passes (self-seeding) |
+| | web unit | 217 of 217 |
+| | web lint | 0 errors, 39 warnings (cap 40) |
+| | seed on a fresh database, then re-run after changing a clinic address and a demo patient phone | existing rows unchanged (insert-only proof) |
+| kiorex-platform | lint (all workspaces), typecheck | pass |
+| | api unit | 172 suites, 2000 pass |
+| | api integration, WHOLE suite once, to completion (12 GB heap, runInBand, own DB) | 116 suites: 115 pass, 1 skipped; 1442 tests pass, 1 skipped; 537 s; no failure (the growth-cohorts spec passed in this run and 3 of 3 alone) |
+| | web 382, ops 361, widget 13, mobile jest 344 | all pass |
+| kiorex-account (Passport) | `tsc -b`, vitest all | 60 files, 483 tests, all pass after fixing the `no-tax-authority` regex (it matched "issue invoices"); new: sign-in limits 8 (idp) + 4 (UI, EN, AR, axe) |
+| kiorly-pharmacy | typecheck, lint | pass; api unit 289, web unit 71, api e2e 238 |
+| kiorly-lab | typecheck, lint | pass; api unit 315, web unit 71, api e2e 218 |
+| kiorly (staff app) | `tsc --noEmit`, jest | pass; 60 suites, 443 tests (includes 2 new; the tree held two uncommitted Playwright specs of another session that jest does not run) |
+| kiorex-contracts | lint, vitest | 455 of 455 |
+| kiorex-pay-contract | lint, vitest | 34 of 34 |
+| Cross-product e2e (`e2e/`, private reg stack 4810-4815, the whole suite 01 to 57 in one run) | | 58 files: 56 pass, 2 skipped; 595 tests: 558 pass, 37 skipped (in-file skips), 0 fail, 0 todo. Suite 50 runs 21 of 21 (it had two `it.todo`). Needed one fix first: `e2e/src/growth.ts` generated 20-character TOTP secrets, which otplib refuses ("Non-zero padding"), so every suite that signs in the second super admin failed at sign-in |
+| Live kx-test suite after the Lab and Passport releases (`npx playwright test -c e2e/kx-test`) | | first run 132 passed, 2 skipped (the two `test.fixme`: human market gate, throwaway Clinic organisation), 1 failed (`08-mfa-policy` second test) and 4 not run behind it; the cause was the spec (the editor starts from the stored policy, which keeps the rule of the previous run, so adding the same organisation was a duplicate: now it clears the old rules first); `08-mfa-policy` re-run alone: 6 of 6. `10-site-leads` and `11-kiorly-markets` pass; the new `12-signin-limits` (3 tests: defaults equal the file, ranges refused, maker-checker with a harmless 300 to 301 s change put back) passes. Net: 137 passed, 2 skipped, 0 failing; phone codes were spent only where a saved session had expired |
+
+### Not run in this sweep (with the reason)
+
+- Clinic Playwright (`apps/web/e2e`, needs the Clinic web on a private port plus its own seeded stack) and the staff-app Expo web specs: not re-run after the one-line `ariaLabel` change; the cause was found by reading `share-card.render.ts` (root `aria-label`) and `react-native-svg` (camel-cases it into a DOM prop) and the helper is covered by a unit test. Re-run `clinic-growth-v2` on the DEV server to confirm.
+- Patient-web, Pharmacy and Lab Playwright, the mobile patient-app Expo e2e: unchanged code in this sweep, last green in sections 3 and 9.
+- No Pharmacy or Lab code changed in this sweep.

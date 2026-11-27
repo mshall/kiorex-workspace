@@ -98,8 +98,9 @@ export async function kxdevGrowthTenant(providerId: string) {
 }
 
 /** A second Passport super admin (maker-checker needs two people). Row-level fixture in the dev Passport database, removed by `drop`. */
-function randomBase32(bytes: number): string { const a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; return [...randomBytes(bytes)].map((b) => a[b % 32]).join(''); }
-export const SECOND_ADMIN = { sub: '01HZKX0000000000000E2E0A2', phone: '+201000009777', totp: randomBase32(20) }; // generated per run, never committed
+/** `chars` base32 characters (5 bits each): use a multiple of 8 (32 = 160 bits, the usual TOTP secret), otherwise otplib refuses the secret ("Non-zero padding"). */
+function randomBase32(chars: number): string { const a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; return [...randomBytes(chars)].map((b) => a[b % 32]).join(''); }
+export const SECOND_ADMIN = { sub: '01HZKX0000000000000E2E0A2', phone: '+201000009777', totp: randomBase32(32) }; // generated per run, never committed
 export async function secondSuperAdmin() {
   const drop = async () => { await q('kiorex_account', `delete from totp_credentials where sub = $1`, [SECOND_ADMIN.sub]); await q('kiorex_account', `delete from accounts where sub = $1`, [SECOND_ADMIN.sub]); };
   await drop();

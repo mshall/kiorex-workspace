@@ -58,8 +58,13 @@ for t in ${tags[@]+"${tags[@]}"}; do
   p="${t%%=*}"; v="${t#*=}"
   case "$p" in platform) upsert PLATFORM_TAG "$v";; passport) upsert PASSPORT_TAG "$v";; pharmacy-api) upsert PHARMACY_API_TAG "$v";; lab-api) upsert LAB_API_TAG "$v";; *) echo "unknown product $p" >&2; exit 64;; esac
 done
-reg="${KX_REGISTRY:-}"; [ -n "$reg" ] && upsert KX_REGISTRY "$reg"; upsert KX_ENV "$env_id"
-for k in KX_REGISTRY PLATFORM_TAG PASSPORT_TAG PHARMACY_API_TAG LAB_API_TAG; do grep -q "^$k=" "$rel/release.env" || { echo "release.env is missing $k (pass --tag and KX_REGISTRY on the first deploy)" >&2; exit 65; }; done
+reg="${KX_REGISTRY:-}"
+# the host pulls from this value: a display name such as "kx-test" makes `docker compose pull` fail on the host, so refuse it here
+if [ -n "$reg" ]; then case "$reg" in *.*|*/*) ;; *) echo "KX_REGISTRY must be a full registry URL (for example <account>.dkr.ecr.<region>.amazonaws.com/kx-<env>), got '$reg'" >&2; exit 65;; esac; upsert KX_REGISTRY "$reg"; fi
+upsert KX_ENV "$env_id"
+for k in KX_REGISTRY PLATFORM_TAG PASSPORT_TAG PHARMACY_API_TAG LAB_API_TAG; do grep -q "^$k=." "$rel/release.env" || { echo "release.env is missing or has an empty $k (pass --tag and KX_REGISTRY on the first deploy)" >&2; exit 65; }; done
+# a release that carries a previously stored registry value is checked too (the stored value could be a display name)
+case "$(sed -n 's/^KX_REGISTRY=//p' "$rel/release.env")" in *.*|*/*) ;; *) echo "release.env KX_REGISTRY is not a full registry URL" >&2; exit 65;; esac
 
 # 2. URLs come from the registry, never typed: one env file per product (deployment unit)
 node "$ws/_docs/registry/validate-registry.mjs" --emit env --env "$env_id" | while IFS=$'\t' read -r svc kv; do
@@ -67,6 +72,8 @@ node "$ws/_docs/registry/validate-registry.mjs" --emit env --env "$env_id" | whi
   echo "$kv" >> "$rel/urls/$f.env"
 done
 touch "$rel/urls/"{platform,passport,pharmacy,lab}.env
+# an empty url file means the registry emitted nothing for that product (typo in the environment, missing services): the containers would start without their host names
+for f in platform passport pharmacy lab; do [ -s "$rel/urls/$f.env" ] || { echo "urls/$f.env is empty: the URL registry emitted no values for $f in env $env_id; refusing to release" >&2; exit 65; }; done
 
 # 3. release id and upload (previous release is kept for rollback)
 rid="$(date -u +%Y%m%dT%H%M%SZ)-$(cat "$rel/release.env" "$rel/docker-compose.yml" | shasum | cut -c1-8)"; echo "$rid" > "$rel/RELEASE_ID"

@@ -79,7 +79,7 @@ test.describe.serial('Kiorly site join requests, end to end on kx-test', () => {
       await page.goto(`${URLS.ops}/leads?q=${reference}`);
       const row = page.getByTestId('data-table').locator('tbody tr').filter({ hasText: reference }); await expect(row).toHaveCount(1); await expect(row).toContainText(LEGAL); await expect(row).toContainText('Test'); await expect(row).not.toContainText(PHONE);
       await row.getByRole('link', { name: reference }).click(); await expect(page).toHaveURL(/\/leads\/ld_/); leadId = page.url().split('/').pop()!;
-      await expect(page.getByTestId('lead-phone')).toHaveText(PHONE); await expect(page.getByTestId('lead-email')).toHaveText(EMAIL); await expect(page.getByText(`E2E-${STAMP}`)).toBeVisible();
+      await expect(page.getByTestId('lead-phone')).toHaveText(PHONE); await expect(page.getByTestId('lead-email')).toHaveText(EMAIL); await expect(page.getByText(`E2E-${STAMP}`).first()).toBeVisible(); // the text shows in the heading and in the details
       await page.getByTestId('lead-to-CONTACTED').click(); await expect(page.getByTestId('lead-status-chip')).toHaveText('Contacted');
       await page.getByTestId('lead-note-input').fill('e2e note'); await page.getByTestId('lead-note-add').click(); await expect(page.getByTestId('lead-trail')).toContainText('e2e note');
     });

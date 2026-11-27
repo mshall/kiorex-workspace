@@ -248,3 +248,37 @@ What Clinic, Pharmacy and Lab show of the commission policy above. They hold **n
 | Disclosure texts, counsel status chip | provider web | texts shown only when Kiorex set wording (EN and / or AR; the other language, marked, when only one is written); the chip shows the status only, never reviewer, document or conditions | hidden / not shown |
 
 Roles that see the statement: Clinic finance, owner, group admin (and administrators when `kiorexCommissions.adminView` is on); Pharmacy owner, branch manager, chain operations; Lab owner, lab director, branch manager, finance.
+
+## Admin-UI sweep (28 Nov 2026): what is configurable where, and what stays env or infra
+
+Audit of the three admin surfaces for business values that were hard-coded or env-only. Rule used: a number or text that a business owner could reasonably change is a **maker-checker, audited setting with a default equal to today's behaviour**; anything that protects people or money, or that describes the deployment, stays **code or environment**.
+
+### Where each business setting lives today
+
+| Setting family | Surface | Screen | Control |
+|---|---|---|---|
+| Feature flags, release cohorts, market go-live gates | Kiorex ops console | Flags, Home gate, Kiorly markets | flag registry with evidence for launch-locked keys; cohorts per release; a human records gate evidence |
+| Growth, attribution, consent, lifecycle, assistant, fraud, LTV, experiment, journey, integration modes (all kinds in this catalogue) | Kiorex ops console | Policy | maker-checker, versioned, effective-dated, rollback by new version |
+| Commission rates, tender treatment (cash vs cash-transfer), dunning and collection parameters, disclosure wording, counsel status | Kiorex ops console | Commissions, Rates, Commission policy | maker-checker, append-only, effective-dated, per organisation type and per organisation |
+| Site join form: picklists, consent text version, retention, response promise, notifications | Kiorex ops console and Kiorly admin edition | Join requests, settings | versioned, saved by a super admin (no maker-checker by design, audited) |
+| Messaging channels and templates, integration status | Kiorex ops console | Messaging, Messaging channels, Integrations center | per channel, mock or real recorded as an approval |
+| Market launch (Kiorly markets), second approver, tax pack | Kiorly admin edition | Market launch | reason, audit, append-only, optional second approver |
+| Second-factor policy (who must use TOTP or a passkey) | Passport web | Ops, MFA policy | maker-checker, audited, default OFF |
+| **Sign-in limits (new, 28 Nov 2026)**: codes per phone per hour, codes per address per hour, guesses per code, code lifetime, lock-out minutes | Passport web | Ops, Sign-in limits (`/account/ops/limits`) | maker-checker (a different ops admin or super admin approves; a super admin may apply directly, audited), live within 5 s, EN and AR, axe clean |
+
+### Sign-in limits (new)
+
+Defaults are exactly the values of `config/idp.json` `passwordless.otp` (5 per phone per hour, 20 per address per hour, 5 guesses, 300 s, 15 minutes lock-out). Nothing stored means the file applies. **The ranges are code, not settings**, re-checked when a change is applied and when a value is read (a row written by hand is clamped): codes per phone 1 to 10, per address 5 to 60, guesses 3 to 8, lifetime 60 to 600 s, lock-out 5 to 240 minutes. An abuse control can be tuned but never switched off or opened wide. Not configurable on purpose: code length, channels and the development bypass (deployment facts), the TOTP attempt limits, the baseline `mfaPolicy.requiredForRoles`. API: `GET /api/ops/signin-limits`, `POST /api/ops/signin-limits/changes` (propose; `apply: true` for a super admin), `POST /api/ops/signin-limits/changes/{id}/(approve|reject|withdraw)`; audit events `signin.limits.proposed|applied|applied_direct|rejected|withdrawn`. Code: `kiorex-account/apps/dev-idp/src/signin-limits.ts`, page `apps/passport-ui/src/pages/OpsLimits.tsx`. Tests: `apps/dev-idp/test/signin-limits.test.ts` (8), `apps/passport-ui/test/signin-limits.test.tsx` (4).
+
+### Found and deliberately NOT moved (with the reason)
+
+| Value | Where it is | Why it stays there |
+|---|---|---|
+| Rate limits of public routes (intake, statement, leads), body-size limits, batch sizes | env or code | abuse and capacity controls: a mistaken setting is an outage or an opening; tuning is an engineering decision with a deploy |
+| Consent gates, quiet-hours enforcement, PHI and health-targeting filters, k-anonymity floor, two-person rule, loss-block floor | code | safety and privacy rules (ADR-025); never a flag |
+| Commission counsel sign-off status | growth config kind, human only | a lawyer's decision, never inferred or defaulted |
+| Money-affecting defaults (fees, deposits, take rates) | env, all 0 | numbers are a founder decision and are not invented; the rate tables are the configurable home |
+| Maintenance banner and support contacts | not built | no user-facing surface reads them yet; adding a setting nothing reads is worse than none. Next step: a `PUBLIC_NOTICES` kind (contracts change, maker-checker, EN and AR, plain text only) once the three web apps have a banner slot |
+| Retention periods of operational logs | infra (log groups, backup timer) and the lead settings | storage-lifecycle facts; the lead retention is already a setting |
+| Hosts, URLs, registries, regions, secrets | `_docs/registry` and the secret bags | infrastructure: changing them is a deployment, never a console action |
+| Notification template wording of safety messages (OTP, safety alerts) | code | must stay reviewed and fixed-form; marketing and lifecycle wording is already managed under Messaging |

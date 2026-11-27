@@ -66,10 +66,14 @@ test.describe.serial('MFA policy on kx-test (maker-checker, mandatory enrolment,
 
   test('maker proposes a rule for the demo pharmacy organisation; the maker cannot approve; the checker (a different ops_admin) approves it', async ({ browser }) => {
     await maker.getByLabel('Make two-step verification mandatory for the rules below').check();
+    // the editor starts from the stored policy and a previous run keeps its (switched-off) rules: clear them so the new rule cannot be a duplicate
+    const editor = maker.locator('#mfa-editor');
+    while (await editor.getByRole('button', { name: 'Remove' }).count()) await editor.getByRole('button', { name: 'Remove' }).first().click();
     await maker.getByRole('button', { name: 'Add a rule' }).click();
-    await maker.getByLabel('Applies to').selectOption('org');
-    await maker.getByLabel('Organisation', { exact: true }).selectOption(ORG);
-    await maker.getByLabel('pharmacist', { exact: true }).check();
+    // "Add a rule" appends a rule group: the form can hold more than one, so the controls of the rule just added are the last ones (strict mode)
+    await maker.getByLabel('Applies to').last().selectOption('org');
+    await maker.getByLabel('Organisation', { exact: true }).last().selectOption(ORG);
+    await maker.getByLabel('pharmacist', { exact: true }).last().check();
     await maker.getByLabel('Reason for the change (optional)').fill('kx-test e2e: demo pharmacists');
     await maker.getByRole('button', { name: 'Submit for approval' }).click();
     await expect(maker.getByRole('status').filter({ hasText: 'Submitted. A second person must approve it.' })).toBeVisible();

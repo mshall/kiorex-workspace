@@ -25,3 +25,4 @@ dist-pack/
 
 # generated document PDFs (see _docs/pdf/README.md)
 _docs/pdf/out/
+/_private/
