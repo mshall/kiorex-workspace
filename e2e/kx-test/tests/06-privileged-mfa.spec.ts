@@ -36,7 +36,10 @@ test.describe.serial('Pharmacy web as owner (phone code + TOTP)', () => {
   });
   test('Orders: the Kiorex marketplace demo orders are listed', async () => {
     await page.goto(`${URLS.pharmacy}/orders`); await expect(page.getByText("You don't have access to this page")).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: /Orders/i }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Kiorex orders' })).toBeVisible(); 
+    await expect(page.getByText('Waiting for your response')).toBeVisible(); await expect(page.getByText('Dispensed, rejected or expired')).toBeVisible();
+    await page.getByText('All', { exact: true }).first().click();
+    await expect.poll(() => page.locator('h2').count(), { message: 'the 6 Kiorex demo orders of the Pharmacy are listed under All' }).toBeGreaterThanOrEqual(6);
   });
   test('Finance / commission statement view loads for the owner', async () => {
     await page.goto(`${URLS.pharmacy}/finance`); await expect(page.getByText("You don't have access to this page")).toHaveCount(0); await expect(page.getByRole('heading', { name: /Finance/i }).first()).toBeVisible();
