@@ -39,3 +39,21 @@ Static: patient web and ops console (platform `2958d42c`), pharmacy web (`52967f
 - Pharmacy/Lab outbox events to the platform were not driven end to end (clients registered; send an order to test).
 - Passport CORS reflects any origin (dev IdP behaviour); the Passport container logs OTP codes (mock mode), so anyone with host access sees codes.
 - Committed locally in the workspace repo; nothing pushed.
+
+## Kiorly marketing site and Kiorly admin hosted (27 Nov 2026)
+No secret values here. Clinic stack untouched.
+
+**Infra (OpenTofu, `infra/tofu/envs/test`, additive: 21 added, 5 changed in place, 0 destroyed).** `static_site` module extended (not copied): per-service `rewrite = "spa" | "directory"` (directory = the kiorly-site CloudFront Function, loaded from `kiorex-account/apps/kiorly-site/deploy/cloudfront-index-rewrite.js`, plus 403/404 -> `/404.html` with status 404) and `api_service` (the service header the origin routes `/api/*` on; lets `kiorly.admin` use `kiorex.admin`, so no Caddy change). Stack fix: `static_sites_out` uses `one(concat(splat))` instead of `try()`, because `try()` made the whole site map unknown as soon as a new site existed (broke for_each keys of the CDN 5xx alarms).
+New: `kiorly.marketing` (test.kiorly.com, bucket `kx-test-site-kiorly-marketing-990597228737`, distribution E15BCBE1TTZP1L, rewrite directory, no API) and `kiorly.admin` (admin.test.kiorly.com, bucket `kx-test-site-kiorly-admin-990597228737`, distribution EQGFK1VR1MHT5, `/api/*` to the Kiorex API), each with bucket, policy, OAC share, A/AAAA alias records in the test.kiorly.com zone and a 5xx alarm; both use the existing ACM certificate for test.kiorly.com (wildcard level covers admin). In place: CI role policy and the four existing bucket policies (extra bucket and distribution ARNs, same content otherwise). The pending `volume_tags` drift on the data volume was excluded (`-exclude`) and stays unapplied.
+**Why a second distribution:** the existing admin distribution holds only the kiorex.com certificate, so an alias for another domain cannot be added.
+
+**Builds uploaded.** Kiorly site: `npm run build -w @kiorex/kiorly-site -- --env test` (mock lead form, noindex, "Preview build" strip; test does not require a lead endpoint), HTML `max-age=300`, assets immutable. Ops console: platform tree at `753dc6c`, built with the regenerated `ops.build.env` (now carries `VITE_KIORLY_ADMIN_HOSTS=admin.test.kiorly.com`); the same build was uploaded to BOTH admin buckets (the kiorex host also now carries the edition code, no visible change there). CloudFront invalidated on all three.
+**Passport.** `KX_CLIENT_OVERRIDES_JSON` in `/kx/test/passport`: only `kiorex-ops` changed (adds `https://admin.test.kiorly.com/auth/callback` and post-logout `/`); secrets of the other clients kept as they were. Applied with the SSM deploy document (`KX_FORCE`): only Passport (and Caddy, by design) recreated.
+**Registry.** `kiorly.marketing` status reserved -> planned (note updated); validator OK.
+
+| Check | Result |
+|---|---|
+| https://test.kiorly.com/, /ar/, /en/, /en/plans/ | 200; unknown page 404 (own 404 page); `x-robots-tag: noindex, nofollow`, HSTS; no localhost in the pages |
+| https://admin.test.kiorly.com/ and `/api/v1/health/live` | 200; API same-origin 200 `{"status":"ok"}` |
+| Passport `/auth` for kiorex-ops with the Kiorly callback | 303 (accepted); an unregistered host 400 |
+| Headless browser, admin.test.kiorly.com | tab title "Kiorly Admin" (Kiorly edition); redirects to Passport, returns to `/auth/callback` on the Kiorly host (the pane's existing SSO session is the non-ops owner persona, so the app then shows "No access", same as on admin.test.kiorex.com) |

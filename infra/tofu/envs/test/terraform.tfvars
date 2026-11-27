@@ -15,6 +15,8 @@ services = {
   "kiorex.admin"       = { type = "static", with_api = true }  # same for the ops console
   "kiorly.pharmacies"  = { type = "static", with_api = true, api_paths = ["/marketplace/*"] } # signed Kiorex partner API (outside /api/v1 by contract)
   "kiorly.labs"        = { type = "static", with_api = true, api_paths = ["/marketplace/*"] }
+  "kiorly.marketing"   = { type = "static", with_api = false, rewrite = "directory" } # apps/kiorly-site (multi-page, no API); test.kiorly.com
+  "kiorly.admin"       = { type = "static", with_api = true, api_service = "kiorex.admin" } # the same Ops console build as kiorex.admin, Kiorly edition by host; /api/* to the Kiorex API
 }
 
 images    = ["platform", "passport", "pharmacy-api", "lab-api"]

@@ -36,7 +36,8 @@ locals {
   certificate_arns   = try(module.certificate_aws[0].certificate_arns, module.certificate_huawei[0].certificate_arns)
   zone_ids           = try(module.dns_zone_aws[0].zone_ids, module.dns_zone_huawei[0].zone_ids)
   edge_distributions = try(module.cdn_api_edge_aws[0].distributions, module.cdn_api_edge_huawei[0].distributions)
-  static_sites_out   = try(module.static_site_aws[0].sites, module.static_site_huawei[0].sites)
+  # one(concat(splat)) rather than try(): try() turns the whole map unknown as soon as one site has apply-time attributes, which breaks for_each keys downstream
+  static_sites_out   = one(concat(module.static_site_aws[*].sites, module.static_site_huawei[*].sites))
   waf_acl_arn        = try(module.cdn_api_edge_aws[0].web_acl_arn, null)
 
   zones        = var.create_dns_zones || var.enable_custom_domains ? module.registry.zone_names : {}
@@ -351,7 +352,7 @@ module "static_site_aws" {
   source                = "../static_site/aws"
   name_prefix           = local.prefix
   tags                  = local.all_tags
-  sites                 = { for id, s in local.static_services : id => { fqdn = local.hosts[id].fqdn, certificate_key = local.hosts[id].domain_key, api_service = s.with_api ? id : "", api_paths = s.api_paths } }
+  sites                 = { for id, s in local.static_services : id => { fqdn = local.hosts[id].fqdn, certificate_key = local.hosts[id].domain_key, api_service = s.with_api ? (s.api_service != "" ? s.api_service : id) : "", api_paths = s.api_paths, rewrite = s.rewrite } }
   origin_domains        = local.origin_domains
   origin_port           = local.origin_port
   origin_secret         = random_password.origin.result
@@ -366,7 +367,7 @@ module "static_site_huawei" {
   source                = "../static_site/huawei"
   name_prefix           = local.prefix
   tags                  = local.all_tags
-  sites                 = { for id, s in local.static_services : id => { fqdn = local.hosts[id].fqdn, certificate_key = local.hosts[id].domain_key, api_service = s.with_api ? id : "", api_paths = s.api_paths } }
+  sites                 = { for id, s in local.static_services : id => { fqdn = local.hosts[id].fqdn, certificate_key = local.hosts[id].domain_key, api_service = s.with_api ? (s.api_service != "" ? s.api_service : id) : "", api_paths = s.api_paths, rewrite = s.rewrite } }
   origin_domains        = local.origin_domains
   origin_port           = local.origin_port
   origin_secret         = random_password.origin.result

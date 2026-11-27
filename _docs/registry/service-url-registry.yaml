@@ -252,8 +252,8 @@ services:
     repo: kiorex-platform
     core: true
     envs: [dev, test, staging, pilot, prod]
-    status: reserved
-    note: "Public marketing, plans, lead generation, provider onboarding. No marketing site code exists yet (KX-19 open question)."
+    status: planned
+    note: "Public marketing, plans, lead generation, provider onboarding: kiorex-account/apps/kiorly-site (static, S3 + CloudFront, directory index rewrite). Hosted on test (test.kiorly.com, mock lead form, noindex) since 27 Nov 2026."
   - id: kiorly.app
     domain: kiorly
     label: app

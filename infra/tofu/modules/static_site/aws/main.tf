@@ -64,6 +64,18 @@ resource "aws_cloudfront_function" "spa" {
   JS
 }
 
+# Multi-page static sites (kiorly-site): /ar/clinics/ and /ar/clinics become /ar/clinics/index.html. The code is the file the site ships (single source).
+locals {
+  directory_sites = { for k, s in var.sites : k => s if s.rewrite == "directory" }
+}
+resource "aws_cloudfront_function" "directory" {
+  count   = length(local.directory_sites) > 0 ? 1 : 0
+  name    = "${var.name_prefix}-directory-index-rewrite"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = file("${path.module}/../../../../../kiorex-account/apps/kiorly-site/deploy/cloudfront-index-rewrite.js")
+}
+
 resource "aws_cloudfront_response_headers_policy" "site" {
   name = "${var.name_prefix}-site"
   security_headers_config {
@@ -145,7 +157,18 @@ resource "aws_cloudfront_distribution" "site" {
     compress                   = true
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.spa.arn
+      function_arn = each.value.rewrite == "directory" ? aws_cloudfront_function.directory[0].arn : aws_cloudfront_function.spa.arn
+    }
+  }
+
+  # Directory sites: a missing page answers the site's own 404 page (private S3 answers 403 for a missing key).
+  dynamic "custom_error_response" {
+    for_each = each.value.rewrite == "directory" ? toset([403, 404]) : toset([])
+    content {
+      error_code            = custom_error_response.value
+      response_code         = 404
+      response_page_path    = "/404.html"
+      error_caching_min_ttl = 60
     }
   }
 
