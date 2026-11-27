@@ -8,6 +8,23 @@
 	}
 }
 
+#
+# Trust boundary for the client address (kx-test gap 4): the host's security group admits only the CDN prefix list and every request needs the
+# shared X-Origin-Secret, so a request that gets past the secret check came through our CDN. CloudFront APPENDS the viewer address it saw as the
+# LAST X-Forwarded-For entry (earlier entries are whatever the visitor sent: never trusted). The snippet below hands the apps exactly that last
+# entry as a single-value X-Forwarded-For; without a usable entry Caddy keeps its default (the peer address). Apps (Passport KX_TRUST_PROXY=true)
+# read the last entry and ignore anything that is not an IP address. Never expose this port without the secret check.
+(upstream) {
+	@viewer header_regexp viewer X-Forwarded-For (?:^|[,\s])([0-9A-Fa-f.:]+)\s*$
+	reverse_proxy @viewer {args[0]} {
+		header_up X-Forwarded-For {re.viewer.1}
+		header_up X-Forwarded-Proto https
+	}
+	reverse_proxy {args[0]} {
+		header_up X-Forwarded-Proto https
+	}
+}
+
 :80 {
 	# local container health, no secret needed (the port is not reachable from outside except through the CDN prefix list)
 	handle /__health {
@@ -19,12 +36,15 @@
 		respond "forbidden" 403
 	}
 
+	# every response of a non-production environment (KX_ENV is test or pilot, not prod; unset counts as non-production) is noindex, whatever the
+	# app does. "?" keeps a value the app (platform, Passport) already set, so the header is never duplicated.
+	@nonprod expression `"{$KX_ENV:test}" != "prod"`
+	header @nonprod ?X-Robots-Tag "noindex, nofollow"
+
 	# the patient web and the ops console call /api/* on their own CDN host, so those two CDN hosts also reach the platform API
 	@platform header_regexp X-Kx-Service ^(kiorex\.api|kiorex\.marketplace|kiorex\.admin)$
 	handle @platform {
-		reverse_proxy platform-api:4000 {
-			header_up X-Forwarded-Proto https
-		}
+		import upstream platform-api:4000
 	}
 
 	# partner webhooks: only the webhook path is exposed on this host name
@@ -32,32 +52,24 @@
 	handle @webhooks {
 		@wh path /api/v1/webhooks/*
 		handle @wh {
-			reverse_proxy platform-api:4000 {
-				header_up X-Forwarded-Proto https
-			}
+			import upstream platform-api:4000
 		}
 		respond 404
 	}
 
 	@passport header X-Kx-Service kiorex.passport
 	handle @passport {
-		reverse_proxy passport:4400 {
-			header_up X-Forwarded-Proto https
-		}
+		import upstream passport:4400
 	}
 
 	@pharmacy header X-Kx-Service kiorly.pharmacies
 	handle @pharmacy {
-		reverse_proxy pharmacy-api:3100 {
-			header_up X-Forwarded-Proto https
-		}
+		import upstream pharmacy-api:3100
 	}
 
 	@lab header X-Kx-Service kiorly.labs
 	handle @lab {
-		reverse_proxy lab-api:3200 {
-			header_up X-Forwarded-Proto https
-		}
+		import upstream lab-api:3200
 	}
 
 	handle {

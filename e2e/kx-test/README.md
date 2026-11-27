@@ -38,7 +38,7 @@ Optional overrides: copy `.env.example` to `.env` (git-ignored; it holds no secr
 | labTech | +201000002005 | Lab dashboard, orders, worklist |
 | labOwner | +201000002010 | Lab privileged role (phone code + TOTP) |
 
-Passport allows 5 one-time codes per phone and 20 per IP and hour. A saved session is reused for 6 minutes (platform apps: 15-minute access tokens) or 40 minutes (Pharmacy, Lab), so a quick re-run costs no codes; `KX_E2E_FRESH=1` forces new sign-ins. A full cold run uses about 9 codes. Do not reset the IdP's rate limits to work around it.
+Passport allows 5 one-time codes per phone and 20 per real client IP and hour (the limit sees the visitor, not the CloudFront edge, since the 27 Nov 2026 edge change; all runs from one workstation still share one bucket). A saved session is reused for 6 minutes (platform apps: 15-minute access tokens) or 40 minutes (Pharmacy, Lab), so a quick re-run costs no codes; `KX_E2E_FRESH=1` forces new sign-ins. A full cold run uses about 9 codes. Do not reset the IdP's rate limits to work around it.
 
 ## Specs
 
@@ -52,7 +52,7 @@ Passport allows 5 one-time codes per phone and 20 per IP and hour. A saved sessi
 | `05-partner-hmac.spec.ts` | Pharmacy and Lab partner routes: unsigned, forged and stale requests refused; platform-signed GETs accepted through the public hosts |
 | `06-privileged-mfa.spec.ts` | privileged role without MFA is refused (403 MFA_REQUIRED), with TOTP it works; owner orders, finance and statement |
 
-Tests marked `test.fail` are KNOWN GAPS: they pass while the gap exists and turn red when it is fixed (then remove the marker). `test.fixme` lists what cannot be tested yet and why.
+Tests marked `test.fail` would be KNOWN GAPS: they pass while the gap exists and turn red when it is fixed (then remove the marker); there are none at the moment. `test.fixme` lists what cannot be tested yet and why.
 
 ## Privileged roles and the 403 on /auth/me (findings, 27 Nov 2026)
 
@@ -64,6 +64,5 @@ Tests marked `test.fail` are KNOWN GAPS: they pass while the gap exists and turn
 ## Known gaps this suite reports (see the run report)
 
 * The Egypt market gate `market.eg.live` is closed (no human gate evidence): patient search is empty and the provider page answers FEATURE_DISABLED until a human records it in the ops console. The suite asserts the closed state and switches to the data assertions by itself once it is open.
-* The Passport dev IdP reflects any `Origin` on authenticated endpoints; the Pharmacy and Lab API hosts send no `X-Robots-Tag`; the Pharmacy names the failure reason (`bad_signature`) on a rejected partner signature while the Lab does not.
-* Passport's per-IP one-time-code limit (20 per hour) is keyed on the CloudFront edge address (`otp_send_log.ip` shows 3.172.97.x), not on the visitor: every user behind the same edge shares one bucket (a limiter that does not limit the attacker and can lock honest users out). Fix at the edge: trust CloudFront's `X-Forwarded-For` in Caddy and set `KX_TRUST_PROXY=true` for Passport, or key the limit on a validated client IP. Until then a cold full run (about 9 codes) can be refused when the window is crowded; wait or reuse saved sessions.
+* CLOSED 27 Nov 2026 (were known gaps, now real assertions in `01-edge-security` and `05-partner-hmac`): Pharmacy and Lab API hosts send `X-Robots-Tag: noindex, nofollow` (the origin router adds it on every response of a non-production environment); the Passport dev IdP no longer reflects an arbitrary `Origin` (allow-list of the registered client origins); the Lab names a rejected partner signature exactly like the Pharmacy (`{ statusCode: 401, code: "HMAC_REJECTED", message: <reason> }`); the Passport per-IP one-time-code limit is keyed on the real visitor (the origin router hands over the address CloudFront recorded, `KX_TRUST_PROXY=true`; trust boundary documented in `infra/tofu/deploy/compose/Caddyfile` and kiorex-account `Docs/DEPLOY_DEV.md`); the fake hospital SSO button is hidden on a hosted Passport.
 * Booking a slot needs a Clinic wired to kx-test (none is).

@@ -13,19 +13,25 @@ const LAB_PATH = '/api/v1/integration/v1/tests';
 const H = { key: 'x-kiorly-client-key', ts: 'x-kiorly-timestamp', nonce: 'x-kiorly-nonce', sig: 'x-kiorly-signature' };
 
 const call = async (url: string, headers: Record<string, string> = {}) => { const c = await pwRequest.newContext(); try { const r = await c.get(url, { headers, maxRedirects: 0 }); return { status: r.status(), body: await r.text() }; } finally { await c.dispose(); } };
-const forged = (path: string, ts = Date.now()) => {
+// the registered (public) client key ids of the two products; the secrets are never known here, so a signature made with a wrong secret is forged
+const KEY: Record<string, string> = { Pharmacy: 'kx_test_pharmacy', Lab: 'kl_test_kiorex' };
+const forged = (path: string, ts = Date.now(), key = KEY.Pharmacy!) => {
   const nonce = randomUUID(); const canonical = `${ts}\n${nonce}\nGET\n${path}\n`;
-  return { [H.key]: 'kx_test_pharmacy', [H.ts]: String(ts), [H.nonce]: nonce, [H.sig]: createHmac('sha256', 'not-the-secret').update(canonical).digest('hex') };
+  return { [H.key]: key, [H.ts]: String(ts), [H.nonce]: nonce, [H.sig]: createHmac('sha256', 'not-the-secret').update(canonical).digest('hex') };
 };
 
 for (const [name, base, path] of [['Pharmacy', URLS.pharmacy, PHARMACY_PATH], ['Lab', URLS.lab, LAB_PATH]] as const) {
   test.describe(`${name} partner route (negative)`, () => {
     test('no signature: uniform 401', async () => { const r = await call(`${base}${path}`); expect(r.status).toBe(401); });
-    test('forged signature: 401 and the body never echoes a secret or the canonical string', async () => {
-      const r = await call(`${base}${path}`, forged(path)); expect(r.status).toBe(401);
-      expect(r.body).not.toMatch(/secret|canonical/i); // note: the Pharmacy names the reason (bad_signature), the Lab does not; low severity, see the report
+    test('forged signature: 401, the same HMAC_REJECTED shape on both products, and the body never echoes a secret or the canonical string', async () => {
+      const r = await call(`${base}${path}`, forged(path, Date.now(), KEY[name])); expect(r.status).toBe(401);
+      expect(r.body).not.toMatch(/secret|canonical/i);
+      // both products name the reason in the same shape: { statusCode, code: HMAC_REJECTED, message: reason }
+      expect(JSON.parse(r.body)).toEqual({ statusCode: 401, code: 'HMAC_REJECTED', message: 'bad_signature' });
+      const unknown = await call(`${base}${path}`, forged(path, Date.now(), 'kx_no_such_client')); expect(JSON.parse(unknown.body)).toEqual({ statusCode: 401, code: 'HMAC_REJECTED', message: 'unknown client key' });
     });
-    test('stale timestamp (replay window): 401', async () => { expect((await call(`${base}${path}`, forged(path, Date.now() - 3_600_000))).status).toBe(401); });
+    test('no signature at all: the same uniform shape', async () => { expect(JSON.parse((await call(`${base}${path}`)).body)).toMatchObject({ statusCode: 401, code: 'HMAC_REJECTED' }); });
+    test('stale timestamp (replay window): 401', async () => { const r = await call(`${base}${path}`, forged(path, Date.now() - 3_600_000, KEY[name])); expect(r.status).toBe(401); expect(JSON.parse(r.body)).toMatchObject({ code: 'HMAC_REJECTED', message: 'stale_timestamp' }); });
     test('the public routing sends only the partner paths to the API, everything else is the web app', async () => {
       const spa = await call(`${base}/some/ui/route`); expect(spa.status).toBe(200); expect(spa.body).toContain('<div id="root"');
     });

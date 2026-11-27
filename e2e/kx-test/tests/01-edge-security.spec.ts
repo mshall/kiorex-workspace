@@ -54,10 +54,15 @@ test.describe('non-production is not indexable', () => {
   for (const [name, url] of [['patient web', `${URLS.patientWeb}/`], ['patient web deep link', `${URLS.patientWeb}/search`], ['ops console', `${URLS.ops}/`], ['Pharmacy web', `${URLS.pharmacy}/`], ['Lab web', `${URLS.lab}/`], ['platform API', `${URLS.api}/api/v1/health/live`], ['Passport', `${URLS.passport}/healthz`]] as const) {
     test(`${name}: X-Robots-Tag noindex`, async () => { expect((await get(url)).headers['x-robots-tag'] ?? '').toMatch(/noindex/i); });
   }
-  // KNOWN GAP (logged in the report): the Pharmacy and Lab API hosts answer JSON without X-Robots-Tag (Caddy adds no header; only the platform API and Passport set it in the app). Flips to a failure when fixed.
+  // closed 27 Nov 2026: the origin router (Caddy) adds the header on every response of a non-production environment, whatever the app does
   for (const [name, url] of [['Pharmacy API', `${URLS.pharmacy}/api/v1/health/live`], ['Lab API', `${URLS.lab}/api/v1/health/live`]] as const) {
-    test(`${name}: X-Robots-Tag noindex`, async () => { test.fail(true, 'known gap: Pharmacy and Lab APIs send no X-Robots-Tag on non-production'); expect((await get(url)).headers['x-robots-tag'] ?? '').toMatch(/noindex/i); });
+    test(`${name}: X-Robots-Tag noindex, nofollow`, async () => { expect((await get(url)).headers['x-robots-tag'] ?? '').toBe('noindex, nofollow'); });
   }
+  test('every response of every API host carries exactly one X-Robots-Tag, errors included', async () => {
+    for (const url of [`${URLS.api}/api/v1/nope-404`, `${URLS.pharmacy}/api/v1/nope-404`, `${URLS.lab}/api/v1/nope-404`, `${URLS.pharmacy}/marketplace/v1/pharmacies`, `${URLS.lab}/api/v1/integration/v1/tests`, `${URLS.passport}/nope-404`]) {
+      const r = await get(url); expect(r.headers['x-robots-tag'], url).toBe('noindex, nofollow');
+    }
+  });
 });
 
 test.describe('CORS', () => {
@@ -77,10 +82,16 @@ test.describe('CORS', () => {
     });
   }
   test('Lab API allows its own web origin', async () => { expect((await get(`${URLS.lab}/api/v1/health/live`, { origin: URLS.lab })).headers['access-control-allow-origin']).toBe(URLS.lab); });
-  test('Passport refuses an evil origin on the authenticated endpoints', async () => {
-    // KNOWN GAP (deploy log): the dev IdP reflects any origin. A bearer token is still required, so the exposure is low, but production identity must not do it.
-    test.fail(true, 'known gap: the Passport dev IdP reflects any Origin (dev behaviour)');
-    expect((await get(`${URLS.passport}/me`, { origin: EVIL })).headers['access-control-allow-origin']).toBeUndefined();
+  test('Passport refuses an evil origin on the authenticated endpoints (no reflection), with and without a token and on a preflight', async () => {
+    for (const o of [EVIL, 'null', `${URLS.patientWeb}.evil.example.com`, 'http://test.kiorex.com']) {
+      for (const hdr of [{ origin: o }, { origin: o, authorization: 'Bearer not-a-token' }]) {
+        const r = await get(`${URLS.passport}/me`, hdr); expect(r.headers['access-control-allow-origin'], `GET /me Origin ${o}`).toBeUndefined();
+      }
+      const p = await preflight(`${URLS.passport}/me`, o); expect(p.headers['access-control-allow-origin'], `OPTIONS /me Origin ${o}`).toBeUndefined();
+    }
+  });
+  test('Passport still answers the registered client origins (patient web, ops console, Pharmacy web, Lab web)', async () => {
+    for (const o of [URLS.patientWeb, URLS.ops, URLS.pharmacy, URLS.lab]) expect((await get(`${URLS.passport}/me`, { origin: o })).headers['access-control-allow-origin'], o).toBe(o);
   });
   test('the EC2 origin cannot be reached around the CDN (no response without the CDN secret)', async () => {
     // the host name is the public registry host; a direct request with a wrong secret must be refused by the origin router (403) or by the CDN, never served

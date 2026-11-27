@@ -13,6 +13,7 @@ services:
     restart: unless-stopped
     ports: ["80:80"]
     env_file: [/opt/kx/env/edge.env]
+    environment: { KX_ENV: "${KX_ENV}" } # non-production environments send X-Robots-Tag noindex on every response (Caddyfile)
     volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro"]
     depends_on:
       platform-api: { condition: service_started, required: false }
@@ -45,7 +46,7 @@ services:
     image: ${KX_REGISTRY}/platform:${PLATFORM_TAG}
     restart: unless-stopped
     env_file: [/opt/kx/env/platform.env]
-    environment: { NODE_ENV: production, PORT: "4000", JOBS_ENABLED: "false", PRISMA_MIGRATE_ON_BOOT: "true" }
+    environment: { NODE_ENV: production, PORT: "4000", JOBS_ENABLED: "false", PRISMA_MIGRATE_ON_BOOT: "true", TRUSTED_PROXY_HOPS: "1" } # 1 = Caddy, which hands over the CDN-validated viewer address (Caddyfile)
     volumes: ["/srv/kx/vault:/data/vault"] # local file vault (STORAGE_MODE=local); the volume is the encrypted data disk
     depends_on:
       postgres: { condition: service_healthy, required: false }
@@ -80,7 +81,7 @@ services:
     restart: unless-stopped
     env_file: [/opt/kx/env/passport.env]
     # NODE_ENV stays "development" on purpose: the dev IdP refuses production by design (public DEV mode, hardened; kiorex-account Docs/DEPLOY_DEV.md).
-    environment: { NODE_ENV: development, PORT: "4400" }
+    environment: { NODE_ENV: development, PORT: "4400", KX_TRUST_PROXY: "true" } # reads the LAST X-Forwarded-For entry, which Caddy sets to the CDN-validated viewer address (Caddyfile)
     depends_on:
       postgres: { condition: service_healthy, required: false }
     healthcheck:
@@ -96,7 +97,7 @@ services:
     image: ${KX_REGISTRY}/pharmacy-api:${PHARMACY_API_TAG}
     restart: unless-stopped
     env_file: [/opt/kx/env/pharmacy.env]
-    environment: { NODE_ENV: production, PORT: "3100", LISTEN_HOST: "0.0.0.0" }
+    environment: { NODE_ENV: production, PORT: "3100", LISTEN_HOST: "0.0.0.0", TRUSTED_PROXY_HOPS: "1" }
     depends_on:
       postgres: { condition: service_healthy, required: false }
     mem_limit: 512m
@@ -106,7 +107,7 @@ services:
     image: ${KX_REGISTRY}/lab-api:${LAB_API_TAG}
     restart: unless-stopped
     env_file: [/opt/kx/env/lab.env]
-    environment: { NODE_ENV: production, PORT: "3200", LISTEN_HOST: "0.0.0.0" }
+    environment: { NODE_ENV: production, PORT: "3200", LISTEN_HOST: "0.0.0.0", TRUSTED_PROXY_HOPS: "1" }
     depends_on:
       postgres: { condition: service_healthy, required: false }
     mem_limit: 512m
