@@ -325,8 +325,10 @@ services:
     repo: kiorex-platform
     core: true
     envs: [dev, test, staging, pilot, prod]
-    status: reserved
-    note: "No Kiorly admin console exists today; the Kiorex Ops console is the super admin. Name reserved by the founder brief."
+    status: planned
+    note: "The Kiorly admin is the SAME Ops console build served on this host (apps/ops, edition detected from the host: Kiorly marks, provider-product views only). Same Passport client kiorex-ops with one more redirect URI (oidc client kiorex-ops-kiorly), same-origin /api routed to the Kiorex API at the CDN, ops roles only. See kiorex-platform/Docs/KIORLY_ADMIN.md."
+    env:
+      VITE_KIORLY_ADMIN_HOSTS: "{host:kiorly.admin}"
   - id: kiorly.api
     domain: kiorly
     label: api
@@ -376,6 +378,12 @@ oidc_clients:
     backchannel_path: /api/v1/auth/backchannel-logout
   - id: kiorex-ops
     service: kiorex.admin
+    redirect_paths: [/auth/callback]
+    post_logout_paths: [/]
+    backchannel_service: kiorex.api
+    backchannel_path: /api/v1/auth/backchannel-logout
+  - id: kiorex-ops-kiorly
+    service: kiorly.admin
     redirect_paths: [/auth/callback]
     post_logout_paths: [/]
     backchannel_service: kiorex.api
