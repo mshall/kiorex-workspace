@@ -328,4 +328,6 @@ function main() {
   if (errors.length) { console.error(`\nregistry INVALID, ${errors.length} problem(s):`); for (const e of errors) console.error("  - " + e); process.exit(1); }
   console.log(`registry OK: ${hosts.length} hosts (${Object.entries(counts).map(([k, v]) => `${k} ${v}`).join(", ")}); ${reg.services.length} services; ${reg.oidc_clients.length} OIDC clients; samples clean; repo literals (informational): ${reposWithHits}`);
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
+// compare REAL paths: on macOS /tmp is a symlink to /private/tmp and a symlinked invocation path made main() silently not run (empty --emit output, empty deploy url files)
+const real = (p) => { try { return fs.realpathSync(p); } catch { return path.resolve(p); } };
+if (process.argv[1] && real(process.argv[1]) === real(fileURLToPath(import.meta.url))) main();
