@@ -50,3 +50,26 @@ variable "egress_az" {
   type    = string
   default = "eu-central-1a"
 }
+variable "egress_gateway_enabled" {
+  type        = bool
+  default     = true
+  description = "Keep the managed NAT gateway (about 36 USD per month). Set false only after the NAT instance is verified."
+}
+variable "egress_instance_enabled" {
+  type        = bool
+  default     = false
+  description = "Create the NAT instance (t4g.nano, Elastic IP, recovery alarms)."
+}
+variable "egress_route_via" {
+  type        = string
+  default     = "gateway"
+  description = "Which egress the two public route tables use: gateway or instance."
+  validation {
+    condition     = contains(["gateway", "instance"], var.egress_route_via)
+    error_message = "egress_route_via must be gateway or instance."
+  }
+}
+variable "egress_instance_type" {
+  type    = string
+  default = "t4g.nano"
+}

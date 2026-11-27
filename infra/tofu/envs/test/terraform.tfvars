@@ -60,3 +60,10 @@ create_github_oidc_provider = false # the account already has token.actions.gith
 # READ-ONLY reference to the live Clinic. Never managed, imported or modified here; the Clinic has its own CDK stack.
 clinic_distribution_id  = "E1DE0H2K3M17YL"
 clinic_apprunner_domain = "qdmz9f29cb.eu-central-1.awsapprunner.com" # technical name of the live Clinic App Runner service (origin of /api and /marketplace for the new Clinic host)
+
+# Clinic API egress (28 Nov 2026): NAT instance (t4g.nano, Elastic IP, recovery alarms, about 7 USD per month) instead of the managed NAT gateway
+# (about 36 USD). Rollback to the gateway: clinic_egress_gateway_enabled = true, clinic_egress_route_via = "gateway", apply, then
+# clinic_egress_instance_enabled = false. See infra/tofu/docs/DEPLOY_LOG_kx-test_clinic_access.md.
+clinic_egress_instance_enabled = true
+clinic_egress_route_via        = "instance"
+clinic_egress_gateway_enabled  = false

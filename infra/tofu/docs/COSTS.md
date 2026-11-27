@@ -22,6 +22,8 @@ Basis: eu-central-1 list prices recalled by the author and rounded, 730 hours pe
 
 Not included: data transfer to the internet beyond the free tier, AI provider calls, SMS and e-mail providers, domain renewals. No NAT gateway and no interface endpoints exist in this design (the live Clinic account pays about 50 for three interface endpoints; this stack avoids them).
 
+Clinic API egress (28 Nov 2026): the live Clinic's App Runner needs outbound internet (Passport, Kiorex API, webhooks). It first used a managed NAT gateway (about 38 USD per month for the gateway hours plus 3.65 for its Elastic IP, plus 0.052 per GB). It now uses a NAT instance in `modules/clinic_link` (t4g.nano about 3.9, Elastic IP 3.65, 8 GB gp3 about 0.8, two recovery alarms about 0.2, total about 8.6 USD per month, data transfer out at the normal rate). Saving about 33 USD per month. Trade-off: one instance, no managed multi-AZ failover (EC2 auto-recovery alarms bring the same instance, interface and Elastic IP back in minutes), bandwidth bounded by the t4g.nano (baseline roughly 32 Mbps, bursts to 5 Gbps), the outbound IP changed once at the cutover. Rollback: `clinic_egress_gateway_enabled = true`, `clinic_egress_route_via = "gateway"`, apply (about 2 minutes), then `clinic_egress_instance_enabled = false`.
+
 Ways to lower it: t4g.small (about 14 less, tight with five Node processes), a one-year compute savings plan (about 30 to 40 percent of the host line), stopping the host out of hours is NOT recommended while the real clinic uses test.
 
 ## kx-pilot (AWS) about 95

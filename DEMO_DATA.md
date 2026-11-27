@@ -1,5 +1,7 @@
 # Kiorex v2: demo data index (DEV ONLY)
 
+> **Local-dev only.** The shared password `demo` named below belongs to the LOCAL-DEV seed. The accounts with the same names on the live AWS Clinic (kx-test) were rotated on 27 Nov 2026, the live seed never re-sets passwords and never accepts `demo`; their passwords are in the git-ignored `_private/DEMO_ACCOUNTS.md` (section "Live Clinic AWS accounts").
+
 > **DEV ONLY / synthetic.** Everything in the demo docs is fictional and local: phones `+20100000xxxx`, e-mails `@demo.kiorex.test` / `@demo.kiorly.local` / `@nurse-demo.kiorly.test`, passwords, the OTP `000000`, TOTP seeds and invitation tokens. They work only against the local stack, are blocked when `NODE_ENV=production` (and by the demo-seed guard), and must never be reused anywhere real. Providers are mocked everywhere (messages land in the dev inbox / log, PSP is `sandbox-fake`, video is `mock`); there is no tax-authority integration.
 > Each repo has a `DEMO_DATA.md` (what the demo is, personas, data, step-by-step manual test scripts, role checklists, limitations). This file is the index. The older cross-product persona and flow tables stay in [TEST_DATA.md](TEST_DATA.md) (this index links to it instead of copying it). Every repo also keeps its seed reference in `Docs/TEST_DATA.md`.
 > All facts were checked on **21 Nov 2026** against the seed scripts, the running APIs (curl) and the dev databases on `:5433` (read-only SELECTs).
@@ -116,3 +118,13 @@ Logins actually exercised against the running stack: **Passport/Kiorex** Hoda `+
 
 ---
 Verified: 2026-11-21
+
+
+## Live kx-test removal list (28 Nov 2026)
+
+Tagged records on the deployed environment that the founder can ask to have removed:
+
+| What | Where | Tag | How to remove |
+|---|---|---|---|
+| Throwaway Clinic organisation "[TEST] KX E2E Clinic (removable)" (owner `owner@kx-e2e.kiorly.test`, provider "Dr KX E2E Test", one clinic, two visit types, one availability template, one LIVE listing) | live AWS Clinic (kx-test) | tenant name prefix `[TEST]`, licence `KXE2E-EG-CAI-01`, e-mail domain `kx-e2e.kiorly.test` | `aws lambda invoke --function-name <DbSeedFunctionName> --cli-binary-format raw-in-base64-out --payload '{"kxE2eOrg":"retire"}' out.json` pauses the listing and deactivates the users (rows stay: booking and audit history are append-only); then the next platform sync delists the provider, and `npm run demo-data:remove -- --confirm` in kiorex-platform removes platform-side demo rows. A hard delete of the tenant rows is a documented super-admin data fix (the Clinic has no tenant delete). Also delete the key `CLINIC_E2E_OWNER_PASSWORD` from the AWS secret `/kx/test/e2e`. |
+| Platform demo seed (4 organisations, 8 providers, bookings, claims) | kx-test platform | `DemoMarker` | `npm run demo-data:remove` (dry run first, then `--confirm`) |

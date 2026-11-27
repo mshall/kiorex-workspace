@@ -177,16 +177,156 @@ resource "aws_route_table_association" "egress" {
   route_table_id = aws_route_table.egress[0].id
 }
 resource "aws_eip" "egress" {
-  count  = var.enable_egress ? 1 : 0
+  count  = var.enable_egress && var.egress_gateway_enabled ? 1 : 0
   domain = "vpc"
   tags   = { Name = "${var.name_prefix}-clinic-nat" }
 }
 resource "aws_nat_gateway" "egress" {
-  count         = var.enable_egress ? 1 : 0
+  count         = var.enable_egress && var.egress_gateway_enabled ? 1 : 0
   allocation_id = aws_eip.egress[0].id
   subnet_id     = aws_subnet.egress[0].id
   tags          = { Name = "${var.name_prefix}-clinic-nat" }
   depends_on    = [aws_route.egress_igw]
+}
+
+# ---------------------------------------------------------------- cheaper egress: a NAT instance (t4g.nano) instead of the managed gateway
+# About 7 USD per month instead of about 36 USD. Trade-off: one instance (no managed HA), bandwidth bounded by the instance size (t4g.nano
+# bursts to 5 Gbps, baseline roughly 32 Mbps, far above the Clinic API's Passport and platform calls), recovery by the EC2 alarms below
+# (the same instance id, interface, private address and Elastic IP come back; minutes, not seconds). Plain Amazon Linux 2023 with nftables
+# masquerade (no third-party image). Rollback: egress_gateway_enabled = true, egress_route_via = "gateway", apply; then egress_instance_enabled = false.
+data "aws_ssm_parameter" "nat_ami" {
+  count = var.enable_egress && var.egress_instance_enabled ? 1 : 0
+  name  = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
+}
+data "aws_region" "current" {}
+
+resource "aws_security_group" "nat" {
+  count       = var.enable_egress && var.egress_instance_enabled ? 1 : 0
+  name        = "${var.name_prefix}-clinic-nat-instance"
+  description = "NAT instance for the Clinic API egress: accepts the Clinic VPC, sends anywhere"
+  vpc_id      = data.aws_vpc.clinic[0].id
+  ingress {
+    description = "Clinic VPC (App Runner connector interfaces)"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [data.aws_vpc.clinic[0].cidr_block]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = { Name = "${var.name_prefix}-clinic-nat-instance" }
+}
+
+resource "aws_iam_role" "nat" {
+  count = var.enable_egress && var.egress_instance_enabled ? 1 : 0
+  name  = "${var.name_prefix}-clinic-nat-instance"
+  assume_role_policy = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [{ Effect = "Allow", Principal = { Service = "ec2.amazonaws.com" }, Action = "sts:AssumeRole" }]
+  })
+}
+resource "aws_iam_role_policy_attachment" "nat_ssm" {
+  count      = var.enable_egress && var.egress_instance_enabled ? 1 : 0
+  role       = aws_iam_role.nat[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+resource "aws_iam_instance_profile" "nat" {
+  count = var.enable_egress && var.egress_instance_enabled ? 1 : 0
+  name  = "${var.name_prefix}-clinic-nat-instance"
+  role  = aws_iam_role.nat[0].name
+}
+
+resource "aws_instance" "nat" {
+  count                  = var.enable_egress && var.egress_instance_enabled ? 1 : 0
+  ami                    = data.aws_ssm_parameter.nat_ami[0].value
+  instance_type          = var.egress_instance_type
+  subnet_id              = aws_subnet.egress[0].id
+  vpc_security_group_ids = [aws_security_group.nat[0].id]
+  iam_instance_profile   = aws_iam_instance_profile.nat[0].name
+  source_dest_check      = false
+  metadata_options {
+    http_tokens   = "required"
+    http_endpoint = "enabled"
+  }
+  root_block_device {
+    volume_size = 8
+    volume_type = "gp3"
+    encrypted   = true
+  }
+  user_data_replace_on_change = false
+  user_data                   = <<-EOT
+    #!/bin/bash
+    set -eux
+    # 0.5 GB of memory: dnf is killed while it loads the repository metadata unless there is swap.
+    if [ ! -f /swapfile ]; then
+      dd if=/dev/zero of=/swapfile bs=1M count=1024
+      chmod 600 /swapfile
+      mkswap /swapfile
+      swapon /swapfile
+      echo "/swapfile none swap sw 0 0" >> /etc/fstab
+    fi
+    dnf install -y nftables
+    echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/90-kx-nat.conf
+    sysctl --system
+    IFACE=$(ip -o -4 route show to default | awk '{print $5}' | head -1)
+    mkdir -p /etc/nftables
+    cat > /etc/nftables/kx-nat.nft <<NFT
+    table ip kx_nat {
+      chain postrouting {
+        type nat hook postrouting priority 100; policy accept;
+        ip saddr ${data.aws_vpc.clinic[0].cidr_block} oifname "$IFACE" masquerade
+      }
+    }
+    NFT
+    grep -q kx-nat.nft /etc/sysconfig/nftables.conf || echo 'include "/etc/nftables/kx-nat.nft"' >> /etc/sysconfig/nftables.conf
+    systemctl enable --now nftables
+  EOT
+  tags                        = { Name = "${var.name_prefix}-clinic-nat-instance" }
+  lifecycle {
+    # A newer Amazon Linux image or an edited script must never replace the live egress by surprise.
+    ignore_changes = [ami, user_data]
+  }
+}
+
+resource "aws_eip" "nat_instance" {
+  count    = var.enable_egress && var.egress_instance_enabled ? 1 : 0
+  domain   = "vpc"
+  instance = aws_instance.nat[0].id
+  tags     = { Name = "${var.name_prefix}-clinic-nat-instance" }
+}
+
+# Auto-recovery: a failed host (system check) is recovered in place, a hung operating system (instance check) is rebooted.
+resource "aws_cloudwatch_metric_alarm" "nat_system" {
+  count               = var.enable_egress && var.egress_instance_enabled ? 1 : 0
+  alarm_name          = "${var.name_prefix}-clinic-nat-system-recover"
+  namespace           = "AWS/EC2"
+  metric_name         = "StatusCheckFailed_System"
+  dimensions          = { InstanceId = aws_instance.nat[0].id }
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 2
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  alarm_actions       = ["arn:aws:automate:${data.aws_region.current.name}:ec2:recover"]
+  treat_missing_data  = "notBreaching"
+}
+resource "aws_cloudwatch_metric_alarm" "nat_instance" {
+  count               = var.enable_egress && var.egress_instance_enabled ? 1 : 0
+  alarm_name          = "${var.name_prefix}-clinic-nat-instance-reboot"
+  namespace           = "AWS/EC2"
+  metric_name         = "StatusCheckFailed_Instance"
+  dimensions          = { InstanceId = aws_instance.nat[0].id }
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 3
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  alarm_actions       = ["arn:aws:automate:${data.aws_region.current.name}:ec2:reboot"]
+  treat_missing_data  = "notBreaching"
 }
 
 # Import first: tofu import 'module.clinic_link[0].aws_route.public_default["1"]' <route table id>_0.0.0.0/0   (same for "2")
@@ -194,5 +334,14 @@ resource "aws_route" "public_default" {
   for_each               = var.enable_egress ? toset(["1", "2"]) : toset([])
   route_table_id         = data.aws_route_table.public[each.key].id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.egress[0].id
+  # Exactly one target: the managed NAT gateway (egress_route_via = "gateway") or the NAT instance's network interface ("instance").
+  nat_gateway_id       = var.egress_route_via == "gateway" ? aws_nat_gateway.egress[0].id : null
+  network_interface_id = var.egress_route_via == "instance" ? aws_instance.nat[0].primary_network_interface_id : null
+
+  lifecycle {
+    precondition {
+      condition     = (var.egress_route_via == "gateway" && var.egress_gateway_enabled) || (var.egress_route_via == "instance" && var.egress_instance_enabled)
+      error_message = "egress_route_via must name an enabled egress (gateway needs egress_gateway_enabled, instance needs egress_instance_enabled)."
+    }
+  }
 }

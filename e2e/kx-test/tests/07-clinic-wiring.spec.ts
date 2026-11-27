@@ -1,15 +1,15 @@
 import { expect, request as pwRequest, test } from '@playwright/test';
 import { URLS } from '../lib/hosts';
 import { passportSignIn } from '../lib/passport';
-import { ssm } from '../lib/aws';
+import { e2eSecrets, ssm } from '../lib/aws';
 import { ensureSession, openAs, savedToken } from '../lib/session';
 
 /**
  * The live AWS Clinic wired to kx-test (27 Nov 2026): https://clinics.test.kiorly.com (second distribution, OpenTofu) next to the legacy CloudFront host,
  * Sign in with Kiorex Passport, CORS allow-list, the signed platform to Clinic marketplace API and the provider and slot sync.
  *
- * SAFETY: every call here is READ-ONLY against the live Clinic (the real organisation Dr Ahmed Shall lives there). No organisation, patient, hold or booking is created,
- * no sign-in default is changed. The throwaway-organisation tests at the end are fixme with the reason (see the run report).
+ * SAFETY: every call here is READ-ONLY against the live Clinic (the only writes are a login of the throwaway owner and the platform's provider sync) (the real organisation Dr Ahmed Shall lives there). No organisation, patient, hold or booking is created,
+ * no sign-in default is changed. The throwaway-organisation test at the end signs in as the owner of the tagged organisation "[TEST] KX E2E Clinic" (created for the suite; never the real organisation).
  */
 const CLINIC = URLS.clinic; const LEGACY = URLS.clinicLegacy;
 const get = async (url: string, headers: Record<string, string> = {}) => { const c = await pwRequest.newContext(); try { const r = await c.get(url, { headers, maxRedirects: 0 }); return { status: r.status(), headers: r.headers(), text: await r.text() }; } finally { await c.dispose(); } };
@@ -128,5 +128,28 @@ test.describe('booking and throwaway organisation', () => {
       if ((b?.total ?? 0) > 0) expect(JSON.stringify(b)).toMatch(/Nile/); else expect([200, 403]).toContain(r.status());
     } finally { await c.dispose(); }
   });
-  test.fixme('throwaway organisation: create it, link Passport from Profile, sign in with Passport, list a provider, book from test.kiorex.com (needs: a way to create an organisation and approve its doctor; public signup needs a real WhatsApp OTP; the Platform tab needs a platform admin credential; and the market gate)', async () => undefined);
+  test('throwaway organisation "[TEST] KX E2E Clinic": its owner signs in with the password from Secrets Manager, its provider is LIVE in the Clinic and listed LIVE in the platform (never Dr Ahmed Shall\'s organisation)', async ({ browser }) => {
+    const bag = e2eSecrets(); const password = bag.CLINIC_E2E_OWNER_PASSWORD;
+    test.skip(!password, 'CLINIC_E2E_OWNER_PASSWORD is not in the /kx/test/e2e secret: create the throwaway organisation first (see infra/tofu/docs/DEPLOY_LOG_kx-test_clinic_access.md)');
+    for (const base of [CLINIC, LEGACY]) {
+      const c = await pwRequest.newContext();
+      try {
+        const bad = await c.post(`${base}/api/v1/auth/login`, { data: { email: 'owner@kx-e2e.kiorly.test', password: 'wrong-' + password.slice(0, 6) } }); expect(bad.status()).toBe(401);
+        const login = await c.post(`${base}/api/v1/auth/login`, { data: { email: 'owner@kx-e2e.kiorly.test', password } }); expect(login.status(), `${base} owner login`).toBeLessThan(300);
+        const lb = await login.json(); expect(lb.accessToken).toBeTruthy();
+        const me = await (await c.get(`${base}/api/v1/auth/me`, { headers: { authorization: `Bearer ${lb.accessToken}` } })).json();
+        expect(JSON.stringify(me)).toMatch(/\[TEST\] KX E2E/); expect(JSON.stringify(me)).not.toMatch(/Dr Ahmed Shall/i);
+        const auth = { authorization: `Bearer ${lb.accessToken}` }; const clinics = await (await c.get(`${base}/api/v1/clinics`, { headers: auth })).json(); const clinicId = (Array.isArray(clinics) ? clinics : clinics.items)[0].id;
+        const listings = await c.get(`${base}/api/v1/marketplace/listings?clinicId=${clinicId}&sync=false`, { headers: auth }); expect(listings.status(), await listings.text()).toBe(200);
+        expect(JSON.stringify(await listings.json())).toMatch(/LIVE/);
+      } finally { await c.dispose(); }
+    }
+    await ensureSession(browser, 'ops');
+    const o = await pwRequest.newContext({ extraHTTPHeaders: { authorization: `Bearer ${savedToken('ops')!}` } });
+    try {
+      expect((await o.post(`${URLS.api}/api/v1/admin/providers/sync?full=true`)).status()).toBe(200);
+      const list = await o.get(`${URLS.api}/api/v1/admin/providers?q=KX%20E2E`); expect(list.status()).toBe(200);
+      const t = JSON.stringify(await list.json()); expect(t).toMatch(/Dr KX E2E Test/); expect(t).toMatch(/LIVE/);
+    } finally { await o.dispose(); }
+  });
 });

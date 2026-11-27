@@ -41,7 +41,35 @@ test.describe.serial('patient web', () => {
     if (live) { expect(r.status).toBe(200); expect(r.body.nameEn ?? r.body.provider?.nameEn).toContain('Laila'); await page.goto(`${URLS.patientWeb}/doctors/demo_dp_3`); await expect(page.getByText(/Laila Farouk/)).toBeVisible(); await expect(page.getByText(/Dermatology/i).first()).toBeVisible(); }
     else { expect(r.status).toBe(403); expect(r.body).toMatchObject({ code: 'FEATURE_DISABLED', key: 'market.eg.live', reason: 'AWAITING_GATE' }); await page.goto(`${URLS.patientWeb}/doctors/demo_dp_3`); await expect(page.getByText(/not live in Egypt yet/i)).toBeVisible(); }
   });
-  test.fixme('book a slot from the patient web: needs the market gate recorded by a HUMAN (the Clinic is wired now, see 07-clinic-wiring.spec.ts: signed providers and slots work) and a throwaway Clinic organisation', async () => undefined);
+  test('book a slot of the throwaway [TEST] KX E2E provider from the patient web API session, see it in My appointments, then cancel it (clean-up)', async () => {
+    test.skip(!live, 'The Egypt market gate market.eg.live is CLOSED: a human records the gate evidence in the ops console (never code). This test then books the throwaway provider "Dr KX E2E Test" of the tagged organisation "[TEST] KX E2E Clinic" and cancels the booking.');
+    test.setTimeout(180_000);
+    const token = await liveToken(page);
+    const c = await pwRequest.newContext({ extraHTTPHeaders: { authorization: `Bearer ${token}` } });
+    let bookingId: string | null = null;
+    try {
+      // the platform syncs Clinic providers periodically; the throwaway provider must be searchable
+      let provider: any = null;
+      for (let i = 0; i < 20 && !provider; i += 1) { const r = await publicGet('/api/v1/search/providers?q=KX%20E2E'); provider = (r.body?.items ?? []).find((x: any) => /KX E2E/.test(JSON.stringify(x))); if (!provider) await new Promise((res) => setTimeout(res, 5000)); }
+      expect(provider, 'the throwaway provider is not in the platform listing: run the ops provider sync (POST /api/v1/admin/providers/sync?full=true) or wait for the periodic sync').toBeTruthy();
+      const detail = await publicGet(`/api/v1/providers/${provider.id}`); expect(detail.status).toBe(200);
+      const typeId = (detail.body?.fees ?? []).find((f: any) => f.serviceLocation === 'IN_CLINIC')?.typeId;
+      expect(typeId, 'provider has a marketplace-bookable visit type').toBeTruthy();
+      const from = new Date(Date.now() + 2 * 86_400_000); const to = new Date(Date.now() + 9 * 86_400_000);
+      const slots = await publicGet(`/api/v1/providers/${provider.id}/slots?typeId=${typeId}&from=${from.toISOString()}&to=${to.toISOString()}`);
+      expect(slots.status).toBe(200); expect(slots.body.slots.length).toBeGreaterThan(0);
+      const slot = slots.body.slots[0];
+      const hold = await c.post(`${URLS.api}/api/v1/bookings`, { data: { providerId: provider.id, typeId, startsAt: slot.startsAt, endsAt: slot.endsAt } });
+      expect(hold.status(), await hold.text()).toBe(201); bookingId = (await hold.json()).id;
+      const confirm = await c.post(`${URLS.api}/api/v1/bookings/${bookingId}/confirm`, { data: { marketplaceConsent: true } });
+      expect(confirm.status(), await confirm.text()).toBe(200);
+      const got = await (await c.get(`${URLS.api}/api/v1/bookings/${bookingId}`)).json(); expect(got.status).toBe('CONFIRMED');
+      await page.goto(`${URLS.patientWeb}/appointments`); await expect(page.getByText(/KX E2E/).first()).toBeVisible({ timeout: 30_000 });
+    } finally {
+      if (bookingId) { const x = await c.post(`${URLS.api}/api/v1/bookings/${bookingId}/cancel`, { data: { reason: 'kx-test e2e clean-up' } }); expect([200, 409]).toContain(x.status()); }
+      await c.dispose();
+    }
+  });
   test('appointments page loads and the Past tab lists the completed demo visit', async () => {
     await page.goto(`${URLS.patientWeb}/appointments`); await expect(page.getByRole('heading', { name: 'My appointments' })).toBeVisible();
     await page.getByRole('tab', { name: 'Past' }).or(page.getByText('Past', { exact: true })).first().click();

@@ -1,5 +1,7 @@
 # Kiorex v2 — synthetic QA / demo data (DEV ONLY)
 
+> **Local-dev only.** The shared password `demo` named below belongs to the LOCAL-DEV seed. The accounts with the same names on the live AWS Clinic (kx-test) were rotated on 27 Nov 2026, the live seed never re-sets passwords and never accepts `demo`; their passwords are in the git-ignored `_private/DEMO_ACCOUNTS.md` (section "Live Clinic AWS accounts").
+
 > **DEV ONLY.** Everything below is fictional: names, phones (`+20100000xxxx`), e-mails (`@demo.kiorex.test`), ids. Passwords/OTPs/TOTP seeds are
 > local development values, never used in staging/production, and are blocked when `NODE_ENV=production`.
 > No tax-authority integration exists anywhere; VAT appears only as a plain configurable % line (14 %) on invoices.

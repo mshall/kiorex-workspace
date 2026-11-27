@@ -1,5 +1,7 @@
 # Kiorex v2 test guide (DEV ONLY)
 
+> **Local-dev only.** The shared password `demo` named below belongs to the LOCAL-DEV seed. The accounts with the same names on the live AWS Clinic (kx-test) were rotated on 27 Nov 2026, the live seed never re-sets passwords and never accepts `demo`; their passwords are in the git-ignored `_private/DEMO_ACCOUNTS.md` (section "Live Clinic AWS accounts").
+
 > **DEV ONLY / synthetic.** Every name, phone (`+20100000xxxx`), e-mail (`@demo.kiorex.test`, `@demo.kiorly.local`, `@nurse-demo.kiorly.test`, `@<slug>.test`), password, OTP and TOTP seed in this guide is a fake value for the local stack. They are refused when `NODE_ENV=production`, and the quick-pick panels below are not in production builds. Never reuse any of them anywhere real. Providers are mocked everywhere (messages land in the dev inbox or logs, the PSP is `sandbox-fake`, video is `mock`). There is no tax-authority integration.
 >
 > Facts in this guide were checked against the seed scripts, the dev databases on `:5433` (read-only SELECTs) and the running stack on 23 Nov 2026. Deeper per-product scripts live in each repo's `DEMO_DATA.md` and `Docs/TEST_GUIDE.md`; cross-product tables are in [TEST_DATA.md](TEST_DATA.md) and [DEMO_DATA.md](DEMO_DATA.md).

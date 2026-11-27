@@ -9,6 +9,19 @@ variable "clinic_link_egress" {
   type    = bool
   default = true
 }
+# Clinic API egress: managed NAT gateway (about 36 USD per month) or the NAT instance (about 7 USD per month). See modules/clinic_link.
+variable "clinic_egress_gateway_enabled" {
+  type    = bool
+  default = true
+}
+variable "clinic_egress_instance_enabled" {
+  type    = bool
+  default = false
+}
+variable "clinic_egress_route_via" {
+  type    = string
+  default = "gateway"
+}
 
 module "registry_clinic" {
   source          = "../../modules/registry"
@@ -36,8 +49,11 @@ module "clinic_link" {
   apprunner_domain           = var.clinic_apprunner_domain
   noindex                    = var.edge.noindex
   enable_egress              = var.clinic_link_egress
+  egress_gateway_enabled     = var.clinic_egress_gateway_enabled
+  egress_instance_enabled    = var.clinic_egress_instance_enabled
+  egress_route_via           = var.clinic_egress_route_via
 }
 
 output "clinic_link" {
-  value = try({ fqdn = module.clinic_link[0].fqdn, distribution_id = module.clinic_link[0].distribution_id, nat_gateway_id = module.clinic_link[0].nat_gateway_id }, null)
+  value = try({ fqdn = module.clinic_link[0].fqdn, distribution_id = module.clinic_link[0].distribution_id, nat_gateway_id = module.clinic_link[0].nat_gateway_id, nat_instance_id = module.clinic_link[0].nat_instance_id, nat_instance_public_ip = module.clinic_link[0].nat_instance_public_ip }, null)
 }
