@@ -83,14 +83,15 @@ Found 3, fixed 1 (in code only).
 Found 1, fixed 0. Title "Kiorly: sign in", `lang`/`dir` correct, no axe violation, mirrored product tiles. Inline links "Create a Kiorly ... workspace" are 20 px high (minor, not fixed). Login surface: not edited (another agent).
 
 ### 6. Clinic web, clinics.test.kiorly.com
-Public pages (login, signup, forgot password, pricing): found 4, fixed 0 (all four belong to the login and Plans work of other agents). Signed-in: found 10, fixed 4. Live on kx-test and the live organisation host (web-only deploy from `main`).
+Public pages (login, signup, forgot password, pricing): found 4, fixed 0 (all four belong to the login and Plans work of other agents). Signed-in: found 11, fixed 4. Live on kx-test and the live organisation host (web-only deploy from `main`).
 
 | Issue | Severity | Fixed | Commit (kiorex / main) |
 |---|---|---|---|
 | Active tab trigger of Revenue and Reports: white on sky-600 4.02:1 (dark mode worse); emerald and amber had the same weakness | serious | Yes (700 shades, AA) | `7d110775` / `390868de` |
 | Blank table headers (10 tables: doctor statements, cash drawer, claims, instalments, invoices, statements, charges, outbox, payment channels, Kiorex booking settings) | minor | Yes (sr-only "Actions") | `7d110775` / `390868de` |
 | Arabic numerals toggle ("123") accessible name did not contain its visible digits | serious | Yes | `7d110775` / `390868de` |
-| Report error line `text-red-700/70` 4.13:1 | serious | Yes | `524711ae` / main follow-up commit (see report) |
+| Report error line `text-red-700/70` 4.13:1 | serious | Yes | `524711ae` / `42e71c36` |
+| Reports: amber status text on the muted table row measures 4.49:1 in light mode (found after the red line was fixed) | serious (borderline) | No | |
 | Heading order (card titles are `h3`) | moderate | No (X5) | |
 | Sidebar section labels outside a landmark (axe region) | moderate | No | |
 | "Documents (7)" banner link 85x16 px; 18 px checkboxes on Team and Kiorex | minor | No | |
@@ -129,7 +130,7 @@ Found 3, fixed 1 (live).
 | Kiorly admin edition | 2 (+ the 3 shared Ops fixes verified) | 0 | shared 3 |
 | Passport | 3 | 1 | 0 (code only) |
 | Kiorly Home | 1 | 0 | 0 |
-| Clinic (public and signed in) | 14 | 4 | 4 (web-only deploy to the shared Clinic host) |
+| Clinic (public and signed in) | 15 | 4 | 4 (web-only deploy to the shared Clinic host) |
 | Pharmacy web | 4 | 1 | 1 |
 | Lab web | 3 | 1 | 1 |
 | Cross-cutting (X1 to X9) | 7 open, 2 pass | 0 | |
