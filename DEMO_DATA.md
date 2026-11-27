@@ -60,7 +60,7 @@ The Vite configs of Pharmacy and Lab honour `PHARMACY_WEB_PORT` / `LAB_WEB_PORT`
 ## 4. Shared logins in one place
 
 * Passport phone OTP for **every** demo phone: `000000`. Staff password `Demo@12345`. Lab: dev-login (org slug + `<role>@<slug>.test`, no password). Legacy password **`demo`** (not `Demo@12345`) only for the older Clinic accounts (`admin@kiorly.com`, `superadmin@kiorly.com`, `admin@drahmedshall.com`).
-* Ops TOTP seeds (Base32): super admin `+201000000099` -> `REMOVED-OLD-DEMO-TOTP-SECRET`; admin `+201000009001` -> `REMOVED-OLD-DEMO-TOTP-SECRET`; finance `+201000009002` -> `REMOVED-OLD-DEMO-TOTP-SECRET`; support `+201000009003` has an unconfirmed TOTP row and no seeded secret, so it enrols on first sign-in. Finance and support are role claims only (the API treats every `ops_admin` alike).
+* Ops TOTP seeds (Base32): super admin `+201000000099` -> `<local seed +201000000099>`; admin `+201000009001` -> `<local seed +201000009001>`; finance `+201000009002` -> `<local seed +201000009002>`; support `+201000009003` has an unconfirmed TOTP row and no seeded secret, so it enrols on first sign-in. Finance and support are role claims only (the API treats every `ops_admin` alike).
 * The persona -> app -> login map, the flow -> persona -> click table (Q10) and the Rev 2.3 Nurse / home-visit description stay in [TEST_DATA.md](TEST_DATA.md); the per-product docs above add the step-by-step scripts and the role checklists.
 
 ## 5. Cross-product flows (end to end): which docs to follow

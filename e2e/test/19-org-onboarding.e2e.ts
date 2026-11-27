@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { localTotpSecret } from '../src/local-totp.js';
 import { KIOREX_API, PATIENT_1 } from '../src/env.js';
 import { kiorex, opsLogin, patientLogin, q } from '../src/clients.js';
 import { existsSync } from 'node:fs';
@@ -15,7 +16,7 @@ import { buildSample } from '../../kiorex-platform/apps/api/src/onboarding-impor
 const B = '/admin/onboarding/imports';
 const MODE = process.env.E2E_IMPORT_TARGET_MODE ?? 'kiorly';
 const ORG = `e2e_org_${Date.now()}`;
-const OPS_ADMIN_TOTP = 'REMOVED-OLD-DEMO-TOTP-SECRET';
+const OPS_ADMIN_TOTP = localTotpSecret('+201000009001'); // local-only, generated per machine
 describe('r. Organization onboarding: scan, resolve, two-person approval, commit, rollback', () => {
   let prep: string; let sup: string; let patient: string; let id: string;
   const s = buildSample();

@@ -2,8 +2,9 @@
 // DEV ONLY helper for seed-all.sh: logs in as the seeded ops super admin (OTP 000000 + dev TOTP, PKCE) against the local Passport
 // and triggers `POST /admin/providers/sync?full=true` on the local Kiorex API so the demo doctors become Providers.
 import { createHash, createHmac, randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 const PASSPORT = process.env.PASSPORT_URL ?? 'http://localhost:4400', KIOREX = process.env.KIOREX_URL ?? 'http://localhost:4000/api/v1';
-const PHONE = '+201000000099', TOTP_SECRET = 'REMOVED-OLD-DEMO-TOTP-SECRET', REDIRECT = 'http://localhost:5181/auth/callback';
+const PHONE_SUPER = '+201000000099', PHONE = PHONE_SUPER, TOTP_SECRET = process.env.OPS_TOTP_SEED ?? JSON.parse(readFileSync(new URL('../kiorex-account/.local/totp-secrets.json', import.meta.url), 'utf8')).secrets[PHONE_SUPER], // local-only, generated per machine REDIRECT = 'http://localhost:5181/auth/callback';
 function totp(secret, at = Date.now()) {
   const a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = '';
   for (const ch of secret.toUpperCase()) bits += a.indexOf(ch).toString(2).padStart(5, '0');

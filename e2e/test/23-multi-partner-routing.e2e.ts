@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { localTotpSecret } from '../src/local-totp.js';
 import { kiorex, opsLogin, q, waitFor } from '../src/clients.js';
 import { loginWithPhone } from '../src/passport.js';
 import { resetOtpLimits, resetRateLimits } from '../src/db.js';
@@ -14,7 +15,7 @@ import { LAB, WEBHOOK_SECRET } from '../src/env.js';
  * (registrationId on carts, orders and bookings) is checked end to end, down to which partner database received the order.
  * Needs the real Pharmacy :3100 and Lab :3200 (multi-tenant: one process, one tenant per client key). The second PROCESS is not needed.
  */
-const OPS_ADMIN_TOTP = 'REMOVED-OLD-DEMO-TOTP-SECRET';
+const OPS_ADMIN_TOTP = localTotpSecret('+201000009001'); // local-only, generated per machine
 describe('t. Several live pharmacies and labs: each receives only its own traffic', () => {
   let sup: string, prep: string, p1: string, ownerA: string, pharmA: string, branchA: string, regA: string;
   let phB: ConnectedPartner, labB: ConnectedPartner, labIdA: string, labRegA: string;

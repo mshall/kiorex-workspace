@@ -25,9 +25,9 @@ the demo sales/Rx/POs/orders it can, but lots, released reports and QC runs stay
 | Staff password (Kiorly Clinic demo orgs, Pharmacy base logins) | `Demo@12345` |
 | Legacy Clinic accounts `admin@kiorly.com`, `superadmin@kiorly.com`, `admin@drahmedshall.com` | `demo` (**not** `Demo@12345`; checked against the bcrypt hashes on 21 Nov 2026) |
 | Sign in with Kiorex Passport as staff (Clinic web :5174, Pharmacy web :5192, Lab web :5193, Kiorly staff app) | Clinic `+201000002001` Ahmed Fawzy (owner.na@, GROUP_ADMIN), `+201000002002` (frontdesk1.na@, RECEPTIONIST), `+201000002006` Dr Nadia (PHYSICIAN); Pharmacy `+201000002004` (pharmacist@), `+201000002007` (owner@), `+201000002008` (cashier@) `@demo.kiorly.local`; Lab `demo-lab` `+201000002005` (tech@), `+201000002009` (signatory@), `+201000002010` (owner@) | phone + OTP `000000`; the product role comes from the linked staff row (INTEGRATION.md "Staff sign-in with Kiorex Passport"). Sign-out ends the Passport session too |
-| Ops super admin TOTP seed (`+201000000099`) | `REMOVED-OLD-DEMO-TOTP-SECRET` |
-| Ops admin (`+201000009001`) TOTP seed | `REMOVED-OLD-DEMO-TOTP-SECRET` |
-| Ops finance (`+201000009002`) TOTP seed | `REMOVED-OLD-DEMO-TOTP-SECRET` |
+| Ops super admin TOTP seed (`+201000000099`) | `<local seed +201000000099>` |
+| Ops admin (`+201000009001`) TOTP seed | `<local seed +201000009001>` |
+| Ops finance (`+201000009002`) TOTP seed | `<local seed +201000009002>` |
 Add the secret to any authenticator app (or compute RFC 6238, SHA-1, 30 s, 6 digits) for the ops console TOTP step.
 
 ## URLs
@@ -98,7 +98,7 @@ Everything below exists after `scripts/seed-all.sh` (same people/phones/ids in e
 | **Nurse sample -> Lab -> result back (KNLAB01)** | Heba / Mona | :5174 -> Lab samples; Lab :5193 | `nurse1@…`; Lab dev-login `demo-lab` (reception / technologist / signatory) | Nurse: Lab samples -> nl1 (released, custody timeline, report link), nl2 (awaiting validation), nl3 (in transit), nl4 (rejected by the lab). Lab: Accessioning -> receive `DEMO-NL3-EDTA`; Validation -> nl2; Release -> nl2. Record a new one for Hoda/Nabila (consent granted); Rana (consent revoked) and Nourhan (none) show the named refusals |
 | Professions / registrations in all states | Agency owner / Ops | Kiorly; Ops console :5181 -> Providers | `owner@…`; `+201000000099` + OTP + TOTP | Verified / pending / rejected / expired / unverified nurses and physios; Dr Samah's paused listing |
 | Physio pack | Dr Mai `mai.na@demo.kiorex.test` | :5174 | `Demo@12345` / Passport `…3010` | Mahmoud: assessment, plan, progress notes, outcome trends, HEP link, 10-session series |
-| Safety console, held deposits, flags (launch-locked gates DEV-ONLY) | Ops super admin / admin | Ops console :5181 | `+201000000099` (TOTP `REMOVED-OLD-DEMO-TOTP-SECRET`) | Safety console (SOS, timer, unsafe abort + SLO breach), held-deposit review queue (35 min / 46 h), Flags: gates labelled `DEV-ONLY-NOT-A-REAL-GATE:G…` |
+| Safety console, held deposits, flags (launch-locked gates DEV-ONLY) | Ops super admin / admin | Ops console :5181 | `+201000000099` (TOTP `<local seed +201000000099>`) | Safety console (SOS, timer, unsafe abort + SLO breach), held-deposit review queue (35 min / 46 h), Flags: gates labelled `DEV-ONLY-NOT-A-REAL-GATE:G…` |
 | Passport: guardian / org / linking / security states | Hoda, Karim, Tarek, Omar, Dalia; Ahmed Fawzy; ops | Passport :4400/account | phone + OTP | `/account/family` (active, ended, expired, pending guardian links), `/account/orgs` (invitations pending / consumed / expired / revoked, ended membership), `/account/security` (passkeys, sessions), `/account/ops/links` (pending_review) |
 | Pharmacy POS / inventory / purchasing | `cashier@`, `owner@demo.kiorly.local` | :5192 | `Demo@12345` | POS, inventory (near-expiry, expired, quarantined, recalled), receiving, purchasing in every state |
 

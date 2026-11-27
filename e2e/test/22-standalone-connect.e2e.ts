@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { localTotpSecret } from '../src/local-totp.js';
 import { KIOREX_API, KIORLY_API, PHARMACY_API, PHARMACY, LAB_API } from '../src/env.js';
 import { kiorex, kiorly, opsLogin, q, waitFor, syncProviders } from '../src/clients.js';
 import { loginWithPhone } from '../src/passport.js';
@@ -13,7 +14,7 @@ import { generateEnrolmentCode, newIntakeNonce, signIntakeRequest } from '../src
  * Real stack: Kiorly Clinic :3010, Kiorex :4000, Pharmacy :3100, Lab :3200. Ops: ops_admin +201000009001 prepares, super_admin +201000000099 approves.
  * Gate evidence for the launch-locked flags is recorded through the existing human-only super-admin route with the dev-only label (like 04/05), never by the module.
  */
-const OPS_ADMIN_TOTP = 'REMOVED-OLD-DEMO-TOTP-SECRET';
+const OPS_ADMIN_TOTP = localTotpSecret('+201000009001'); // local-only, generated per machine
 const P = '/admin/onboarding/partners';
 const tag = rnd().toLowerCase();
 let sup: string; let prep: string;

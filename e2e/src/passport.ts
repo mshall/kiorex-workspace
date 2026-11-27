@@ -1,5 +1,6 @@
 import { createHash, createHmac, randomBytes } from 'node:crypto';
 import { PASSPORT, OTP } from './env.js';
+import { localTotpSecret } from './local-totp.js';
 
 /** Minimal cookie-jar fetch that never follows redirects (mirrors a browser on the Passport interaction pages). */
 class Jar {
@@ -50,7 +51,8 @@ async function otpFromLog(phone: string): Promise<string> {
   throw new Error(`no OTP logged for ${phone}`);
 }
 
-export const DEV_OPS_TOTP_SECRET = 'REMOVED-OLD-DEMO-TOTP-SECRET';
+/** Local-only (generated per machine, see local-totp.ts); never a committed value. */
+export const devOpsTotpSecret = () => localTotpSecret('+201000000099');
 /** RFC 6238 TOTP (SHA-1, 30 s, 6 digits) from a base32 secret. */
 export function totp(secretB32: string, at = Date.now()): string {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -88,7 +90,7 @@ export async function loginWithPhone(phone: string, opts: { clientId?: string; r
     const page = await r.clone().text();
     if (!page.includes(`/interaction/${uid}/totp`)) break;
     if (attempt) await new Promise((res) => setTimeout(res, 30_000 - (Date.now() % 30_000) + 1500));
-    r = await b.req(`${PASSPORT}/interaction/${uid}/totp`, { method: 'POST', form: { totp: totp(opts.totpSecret ?? DEV_OPS_TOTP_SECRET), lang: 'en' } });
+    r = await b.req(`${PASSPORT}/interaction/${uid}/totp`, { method: 'POST', form: { totp: totp(opts.totpSecret ?? devOpsTotpSecret()), lang: 'en' } });
   }
   if (r.status === 200) r = await b.req(`${PASSPORT}/interaction/${uid}/finish`, { method: 'POST', form: { lang: 'en' } }); // skip passkey enrolment
   const end = await b.follow(r, PASSPORT, redirectUri);

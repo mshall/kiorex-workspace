@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { chromium, open, saveAuth, loadAuth, URLS } from './lib.mjs';
 import { execFileSync } from 'node:child_process';
 const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -9,7 +10,9 @@ export function totp(secret, at = Date.now()) {
   const h = crypto.createHmac('sha1', key).update(ctr).digest(); const o = h[19] & 15;
   return String(((h.readUInt32BE(o) & 0x7fffffff) % 1e6)).padStart(6, '0');
 }
-export const OPS = { super: { phone: '+201000000099', seed: 'REMOVED-OLD-DEMO-TOTP-SECRET' }, admin: { phone: '+201000009001', seed: 'REMOVED-OLD-DEMO-TOTP-SECRET' } };
+// seeds are LOCAL, generated per machine (kiorex-account/.local/totp-secrets.json), never committed
+const localSeed = (phone) => JSON.parse(readFileSync(new URL('../../kiorex-account/.local/totp-secrets.json', import.meta.url), 'utf8')).secrets[phone];
+export const OPS = { super: { phone: '+201000000099', get seed() { return localSeed('+201000000099'); } }, admin: { phone: '+201000009001', get seed() { return localSeed('+201000009001'); } } };
 export async function opsSignIn(browser, who) {
   const cached = loadAuth('ops-' + who);
   if (cached.key && cached.expiresAt - Date.now() / 1000 > 300) return cached;
