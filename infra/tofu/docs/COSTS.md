@@ -11,8 +11,8 @@ Basis: eu-central-1 list prices recalled by the author and rounded, 730 hours pe
 | Data volume 20 GB gp3 | same | 1.9 |
 | Daily snapshots, 7 kept | incremental, a few GB | 1 |
 | Public IPv4 for the Elastic IP | 0.005 per hour | 3.7 |
-| CloudFront, 7 distributions | always-free tier covers 1 TB and 10 M requests; PriceClass_100 | 0 to 2 |
-| S3: 4 site buckets, backups, deploy | small, versioned | 1 |
+| CloudFront, 8 distributions (Kiorly Home added 28 Nov 2026, no extra fixed cost) | always-free tier covers 1 TB and 10 M requests; PriceClass_100 | 0 to 2 |
+| S3: 8 site buckets (Kiorly Home added), backups, deploy | small, versioned | 1 |
 | ECR: 4 repositories, 15 images each | about 0.10 per GB | 1 to 2 |
 | Route 53: 2 zones | 0.50 per zone plus queries | 1 |
 | Secrets Manager: 6 secrets | 0.40 each | 2.4 |

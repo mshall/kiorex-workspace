@@ -76,6 +76,24 @@ resource "aws_cloudfront_function" "directory" {
   code    = file("${path.module}/../../../../../kiorex-account/apps/kiorly-site/deploy/cloudfront-index-rewrite.js")
 }
 
+# Same-origin Passport path for Kiorly Home: /idp/token becomes /token on the Passport origin. Only sites with idp_proxy get the behaviour.
+locals {
+  idp_sites = { for k, s in var.sites : k => s if s.idp_proxy }
+}
+resource "aws_cloudfront_function" "idp_strip" {
+  count   = length(local.idp_sites) > 0 ? 1 : 0
+  name    = "${var.name_prefix}-idp-prefix-strip"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-JS
+    function handler(event) {
+      var r = event.request;
+      r.uri = r.uri.replace(/^\/idp(?=\/|$)/, '') || '/';
+      return r;
+    }
+  JS
+}
+
 resource "aws_cloudfront_response_headers_policy" "site" {
   name = "${var.name_prefix}-site"
   security_headers_config {
@@ -147,6 +165,30 @@ resource "aws_cloudfront_distribution" "site" {
     }
   }
 
+  dynamic "origin" {
+    for_each = each.value.idp_proxy ? { "idp" = var.origin_domains[0] } : {}
+    content {
+      origin_id   = "idp"
+      domain_name = origin.value
+      custom_origin_config {
+        http_port                = var.origin_port
+        https_port               = 443
+        origin_protocol_policy   = "http-only"
+        origin_ssl_protocols     = ["TLSv1.2"]
+        origin_read_timeout      = 60
+        origin_keepalive_timeout = 30
+      }
+      custom_header {
+        name  = "X-Origin-Secret"
+        value = var.origin_secret
+      }
+      custom_header {
+        name  = "X-Kx-Service"
+        value = "kiorex.passport"
+      }
+    }
+  }
+
   default_cache_behavior {
     target_origin_id           = "s3"
     viewer_protocol_policy     = "redirect-to-https"
@@ -183,6 +225,24 @@ resource "aws_cloudfront_distribution" "site" {
       cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # CachingDisabled
       origin_request_policy_id = "216adef6-5c7f-47e4-b989-5492eafa07d3" # AWS managed AllViewer: the API sees the public host name
       compress                 = true
+    }
+  }
+
+  dynamic "ordered_cache_behavior" {
+    for_each = each.value.idp_proxy ? toset(["/idp/*"]) : toset([])
+    content {
+      path_pattern             = ordered_cache_behavior.value
+      target_origin_id         = "idp"
+      viewer_protocol_policy   = "redirect-to-https"
+      allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+      cached_methods           = ["GET", "HEAD"]
+      cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # CachingDisabled
+      origin_request_policy_id = "216adef6-5c7f-47e4-b989-5492eafa07d3" # AWS managed AllViewer
+      compress                 = true
+      function_association {
+        event_type   = "viewer-request"
+        function_arn = aws_cloudfront_function.idp_strip[0].arn
+      }
     }
   }
 

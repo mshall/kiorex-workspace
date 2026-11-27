@@ -23,5 +23,6 @@ export default defineConfig({
   retries: 0,
   reporter: [['list'], ['html', { outputFolder: path.join(dir, 'playwright-report'), open: 'never' }]],
   use: { locale: 'en-US', ignoreHTTPSErrors: false, trace: 'retain-on-failure', screenshot: 'only-on-failure', actionTimeout: 20_000, navigationTimeout: 45_000 },
-  projects: [{ name: 'kx-test', use: { browserName: 'chromium' } }],
+  // KX_E2E_HOST_RESOLVER_RULES (optional): Chrome --host-resolver-rules, for a workstation whose resolver still caches a negative answer for a brand new host name (for example "MAP app.test.kiorly.com 18.161.97.36").
+  projects: [{ name: 'kx-test', use: { browserName: 'chromium', launchOptions: process.env.KX_E2E_HOST_RESOLVER_RULES ? { args: [`--host-resolver-rules=${process.env.KX_E2E_HOST_RESOLVER_RULES}`] } : {} } }],
 });

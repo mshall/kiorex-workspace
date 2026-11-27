@@ -44,6 +44,7 @@ variable "services" {
     api_paths = optional(list(string), []) # static with_api only: extra path patterns routed to the host besides /api/* (e.g. /marketplace/* for the signed partner API)
     api_service = optional(string, "") # static with_api only: X-Kx-Service value the origin routes on; empty = the service id itself (set it when the host serves another service's app, e.g. kiorly.admin -> kiorex.admin)
     rewrite     = optional(string, "spa") # spa = any path without a dot serves /index.html; directory = /x/ and /x serve /x/index.html (multi-page sites) and missing pages answer /404.html
+    idp_proxy   = optional(bool, false) # static only (AWS): same-origin /idp/* is sent to the Passport origin with the prefix removed (Kiorly Home)
   }))
   description = "Registry service ids this environment deploys. Hostnames come from the registry, never from here."
   validation {

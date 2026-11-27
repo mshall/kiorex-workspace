@@ -264,8 +264,9 @@ services:
     repo: kiorex-account
     core: true
     envs: [dev, test, staging, pilot, prod]
-    status: planned
-    note: "Kiorly Home: one sign-in and workspace switcher (ADR-038). Also the staff app universal-link host. Replaces www.kiorly.com/signin."
+    status: live
+    live_envs: [test]
+    note: "Kiorly Home: one sign-in and workspace switcher (ADR-038). Also the staff app universal-link host. Replaces www.kiorly.com/signin. Hosted on test (app.test.kiorly.com, noindex) since 28 Nov 2026: static site (kiorex-account/apps/kiorly-home, SPA fallback, no API behaviour); Passport calls go straight to the issuer (Passport answers CORS for registered client origins)."
     env:
       VITE_KIORLY_HOME_URL: "{url:kiorly.app}"
       KIORLY_HOME_ORIGINS: "{url:kiorly.app}"

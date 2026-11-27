@@ -17,6 +17,7 @@ services = {
   "kiorly.labs"        = { type = "static", with_api = true, api_paths = ["/marketplace/*"] }
   "kiorly.marketing"   = { type = "static", with_api = false, rewrite = "directory" }       # apps/kiorly-site (multi-page, no API); test.kiorly.com
   "kiorly.admin"       = { type = "static", with_api = true, api_service = "kiorex.admin" } # the same Ops console build as kiorex.admin, Kiorly edition by host; /api/* to the Kiorex API
+  "kiorly.app"         = { type = "static", with_api = false, idp_proxy = true }            # apps/kiorly-home (ADR-038): SPA fallback to /index.html for /signin and /signin/<product>; /idp/* proxied to Passport (workspaces call has no CORS); product APIs directly (CORS)
 }
 
 images    = ["platform", "passport", "pharmacy-api", "lab-api"]

@@ -25,6 +25,7 @@ export const URLS = {
   pharmacy: url('kiorly.pharmacies'),
   lab: url('kiorly.labs'),
   clinic: url('kiorly.clinics'),
+  home: url('kiorly.app'),
   clinicLegacy: `https://${(registry.legacy_hosts ?? []).find((l: { env: string; service: string; status: string; host: string }) => l.env === ENV_ID && l.service === 'kiorly.clinics' && l.status === 'live')?.host}`,
   issuer: issuerFor(registry, ENV_ID) as string,
 };
