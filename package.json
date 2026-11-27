@@ -1,0 +1,12 @@
+{
+  "name": "kiorex-workspace",
+  "private": true,
+  "description": "Workspace-level tooling only (the product repos are separate). Today: the kx-test end-to-end suite against the deployed hosts, see e2e/kx-test/README.md",
+  "scripts": {
+    "e2e:kx-test": "playwright test -c e2e/kx-test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "^22.10.0"
+  }
+}
