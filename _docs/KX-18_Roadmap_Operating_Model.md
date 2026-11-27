@@ -132,3 +132,35 @@ Repository map, migration order and the build-agent brief: KX22.
 - Steps cite PRD requirement IDs (KXM-*, KP-*, KL-*, KA-*).
 - Definition of done per step: migration + API + UI + tests + doc status row updated in the same change (GT06 convention).
 - Human-only items go to a `NEEDS_HUMAN.md` register with STOP flags, as in Kiorly.
+
+## 08 Added roadmap items (founder decision, 27 Nov 2026)
+
+Both items apply to the Kiorly modules (Clinic, Pharmacy, Lab, staff app) when they run standalone, without Kiorex. They are not scheduled yet: the founder decides month and owner. Neither changes anything that is built today.
+
+### R-OFF-1 Outage mode (standalone modules, internet lost for some time)
+
+Status: PLANNED, unscheduled. The module keeps working during an internet outage and syncs when the connection returns. The server stays the single source of truth.
+
+- Local store in web and staff apps (IndexedDB or SQLite), service worker caching so the app opens without a network.
+- Queue of pending actions replayed in order; every action carries a unique id and the API is idempotent so a retry never applies twice.
+- Visible "offline, N changes waiting" state and a sync-status screen.
+- Conflict rules; offline actions keep their real time and user for the audit log, and the server records both client and server time.
+- Sign-in survives an outage: cached session for a limited window, refreshed on reconnect.
+- Security: encrypted cache at rest, short cache window, screen lock, remote wipe on next connection, data-age indicator on cached clinical records.
+- Staging (recommended): (1) Clinic reception and visit notes, read-mostly (cached schedule and records; notes and walk-in registration queued; no offline money or stock changes); (2) Pharmacy counter; (3) Lab; (4) offline dispensing and payments only with strict rules and review on sync. One shared sync layer, not one per module.
+- Known limits: double booking across devices (pending-confirmation state or per-device slot assignment), messaging and card payments queue or stay off, Kiorex online bookings reach the clinic only after reconnect, controlled-item dispensing needs flagging.
+- Open decisions (founder): which module and actions first, allowed offline duration (hours or days), acceptance of delayed Kiorex bookings.
+
+### R-AIR-1 Fully air-gapped edition (standalone modules, no internet at the site)
+
+Status: FUTURE, a separate product, not a switch on the cloud product. Build only after outage mode and after validating demand with two or three real customers.
+
+- Single-machine package with no external software to install (bundled embedded database, API, jobs, file storage, local web server), one module first (probably Clinic).
+- Local accounts and local MFA; Passport, OTP and messaging channels, payments and Kiorex sync are off.
+- Licence: signed token with expiry; a once-a-month connection to AWS renews the subscription and verifies the package. Day-31 behaviour should be a read-only grace period, not a lock-out; handle clock tampering and lost machines.
+- Encrypted local backups to a second disk or USB with a tested restore (mandatory: single machine holding patient records).
+- Offline to online migration is a one-way export and import at first, not a merge.
+- Update, migration and support process for machines we cannot see; counsel review of Egyptian health-data and licensing rules (not asserted here).
+- Open decisions (founder): target customer, first module, whether a phone hotspot once a month is acceptable for the renewal check-in, whether offline data may ever merge back.
+
+Related: a standalone module can be online (hosted by us, optionally connected to Kiorex through configuration) with no new work beyond packaging and billing.
