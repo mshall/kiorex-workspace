@@ -79,7 +79,8 @@ services:
     image: ${KX_REGISTRY}/passport:${PASSPORT_TAG}
     restart: unless-stopped
     env_file: [/opt/kx/env/passport.env]
-    environment: { NODE_ENV: production, PORT: "4400" }
+    # NODE_ENV stays "development" on purpose: the dev IdP refuses production by design (public DEV mode, hardened; kiorex-account Docs/DEPLOY_DEV.md).
+    environment: { NODE_ENV: development, PORT: "4400" }
     depends_on:
       postgres: { condition: service_healthy, required: false }
     healthcheck:

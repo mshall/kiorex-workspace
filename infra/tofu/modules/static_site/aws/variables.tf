@@ -8,6 +8,7 @@ variable "sites" {
     fqdn            = string
     certificate_key = string
     api_service     = string # service header the origin routes /api/* on; empty = no /api behavior
+    api_paths       = optional(list(string), []) # extra path patterns sent to the same origin (e.g. /marketplace/*)
   }))
   default     = {}
   description = "Web apps (registry id => host). Static bundle in object storage behind the CDN; /api/* goes same-origin to the host when api_service is set."

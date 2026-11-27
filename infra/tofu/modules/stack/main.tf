@@ -351,7 +351,7 @@ module "static_site_aws" {
   source                = "../static_site/aws"
   name_prefix           = local.prefix
   tags                  = local.all_tags
-  sites                 = { for id, s in local.static_services : id => { fqdn = local.hosts[id].fqdn, certificate_key = local.hosts[id].domain_key, api_service = s.with_api ? id : "" } }
+  sites                 = { for id, s in local.static_services : id => { fqdn = local.hosts[id].fqdn, certificate_key = local.hosts[id].domain_key, api_service = s.with_api ? id : "", api_paths = s.api_paths } }
   origin_domains        = local.origin_domains
   origin_port           = local.origin_port
   origin_secret         = random_password.origin.result
@@ -366,7 +366,7 @@ module "static_site_huawei" {
   source                = "../static_site/huawei"
   name_prefix           = local.prefix
   tags                  = local.all_tags
-  sites                 = { for id, s in local.static_services : id => { fqdn = local.hosts[id].fqdn, certificate_key = local.hosts[id].domain_key, api_service = s.with_api ? id : "" } }
+  sites                 = { for id, s in local.static_services : id => { fqdn = local.hosts[id].fqdn, certificate_key = local.hosts[id].domain_key, api_service = s.with_api ? id : "", api_paths = s.api_paths } }
   origin_domains        = local.origin_domains
   origin_port           = local.origin_port
   origin_secret         = random_password.origin.result

@@ -30,6 +30,9 @@ if [ "$KX_DB_MODE" = "host" ]; then
   /usr/local/lib/kx/kx-pg-reconcile.sh
 fi
 docker compose --env-file release.env up -d --remove-orphans --wait --wait-timeout 300 || { kx_log "release unhealthy"; docker compose ps; exit 1; }
+# Caddy bind-mounts ./Caddyfile from releases/current, which is replaced (moved) on every deploy: a running container would keep the OLD file
+# (stale inode) and compose sees no change in its own config. Recreate the edge container on every release (a few seconds, the CDN retries).
+docker compose --env-file release.env up -d --force-recreate --no-deps --wait --wait-timeout 60 caddy || kx_log "caddy recreate failed"
 docker image prune -f --filter "until=168h" >/dev/null
 kx_log "release ${rid} applied"
 kx_obj_put /opt/kx/releases/current/RELEASE_ID "state/${KX_ENV}/applied" "$KX_DEPLOY_BUCKET" || true

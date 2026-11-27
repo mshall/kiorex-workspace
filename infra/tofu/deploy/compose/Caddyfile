@@ -19,9 +19,12 @@
 		respond "forbidden" 403
 	}
 
-	@platform header X-Kx-Service kiorex.api
+	# the patient web and the ops console call /api/* on their own CDN host, so those two CDN hosts also reach the platform API
+	@platform header_regexp X-Kx-Service ^(kiorex\.api|kiorex\.marketplace|kiorex\.admin)$
 	handle @platform {
-		reverse_proxy platform-api:4000
+		reverse_proxy platform-api:4000 {
+			header_up X-Forwarded-Proto https
+		}
 	}
 
 	# partner webhooks: only the webhook path is exposed on this host name
@@ -29,24 +32,32 @@
 	handle @webhooks {
 		@wh path /api/v1/webhooks/*
 		handle @wh {
-			reverse_proxy platform-api:4000
+			reverse_proxy platform-api:4000 {
+				header_up X-Forwarded-Proto https
+			}
 		}
 		respond 404
 	}
 
 	@passport header X-Kx-Service kiorex.passport
 	handle @passport {
-		reverse_proxy passport:4400
+		reverse_proxy passport:4400 {
+			header_up X-Forwarded-Proto https
+		}
 	}
 
 	@pharmacy header X-Kx-Service kiorly.pharmacies
 	handle @pharmacy {
-		reverse_proxy pharmacy-api:3100
+		reverse_proxy pharmacy-api:3100 {
+			header_up X-Forwarded-Proto https
+		}
 	}
 
 	@lab header X-Kx-Service kiorly.labs
 	handle @lab {
-		reverse_proxy lab-api:3200
+		reverse_proxy lab-api:3200 {
+			header_up X-Forwarded-Proto https
+		}
 	}
 
 	handle {

@@ -32,6 +32,7 @@ variable "services" {
   type = map(object({
     type     = string               # api = gateway/idp behind the CDN, routed by header; static = web bundle in object storage
     with_api = optional(bool, true) # static only: also proxy same-origin /api/* to the host
+    api_paths = optional(list(string), []) # static with_api only: extra path patterns routed to the host besides /api/* (e.g. /marketplace/* for the signed partner API)
   }))
   description = "Registry service ids this environment deploys. Hostnames come from the registry, never from here."
   validation {

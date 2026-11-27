@@ -1,6 +1,6 @@
 locals {
   cache_disabled     = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS managed CachingDisabled
-  all_viewer_no_host = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # AWS managed AllViewerExceptHostHeader (forwards Authorization, cookies, query)
+  all_viewer_no_host = "216adef6-5c7f-47e4-b989-5492eafa07d3" # AWS managed AllViewer (forwards the viewer Host, Authorization, cookies, query). The name is historical: the apps must see the PUBLIC host (OIDC discovery URLs, signed-request host binding), Caddy routes on X-Kx-Service only.
   custom             = var.enable_custom_domains
 }
 

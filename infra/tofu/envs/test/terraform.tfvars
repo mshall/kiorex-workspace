@@ -11,10 +11,10 @@ services = {
   "kiorex.api"         = { type = "api" }
   "kiorex.webhooks"    = { type = "api" }
   "kiorex.passport"    = { type = "api" }
-  "kiorex.marketplace" = { type = "static", with_api = false }
-  "kiorex.admin"       = { type = "static", with_api = false }
-  "kiorly.pharmacies"  = { type = "static", with_api = true }
-  "kiorly.labs"        = { type = "static", with_api = true }
+  "kiorex.marketplace" = { type = "static", with_api = true }  # the patient web calls /api/* on its own origin (apps/web has no API base URL setting)
+  "kiorex.admin"       = { type = "static", with_api = true }  # same for the ops console
+  "kiorly.pharmacies"  = { type = "static", with_api = true, api_paths = ["/marketplace/*"] } # signed Kiorex partner API (outside /api/v1 by contract)
+  "kiorly.labs"        = { type = "static", with_api = true, api_paths = ["/marketplace/*"] }
 }
 
 images    = ["platform", "passport", "pharmacy-api", "lab-api"]

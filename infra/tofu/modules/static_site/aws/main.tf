@@ -150,15 +150,15 @@ resource "aws_cloudfront_distribution" "site" {
   }
 
   dynamic "ordered_cache_behavior" {
-    for_each = each.value.api_service != "" ? [1] : []
+    for_each = each.value.api_service != "" ? toset(concat(["/api/*"], each.value.api_paths)) : toset([])
     content {
-      path_pattern             = "/api/*"
+      path_pattern             = ordered_cache_behavior.value
       target_origin_id         = "api"
       viewer_protocol_policy   = "redirect-to-https"
       allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
       cached_methods           = ["GET", "HEAD"]
       cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # CachingDisabled
-      origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # AllViewerExceptHostHeader
+      origin_request_policy_id = "216adef6-5c7f-47e4-b989-5492eafa07d3" # AWS managed AllViewer: the API sees the public host name
       compress                 = true
     }
   }
