@@ -29,7 +29,7 @@ Parent folder: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/` (workspace repo
 4. **Money design:** patient credit and provider credit are separate closed-loop ledgers; no money wallet; Kiorex does not hold funds. Commission is collected by Kiorex and shown to both sides (see section 6).
 5. **Brand:** Kiorex logo per `_brand/KIOREX_LOGO_SPEC_v2.md` verbatim (indigo `#3730A3`, ocean `#0369A1`, coral `#E8735E` only for lines and large highlights, Plus Jakarta Sans/Inter). Kiorly marks unchanged (guard `_brand/scripts/kiorly-guard.cjs`).
 6. **Ports and shared services:** never use ports 3000, 5173, 5175 or the founder's 3020/5190/5191. No broad `pkill`; kill only PIDs you started. Shared stack changes only via `e2e/scripts/up.sh --build --restart --only=<svc>` with output redirected. Tests use private databases and private ports, never the shared DBs (`kiorly`, `kiorex_platform`, `kiorex_account`, `kiorly_pharmacy`, `kiorly_lab`).
-7. **No deploys, no `tofu apply`, no AWS access** unless the founder says so in that moment. Pushes to Clinic `main` auto-deploy to AWS (see section 8): always add `[skip ci]`.
+7. **Deploys and AWS changes only on the founder's explicit say-so.** Standing approvals as of 27 Nov 2026: (a) Clinic changes go to BOTH `kiorex` and `main` always; pushes to `main` auto-deploy to AWS and must NOT carry `[skip ci]` any more, but must not change ports, CI workflows or infra files; (b) the founder approved provisioning the kx-test environment (cost-minimal) 'on my behalf per your recommendation' (OpenTofu in `infra/tofu`, plan reviewed before apply); DNS records, registrar changes, purchases, real-money modes, real patient-data migration and the counsel sign-off always stay with the founder. Local AWS CLI credentials exist for account 990597228737 (the Clinic account); use them only for what is approved. Take an RDS snapshot before a Clinic deploy that has migrations.
 8. Databases are local Postgres at localhost:5433 (user `postgres`); `psql` is at `~/.local/bin/psql`.
 9. Git: commit with `git commit --only` as author Mohamed Shall; set `GIT_AUTHOR_*` and `GIT_COMMITTER_*` env if identity is missing; end messages with the Co-Authored-By line given by the session. Never force-push. Merge founder commits, never discard them.
 10. Privacy/safety in growth code: k>=10 floors, no PHI in growth events, consent gating, closed action vocabularies, shadow-mode fraud scoring.
@@ -76,8 +76,8 @@ Parent folder: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/` (workspace repo
 
 ## 8. Deployment facts (read before touching `main`)
 
-- Only **Kiorly Clinic** is deployed on AWS, from `mshall/clinics-management` branch `main`, via `.github/workflows/deploy-aws.yml` (triggers on every push to `main`, scope auto-detected, region eu-central-1, CDK stack). Other deploy workflows are manual only. Contracts/pay-contract repos have no link to that deploy.
-- A push without `[skip ci]` deploys everything merged so far, including ~9 new migrations on the live database.
+- Only **Kiorly Clinic** is deployed on AWS, from `mshall/clinics-management` branch `main`, via `.github/workflows/deploy-aws.yml` (triggers on every push to `main`, scope auto-detected, region eu-central-1, CDK stack; CI test job gates the deploy: typecheck, unit, integration, money gate, Playwright). Earlier deploys ran on 24-25 Nov 2026; on 27 Nov 2026 main was deployed with all merged work (RDS snapshot `pre-kiorex-merge-20261127` taken first). Other deploy workflows are manual only. Contracts/pay-contract repos have no link to that deploy.
+- Any push to `main` deploys; the live organisation (Dr Ahmed Shall) must keep working: every Clinic change is backward compatible and neutral by default.
 
 ## 9. Where things are
 
@@ -171,7 +171,7 @@ Legend: [H] needs the founder, finance, counsel or a vendor; [E] engineering an 
 ### F. Rules of engagement for the next agent
 Read section 2 first. Before any push to Clinic `main`, confirm `[skip ci]` and run the diff check for `.github/`, `infra/`, Docker, vite, env and port files. Use private DBs and ports; one test process at a time; ask before drops, visibility changes, deploys, publishing and anything outward-facing.
 
-## 13. Environments, domains and the URL registry (27 Nov 2026, ADR-059 Proposed)
+## 13. Environments, domains and the URL registry (27 Nov 2026, ADR-059 Accepted by the founder's instruction)
 
 Written from the founder brief `briefs/ENV_DOMAIN_STANDARD_BRIEF.md`. Documentation and a registry only: no DNS, AWS, certificate, CI or deploy change was made, and nothing is pushed.
 
@@ -181,3 +181,34 @@ Written from the founder brief `briefs/ENV_DOMAIN_STANDARD_BRIEF.md`. Documentat
 - **Key decisions to keep:** pilot runs on the production plane and uses the production issuer `passport.kiorex.com`; per-environment ACM certificates (a production wildcard never covers non-production); Route 53 introduced by delegating only the `test` child zones first; the live Clinic `cloudfront.net` host stays valid permanently (custom name added to the same distribution); host-only `__Host-` cookies, never `Domain=.kiorex.com`; country is `kiorex.com/{locale}/{cc}` and tenant configuration, never a host.
 - **Supersedes** the host table of ADR-038 (`kiorex-account/config/domains.json`; the sign-in design stays) and the random-URL, SSM registry and two-pass bootstrap parts of `AWS_DEV_ENV_PLAN.md` (banner added there). ADR number 059 (058 stays retired).
 - **Open actions:** section 12 item E2. Drive documents to update (not attempted): see `DOCS_SYNC_MANIFEST.md` section "27 Nov 2026".
+
+
+## 14. State at the end of the 27 Nov 2026 session (read this first if you are a new agent)
+
+**Founder decisions made on 27 Nov 2026**
+- Environments: kx-test (`test`, real data at small scale, includes the real Clinic organisation Dr Ahmed Shall plus tagged dummy data), kx-pilot (`pilot`, bigger scale), kx-pro (`prod`, major release for Egypt). Hosting: AWS now for test; initial production decision is Huawei Cloud (Egypt data residency), and test or pilot may move to Huawei at any time, so everything is configured through OpenTofu with an `aws|huawei` provider switch per environment (`infra/tofu`). Verify Huawei region availability and CBE rules before relying on them.
+- No dev Clinic copy: the existing AWS Clinic (`https://d92iz83i79c05.cloudfront.net/`, account 990597228737, eu-central-1) is the kx-test Clinic. Other products (platform, Passport, Pharmacy, Lab) are added around it on one cost-minimal host with a PRIVATE database; the Clinic keeps its own RDS untouched.
+- Domains `kiorex.com`, `kiorly.com` (registrars domain.com and namecheap.com; the founder edits DNS). Start by delegating only `test.kiorex.com` and `test.kiorly.com` child zones to Route 53.
+- Promotion rule: before moving test to pilot or pilot to prod, ASK the founder whether to carry the previous environment over (identities, orgs, patients, bookings) or keep them separate (`LAUNCH_PREPARATION_GUIDE.md` section 0; `IDENTITY_PROMOTION_MODE=ask|carry|separate` in Passport).
+- LG-COM-20 decided: direct bank transfer, InstaPay and card terminal at the clinic count as a cash-type tender recorded as its own kind `CASH_TRANSFER` with a configurable per-tender commission treatment (default = base rate), configurable per organisation type and per organisation.
+- Commission recommended defaults are shipped as editable `SEEDED_DEFAULT` rows (Clinic 3% min EGP 10 cap EGP 75; Pharmacy 2% min 5 cap 100; Lab 3% min 10 cap 100; net from payout); disclosure texts are drafts; counsel sign-off remains NOT_REVIEWED (real-money modes stay blocked). Only a human records sign-off.
+- Contracts 1.13.0 is merged and tagged `v1.13.0`; registry publishing failed (GitHub scope `@kiorex` has no owner under `mshall`); the founder chose to do nothing: consumers use vendored tarballs. A 1.13.1 additive patch (adds `CARD_GATEWAY`, `BANK_IPN` to INTEGRATION_MODES) may be present locally.
+- All nine repos are PUBLIC on GitHub (founder decision for unlimited Actions minutes; secret scan of history was clean). Workspace repo is `mshall/kiorex-workspace`. Treat anything committed as public: demo passwords and real data NEVER go in git. The private demo-accounts register lives in the git-ignored `_private/` folder of the workspace (not in GitHub).
+- Demo/dummy data: removed from all login UIs (Passport, Kiorly Home, Pharmacy, Lab, Clinic, platform, staff app); seeds stay; demo rows are tagged (`DemoMarker` table in platform, `data_class` in Passport) with `demo-data:remove` scripts (dry-run default, `--confirm` to delete). The founder will ask when to remove the dummy records.
+- Local scratch databases `kiorex_pay_unified`, `kiorly_pay_unified`, `kiorly_telehealth` are kept; never raise dropping them again.
+- Clinic changes always go to BOTH `kiorex` and `main`.
+
+**What was built and shipped on 27 Nov 2026 (all pushed unless noted)**
+Engineering leftovers closed (platform claim-vs-rate reconciliation, per-org partner credentials, signed query string, constants to config); Clinic R3 failed-migration health, dunning reminders config, SB-05 registry entry, CORS allow-list (legacy mode when unset: set `CORS_ALLOWED_ORIGINS` at deploy), host literals to config, env-driven Passport wiring (per-org default stays PASSWORD); Passport Dockerfile, client override emitter, hardened public DEV mode, identity promotion tool, demo tagging; Pharmacy and Lab runtime Dockerfiles with bounded migration retry; platform Dockerfile verified, scheduler hardened (run exactly ONE container with jobs on), growth-admin overview bug fixed; staff app link host per EAS profile; ADR-059 with six environment documents and the URL registry (`_docs/registry`).
+
+**In flight or not yet merged at the time of writing (check `git log` and `git status` of each repo and `_docs/briefs`)**
+OpenTofu multi-cloud infra under `infra/tofu` (plan only, not applied); contracts 1.13.1 + platform host fail-closed + cohort attribute; Pharmacy and Lab signed-statement client + Lab accessibility fixes; Clinic, platform and staff-app demo-UI removal (Clinic part must be merged to `main` too); PDF rebuild with rich design (`_docs/pdf`); merging the private demo-accounts register sections (`_private/sections/*.md`) into one file.
+
+**Critical path to a full end-to-end test on AWS (kx-test)**
+1. Review `tofu plan`, bootstrap state, apply the AWS test stack. 2. Build and push images (platform, Passport, Pharmacy, Lab), start on the host, one container with jobs. 3. Deploy workflows and the deploy-role secret per repo (GitHub OIDC role `GitHubAction-AssumeRole` trusts `repo:mshall/*`). 4. Passport client config via `npm run client-overrides:emit -- --env test`; wire the Clinic to Passport (env vars on the Clinic App Runner: needs a Clinic deploy; Dr Ahmed Shall organisation stays on its current sign-in method until an admin switches it). 5. Disable Lab dev sign-in (slug and email, no password) on any environment with real data. 6. Run the cross-product e2e against the deployed URLs. 7. Founder checks the real clinic after every deploy.
+
+**Founder-only steps (give these instructions when asked)**
+Tell which registrar holds each domain; add NS records for `test` child zones once zones exist; Apple Team ID and Android SHA-256 fingerprints for app links; WhatsApp (Meta Cloud API business verification, phone number, system-user token, templates), SES domain verification and production access, push (Firebase service account, APNs `.p8` key), payment sandbox credentials (Paymob, Fawry); never paste secrets in chat (store via Secrets Manager commands). Verify the real clinic after each deploy.
+
+**Open decisions and gaps**
+Production-capable Passport identity provider (the dev IdP refuses production; identities may not carry over); G-HOST (do signed partner requests bind the Host header) and G-COHORT (pilot cohort attribute); Kiorly admin console and marketing site not in code; Clinic matching screens, patient/staff Pay screens and Pay Playwright; Android Gradle/device checks; Passport email UI; counsel sign-off; commission numbers review; Huawei region verification; the real Clinic organisation in kx-test is a declared exception to 'no real patient data outside production' pending counsel (see `environments/PILOT_ENVIRONMENT_STRATEGY.md`).
