@@ -32,6 +32,7 @@ Optional overrides: copy `.env.example` to `.env` (git-ignored; it holds no secr
 | patient (Hoda Mahmoud) | +201000001001 | patient web: sign-in, account, appointments, pharmacy orders |
 | ops (ops_admin) | +201000009001 | ops console providers, orders, finance (phone code + TOTP) |
 | opsFinance | +201000009002 | commission summary, claims, statements, runs (role `finance`) |
+| superAdmin | +201000000099 | join-request settings and test-data removal (role `super_admin`; phone code + TOTP from `/kx/test/e2e`) |
 | pharmacyCashier | +201000002008 | Pharmacy web dashboard, customers, catalogue, growth, role matrix |
 | pharmacyOwner | +201000002007 | Pharmacy privileged role (phone code + TOTP) |
 | pharmacistNoMfa | +201000002004 | proves the MFA rule: phone code only gives 403 MFA_REQUIRED |
@@ -54,6 +55,7 @@ Passport allows 5 one-time codes per phone and 20 per real client IP and hour (t
 | `06-privileged-mfa.spec.ts` | privileged role without MFA is refused (403 MFA_REQUIRED), with TOTP it works; owner orders, finance and statement |
 | `08-mfa-policy.spec.ts` | MFA policy end to end on kx-test: default OFF, ops propose (maker), a different ops approves (checker), the demo pharmacist is walked through mandatory enrolment and then works in the Pharmacy web, switch off again (optional, offered code), the friendly "set up two-step verification" screen with the Passport link in the Pharmacy web and the Lab web; the policy ends OFF and the pharmacist's enrolment is removed |
 | `09-old-demo-totp.spec.ts` | the demo TOTP seeds once published in the repositories are worthless on kx-test: the code computed from the old secret is refused at the Passport sign-in of the ops accounts, and no `totp_credentials` row holds an old secret. The old values are read from the git history at run time (nothing typed); skips when the history no longer has them |
+| `10-site-leads.spec.ts` | Kiorly site join flow on the deployed hosts: public config and CORS, the single-page site in EN and AR, a real form submission with a TEST-tagged lead (name prefix [TEST], reserved e-mail domain), idempotent replay, 400/413/honeypot, the lead in the Kiorex admin (ops) and the Kiorly admin (super admin), CSV export, role limits (ops cannot save settings or remove test data), and removal of the test lead (count, then confirm) |
 
 Tests marked `test.fail` would be KNOWN GAPS: they pass while the gap exists and turn red when it is fixed (then remove the marker); there are none at the moment. `test.fixme` lists what cannot be tested yet and why.
 

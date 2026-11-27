@@ -19,6 +19,8 @@ export const URLS = {
   patientWeb: url('kiorex.marketplace'),
   api: url('kiorex.api'),
   ops: url('kiorex.admin'),
+  site: url('kiorly.marketing'),
+  opsKiorly: url('kiorly.admin'),
   passport: url('kiorex.passport'),
   pharmacy: url('kiorly.pharmacies'),
   lab: url('kiorly.labs'),

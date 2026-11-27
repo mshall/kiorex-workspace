@@ -10,6 +10,7 @@ import { e2eSecrets } from './aws';
  *  patient            +201000001001  Hoda Mahmoud, has bookings, consents, orders in the platform demo data
  *  ops                +201000009001  ops_admin (Passport enforces TOTP; the seed is the one in AWS Secrets Manager /kx/test/e2e)
  *  opsFinance         +201000009002  ops_admin + finance (the commission views need the finance role)
+ *  superAdmin         +201000000099  super_admin (settings and test-data removal of the join requests; phone code + TOTP from /kx/test/e2e)
  *  pharmacyCashier    +201000002008  CASHIER: not a privileged role, so no MFA claim is needed
  *  pharmacyOwner      +201000002007  OWNER: privileged. The Pharmacy API demands an MFA claim in production mode, so this persona signs in with phone code + TOTP (secret in AWS Secrets Manager)
  *  pharmacistNoMfa    +201000002004  PHARMACIST (privileged) signing in with the phone code only: used to PROVE the rule (403 MFA_REQUIRED), never to get access
@@ -20,6 +21,7 @@ export const PERSONAS = {
   patient: { phone: '+201000001001', app: 'patientWeb' },
   ops: { phone: '+201000009001', app: 'ops', totp: 'ops_admin_totp' },
   opsFinance: { phone: '+201000009002', app: 'ops', totp: 'finance_totp' },
+  superAdmin: { phone: '+201000000099', app: 'ops', totp: 'super_admin_totp' },
   pharmacyCashier: { phone: '+201000002008', app: 'pharmacy' },
   pharmacyOwner: { phone: '+201000002007', app: 'pharmacy', totp: 'pharmacy_owner_totp' },
   pharmacistNoMfa: { phone: '+201000002004', app: 'pharmacy' },
