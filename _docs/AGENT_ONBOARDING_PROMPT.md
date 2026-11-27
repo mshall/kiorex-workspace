@@ -1,6 +1,6 @@
 # Onboarding prompt for a new agent (Kiorex and Kiorly)
 
-Paste everything below the line into the new agent as its first message, or attach this file together with `_docs/LLM_HANDOFF.md`. Workspace root on the founder's machine: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/`. Last updated 27 Nov 2026.
+Paste everything below the line into the new agent as its first message, or attach this file together with `_docs/LLM_HANDOFF.md`. Workspace root on the founder's machine: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/`. Last updated 27 Nov 2026 (end of session). Read section 14 of the handoff first: it holds the current state, decisions and the critical path.
 
 ---
 
@@ -26,8 +26,9 @@ You are joining a long-running build for the founder (Mohamed Shall, Gulf time U
 
 ## 3. Hard rules (non-negotiable)
 
-- No deploys, no `tofu apply`, no AWS access. The first AWS deploy is held by the founder until WhatsApp, email and push notifications are verified.
-- Clinic deploys to AWS only from `main`. Any push to Clinic `main` must carry `[skip ci]` and must not change ports, CI workflows or infra. Working branch is `kiorex`.
+- Deploys and AWS changes only on the founder's explicit say-so. Standing approvals (27 Nov 2026): every Clinic change goes to BOTH `kiorex` and `main`; a push to `main` auto-deploys to AWS (the real organisation Dr Ahmed Shall is live there) and no longer carries `[skip ci]`, but must not change ports, CI workflows or infra; take an RDS snapshot first when migrations are included. Provisioning of the kx-test environment through OpenTofu was approved 'per your recommendation' (review the plan before apply). DNS, purchases, real-money modes, real patient-data migration and counsel sign-off stay with the founder.
+- Every repo on GitHub is PUBLIC: never commit secrets, real data or demo passwords. The private demo-accounts register is in the git-ignored `_private/` folder.
+- Before moving to the next environment (test to pilot to prod) ask the founder: carry the previous one over, or keep separate.
 - Never touch ports 3000, 5173 or 5175, or the founder's own checkout `kiorly-clinics-management` (ports 3020, 5190, 5191). Use private databases and ports for tests; one test process at a time; no broad `pkill`.
 - Shared services only through `e2e/scripts/up.sh --build --restart --only=<svc>` with output redirected.
 - Mock providers by default. Secrets by reference only, never in code, chat or commits.
@@ -45,7 +46,9 @@ You are joining a long-running build for the founder (Mohamed Shall, Gulf time U
 - Clinic repo visibility: public (kept public for unlimited Actions minutes; make private later after checking minutes). The other repos are private.
 - Local scratch databases `kiorex_pay_unified`, `kiorly_pay_unified`, `kiorly_telehealth` are kept; do not raise dropping them.
 - Contracts registry publishing: deferred (founder chose to do nothing). Vendored tarballs keep working.
-- Open decision for the founder: whether direct bank/InstaPay transfers and card terminals count as CASH tender (recommendation: yes, see `COMMISSION_DEFAULTS.md`).
+- Environments: kx-test=test, kx-pilot=pilot, kx-pro=prod. AWS for test now, Huawei Cloud the initial production decision (Egypt data residency), all configurable through OpenTofu (`infra/tofu`, `aws|huawei` switch). No dev Clinic copy: the existing AWS Clinic is kx-test's Clinic. ADR-059 and `_docs/registry/service-url-registry.yaml` are the canonical naming source.
+- Demo data is removed from all login UIs and tagged for removal on request (`demo-data:remove`, dry-run default).
+- LG-COM-20 decided: direct bank/InstaPay/card terminal count as cash-type tender recorded as its own kind CASH_TRANSFER with a configurable per-tender commission treatment.
 
 ## 5. What to do after reading
 
