@@ -1,0 +1,112 @@
+# Base compose file, identical in every environment. Per-environment differences live in <env>/docker-compose.override.yml.
+# Image tags come from release.env (written by scripts/deploy.sh); URLs and secrets come from /opt/kx/env/*.env (rendered on the host from
+# the URL registry and the secret store). NOTHING here publishes a database port: only Caddy listens (port 80, reachable by the CDN only).
+name: kx
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80"]
+    env_file: [/opt/kx/env/edge.env]
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro"]
+    depends_on:
+      platform-api: { condition: service_started, required: false }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:80/__health"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    mem_limit: 128m
+    logging: *logging
+
+  postgres:
+    # Host database mode only (compose profile "localdb"). No ports: reachable by the other containers on the compose network and nothing else.
+    profiles: [localdb]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: [/opt/kx/env/postgres.env]
+    command: ["postgres", "-c", "shared_buffers=256MB", "-c", "max_connections=120", "-c", "log_min_duration_statement=500", "-c", "password_encryption=scram-sha-256"]
+    volumes: ["/srv/kx/pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 768m
+    stop_grace_period: 60s
+    logging: *logging
+
+  platform-api:
+    image: ${KX_REGISTRY}/platform:${PLATFORM_TAG}
+    restart: unless-stopped
+    env_file: [/opt/kx/env/platform.env]
+    environment: { NODE_ENV: production, PORT: "4000", JOBS_ENABLED: "false", PRISMA_MIGRATE_ON_BOOT: "true" }
+    volumes: ["/srv/kx/vault:/data/vault"] # local file vault (STORAGE_MODE=local); the volume is the encrypted data disk
+    depends_on:
+      postgres: { condition: service_healthy, required: false }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/v1/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+    mem_limit: 768m
+    logging: *logging
+
+  platform-jobs:
+    # JOBS: exactly ONE instance, ever. Same image as the API with JOBS_ENABLED=true (the API container runs with JOBS_ENABLED=false so timers never
+    # run twice). A fixed container_name makes a second copy impossible on a host, the "jobs" profile is enabled on host 0 only (KX_JOBS_HOST), and
+    # replicas is pinned to 1. It never migrates (the API container does) and is not exposed.
+    profiles: [jobs]
+    image: ${KX_REGISTRY}/platform:${PLATFORM_TAG}
+    container_name: kx-${KX_ENV}-platform-jobs
+    restart: unless-stopped
+    env_file: [/opt/kx/env/platform.env]
+    environment: { NODE_ENV: production, PORT: "4001", JOBS_ENABLED: "true", PRISMA_MIGRATE_ON_BOOT: "false" }
+    volumes: ["/srv/kx/vault:/data/vault"]
+    deploy: { replicas: 1 }
+    depends_on:
+      platform-api: { condition: service_healthy }
+    mem_limit: 640m
+    logging: *logging
+
+  passport:
+    image: ${KX_REGISTRY}/passport:${PASSPORT_TAG}
+    restart: unless-stopped
+    env_file: [/opt/kx/env/passport.env]
+    environment: { NODE_ENV: production, PORT: "4400" }
+    depends_on:
+      postgres: { condition: service_healthy, required: false }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4400/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+    mem_limit: 512m
+    logging: *logging
+
+  pharmacy-api:
+    image: ${KX_REGISTRY}/pharmacy-api:${PHARMACY_API_TAG}
+    restart: unless-stopped
+    env_file: [/opt/kx/env/pharmacy.env]
+    environment: { NODE_ENV: production, PORT: "3100", LISTEN_HOST: "0.0.0.0" }
+    depends_on:
+      postgres: { condition: service_healthy, required: false }
+    mem_limit: 512m
+    logging: *logging
+
+  lab-api:
+    image: ${KX_REGISTRY}/lab-api:${LAB_API_TAG}
+    restart: unless-stopped
+    env_file: [/opt/kx/env/lab.env]
+    environment: { NODE_ENV: production, PORT: "3200", LISTEN_HOST: "0.0.0.0" }
+    depends_on:
+      postgres: { condition: service_healthy, required: false }
+    mem_limit: 512m
+    logging: *logging

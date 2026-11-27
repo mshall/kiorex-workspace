@@ -1,0 +1,13 @@
+# TEMPLATE: put this in a product repo as .github/workflows/deploy-test.yml. Manual trigger only (the founder presses the button for test).
+name: deploy to kx-test
+on:
+  workflow_dispatch:
+jobs:
+  api:
+    uses: mshall/kiorex-v2/.github/workflows/kx-build-deploy.yml@main # wherever the reusable workflow was copied to
+    with:
+      environment: test
+      image: pharmacy-api
+      dockerfile: apps/api/Dockerfile
+    secrets:
+      INFRA_REPO_TOKEN: ${{ secrets.INFRA_REPO_TOKEN }}

@@ -1,0 +1,15 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfplan
+tfplan*
+# lock files ARE committed (provider pinning); state and plans never
+!.terraform.lock.hcl
+backend.hcl
+*.auto.tfvars
+huawei.tfvars
+aws.tfvars
+override.tf
+# module directories are validated in place; their lock files are scratch
+modules/**/.terraform.lock.hcl

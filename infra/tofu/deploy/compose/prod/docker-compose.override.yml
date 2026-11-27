@@ -1,0 +1,7 @@
+# kx-pro: 16 GB host, managed multi-AZ database (the postgres service is not started: compose profile "localdb" is off in managed mode).
+services:
+  platform-api: { mem_limit: 2048m, environment: { LOG_LEVEL: info } }
+  platform-jobs: { mem_limit: 1024m }
+  passport: { mem_limit: 1024m }
+  pharmacy-api: { mem_limit: 1024m }
+  lab-api: { mem_limit: 1024m }

@@ -1,0 +1,10 @@
+# kx-pilot: 8 GB host. More headroom and a larger database cache.
+services:
+  platform-api: { mem_limit: 1024m, environment: { LOG_LEVEL: info } }
+  platform-jobs: { mem_limit: 768m }
+  passport: { mem_limit: 640m }
+  pharmacy-api: { mem_limit: 640m }
+  lab-api: { mem_limit: 640m }
+  postgres:
+    mem_limit: 2048m
+    command: ["postgres", "-c", "shared_buffers=768MB", "-c", "effective_cache_size=3GB", "-c", "max_connections=200", "-c", "log_min_duration_statement=500", "-c", "password_encryption=scram-sha-256"]

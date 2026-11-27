@@ -1,0 +1,26 @@
+# Fallback: run kx-pro on AWS instead:  tofu plan -var-file=aws.tfvars
+provider_name  = "aws"
+aws_region     = "eu-central-1"
+aws_account_id = "REPLACE_WITH_PROD_AWS_ACCOUNT_ID"
+enable_custom_domains = false
+compute = {
+  instance_type = "t4g.xlarge"
+  vcpus         = 4
+  memory_gb     = 16
+  arch          = "arm64"
+  deploy_mode   = "ssm"
+}
+database = {
+  mode                   = "managed"
+  managed_instance_class = "db.t4g.medium"
+  managed_storage_gb     = 100
+  managed_multi_az       = true
+  managed_backup_days    = 14
+  backup_retention_days  = 90
+}
+edge = {
+  waf_enabled = true
+  noindex     = false
+}
+github_repos                = ["mshall/kiorex-platform", "mshall/kiorex-account", "mshall/kiorly-pharmacy", "mshall/kiorly-lab"]
+create_github_oidc_provider = true

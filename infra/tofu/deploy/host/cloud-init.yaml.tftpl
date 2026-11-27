@@ -1,0 +1,31 @@
+#cloud-config
+# Same bootstrap on both providers (Ubuntu 24.04 LTS, arm64 preferred). No SSH key, no inbound SSH: access is SSM (AWS) or the console (Huawei).
+package_update: true
+packages: [ca-certificates, curl, jq, unzip, gnupg, openssl]
+write_files:
+  - path: /etc/kx/host.env
+    permissions: "0644"
+    content: |
+      KX_PROVIDER=${provider}
+      KX_ENV=${env}
+      KX_REGION=${region}
+      KX_DEPLOY_BUCKET=${deploy_bucket}
+      KX_BACKUP_BUCKET=${backup_bucket}
+      KX_SECRETS_PREFIX=${secrets_prefix}
+      KX_REGISTRY_URL=${registry_url}
+      KX_DB_MODE=${db_mode}
+      KX_DATABASES="${databases}"
+      KX_PRODUCTS="${databases}"
+      KX_DEPLOY_MODE=${deploy_mode}
+      KX_JOBS_HOST=${jobs_host}
+%{ for name, b64 in files ~}
+  - path: /usr/local/lib/kx/${name}
+    permissions: "${endswith(name, ".sh") ? "0755" : "0644"}"
+    encoding: gzip+base64
+    content: ${b64}
+%{ endfor ~}
+runcmd:
+  - [bash, -c, "set -e; install -d -m 0755 /opt/kx/releases /usr/local/lib/kx"]
+  - [bash, -c, "set -e; install -m 0755 -d /etc/apt/keyrings; curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc; echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable\" > /etc/apt/sources.list.d/docker.list; apt-get update -y; apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin"]
+  - [bash, -c, "${provider_cli_install}"]
+  - [bash, -c, "set -e; for u in kx.service kx-backup.service kx-backup.timer kx-deploy-poll.service kx-deploy-poll.timer; do cp /usr/local/lib/kx/$u /etc/systemd/system/$u; done; systemctl daemon-reload; systemctl enable --now docker; systemctl enable --now kx.service kx-backup.timer; if [ '${deploy_mode}' = poll ]; then systemctl enable --now kx-deploy-poll.timer; fi"]

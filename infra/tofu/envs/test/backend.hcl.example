@@ -1,0 +1,11 @@
+# tofu init -backend-config=backend.hcl   (copy this file to backend.hcl; backend.hcl is git-ignored)
+# State bucket comes from ../../bootstrap (output state_bucket). The lock is an S3 lock file next to the state (no DynamoDB, no cost).
+bucket       = "REPLACE_WITH_BOOTSTRAP_OUTPUT_state_bucket"
+key          = "kiorex/test/terraform.tfstate"
+region       = "eu-central-1"
+encrypt      = true
+use_lockfile = true
+# For a Huawei environment you may keep state in THIS same AWS bucket (simplest, locked), or use Huawei OBS through its S3 API:
+#   endpoints = { s3 = "https://obs.<huawei region>.myhuaweicloud.com" }
+#   skip_credentials_validation = true, skip_requesting_account_id = true, skip_metadata_api_check = true, skip_region_validation = true, use_path_style = true
+#   (OBS does not honour S3 lock files: use_lockfile = false and run apply from one place only.)

@@ -1,0 +1,94 @@
+# TEMPLATE (not active: it lives under infra/, not .github/workflows). Reusable workflow: build one product image from its Dockerfile, push it to the
+# registry, then tell the host to pull and restart. Copy it into the repo that owns your workflows (or into each product repo) and call it with
+# the example-caller.yml. No long-lived cloud keys: AWS uses GitHub OIDC; the role is created by OpenTofu (output deploy.ci_role_arn).
+#
+# One-time GitHub setup per product repo (founder):
+#   Settings > Environments: create "test", "pilot", "prod" (add required reviewers on pilot and prod).
+#   Environment variables on each: AWS_ROLE_ARN (tofu output deploy.ci_role_arn), AWS_REGION, KX_REGISTRY (tofu output deploy.registry_url),
+#   DEPLOY_BUCKET and SSM_DOCUMENT (tofu output deploy).  Environment secret: INFRA_REPO_TOKEN (read-only token for the repo holding infra/tofu/deploy).
+name: kx build and deploy
+on:
+  workflow_call:
+    inputs:
+      environment: { type: string, required: true, description: "test | pilot | prod (also the GitHub Environment name)" }
+      image: { type: string, required: true, description: "image name = product key: platform | passport | pharmacy-api | lab-api" }
+      dockerfile: { type: string, required: true, description: "Dockerfile path inside the product repo, for example apps/api/Dockerfile" }
+      context: { type: string, default: ".", description: "Docker build context" }
+      build_args: { type: string, default: "", description: "newline separated KEY=VALUE build args" }
+      provider: { type: string, default: aws, description: "aws | huawei" }
+      infra_repo: { type: string, default: "mshall/kiorex-v2" }
+      runs_on: { type: string, default: "ubuntu-24.04-arm", description: "arm64 runner: the hosts are Graviton / Kunpeng" }
+    secrets:
+      INFRA_REPO_TOKEN: { required: true }
+      HUAWEI_AK: { required: false }
+      HUAWEI_SK: { required: false }
+
+# One deploy per environment at a time, never cancelled half way.
+concurrency:
+  group: kx-deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ${{ inputs.runs_on }}
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 45
+    env:
+      TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---------------- AWS (OIDC, no stored keys)
+      - name: Configure AWS credentials (OIDC)
+        if: inputs.provider == 'aws'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Log in to ECR
+        if: inputs.provider == 'aws'
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ---------------- Huawei SWR (interim: push-only IAM user keys as environment secrets; replace by federation when available)
+      - name: Log in to SWR
+        if: inputs.provider == 'huawei'
+        run: |
+          login="$(printf '%s' "${{ secrets.HUAWEI_AK }}" | openssl dgst -binary -sha256 -hmac "${{ secrets.HUAWEI_SK }}" | od -An -vtx1 | tr -d ' \n')"
+          echo "$login" | docker login -u "${{ vars.AWS_REGION }}@${{ secrets.HUAWEI_AK }}" --password-stdin "${KX_REGISTRY%%/*}"
+        env:
+          KX_REGISTRY: ${{ vars.KX_REGISTRY }}
+
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and push (single architecture, matches the host)
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.dockerfile }}
+          platforms: linux/arm64
+          push: true
+          provenance: false
+          build-args: ${{ inputs.build_args }}
+          tags: ${{ vars.KX_REGISTRY }}/${{ inputs.image }}:${{ env.TAG }}
+          cache-from: type=gha,scope=${{ inputs.image }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.image }}
+
+      - name: Fetch the deploy scripts
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.infra_repo }}
+          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          path: kx-infra
+
+      - name: Release and restart the host (migrations run on boot; jobs run in exactly one container)
+        working-directory: kx-infra
+        env:
+          KX_PROVIDER: ${{ inputs.provider }}
+          KX_REGISTRY: ${{ vars.KX_REGISTRY }}
+          DEPLOY_BUCKET: ${{ vars.DEPLOY_BUCKET }}
+          SSM_DOCUMENT: ${{ vars.SSM_DOCUMENT }}
+        run: infra/tofu/deploy/scripts/deploy.sh "${{ inputs.environment }}" --tag "${{ inputs.image }}=${TAG}"

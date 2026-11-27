@@ -1,0 +1,55 @@
+# Origin router. TLS ends at the CDN; this listens on plain HTTP and ONLY answers requests that carry the shared origin secret.
+# The CDN adds X-Origin-Secret and X-Kx-Service (the registry service id), so routing works on default CDN host names too.
+{
+	auto_https off
+	admin off
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+:80 {
+	# local container health, no secret needed (the port is not reachable from outside except through the CDN prefix list)
+	handle /__health {
+		respond "ok" 200
+	}
+
+	@no_secret not header X-Origin-Secret {$KX_ORIGIN_SECRET}
+	handle @no_secret {
+		respond "forbidden" 403
+	}
+
+	@platform header X-Kx-Service kiorex.api
+	handle @platform {
+		reverse_proxy platform-api:4000
+	}
+
+	# partner webhooks: only the webhook path is exposed on this host name
+	@webhooks header X-Kx-Service kiorex.webhooks
+	handle @webhooks {
+		@wh path /api/v1/webhooks/*
+		handle @wh {
+			reverse_proxy platform-api:4000
+		}
+		respond 404
+	}
+
+	@passport header X-Kx-Service kiorex.passport
+	handle @passport {
+		reverse_proxy passport:4400
+	}
+
+	@pharmacy header X-Kx-Service kiorly.pharmacies
+	handle @pharmacy {
+		reverse_proxy pharmacy-api:3100
+	}
+
+	@lab header X-Kx-Service kiorly.labs
+	handle @lab {
+		reverse_proxy lab-api:3200
+	}
+
+	handle {
+		respond "not found" 404
+	}
+}

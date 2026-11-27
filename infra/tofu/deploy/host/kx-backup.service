@@ -1,0 +1,5 @@
+[Unit]
+Description=Kiorex daily database dump to object storage
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/kx/kx-backup.sh

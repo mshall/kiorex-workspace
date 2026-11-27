@@ -1,0 +1,11 @@
+[Unit]
+Description=Kiorex data volume mount and release apply on boot
+After=docker.service network-online.target
+Wants=network-online.target
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/kx/kx-mount-data.sh
+ExecStartPost=/bin/bash -c 'KX_FORCE=1 /usr/local/lib/kx/kx-deploy.sh || true'
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,5 @@
+[Unit]
+Description=Apply a new release if the release id in object storage changed (pull-based deploy)
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/kx/kx-deploy.sh

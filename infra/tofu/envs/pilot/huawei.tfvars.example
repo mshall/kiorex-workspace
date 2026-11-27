@@ -1,0 +1,14 @@
+# Move kx-pilot to Huawei Cloud:  tofu plan -var-file=huawei.tfvars   (copy this file to huawei.tfvars; README section "Switch AWS to Huawei")
+provider_name = "huawei"
+huawei_region = "REPLACE_AFTER_REGION_VERIFICATION"
+enable_custom_domains = true # Huawei CDN cannot exist without a custom domain
+origin_allow_cidrs    = []   # REPLACE: Huawei CDN back-to-origin IP ranges (console / API), or your own address for a first smoke test
+compute = {
+  instance_type  = "" # empty = pick by vcpus and memory_gb
+  vcpus          = 2
+  memory_gb      = 4
+  arch           = "arm64"
+  root_volume_gb = 40
+  key_pair       = "" # optional pre-created key pair name; there is no SSH rule either way
+  deploy_mode    = "poll"
+}

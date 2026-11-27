@@ -1,0 +1,40 @@
+# TEMPLATE (not active). Reusable workflow for a static web app (marketplace, ops console, pharmacy web, lab web): build, sync to the site bucket,
+# invalidate the CDN. Same OIDC role as the image workflow (it is allowed on the site buckets by the CI policy extension, see README).
+name: kx static site deploy
+on:
+  workflow_call:
+    inputs:
+      environment: { type: string, required: true }
+      working_directory: { type: string, default: "." }
+      build_command: { type: string, default: "npm ci && npm run build" }
+      output_dir: { type: string, default: "dist" }
+      site_bucket: { type: string, required: true, description: "tofu output deploy.static_buckets[<service id>]" }
+      distribution_id: { type: string, required: true, description: "CloudFront distribution id of the site" }
+concurrency:
+  group: kx-static-${{ inputs.environment }}-${{ inputs.site_bucket }}
+  cancel-in-progress: false
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Build
+        working-directory: ${{ inputs.working_directory }}
+        run: ${{ inputs.build_command }}
+      - name: Upload (hashed assets long-cached, index.html never cached)
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          aws s3 sync "${{ inputs.output_dir }}" "s3://${{ inputs.site_bucket }}" --delete --exclude index.html --cache-control "public,max-age=31536000,immutable"
+          aws s3 cp "${{ inputs.output_dir }}/index.html" "s3://${{ inputs.site_bucket }}/index.html" --cache-control "no-cache"
+      - name: Invalidate
+        run: aws cloudfront create-invalidation --distribution-id "${{ inputs.distribution_id }}" --paths "/index.html" "/"

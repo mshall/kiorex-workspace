@@ -1,0 +1,8 @@
+# kx-test: 4 GB host, everything on one box. Tight limits keep the five Node processes and PostgreSQL inside memory.
+services:
+  platform-api: { mem_limit: 640m, environment: { LOG_LEVEL: debug } }
+  platform-jobs: { mem_limit: 512m }
+  passport: { mem_limit: 384m }
+  pharmacy-api: { mem_limit: 384m }
+  lab-api: { mem_limit: 384m }
+  postgres: { mem_limit: 640m }
