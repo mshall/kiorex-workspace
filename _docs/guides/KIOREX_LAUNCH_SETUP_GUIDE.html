@@ -1,0 +1,527 @@
+<title>Kiorex Launch Setup Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Concept: a calm field manual. Left rail = route map with progress; each step is a card with a real sequence, an illustrated screen, and a "send me" box. Kiorex light theme: indigo and ocean carry structure, coral only for lines and big highlights. */
+:root{
+  --ground:#F4F6FC; --surface:#FFFFFF; --ink:#0F172A; --muted:#475569; --faint:#64748B;
+  --line:#E2E8F0; --line-strong:#CBD5E1; --indigo:#3730A3; --indigo-soft:#EEF0FF; --ocean:#0369A1; --ocean-soft:#E6F4FB;
+  --coral:#E8735E; --coral-soft:#FDEEEA; --ok:#047857; --ok-soft:#E7F6EF; --warn:#B45309; --warn-soft:#FEF3E2; --risk:#B91C1C; --risk-soft:#FDECEC;
+  --code:#0F172A; --code-ink:#E2E8F0;
+  --font:"Plus Jakarta Sans","Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--font);font-size:15.5px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+h1,h2,h3,h4{text-wrap:balance;margin:0;letter-spacing:-.01em}
+a{color:var(--ocean)} p{margin:0 0 .8em} ul,ol{margin:.2em 0 1em;padding-left:1.25em} li{margin:.25em 0}
+code,.mono{font-family:var(--mono);font-size:.88em;background:var(--indigo-soft);color:var(--indigo);padding:.1em .38em;border-radius:5px}
+pre{margin:.6em 0 1em;background:var(--code);color:var(--code-ink);padding:14px 16px;border-radius:10px;overflow-x:auto;font:13px/1.55 var(--mono);position:relative}
+pre code{background:none;color:inherit;padding:0}
+.copy{position:absolute;top:8px;right:8px;border:1px solid #334155;background:#1E293B;color:#CBD5E1;border-radius:7px;font:600 11px var(--font);padding:4px 9px;cursor:pointer}
+.copy:hover{background:#334155} :focus-visible{outline:3px solid var(--ocean);outline-offset:2px;border-radius:6px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(244,246,252,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+  margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:14px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--ground)}
+.top svg{height:30px;width:auto;flex:none}
+.top .meter{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--muted)}
+.bar{width:140px;height:8px;border-radius:99px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--indigo),var(--ocean));transition:width .3s}
+.menu-btn{display:none;border:1px solid var(--line-strong);background:var(--surface);border-radius:9px;padding:7px 12px;font:600 13px var(--font);color:var(--ink)}
+
+.shell{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:268px minmax(0,1fr);gap:36px;padding-top:28px}
+nav.rail{position:sticky;top:78px;align-self:start;max-height:calc(100vh - 96px);overflow:auto;padding-right:4px}
+nav.rail h4{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:18px 0 6px;font-weight:700}
+nav.rail a{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:10px;color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;border:1px solid transparent}
+nav.rail a:hover{background:var(--surface);color:var(--ink)} nav.rail a.on{background:var(--surface);color:var(--indigo);border-color:var(--line);box-shadow:0 1px 0 rgba(15,23,42,.04)}
+nav.rail a .n{flex:none;width:22px;height:22px;border-radius:7px;background:var(--indigo-soft);color:var(--indigo);font-size:11.5px;display:grid;place-items:center;font-weight:800}
+nav.rail a.done .n{background:var(--ok);color:#fff}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#312E81 0%,var(--indigo) 38%,var(--ocean) 100%);color:#fff;border-radius:22px;padding:34px clamp(20px,4vw,44px);position:relative;overflow:hidden}
+.hero h1{font-size:clamp(28px,4.2vw,44px);line-height:1.08;font-weight:800;max-width:18ch}
+.hero p{max-width:62ch;color:#E0E7FF;font-size:16.5px;margin:14px 0 0}
+.hero .pulse{position:absolute;right:-10px;bottom:18px;width:min(46%,420px);opacity:.9}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.chip{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.25)}
+
+section.step{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:clamp(18px,3vw,32px);margin-top:26px}
+.sh{display:flex;gap:14px;align-items:flex-start;margin-bottom:6px}
+.badge{flex:none;width:40px;height:40px;border-radius:12px;background:var(--indigo);color:#fff;font-weight:800;display:grid;place-items:center;font-size:17px}
+.sh h2{font-size:clamp(21px,2.6vw,27px);line-height:1.2;font-weight:800}
+.sh .sub{color:var(--muted);margin-top:3px;font-size:14.5px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.tag{font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--ocean-soft);color:var(--ocean)}
+.tag.you{background:var(--indigo-soft);color:var(--indigo)} .tag.cost{background:var(--warn-soft);color:var(--warn)} .tag.time{background:var(--ok-soft);color:var(--ok)}
+h3{font-size:18px;font-weight:800;margin:26px 0 8px;display:flex;align-items:center;gap:10px}
+h3::after{content:"";height:2px;flex:1;background:linear-gradient(90deg,var(--coral),transparent);opacity:.55;border-radius:2px}
+h4{font-size:15px;font-weight:800;margin:18px 0 6px}
+
+/* sequence */
+ol.seq{list-style:none;padding:0;margin:10px 0 16px;counter-reset:s}
+ol.seq>li{counter-increment:s;position:relative;padding:12px 14px 12px 52px;border:1px solid var(--line);border-radius:14px;margin:9px 0;background:#FBFCFF}
+ol.seq>li::before{content:counter(s);position:absolute;left:14px;top:12px;width:26px;height:26px;border-radius:8px;background:var(--ocean);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center}
+ol.seq>li b{color:var(--ink)} ol.seq>li p:last-child{margin-bottom:0}
+.check{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--ok-soft);color:#065F46;font-weight:600;font-size:14px}
+.check input{width:18px;height:18px;margin-top:2px;accent-color:var(--ok);flex:none}
+
+.callout{display:flex;gap:12px;border-radius:14px;padding:12px 14px;margin:14px 0;border:1px solid;font-size:14.5px}
+.callout .ic{flex:none;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff}
+.callout.info{background:var(--ocean-soft);border-color:#BAE0F4}.callout.info .ic{background:var(--ocean)}
+.callout.warn{background:var(--warn-soft);border-color:#F6D7A8}.callout.warn .ic{background:var(--warn)}
+.callout.risk{background:var(--risk-soft);border-color:#F6C2C2}.callout.risk .ic{background:var(--risk)}
+.callout.ok{background:var(--ok-soft);border-color:#B8E6D2}.callout.ok .ic{background:var(--ok)}
+.callout>div{min-width:0}.callout p:last-child{margin:0}
+.send{border:2px dashed var(--indigo);background:var(--indigo-soft);border-radius:14px;padding:12px 16px;margin:16px 0}
+.send b{color:var(--indigo)} .send ul{margin-bottom:0}
+
+/* tables */
+.tw{overflow-x:auto;margin:10px 0 16px;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+th{background:var(--indigo);color:#fff;text-align:left;padding:9px 12px;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}tbody tr:nth-child(even){background:#F8FAFF}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:12px 0}
+.card{border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff;min-width:0}
+.card h4{margin-top:0}.card.app1{border-top:4px solid var(--indigo)}.card.app2{border-top:4px solid var(--ocean)}
+
+/* illustrated windows */
+figure.shot{margin:16px 0;border:1px solid var(--line-strong);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 10px 30px -18px rgba(55,48,163,.35)}
+.win-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#EEF1F8;border-bottom:1px solid var(--line)}
+.dots{display:flex;gap:6px}.dots i{width:10px;height:10px;border-radius:50%;background:#CBD5E1}
+.url{flex:1;min-width:0;background:#fff;border:1px solid var(--line);border-radius:99px;padding:3px 12px;font:12px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.win{padding:14px 16px;display:grid;gap:8px;font-size:13px;overflow-x:auto}
+.win .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;min-width:0}
+.win .row.h{background:var(--ocean-soft);border-color:#BAE0F4}
+.win .lbl{font-weight:700;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;min-width:74px}
+.win .val{font-family:var(--mono);background:#F1F5F9;border-radius:6px;padding:2px 8px;min-width:0;overflow-wrap:anywhere}
+.win .btn{background:var(--indigo);color:#fff;border-radius:8px;padding:5px 12px;font-weight:700;font-size:12.5px}
+.win .btn.alt{background:#fff;color:var(--indigo);border:1px solid var(--indigo)}
+.win .nav{display:flex;gap:6px;flex-wrap:wrap}.win .nav span{padding:4px 10px;border-radius:8px;background:#F1F5F9;color:var(--muted);font-weight:600}.win .nav span.on{background:var(--indigo-soft);color:var(--indigo)}
+.win .big{font-size:15px;font-weight:800}
+.pin{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--coral);color:#fff;font-weight:800;font-size:11px;flex:none;box-shadow:0 0 0 4px rgba(232,115,94,.25)}
+.hl{outline:2px solid var(--coral);outline-offset:1px}
+figcaption{padding:8px 14px;font-size:12.5px;color:var(--faint);border-top:1px solid var(--line);background:#FAFBFE}
+figcaption b{color:var(--muted)}
+
+details{border:1px solid var(--line);border-radius:12px;margin:10px 0;background:#fff}
+summary{cursor:pointer;padding:11px 14px;font-weight:700} details[open] summary{border-bottom:1px solid var(--line)} details>div{padding:12px 14px}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:14px 0}
+.tl{border-left:3px solid var(--coral);padding:2px 0 2px 12px}.tl b{display:block}.tl span{color:var(--muted);font-size:13.5px}
+footer{margin-top:34px;color:var(--faint);font-size:13px}
+
+@media (max-width:980px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  nav.rail{position:fixed;inset:calc(env(safe-area-inset-top,0px) + 56px) 0 0 0;max-height:none;background:var(--ground);z-index:25;padding:12px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px));display:none}
+  nav.rail.open{display:block}.menu-btn{display:inline-block}.bar{width:90px}.hero .pulse{display:none}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.bar i{transition:none}}
+</style>
+
+<header class="top">
+  <svg viewBox="0 0 440 130" role="img" aria-label="KIOREX">
+    <g fill="#3730A3"><rect x="37" y="26" width="3.6" height="22" rx="1.8"/><rect x="37" y="82" width="3.6" height="22" rx="1.8"/><rect x="45" y="33" width="3.6" height="20" rx="1.8"/><rect x="45" y="77" width="3.6" height="20" rx="1.8"/><rect x="53" y="40" width="3.6" height="17.5" rx="1.8"/><rect x="53" y="72.5" width="3.6" height="17.5" rx="1.8"/><rect x="61" y="47" width="3.6" height="13.5" rx="1.8"/><rect x="61" y="69.5" width="3.6" height="13.5" rx="1.8"/></g>
+    <polyline points="24,65 64,65 68,61 72.5,51 77,79 81.5,57 85,65 126,65" stroke="#E8735E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <g fill="#0369A1"><rect x="85.4" y="47" width="3.6" height="13.5" rx="1.8"/><rect x="85.4" y="69.5" width="3.6" height="13.5" rx="1.8"/><rect x="93.4" y="40" width="3.6" height="17.5" rx="1.8"/><rect x="93.4" y="72.5" width="3.6" height="17.5" rx="1.8"/><rect x="101.4" y="33" width="3.6" height="20" rx="1.8"/><rect x="101.4" y="77" width="3.6" height="20" rx="1.8"/><rect x="109.4" y="26" width="3.6" height="22" rx="1.8"/><rect x="109.4" y="82" width="3.6" height="22" rx="1.8"/></g>
+    <line x1="144" y1="26" x2="144" y2="104" stroke="#E8735E" stroke-width="1.3" opacity="0.9"/>
+    <text x="172" y="74" font-family="'Plus Jakarta Sans','Inter',sans-serif" font-weight="600" font-size="27" letter-spacing="8.5" fill="#3730A3">KIORE<tspan fill="#0369A1">X</tspan></text>
+  </svg>
+  <div class="meter"><span id="pct">0 of 9 steps</span><div class="bar"><i id="barfill"></i></div></div>
+  <button class="menu-btn" id="menu" aria-expanded="false" aria-controls="rail">Steps</button>
+</header>
+
+<div class="shell">
+<nav class="rail" id="rail" aria-label="Steps">
+  <h4>Start</h4>
+  <a href="#start"><span class="n">0</span>Read this first</a>
+  <h4>Store accounts</h4>
+  <a href="#stores" data-step="stores"><span class="n">1</span>Apple and Google accounts</a>
+  <a href="#apple" data-step="apple"><span class="n">2</span>Apple, step by step</a>
+  <a href="#google" data-step="google"><span class="n">3</span>Google Play, step by step</a>
+  <a href="#applinks" data-step="applinks"><span class="n">4</span>Team ID and fingerprints</a>
+  <h4>Domains and providers</h4>
+  <a href="#dns" data-step="dns"><span class="n">5</span>Domains and DNS</a>
+  <a href="#whatsapp" data-step="whatsapp"><span class="n">6</span>WhatsApp</a>
+  <a href="#email" data-step="email"><span class="n">7</span>Email (SES)</a>
+  <a href="#push" data-step="push"><span class="n">8</span>Push notifications</a>
+  <a href="#pay" data-step="pay"><span class="n">9</span>Payments</a>
+  <h4>Every deploy</h4>
+  <a href="#clinic"><span class="n">✓</span>Check your clinic</a>
+  <a href="#secrets"><span class="n">🔒</span>Handing me secrets</a>
+  <a href="#faq"><span class="n">?</span>Questions</a>
+</nav>
+
+<main>
+<section class="hero" id="start">
+  <h1>Your launch setup, one step at a time</h1>
+  <p>Everything that only you can do, in the order it unblocks the work: store accounts for the Kiorex and Kiorly apps, domain records, and the messaging and payment providers. Each step says what to click, what to send me, how long it takes and what it costs.</p>
+  <div class="chips"><span class="chip">kx-test now</span><span class="chip">2 apps, 1 Apple team, 1 Play account</span><span class="chip">Never paste secrets in chat</span></div>
+  <svg class="pulse" viewBox="0 0 300 80" aria-hidden="true"><polyline points="0,40 90,40 100,32 112,12 124,66 136,24 146,40 300,40" fill="none" stroke="#E8735E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</section>
+
+<section class="step" aria-labelledby="h0">
+  <div class="sh"><div><h2 id="h0">Read this first</h2><div class="sub">Three minutes that save you days.</div></div></div>
+  <div class="callout info"><span class="ic">i</span><div><p><b>About the pictures.</b> I cannot sign in to your Apple, Google, Meta, AWS or registrar accounts, so the screens below are <b>illustrations</b> drawn from each service's documented layout, with a numbered pin where to click. Buttons can be renamed or moved. If something looks different, follow the same words and the same menu path.</p></div></div>
+  <h3>The order that avoids waiting</h3>
+  <div class="timeline">
+    <div class="tl"><b>Today</b><span>Tell me which registrar holds each domain. Start the Apple and Google enrolments: they have the longest waits.</span></div>
+    <div class="tl"><b>Days 1 to 10</b><span>Apple verification, Google identity check, Meta business verification run in the background.</span></div>
+    <div class="tl"><b>When I send values</b><span>Add the DNS records. Then SES, push keys and payment sandboxes.</span></div>
+    <div class="tl"><b>After every deploy</b><span>Two minutes to check your real clinic.</span></div>
+  </div>
+  <div class="callout risk"><span class="ic">!</span><div><p><b>Never paste a password, token, key file or secret into this chat or into GitHub.</b> Every repo is public. Section <a href="#secrets">Handing me secrets</a> shows how to store them straight into AWS Secrets Manager from your own computer. Identifiers such as a Team ID or a SHA-256 fingerprint are not secrets and are fine to send.</p></div></div>
+</section>
+
+<!-- ============ 1 STORES ============ -->
+<section class="step" id="stores" aria-labelledby="h1">
+  <div class="sh"><div class="badge">1</div><div><h2 id="h1">Apple and Google: one account each, two apps</h2><div class="sub">Both apps live under the same Apple team and the same Google Play developer account, named Kiorex.</div></div></div>
+  <div class="meta"><span class="tag you">You</span><span class="tag time">Decision, 10 minutes</span></div>
+
+  <h3>The answer in one table</h3>
+  <div class="grid2">
+    <div class="card app1"><h4>Kiorex, the marketplace</h4><p>Patients search, book and pay providers.</p>
+      <p><b>Bundle ID / package:</b> <code>com.kiorex.app</code><br><b>Store name:</b> Kiorex<br><b>Audience:</b> patients<br><b>Code:</b> <code>kiorex-platform/apps/mobile</code></p></div>
+    <div class="card app2"><h4>Kiorly, the provider app</h4><p>Staff of clinics, pharmacies and labs.</p>
+      <p><b>Bundle ID / package:</b> <code>com.kiorly.app</code><br><b>Store name:</b> Kiorly<br><b>Audience:</b> clinic, pharmacy and lab staff<br><b>Code:</b> <code>kiorly</code> repo</p></div>
+  </div>
+  <div class="tw"><table><thead><tr><th>Question</th><th>Answer</th></tr></thead><tbody>
+    <tr><td>Can both apps share one Apple account and one Google account?</td><td><b>Yes.</b> One Apple Developer Program membership (one Team ID) and one Play Console developer account can publish any number of apps. Each app has its own bundle ID or package name.</td></tr>
+    <tr><td>Do I need two Apple IDs or two Google accounts, one per app?</td><td><b>No.</b> You need one organisation account on each store. Other people (a developer, a designer, me through your CI) are added as users with roles, never by sharing a password.</td></tr>
+    <tr><td>Can the main account be named "Kiorex"?</td><td><b>Yes, with one condition.</b> Apple shows the <b>legal entity name</b> as the seller. If your registered company is not named Kiorex, the store shows the company's legal name, and the apps themselves still show "Kiorex" and "Kiorly". Google lets you choose a public developer name, so "Kiorex" works there directly after verification.</td></tr>
+    <tr><td>Individual or organisation?</td><td><b>Organisation, both stores.</b> An individual account shows your personal name as the seller, cannot add team members properly, and on Google new individual accounts must run a 14-day closed test with 12 testers before production. Organisations are exempt from that test rule.</td></tr>
+    <tr><td>Do the apps share sign-in?</td><td>Yes, both sign in through Passport, so a person with a patient account and a staff role signs in once to either app.</td></tr>
+    <tr><td>Do the website links (universal and app links) cover both?</td><td>Yes. One Apple Team ID covers both apps. Each Android app has its own signing fingerprint. Kiorex links live on <code>kiorex.com</code> hosts, Kiorly links on <code>app.&lt;env&gt;.kiorly.com</code>.</td></tr>
+  </tbody></table></div>
+
+  <h3>What you need before you start</h3>
+  <ul>
+    <li><b>The legal company</b> that will own the apps: exact registered name, address, phone, and a person with legal authority to sign (Apple checks).</li>
+    <li><b>A D-U-N-S number</b> for that company. Both Apple and Google use it to verify an organisation. It is free: Apple has a lookup page (search "Apple D-U-N-S lookup"). If your company has none, requesting one takes days to a couple of weeks, so <b>start this first</b>.</li>
+    <li><b>Company email addresses on your domain</b>, for example <code>apple@kiorex.com</code> and <code>play@kiorex.com</code>, plus <code>support@</code> and <code>privacy@</code>. Use shared role mailboxes, not a personal inbox, so the accounts survive staff changes. If the domains have no mailboxes yet, create them first (any business email host works; I can recommend one).</li>
+    <li><b>A public website</b> for the company and a <b>privacy policy URL</b> (both stores require one for a health app). Legal wording is for counsel; I will not write it.</li>
+    <li><b>A phone that can receive verification codes</b> and a second device or authenticator app for two-factor sign-in.</li>
+  </ul>
+  <div class="send"><b>Send me:</b><ul><li>The legal company name as registered, and whether it has a D-U-N-S number.</li><li>Which email addresses you created for Apple and for Google (the address only).</li></ul></div>
+</section>
+
+<!-- ============ 2 APPLE ============ -->
+<section class="step" id="apple" aria-labelledby="h2">
+  <div class="sh"><div class="badge">2</div><div><h2 id="h2">Apple Developer Program and App Store Connect</h2><div class="sub">One organisation membership, two apps, one Team ID.</div></div></div>
+  <div class="meta"><span class="tag you">You</span><span class="tag cost">99 USD per year</span><span class="tag time">Verification: days to about two weeks</span></div>
+
+  <h3>A. Enrol the organisation</h3>
+  <ol class="seq">
+    <li><p><b>Create the company Apple Account.</b> Go to <code>account.apple.com</code> and create an Apple Account with the role email (for example <code>apple@kiorex.com</code>). Turn on two-factor authentication with a real phone number.</p></li>
+    <li><p><b>Start enrolment.</b> Open <code>developer.apple.com/programs/enroll</code> and press <b>Start Your Enrollment</b>. Sign in with the company Apple Account.</p></li>
+    <li><p><b>Choose the entity type: Organization.</b> Not Individual. Enter the legal entity name exactly as registered, the D-U-N-S number, the headquarters address, phone and website.</p></li>
+    <li><p><b>Confirm legal authority.</b> The person enrolling must be able to bind the company. Apple may call the company phone to verify, so answer that number during working hours.</p></li>
+    <li><p><b>Pay and wait.</b> Pay 99 USD (it renews yearly; set a calendar reminder, a lapse removes the apps from sale). Apple emails when the membership is active.</p></li>
+  </ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">developer.apple.com/programs/enroll</span></div>
+    <div class="win"><div class="big">Select your entity type</div>
+      <div class="row"><span class="lbl">Individual</span><span>Your personal name is the seller. Not for Kiorex.</span></div>
+      <div class="row h hl"><span class="pin">1</span><span class="lbl">Organization</span><span>Needs D-U-N-S number, legal entity name, legal authority.</span></div>
+      <div class="row"><span class="lbl">Government</span><span>Not applicable.</span></div>
+      <div class="row"><span class="lbl">Legal name</span><span class="val">Your registered company name</span><span class="lbl">D-U-N-S</span><span class="val">9 digits</span><span class="btn">Continue</span></div></div>
+    <figcaption><b>Illustration.</b> Pick Organization (pin 1). The legal entity name you type here becomes the seller name shown on the App Store.</figcaption></figure>
+
+  <h3>B. Set up the team in App Store Connect</h3>
+  <ol class="seq">
+    <li><p><b>Open App Store Connect:</b> <code>appstoreconnect.apple.com</code>, sign in with the same account.</p></li>
+    <li><p><b>Agreements.</b> <b>Business</b> (older layout: Agreements, Tax, and Banking). The Free Apps agreement must show <b>Active</b>. Both apps are free downloads. If you later sell subscriptions or in-app purchases through Apple, the Paid Apps agreement, a bank account and tax forms are also required. Apple has rules on when digital purchases must use its payment system, so ask counsel before you sell provider subscriptions inside the iPhone app.</p></li>
+    <li><p><b>Add people.</b> <b>Users and Access</b> then the plus button. Give a developer the <b>Developer</b> or <b>App Manager</b> role. Keep <b>Account Holder</b> and <b>Admin</b> for the legal owner only.</p></li>
+    <li><p><b>Register the two app identifiers.</b> At <code>developer.apple.com/account</code> open <b>Certificates, Identifiers and Profiles</b>, then <b>Identifiers</b>, plus button, <b>App IDs</b>, <b>App</b>. Choose <b>Explicit</b> bundle ID <code>com.kiorex.app</code>, tick the capabilities <b>Associated Domains</b> and <b>Push Notifications</b>, and register. Repeat for <code>com.kiorly.app</code>. (Expo's EAS can also create these for you, but registering them yourself keeps the names exactly as above.)</p></li>
+    <li><p><b>Create the two App Store records.</b> In App Store Connect, <b>Apps</b>, plus button, <b>New App</b>: platform iOS, name <b>Kiorex</b>, primary language English (add Arabic later), bundle ID <code>com.kiorex.app</code>, SKU <code>kiorex-ios</code>. Repeat with name <b>Kiorly</b>, bundle ID <code>com.kiorly.app</code>, SKU <code>kiorly-ios</code>. App names are unique across the store: if "Kiorex" is already taken the form says so, and you can pick a variant such as "Kiorex Health" while the bundle ID stays the same.</p></li>
+    <li><p><b>Prepare the listing items Apple asks for:</b> privacy policy URL, support URL, a description in English and Arabic, screenshots, age rating, the <b>App Privacy</b> questionnaire (health and contact data are collected), and a <b>review account</b>. Create a dedicated reviewer account on the real system with its own unique password, never one of the seeded demo passwords. A health app must also offer <b>in-app account deletion</b>; I will confirm both apps have it before the first review.</p></li>
+  </ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">appstoreconnect.apple.com/apps</span></div>
+    <div class="win"><div class="nav"><span class="on">Apps</span><span>Business</span><span>Users and Access</span><span>Analytics</span></div>
+      <div class="row"><span class="big">Apps</span><span class="btn hl">+ New App</span><span class="pin">1</span></div>
+      <div class="row"><span class="lbl">Platform</span><span class="val">iOS</span><span class="lbl">Name</span><span class="val">Kiorex</span></div>
+      <div class="row"><span class="lbl">Bundle ID</span><span class="val hl">com.kiorex.app</span><span class="pin">2</span><span class="lbl">SKU</span><span class="val">kiorex-ios</span></div></div>
+    <figcaption><b>Illustration.</b> Create the app record (pin 1). The bundle ID (pin 2) must match the identifier you registered and never changes afterwards.</figcaption></figure>
+
+  <h3>C. Find your Team ID</h3>
+  <ol class="seq"><li><p>Go to <code>developer.apple.com/account</code> and open <b>Membership details</b> (left menu, or the profile menu). Copy the <b>Team ID</b>: 10 letters and digits.</p></li></ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">developer.apple.com/account#MembershipDetailsCard</span></div>
+    <div class="win"><div class="big">Membership details</div>
+      <div class="row"><span class="lbl">Entity name</span><span class="val">Your company, legal name</span></div>
+      <div class="row h"><span class="lbl">Team ID</span><span class="val hl">ABCDE12345</span><span class="pin">1</span></div>
+      <div class="row"><span class="lbl">Program</span><span class="val">Apple Developer Program</span><span class="lbl">Renewal</span><span class="val">date</span></div></div>
+    <figcaption><b>Illustration.</b> The Team ID (pin 1) is an identifier, not a secret: it is safe to send me.</figcaption></figure>
+  <div class="send"><b>Send me:</b><ul><li>The <b>Team ID</b>.</li><li>Confirmation that the two bundle IDs exist and the two app records are created (or the name Apple refused).</li></ul></div>
+  <label class="check"><input type="checkbox" data-done="apple"> Apple membership is active and both apps are created</label>
+</section>
+
+<!-- ============ 3 GOOGLE ============ -->
+<section class="step" id="google" aria-labelledby="h3x">
+  <div class="sh"><div class="badge">3</div><div><h2 id="h3x">Google Play Console</h2><div class="sub">One developer account named Kiorex, two apps.</div></div></div>
+  <div class="meta"><span class="tag you">You</span><span class="tag cost">25 USD, one time</span><span class="tag time">Identity check: days</span></div>
+  <h3>A. Create the developer account</h3>
+  <ol class="seq">
+    <li><p>Use a Google account for the company (for example <code>play@kiorex.com</code> on a Google Workspace or any Google account), with two-step verification on.</p></li>
+    <li><p>Open <code>play.google.com/console/signup</code>. Choose <b>Organization</b> as the account type.</p></li>
+    <li><p><b>Developer name:</b> type <b>Kiorex</b>. This is the public name on every app page. Add the contact email, phone, website and the D-U-N-S number.</p></li>
+    <li><p>Pay the 25 USD registration fee, then complete <b>identity verification</b> (company documents and a phone and email check). The console is limited until Google finishes.</p></li>
+  </ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">play.google.com/console/signup</span></div>
+    <div class="win"><div class="big">Choose an account type</div>
+      <div class="row"><span class="lbl">Personal</span><span>For individuals. Extra testing rules apply.</span></div>
+      <div class="row h hl"><span class="pin">1</span><span class="lbl">Organization</span><span>For a registered business. Needs a D-U-N-S number.</span></div>
+      <div class="row"><span class="lbl">Developer name</span><span class="val hl">Kiorex</span><span class="pin">2</span><span class="btn">Next</span></div></div>
+    <figcaption><b>Illustration.</b> Choose Organization (pin 1) and set the public name to Kiorex (pin 2).</figcaption></figure>
+
+  <h3>B. Create the two apps</h3>
+  <ol class="seq">
+    <li><p>In the console press <b>Create app</b>. App name <b>Kiorex</b>, default language English, type <b>App</b>, <b>Free</b>, accept the declarations. Repeat with the name <b>Kiorly</b>.</p></li>
+    <li><p><b>Package names</b> are set by the first build you upload: <code>com.kiorex.app</code> and <code>com.kiorly.app</code>. They can never change, so I will confirm them in the builds before the first upload.</p></li>
+    <li><p><b>Store listing and policy forms</b> for each app: privacy policy URL, <b>Data safety</b> (health and contact data), the <b>Health apps</b> declaration, content rating, target audience, ads declaration, and a login account for the reviewers (a dedicated account with its own unique password).</p></li>
+    <li><p><b>Test before production.</b> Use the <b>Internal testing</b> track first (up to 100 testers, no review), then <b>Closed</b> and <b>Open</b>, then <b>Production</b>.</p></li>
+  </ol>
+
+  <h3>C. Find the signing fingerprints</h3>
+  <p>Google re-signs your app with its own key (Play App Signing, on by default for new apps). The website link files need that key's fingerprint.</p>
+  <ol class="seq">
+    <li><p>Open the app, then <b>Test and release</b>, <b>Setup</b>, <b>App signing</b> (older layout: Release, Setup, App signing).</p></li>
+    <li><p>Under <b>App signing key certificate</b>, copy the <b>SHA-256 certificate fingerprint</b>. This one is for the Play-installed app. Also copy the <b>Upload key certificate</b> SHA-256: builds installed directly (internal testing) use it.</p></li>
+    <li><p>Repeat for the second app.</p></li>
+  </ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">play.google.com/console/.../app-signing</span></div>
+    <div class="win"><div class="nav"><span>Dashboard</span><span class="on">Test and release</span><span>Grow</span></div>
+      <div class="big">App signing</div>
+      <div class="row h"><span class="lbl">App signing key</span><span class="val hl">SHA-256: AA:BB:CC:...:99</span><span class="pin">1</span></div>
+      <div class="row"><span class="lbl">Upload key</span><span class="val hl">SHA-256: 11:22:33:...:FF</span><span class="pin">2</span></div></div>
+    <figcaption><b>Illustration.</b> Pin 1 is the key Google signs store builds with, pin 2 the key you upload with. Both are public identifiers.</figcaption></figure>
+  <div class="send"><b>Send me:</b><ul><li>For each app: the App signing key SHA-256 and the Upload key SHA-256.</li><li>The confirmed developer name once Google verifies it.</li></ul></div>
+  <div class="callout info"><span class="ic">i</span><div><p><b>Expo (EAS) also needs an organisation.</b> The apps are built with Expo's EAS. Create an Expo account organisation named <b>kiorex</b> and put both projects under it. Later we link it to the Apple team and to a Play service account so builds submit with one command.</p></div></div>
+  <label class="check"><input type="checkbox" data-done="google"> Play developer account verified and both apps created</label>
+</section>
+
+<!-- ============ 4 APP LINKS ============ -->
+<section class="step" id="applinks" aria-labelledby="h4">
+  <div class="sh"><div class="badge">4</div><div><h2 id="h4">Hand over the Team ID and fingerprints</h2><div class="sub">What I do with the values from steps 2 and 3.</div></div></div>
+  <div class="tw"><table><thead><tr><th>You send</th><th>It becomes</th><th>Used for</th></tr></thead><tbody>
+    <tr><td>Apple Team ID</td><td><code>APPLE_TEAM_ID</code> build variable</td><td>The Apple site association file on Kiorly Home and the Kiorex hosts, so links open the app.</td></tr>
+    <tr><td>Play SHA-256 for each app</td><td><code>ANDROID_SHA256_CERT_FINGERPRINTS</code></td><td>The Android Digital Asset Links file (<code>assetlinks.json</code>).</td></tr>
+    <tr><td>Bundle IDs and package names</td><td>EAS profiles and store records</td><td><code>com.kiorex.app</code>, <code>com.kiorly.app</code> are already set in the code.</td></tr>
+  </tbody></table></div>
+  <p>Staff app links use <code>app.test.kiorly.com</code> for test, <code>app.pilot.kiorly.com</code> for pilot and <code>app.kiorly.com</code> for production. Until you send the values, the files carry placeholders and the build warns, nothing breaks.</p>
+  <label class="check"><input type="checkbox" data-done="applinks"> I sent the Team ID and the fingerprints</label>
+</section>
+
+<!-- ============ 5 DNS ============ -->
+<section class="step" id="dns" aria-labelledby="h5">
+  <div class="sh"><div class="badge">5</div><div><h2 id="h5">Domains and DNS</h2><div class="sub">Point <code>test.kiorex.com</code> and <code>test.kiorly.com</code> at AWS. Nothing else changes.</div></div></div>
+  <div class="meta"><span class="tag you">You</span><span class="tag time">10 minutes each</span><span class="tag cost">About 1 USD/month on AWS side</span></div>
+  <div class="callout info"><span class="ic">i</span><div><p><b>What this does.</b> I create two small DNS zones in AWS (<code>test.kiorex.com</code>, <code>test.kiorly.com</code>). Each zone has four nameserver names. You add them at the registrar as NS records for the host <code>test</code>. Your websites, email and anything else on the main domains stay exactly as they are.</p></div></div>
+  <div class="callout warn"><span class="ic">!</span><div><p><b>Do not change the domain's main nameservers.</b> Only add records. Changing the main nameservers moves the whole domain and can take your email and websites offline.</p></div></div>
+  <h3>Step 5.1: tell me where each domain lives</h3>
+  <div class="send"><b>Send me:</b><ul><li>Which registrar holds <b>kiorex.com</b> and which holds <b>kiorly.com</b> (domain.com or Namecheap).</li><li>Whether each domain uses the registrar's own nameservers (the default) or a custom DNS service.</li></ul></div>
+  <p>I will then create the zones and send you four values per domain, written like <code>ns-123.awsdns-45.com</code>.</p>
+
+  <h3>Step 5.2: add the records</h3>
+  <h4>If the domain is on Namecheap</h4>
+  <ol class="seq">
+    <li><p>Sign in, open <b>Domain List</b>, press <b>Manage</b> next to the domain.</p></li>
+    <li><p>Open the <b>Advanced DNS</b> tab. The domain must be on <b>Namecheap BasicDNS</b> (or PremiumDNS). If it says Custom DNS, add the records at that DNS provider instead.</p></li>
+    <li><p>Press <b>Add New Record</b>. Type <b>NS Record</b>, Host <code>test</code>, Value: the first AWS name (no trailing spaces), TTL <b>Automatic</b>. Save with the green check.</p></li>
+    <li><p>Repeat for all four values, so the host <code>test</code> has four NS records.</p></li>
+  </ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">ap.www.namecheap.com/domains/domaincontrolpanel/kiorex.com/advancedns</span></div>
+    <div class="win"><div class="nav"><span>Domain</span><span>Products</span><span class="on">Advanced DNS</span><span>Redirect Domain</span></div>
+      <div class="row"><span class="big">Host Records</span><span class="btn hl">Add New Record</span><span class="pin">1</span></div>
+      <div class="row h"><span class="lbl">Type</span><span class="val hl">NS Record</span><span class="pin">2</span><span class="lbl">Host</span><span class="val hl">test</span><span class="pin">3</span></div>
+      <div class="row"><span class="lbl">Value</span><span class="val hl">ns-123.awsdns-45.com</span><span class="pin">4</span><span class="lbl">TTL</span><span class="val">Automatic</span></div></div>
+    <figcaption><b>Illustration.</b> Namecheap: Advanced DNS, add an NS record for host test (pins 1 to 4). Four records in total.</figcaption></figure>
+  <h4>If the domain is on domain.com</h4>
+  <ol class="seq">
+    <li><p>Sign in, open <b>My Domains</b> (Domain Manager) and select the domain.</p></li>
+    <li><p>Open <b>DNS &amp; Nameservers</b>, then <b>DNS Records</b>. Use <b>Add DNS Record</b>.</p></li>
+    <li><p>Type <b>NS</b>, Name/Host <code>test</code>, Value the first AWS name, TTL the default. Save.</p></li>
+    <li><p>Repeat for the other three. The domain must be using domain.com's own nameservers for these records to take effect.</p></li>
+  </ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">domain.com/manage/kiorly.com/dns</span></div>
+    <div class="win"><div class="nav"><span>Overview</span><span class="on">DNS &amp; Nameservers</span><span>Email</span></div>
+      <div class="row"><span class="big">DNS Records</span><span class="btn hl">Add DNS Record</span><span class="pin">1</span></div>
+      <div class="row h"><span class="lbl">Type</span><span class="val hl">NS</span><span class="pin">2</span><span class="lbl">Name</span><span class="val hl">test</span><span class="pin">3</span><span class="lbl">Value</span><span class="val hl">ns-678.awsdns-12.org</span><span class="pin">4</span></div></div>
+    <figcaption><b>Illustration.</b> domain.com: the same four-field record. Menu names can differ slightly between plans.</figcaption></figure>
+  <h3>Step 5.3: check it worked</h3>
+  <p>Wait 5 to 30 minutes, then run on your computer. The four AWS names should come back:</p>
+  <pre><button class="copy">Copy</button><code>dig NS test.kiorex.com +short
+dig NS test.kiorly.com +short</code></pre>
+  <p>Tell me when it is done. I verify, request the free certificates (AWS ACM), and the stack starts serving on the real names such as <code>passport.test.kiorex.com</code> and <code>clinics.test.kiorly.com</code>. Your existing Clinic address keeps working.</p>
+  <label class="check"><input type="checkbox" data-done="dns"> Both NS delegations added and verified</label>
+</section>
+
+<!-- ============ 6 WHATSAPP ============ -->
+<section class="step" id="whatsapp" aria-labelledby="h6">
+  <div class="sh"><div class="badge">6</div><div><h2 id="h6">WhatsApp Business (Meta Cloud API)</h2><div class="sub">For booking confirmations and reminders. Stays mock until you finish this and say go.</div></div></div>
+  <div class="meta"><span class="tag you">You</span><span class="tag time">Business verification: days</span><span class="tag cost">Pay per conversation (Meta pricing)</span></div>
+  <ol class="seq">
+    <li><p><b>Business portfolio.</b> Go to <code>business.facebook.com</code> and create a <b>Business portfolio</b> for the company, using the company email.</p></li>
+    <li><p><b>Business verification.</b> <b>Business settings</b>, <b>Security Center</b>, <b>Start verification</b>. Upload the company documents Meta asks for. This is the long wait; do it first.</p></li>
+    <li><p><b>Create the app.</b> At <code>developers.facebook.com</code> choose <b>Create App</b>, type <b>Business</b>, connect it to the portfolio, then <b>Add product</b>, <b>WhatsApp</b>.</p></li>
+    <li><p><b>Add a phone number.</b> In <b>WhatsApp</b>, <b>API Setup</b>, add a number that is <b>not already registered on WhatsApp or WhatsApp Business</b> (a new SIM or eSIM). Verify it by code. Set the display name; Meta reviews it.</p></li>
+    <li><p><b>Note two identifiers</b> on the same page: the <b>Phone number ID</b> and the <b>WhatsApp Business Account ID</b>.</p></li>
+    <li><p><b>Create a long-lived token.</b> <b>Business settings</b>, <b>Users</b>, <b>System users</b>, add one (Admin), <b>Assign assets</b> (the app and the WhatsApp account, full control), then <b>Generate token</b> with <code>whatsapp_business_messaging</code> and <code>whatsapp_business_management</code>, expiry <b>Never</b>. <b>This token is a secret:</b> store it as in <a href="#secrets">Handing me secrets</a>.</p></li>
+    <li><p><b>Message templates.</b> <b>WhatsApp Manager</b>, <b>Message templates</b>, create the ones we will use (booking confirmed, reminder, cancelled) in Arabic and English, category <b>Utility</b>. Approval takes minutes to a day. I will send the exact texts to paste.</p></li>
+    <li><p><b>Webhook.</b> Once the platform is up I will give you a callback URL and a verify token to enter under <b>WhatsApp</b>, <b>Configuration</b>, <b>Webhook</b>.</p></li>
+  </ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">business.facebook.com/settings/system-users</span></div>
+    <div class="win"><div class="nav"><span>Users</span><span class="on">System users</span><span>Accounts</span><span>Security Center</span></div>
+      <div class="row"><span class="big">System users</span><span class="btn alt">Add</span></div>
+      <div class="row h"><span class="lbl">Kiorex bot</span><span>Admin</span><span class="btn hl">Generate token</span><span class="pin">1</span></div>
+      <div class="row"><span class="lbl">Permissions</span><span class="val hl">whatsapp_business_messaging</span><span class="pin">2</span><span class="val hl">whatsapp_business_management</span><span class="pin">3</span></div></div>
+    <figcaption><b>Illustration.</b> Generate the system-user token with the two permissions (pins 2 and 3). Copy it once; Meta will not show it again.</figcaption></figure>
+  <div class="send"><b>Send me (identifiers only):</b><ul><li>Phone number ID, WhatsApp Business Account ID, the display name.</li><li><b>Not the token.</b> Store that with the command in the secrets section.</li></ul></div>
+  <label class="check"><input type="checkbox" data-done="whatsapp"> Meta business verified, number added, templates approved</label>
+</section>
+
+<!-- ============ 7 EMAIL ============ -->
+<section class="step" id="email" aria-labelledby="h7">
+  <div class="sh"><div class="badge">7</div><div><h2 id="h7">Email with Amazon SES</h2><div class="sub">Appointment, invoice and sign-in emails from your own domains.</div></div></div>
+  <div class="meta"><span class="tag you">You (or I, if you give me AWS access for this)</span><span class="tag time">Approval about a day</span><span class="tag cost">About 0.10 USD per 1,000 emails</span></div>
+  <ol class="seq">
+    <li><p>Open the AWS Console in the same account as your Clinic, switch the region to <b>Europe (Frankfurt) eu-central-1</b>, search <b>Amazon SES</b>.</p></li>
+    <li><p><b>Identities</b>, <b>Create identity</b>, type <b>Domain</b>, enter <code>kiorly.com</code>, keep <b>Easy DKIM</b> (RSA 2048) on, create. Repeat for <code>kiorex.com</code>.</p></li>
+    <li><p>SES shows <b>three CNAME records</b> per domain. Add them at the registrar's main DNS (names like <code>abc123._domainkey.kiorly.com</code>). Wait until the identity shows <b>Verified</b>.</p></li>
+    <li><p>Add one <b>TXT</b> record per domain for DMARC: name <code>_dmarc</code>, value <code>v=DMARC1; p=none; rua=mailto:dmarc@kiorex.com</code>. Start with <code>p=none</code> and tighten later.</p></li>
+    <li><p>SES starts in <b>sandbox</b> (can only email verified addresses). Press <b>Request production access</b> in the account dashboard: mail type <b>Transactional</b>, your website, and a short description: appointment confirmations, reminders, receipts and sign-in codes to people who requested them, with unsubscribe and bounce handling.</p></li>
+  </ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">eu-central-1.console.aws.amazon.com/ses</span></div>
+    <div class="win"><div class="nav"><span class="on">Identities</span><span>Configuration sets</span><span>Account dashboard</span></div>
+      <div class="row"><span class="big">Identities</span><span class="btn hl">Create identity</span><span class="pin">1</span></div>
+      <div class="row h"><span class="lbl">kiorly.com</span><span class="val">DKIM: Successful</span><span class="val">Status: Verified</span></div>
+      <div class="row"><span class="lbl">Sandbox</span><span class="btn alt hl">Request production access</span><span class="pin">2</span></div></div>
+    <figcaption><b>Illustration.</b> Create the domain identity (pin 1), then leave the sandbox (pin 2).</figcaption></figure>
+  <div class="send"><b>Send me:</b><ul><li>Confirmation both domains show Verified and production access is approved.</li><li>The sender addresses you want (for example <code>no-reply@kiorly.com</code>).</li></ul></div>
+  <label class="check"><input type="checkbox" data-done="email"> Both domains verified and out of the sandbox</label>
+</section>
+
+<!-- ============ 8 PUSH ============ -->
+<section class="step" id="push" aria-labelledby="h8">
+  <div class="sh"><div class="badge">8</div><div><h2 id="h8">Push notifications</h2><div class="sub">Firebase for Android, an Apple key for iPhone. One of each covers both apps.</div></div></div>
+  <div class="meta"><span class="tag you">You</span><span class="tag cost">Free</span><span class="tag time">1 hour</span></div>
+  <h3>Android: Firebase Cloud Messaging</h3>
+  <ol class="seq">
+    <li><p>Open <code>console.firebase.google.com</code>, <b>Create a project</b> named <b>Kiorex</b> (analytics off is fine).</p></li>
+    <li><p><b>Add app</b>, Android, package <code>com.kiorex.app</code>. Download <code>google-services.json</code>. Repeat for <code>com.kiorly.app</code> in the same project.</p></li>
+    <li><p><b>Project settings</b>, <b>Service accounts</b>, <b>Generate new private key</b>. This JSON file is a <b>secret</b>. Do not email it, upload it to the repo or paste it here.</p></li>
+    <li><p>Upload it to Expo: in each app folder run <code>eas credentials</code>, choose Android, then <b>Google Service Account Key for FCM V1</b>. I will guide you through the prompts.</p></li>
+  </ol>
+  <h3>iPhone: Apple Push key</h3>
+  <ol class="seq">
+    <li><p><code>developer.apple.com/account</code>, <b>Certificates, Identifiers and Profiles</b>, <b>Keys</b>, plus button. Name it <b>Kiorex Push</b>, tick <b>Apple Push Notifications service (APNs)</b>, <b>Continue</b>, <b>Register</b>.</p></li>
+    <li><p><b>Download</b> the <code>.p8</code> file. <b>Apple lets you download it only once.</b> Note the <b>Key ID</b> shown. Keep the file private: it is a secret.</p></li>
+    <li><p>One key serves every app in your team, so both apps use it. Upload it with <code>eas credentials</code>, iOS, <b>Push Notifications</b>.</p></li>
+  </ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">developer.apple.com/account/resources/authkeys/add</span></div>
+    <div class="win"><div class="big">Register a New Key</div>
+      <div class="row"><span class="lbl">Key name</span><span class="val hl">Kiorex Push</span><span class="pin">1</span></div>
+      <div class="row h"><span class="lbl">Services</span><span class="val hl">Apple Push Notifications service (APNs)</span><span class="pin">2</span></div>
+      <div class="row"><span class="btn hl">Continue</span><span class="pin">3</span><span class="lbl">Then</span><span class="btn alt">Download (once)</span></div></div>
+    <figcaption><b>Illustration.</b> Name the key (pin 1), tick APNs (pin 2), continue (pin 3), download the file once.</figcaption></figure>
+  <div class="send"><b>Send me (identifiers only):</b><ul><li>The APNs <b>Key ID</b> and confirmation that both uploads succeeded.</li><li>Never the <code>.p8</code> file or the Firebase JSON.</li></ul></div>
+  <label class="check"><input type="checkbox" data-done="push"> Firebase and the Apple key are uploaded to Expo</label>
+</section>
+
+<!-- ============ 9 PAYMENTS ============ -->
+<section class="step" id="pay" aria-labelledby="h9">
+  <div class="sh"><div class="badge">9</div><div><h2 id="h9">Payment providers (sandbox first)</h2><div class="sub">Test money only. Real money stays blocked until counsel signs off.</div></div></div>
+  <div class="meta"><span class="tag you">You</span><span class="tag time">Merchant onboarding: days</span></div>
+  <div class="callout risk"><span class="ic">!</span><div><p><b>Real-money modes remain off.</b> The counsel and Central Bank of Egypt funds-flow sign-off is a human record in Ops. Nothing I connect here moves real money until that exists and you approve it.</p></div></div>
+  <ol class="seq">
+    <li><p><b>Choose the providers.</b> Planned: <b>Paymob</b> (cards and wallets) and <b>Fawry</b> (cash-at-outlet and cards). InstaPay goes through your bank or a payment provider. Tell me which ones you actually want first.</p></li>
+    <li><p><b>Paymob:</b> create the merchant account at <code>accept.paymob.com</code> and complete merchant verification. In the dashboard keep <b>test mode</b> on and note the <b>Integration ID</b>, <b>iFrame ID</b> and the <b>HMAC</b> value. The <b>API key</b> and <b>HMAC</b> are secrets.</p></li>
+    <li><p><b>Fawry:</b> apply for a merchant account with Fawry and ask for <b>sandbox</b> credentials: a merchant code and a security key (the key is a secret).</p></li>
+    <li><p>I will tell you the callback URLs to register on each provider once the environment is up, and the exact secret names to store.</p></li>
+  </ol>
+  <div class="send"><b>Send me:</b><ul><li>Which providers you chose and whether sandbox access is granted.</li><li>Non-secret ids (integration id, merchant code). Secrets go through Secrets Manager.</li></ul></div>
+  <label class="check"><input type="checkbox" data-done="pay"> Sandbox accounts created</label>
+</section>
+
+<!-- ============ CLINIC CHECK ============ -->
+<section class="step" id="clinic" aria-labelledby="hc">
+  <div class="sh"><div class="badge" style="background:var(--ok)">✓</div><div><h2 id="hc">Check your real clinic after every deploy</h2><div class="sub">Dr Ahmed Shall organisation, two minutes.</div></div></div>
+  <ol class="seq">
+    <li><p>Open <code>https://d92iz83i79c05.cloudfront.net/</code> in a private window and sign in as an admin of the organisation.</p></li>
+    <li><p><b>Patients:</b> open the patient list. The numbers and recent names look right.</p></li>
+    <li><p><b>Calendar:</b> open today. Existing appointments are there.</p></li>
+    <li><p><b>One patient:</b> open a record, then one invoice. Amounts and dates look right.</p></li>
+    <li><p><b>One action:</b> create a test booking or check-in and save it. Delete or cancel it afterwards.</p></li>
+    <li><p>Tell me <b>"good"</b>, or what looks wrong with the time and what you clicked. If anything looks off I check the logs and, if needed, roll back to the database snapshot.</p></li>
+  </ol>
+  <figure class="shot"><div class="win-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">d92iz83i79c05.cloudfront.net</span></div>
+    <div class="win"><div class="nav"><span class="on">Calendar</span><span>Patients</span><span>Invoices</span><span>Reports</span></div>
+      <div class="row h"><span class="big">Today</span><span class="val">appointments listed <span class="pin">1</span></span></div>
+      <div class="row"><span class="lbl">Patients</span><span class="val">count and names look right <span class="pin">2</span></span></div>
+      <div class="row"><span class="lbl">Invoice</span><span class="val">amount and date correct <span class="pin">3</span></span><span class="btn">Save test booking</span><span class="pin">4</span></div></div>
+    <figcaption><b>Illustration.</b> The four checks: calendar, patients, an invoice, and one save.</figcaption></figure>
+</section>
+
+<!-- ============ SECRETS ============ -->
+<section class="step" id="secrets" aria-labelledby="hs">
+  <div class="sh"><div class="badge" style="background:var(--coral)">🔒</div><div><h2 id="hs">Handing me secrets safely</h2><div class="sub">They go from your keyboard to AWS Secrets Manager, never through chat or Git.</div></div></div>
+  <p>For each secret I will give you the exact name. You paste the value into a hidden prompt on your own computer (the AWS command line is already set up there):</p>
+  <pre><button class="copy">Copy</button><code>read -s -p "Paste the value, then Enter: " V; echo
+aws secretsmanager create-secret --region eu-central-1 \
+  --name "&lt;the name I gave you&gt;" --secret-string "$V"
+unset V</code></pre>
+  <ul><li>The value is never printed or saved in your shell history.</li><li>If the secret already exists, use <code>put-secret-value</code> with <code>--secret-id</code> instead of <code>create-secret</code>.</li><li>I read secrets only by reference at run time. I never see or print the value.</li></ul>
+  <div class="callout warn"><span class="ic">!</span><div><p><b>If a secret is ever pasted in chat or committed:</b> tell me straight away. We rotate it at the provider, the old one is dead within minutes.</p></div></div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="step" id="faq" aria-labelledby="hq">
+  <div class="sh"><div><h2 id="hq">Questions you may have</h2></div></div>
+  <details><summary>Why one Apple team for both apps? Is it allowed to publish unrelated brands?</summary><div>Yes. A team can publish any apps it owns. Kiorex and Kiorly are two products of the same company, so one membership and one Team ID is the normal setup, and it simplifies links and push keys.</div></details>
+  <details><summary>What if the company is not named Kiorex?</summary><div>Apple shows the registered legal name as the seller. Changing a company's legal name takes a legal process, and Apple must re-verify. Your options: keep the legal name as seller (app names still say Kiorex and Kiorly), or register a company whose legal name includes Kiorex before you enrol. The Google developer name can be Kiorex either way.</div></details>
+  <details><summary>Can I start the stores before DNS and the cloud are ready?</summary><div>Yes, and you should. The verification waits are independent of everything else we build.</div></details>
+  <details><summary>Do I pay Apple or Google per app?</summary><div>No. Apple is 99 USD a year for the whole team, Google is a 25 USD one-time fee for the whole account. Neither charges per app.</div></details>
+  <details><summary>What about selling provider subscriptions inside the app?</summary><div>Both stores have rules on when digital purchases must use their payment systems, with exceptions for services consumed outside the app and for business customers. This depends on how the subscription is sold, so it is a question for counsel before the first review. I have not assumed an answer.</div></details>
+  <details><summary>Will you stop me from doing something risky?</summary><div>Yes. Real-money payments, real patient-data moves between environments and the counsel sign-off are blocked by design until you and counsel say otherwise, and I ask before promoting any environment.</div></details>
+  <footer>Kiorex launch setup guide, 27 Nov 2026. Prices and portal layouts are from public documentation as I know it; confirm the current price on each store before paying. Illustrations are not screenshots of your accounts.</footer>
+</section>
+</main>
+</div>
+
+<script>
+(function(){
+  var KEY="kx-guide-done-v1", done={};
+  try{done=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){done={}}
+  var steps=["stores","apple","google","applinks","dns","whatsapp","email","push","pay"];
+  var map={apple:"apple",google:"google",applinks:"applinks",dns:"dns",whatsapp:"whatsapp",email:"email",push:"push",pay:"pay",stores:"apple"};
+  function paint(){
+    var n=0;
+    steps.forEach(function(s){
+      var key=map[s]; var on=!!done[key]; if(s==="stores"){on=!!done.apple&&!!done.google}
+      var a=document.querySelector('nav.rail a[data-step="'+s+'"]'); if(a)a.classList.toggle("done",on);
+      if(on)n++;
+    });
+    document.getElementById("pct").textContent=n+" of "+steps.length+" steps";
+    document.getElementById("barfill").style.width=(n/steps.length*100)+"%";
+  }
+  document.querySelectorAll("input[data-done]").forEach(function(c){
+    c.checked=!!done[c.dataset.done];
+    c.addEventListener("change",function(){done[c.dataset.done]=c.checked;try{localStorage.setItem(KEY,JSON.stringify(done))}catch(e){}paint()});
+  });
+  paint();
+  var links=[].slice.call(document.querySelectorAll("nav.rail a"));
+  var secs=links.map(function(a){return document.querySelector(a.getAttribute("href"))}).filter(Boolean);
+  function spy(){var y=window.scrollY+120,cur=0;secs.forEach(function(s,i){if(s.offsetTop<=y)cur=i});links.forEach(function(a,i){a.classList.toggle("on",i===cur)})}
+  window.addEventListener("scroll",spy,{passive:true});spy();
+  var rail=document.getElementById("rail"),btn=document.getElementById("menu");
+  btn.addEventListener("click",function(){var o=rail.classList.toggle("open");btn.setAttribute("aria-expanded",o)});
+  links.forEach(function(a){a.addEventListener("click",function(){rail.classList.remove("open");btn.setAttribute("aria-expanded","false")})});
+  document.querySelectorAll(".copy").forEach(function(b){b.addEventListener("click",function(){
+    var t=b.parentElement.querySelector("code").innerText;
+    function ok(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy"},1400)}
+    function sel(){var r=document.createRange();r.selectNodeContents(b.parentElement.querySelector("code"));var s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="Selected"}
+    try{navigator.clipboard.writeText(t).then(ok,sel)}catch(e){sel()}
+  })});
+})();
+</script>
