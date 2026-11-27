@@ -106,6 +106,15 @@ Differences you must expect on Huawei (all listed so none is a surprise): the CD
 | Jobs run once | `platform-jobs` has a fixed container name, `replicas: 1`, a compose profile enabled on one host only, and the API container runs with `JOBS_ENABLED=false` | compose |
 | Audit | CloudTrail is not created here (the account already has its own decisions); recommended before pilot | risks |
 
+## One-time codes in logs (kx-test only)
+
+Passport in mock messaging mode (`SMS_MODE` / `WHATSAPP_MODE` unset or `mock`) writes every one-time code to its container stdout (`[otp-sender:log] to=<phone> ... code=<code> (dev only)`). On kx-test this is deliberate: the live e2e suite (`e2e/kx-test`) reads the code with a read-only `docker logs` over SSM, because the environment holds synthetic and tagged-dummy data and no SMS provider is paid for. In **pilot and prod it must be impossible**: a code in a log is an account takeover for anyone who can read logs.
+
+* Guard: the one-shot compose service `otp-guard` (`deploy/compose/kx-guard-otp.sh`, ships inside every release bundle, runs in the caddy image already on the host) is a hard dependency of `passport` (`service_completed_successfully`). For `pilot` and `prod` it refuses (exit 78, `docker compose up` fails with "release unhealthy", Passport never starts) unless `SMS_MODE=real` **and** `WHATSAPP_MODE=real` are in `/opt/kx/env/passport.env`, `KX_DEV_OTP_BYPASS` and `KX_DEV_ENDPOINTS` (the dev inbox lists codes too) are not `true`, and `KX_ENV` there is not `test`/`dev`. Any environment other than `test`, `pilot`, `prod` is refused. On `test` it only prints a notice.
+* Why it ships in the release and not in the host bootstrap: host scripts are delivered once by cloud-init and `user_data` changes never replace a running host (`ignore_changes`), so a guard there would never reach kx-test.
+* Test: `deploy/scripts/test-otp-guard.sh` (15 cases, also inside the compose image; run by `scripts/validate-all.sh`).
+* Not in this repo: the dev Passport itself still refuses `KX_ENV=prod` (`assertNotProduction`) and a production-capable IdP is a separate decision. Handoff for the Passport owner: Passport could stop writing the code line unless a `KX_LOG_OTP=true` is set explicitly (default off outside local runs); until then this guard plus the SSM-only access to the host is the control.
+
 ## Variables you will touch
 
 All sizing lives in `envs/<env>/terraform.tfvars`: `services` (which registry ids are deployed), `compute` (instance, vcpus, memory, disk), `database` (mode host | managed, volume size, retention), `edge` (WAF, noindex), `alert_emails`, `monthly_budget_usd`, `github_repos`, `enable_custom_domains`. Provider: `provider_name`. Safety lock: `aws_account_id`.

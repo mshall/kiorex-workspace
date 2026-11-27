@@ -76,6 +76,18 @@ services:
     mem_limit: 640m
     logging: *logging
 
+  otp-guard:
+    # One-shot deploy guard (kx-guard-otp.sh): refuses a pilot or prod release whose Passport would run in mock messaging mode, where every one-time code is written to
+    # the container log. On "test" it only prints a notice (the live e2e suite reads codes from that log on purpose). Runs inside the already-present caddy image; reads the
+    # rendered Passport env read-only; exit 78 stops Passport from starting and fails the release.
+    image: caddy:2-alpine
+    restart: "no"
+    entrypoint: ["/bin/sh", "/guard/kx-guard-otp.sh", "${KX_ENV}", "/guard/passport.env"]
+    volumes: ["./kx-guard-otp.sh:/guard/kx-guard-otp.sh:ro", "/opt/kx/env/passport.env:/guard/passport.env:ro"]
+    network_mode: none
+    mem_limit: 16m
+    logging: *logging
+
   passport:
     image: ${KX_REGISTRY}/passport:${PASSPORT_TAG}
     restart: unless-stopped
@@ -83,6 +95,7 @@ services:
     # NODE_ENV stays "development" on purpose: the dev IdP refuses production by design (public DEV mode, hardened; kiorex-account Docs/DEPLOY_DEV.md).
     environment: { NODE_ENV: development, PORT: "4400", KX_TRUST_PROXY: "true" } # reads the LAST X-Forwarded-For entry, which Caddy sets to the CDN-validated viewer address (Caddyfile)
     depends_on:
+      otp-guard: { condition: service_completed_successfully }
       postgres: { condition: service_healthy, required: false }
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4400/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]

@@ -11,4 +11,5 @@ dirs=$(find modules envs bootstrap -name '*.tf' -not -path '*/.terraform/*' -exe
 for d in $dirs; do
   out=$( (cd "$d" && tofu init -backend=false -input=false >/dev/null 2>&1 && tofu validate -no-color 2>&1) ) && echo "ok    $d" || { echo "FAIL  $d"; echo "$out" | sed 's/^/      /'; fail=1; }
 done
+bash deploy/scripts/test-otp-guard.sh >/dev/null && echo "ok    deploy/compose/kx-guard-otp.sh" || { echo "FAIL  deploy/compose/kx-guard-otp.sh (run deploy/scripts/test-otp-guard.sh)"; fail=1; }
 exit $fail

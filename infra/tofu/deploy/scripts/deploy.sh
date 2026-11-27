@@ -49,7 +49,7 @@ if [ "$rollback" = 1 ]; then
 fi
 
 work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT; rel="$work/release"; mkdir -p "$rel/urls"
-cp "$root/compose/docker-compose.yml" "$root/compose/Caddyfile" "$rel/"; cp "$root/compose/$env_id/docker-compose.override.yml" "$rel/"
+cp "$root/compose/docker-compose.yml" "$root/compose/Caddyfile" "$root/compose/kx-guard-otp.sh" "$rel/"; chmod 0644 "$rel/kx-guard-otp.sh"; cp "$root/compose/$env_id/docker-compose.override.yml" "$rel/"
 
 # 1. image tags: start from the release that is running now, then apply --tag overrides
 if [ "${KX_OFFLINE:-0}" != 1 ] && sync_dn "$(scheme)/releases/current/" "$work/prev" 2>/dev/null && [ -f "$work/prev/release.env" ]; then cp "$work/prev/release.env" "$rel/release.env"; else : > "$rel/release.env"; fi
