@@ -125,6 +125,7 @@ services:
       OIDC_ISSUER: "{issuer}"
       CORS_ORIGINS: "{cors}"
       WIDGET_HOST: "{host:kiorex.widget}"
+      LEADS_PUBLIC_ORIGINS: "{url:kiorly.marketing}" # 28 Nov 2026: the public site posts join requests to /api/v1/public/leads; CORS for that route only (apps/api/src/leads/leads-cors.ts), NOT added to the API-wide CORS_ORIGINS list
       KIORLY_BASE_URL: "{url:kiorly.clinics}/marketplace/v1" # 27 Nov 2026: the Clinic web host routes /marketplace/* to its API (signed partner API outside /api/v1), like pharmacies and labs; the gateway form stays planned
   - id: kiorex.admin
     domain: kiorex
@@ -253,7 +254,7 @@ services:
     core: true
     envs: [dev, test, staging, pilot, prod]
     status: planned
-    note: "Public marketing, plans, lead generation, provider onboarding: kiorex-account/apps/kiorly-site (static, S3 + CloudFront, directory index rewrite). Hosted on test (test.kiorly.com, noindex) since 27 Nov 2026; single-page index with the join form since 28 Nov 2026, posting to {url:kiorex.api}/api/v1/public/leads (CORS allow-listed)."
+    note: "Public marketing, plans, lead generation, provider onboarding: kiorex-account/apps/kiorly-site (static, S3 + CloudFront, directory index rewrite). Hosted on test (test.kiorly.com, noindex) since 27 Nov 2026; single-page index with the join form since 28 Nov 2026, posting to {url:kiorex.api}/api/v1/public/leads (route-scoped CORS from LEADS_PUBLIC_ORIGINS)."
   - id: kiorly.app
     domain: kiorly
     label: app
@@ -368,7 +369,7 @@ services:
     note: "Short booking links (ADR-040, open decision NH-008). Third domain, not in the founder brief; founder to confirm it is owned and wanted."
 
 cors:
-  kiorex.api: [kiorex.marketplace, kiorex.admin, kiorex.widget, kiorly.app, kiorly.marketing] # kiorly.marketing: the public site posts join requests to /api/v1/public/leads (28 Nov 2026)
+  kiorex.api: [kiorex.marketplace, kiorex.admin, kiorex.widget, kiorly.app]
   kiorly.api: [kiorly.app, kiorly.clinics, kiorly.pharmacies, kiorly.labs, kiorly.nurse, kiorly.admin]
   kiorex.passport: [kiorex.marketplace, kiorex.admin, kiorly.app]
 
