@@ -10,6 +10,10 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"; LOGS="$ROOT/.e2e/logs"; PIDS="$ROOT/.e2e/pids"; mkdir -p "$LOGS" "$PIDS"
 export PATH="$HOME/.local/node-26/node-v26.13.1-darwin-arm64/bin:/Users/postgres/bin:$PATH" PGPASSWORD=postgres
+# The Clinic is built and migrated from a THROW-AWAY CLONE, never from the founder's checkout (clinics-management is read-only for every agent: a build there rewrites its node_modules/.prisma and dist).
+# `scripts/clinic-clone.sh` creates/refreshes the clone (a local `git clone` of branch kiorex into .e2e/clinic-clone, then `npm ci`). Override with CLINIC_DIR.
+CLINIC_DIR="${CLINIC_DIR:-$ROOT/.e2e/clinic-clone}"
+case "$(cd "$CLINIC_DIR" 2>/dev/null && pwd -P)" in "") echo "no Clinic clone at $CLINIC_DIR: run scripts/clinic-clone.sh first"; exit 4;; "$(cd "$ROOT/clinics-management" && pwd -P)"|*/kiorly-clinics-management*) echo "refusing to build from the founder's Clinic checkout"; exit 4;; esac
 PSQL="psql -q -h 127.0.0.1 -p 5433 -U postgres"
 DB() { echo "postgresql://postgres:postgres@127.0.0.1:5433/$1?schema=public&connection_limit=6"; }
 P_KIOREX=4300; P_CLINIC=4301; P_PHARMACY=4302; P_LAB=4303; P_PASSPORT=4304; P_UPSTREAM=4305
@@ -30,7 +34,7 @@ EOF
     for port in $P_KIOREX $P_CLINIC $P_PHARMACY $P_LAB $P_PASSPORT $P_UPSTREAM; do pid=$(port_pid $port); [ -n "$pid" ] && { kill "$pid" 2>/dev/null || true; }; done; sleep 2
     for port in $P_KIOREX $P_CLINIC $P_PHARMACY $P_LAB $P_PASSPORT $P_UPSTREAM; do pid=$(port_pid $port); [ -n "$pid" ] && kill -9 "$pid" 2>/dev/null || true; done
     for d in kiorly kiorex_platform kiorly_pharmacy kiorly_lab kiorex_account; do $PSQL -d postgres -c "drop database if exists sec_$d" 2>/dev/null || true; done
-    for r in clinics-management kiorex-platform kiorly-pharmacy kiorly-lab; do rm -rf "$ROOT/$r/apps/api/$DIST"; done
+    for r in kiorex-platform kiorly-pharmacy kiorly-lab; do rm -rf "$ROOT/$r/apps/api/$DIST"; done; rm -rf "$CLINIC_DIR/apps/api/$DIST"
     rm -f "$IDP_CFG"; exit 0 ;;
   up) ;;
   *) echo "usage: $0 up [--prod] | down | env"; exit 2 ;;
@@ -44,7 +48,7 @@ for d in kiorly kiorex_platform kiorly_pharmacy kiorly_lab kiorex_account; do
 done
 # current migrations on top of the clones, and the idempotent Kiorex seed (flag catalogue of newer contract versions, dev partner registrations)
 (cd "$ROOT/kiorex-platform" && DATABASE_URL="$(DB sec_kiorex_platform)" npm run db:deploy -w apps/api) > "$LOGS/sec-migrate-kiorex.log" 2>&1 || fail "kiorex migrate" "$LOGS/sec-migrate-kiorex.log"
-(cd "$ROOT/clinics-management" && DATABASE_URL="$(DB sec_kiorly)" npm run db:deploy -w api) > "$LOGS/sec-migrate-clinic.log" 2>&1 || fail "clinic migrate" "$LOGS/sec-migrate-clinic.log"
+(cd "$CLINIC_DIR" && DATABASE_URL="$(DB sec_kiorly)" npm run db:deploy -w api) > "$LOGS/sec-migrate-clinic.log" 2>&1 || fail "clinic migrate" "$LOGS/sec-migrate-clinic.log"
 (cd "$ROOT/kiorly-pharmacy" && DATABASE_URL="$(DB sec_kiorly_pharmacy)" npm run db:deploy -w api) > "$LOGS/sec-migrate-pharmacy.log" 2>&1 || fail "pharmacy migrate" "$LOGS/sec-migrate-pharmacy.log"
 (cd "$ROOT/kiorly-lab" && DATABASE_URL="$(DB sec_kiorly_lab)" npm run db:deploy -w api) > "$LOGS/sec-migrate-lab.log" 2>&1 || fail "lab migrate" "$LOGS/sec-migrate-lab.log"
 (cd "$ROOT/kiorex-platform" && DATABASE_URL="$(DB sec_kiorex_platform)" npm run db:seed -w apps/api) > "$LOGS/sec-seed-kiorex.log" 2>&1 || fail "kiorex seed" "$LOGS/sec-seed-kiorex.log"
@@ -55,21 +59,22 @@ $PSQL -d sec_kiorly_pharmacy -c "update \"IntegrationClient\" set \"kiorexBaseUr
 $PSQL -d sec_kiorly_lab -c "update \"IntegrationClient\" set \"kiorexBaseUrl\" = 'http://localhost:$P_KIOREX' where \"kiorexBaseUrl\" like 'http://localhost:4000%'" -c "update \"OutboxEvent\" set status = 'SENT' where status <> 'SENT'" >/dev/null 2>&1 || true
 
 # builds into dist-sec (plain tsc: the swagger plugin is not needed, production boots with docs off)
-build() { # repo, name
-  local dir="$ROOT/$1/apps/api"
-  (cd "$dir" && npx prisma generate >/dev/null 2>&1; rm -rf $DIST && npx tsc -p tsconfig.build.json --outDir $DIST --incremental false) > "$LOGS/sec-build-$2.log" 2>&1 || fail "$2 build" "$LOGS/sec-build-$2.log"
+dirof() { if [ "$1" = clinic ]; then echo "$CLINIC_DIR/apps/api"; else echo "$ROOT/$1/apps/api"; fi; }
+build() { # repo (or "clinic"), name
+  local dir; dir="$(dirof "$1")"
+  (cd "$dir" && DATABASE_URL="${DATABASE_URL:-postgresql://build:build@127.0.0.1:5433/build}" npx prisma generate >/dev/null 2>&1; rm -rf $DIST && npx tsc -p tsconfig.build.json --outDir $DIST --incremental false) > "$LOGS/sec-build-$2.log" 2>&1 || fail "$2 build" "$LOGS/sec-build-$2.log"
 }
-build clinics-management clinic; build kiorex-platform kiorex; build kiorly-pharmacy pharmacy; build kiorly-lab lab
-(cd "$ROOT/clinics-management/apps/api" && mkdir -p $DIST/src/assistant && cp -r src/assistant/prompts $DIST/src/assistant/ 2>/dev/null || true)
-entry() { local d="$ROOT/$1/apps/api/$DIST"; if [ -f "$d/src/main.js" ]; then echo "$DIST/src/main.js"; else echo "$DIST/main.js"; fi; }
+build clinic clinic; build kiorex-platform kiorex; build kiorly-pharmacy pharmacy; build kiorly-lab lab
+(cd "$CLINIC_DIR/apps/api" && mkdir -p $DIST/src/assistant && cp -r src/assistant/prompts $DIST/src/assistant/ 2>/dev/null || true)
+entry() { local d; d="$(dirof "$1")/$DIST"; if [ -f "$d/src/main.js" ]; then echo "$DIST/src/main.js"; else echo "$DIST/main.js"; fi; }
 
 # private Passport: the committed idp.json with every local URL moved to the sec ports (back-channel logout must reach the PRIVATE Kiorex)
 sed -e "s#localhost:3010#localhost:$P_CLINIC#g" -e "s#localhost:3100#localhost:$P_PHARMACY#g" -e "s#localhost:3200#localhost:$P_LAB#g" -e "s#localhost:4000#localhost:$P_KIOREX#g" -e "s#localhost:4400#localhost:$P_PASSPORT#g" -e "s#localhost:4401#localhost:$P_UPSTREAM#g" "$ROOT/kiorex-account/config/idp.json" > "$IDP_CFG"
 start() { local name=$1 cwd=$2; shift 2; (cd "$cwd" && exec nohup "$@" > "$LOGS/sec-$name.log" 2>&1) & echo $! > "$PIDS/sec-$name.pid"; }
 start passport "$ROOT/kiorex-account/apps/dev-idp" env NODE_ENV=development PORT=$P_PASSPORT KX_FAKE_UPSTREAM_PORT=$P_UPSTREAM KX_IDP_CONFIG="$IDP_CFG" DATABASE_URL="$(DB sec_kiorex_account)" npx tsx src/index.ts
 JWT=$(openssl rand -hex 32)
-start clinic "$ROOT/clinics-management/apps/api" env NODE_ENV=$MODE_ENV SWAGGER_ENABLED= PORT=$P_CLINIC DATABASE_URL="$(DB sec_kiorly)" JWT_SECRET="$JWT" APP_WEB_URL=http://localhost:5174 SIGNIN_DEFAULT_METHOD=PASSPORT \
-  KIOREX_OUTBOX_WEBHOOK_URL=http://localhost:$P_KIOREX/api/v1/webhooks/kiorly KIOREX_OUTBOX_WEBHOOK_SECRET=kx_dev_webhook_secret KIOREX_OIDC_ISSUER=http://localhost:$P_PASSPORT node "$(entry clinics-management)"
+start clinic "$CLINIC_DIR/apps/api" env NODE_ENV=$MODE_ENV SWAGGER_ENABLED= PORT=$P_CLINIC DATABASE_URL="$(DB sec_kiorly)" JWT_SECRET="$JWT" APP_WEB_URL=http://localhost:5174 SIGNIN_DEFAULT_METHOD=PASSPORT \
+  KIOREX_OUTBOX_WEBHOOK_URL=http://localhost:$P_KIOREX/api/v1/webhooks/kiorly KIOREX_OUTBOX_WEBHOOK_SECRET=kx_dev_webhook_secret KIOREX_OIDC_ISSUER=http://localhost:$P_PASSPORT node "$(entry clinic)"
 ( set -a; . "$ROOT/kiorex-platform/apps/api/.env.example"; set +a
   export NODE_ENV=$MODE_ENV PORT=$P_KIOREX DATABASE_URL="$(DB sec_kiorex_platform)" JOBS_ENABLED=true KIORLY_BASE_URL=http://localhost:$P_CLINIC/marketplace/v1 KIORLY_PHARMACY_BASE_URL=http://localhost:$P_PHARMACY KIORLY_LAB_BASE_URL=http://localhost:$P_LAB OIDC_ISSUER=http://localhost:$P_PASSPORT PARTNER_LEAD_SIGNING_SECRET=0123456789abcdef0123456789abcdef01 ALLOW_INSECURE_DEFAULT_SECRETS=true SANDBOX_PAYMENTS_ALLOWED=true
   start kiorex "$ROOT/kiorex-platform/apps/api" node "$(entry kiorex-platform)" )

@@ -104,3 +104,22 @@ export { syncProviders, sleep, opsLogin };
 export async function waitProvidersLive(ops: string, n = 3) {
   return waitFor('providers LIVE in Kiorex', async () => (await kiorex(ops, 'GET', '/admin/providers?status=LIVE')).body.total >= n, 60_000, 1000);
 }
+
+/**
+ * Gives a provider's Clinic availability its own, known shape so a test that needs "many open slots" never depends on how the demo schedule has aged
+ * or on how many marketplace bookings earlier runs left on the doctor's days: every weekday 09:00-17:00 (Cairo), a marketplace daily cap of 200 and no
+ * blocked periods. It touches ONLY the doctor's availability template in the Clinic database the suite already writes to (E2E_DB_MAP), and creates it when the
+ * doctor has none. Idempotent. Returns the number of days it covers.
+ */
+export async function ensureOpenAvailability(providerId: string): Promise<void> {
+  const prov = (await q('kiorex_platform', `select "clinicId", "clinicianId" from "Provider" where id = $1`, [providerId]))[0];
+  if (!prov) throw new Error(`provider ${providerId} not found`);
+  const clinic = (await q('kiorly', `select "tenantId" from "Clinic" where id = $1`, [prov.clinicId]))[0];
+  if (!clinic) throw new Error(`clinic ${prov.clinicId} not found in the Clinic database`);
+  const week = { version: 1, timezone: 'Africa/Cairo', days: [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ weekday, slots: [{ start: '09:00', end: '17:00' }] })) };
+  await q('kiorly', `
+    insert into "ClinicianAvailabilityTemplate" (id, "tenantId", "clinicId", "clinicianId", "weekJson", "blockedJson", "marketplaceDailyCap", "updatedAt")
+    values ($1, $2, $3, $4, $5::jsonb, '[]'::jsonb, 200, now())
+    on conflict ("tenantId", "clinicId", "clinicianId") do update set "weekJson" = excluded."weekJson", "blockedJson" = '[]'::jsonb, "marketplaceDailyCap" = 200, "updatedAt" = now()`,
+    [`e2e_avail_${prov.clinicianId}`.slice(0, 40), clinic.tenantId, prov.clinicId, prov.clinicianId, JSON.stringify(week)]);
+}

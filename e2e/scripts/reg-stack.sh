@@ -94,7 +94,7 @@ fi
 entry() { local d="$ROOT/$1/apps/api/$DIST"; if [ -f "$d/src/main.js" ]; then echo "$DIST/src/main.js"; else echo "$DIST/main.js"; fi; }
 
 # ---- 3. private Passport: the committed idp.json with every local URL moved to the private ports (the back-channel logout must reach the PRIVATE Kiorex)
-sed -e "s#localhost:3010#localhost:$P_CLINIC#g" -e "s#localhost:3100#localhost:$P_PHARMACY#g" -e "s#localhost:3200#localhost:$P_LAB#g" -e "s#localhost:4000#localhost:$P_KIOREX#g" -e "s#localhost:4400#localhost:$P_PASSPORT#g" -e "s#localhost:4401#localhost:$P_UPSTREAM#g" "$ROOT/kiorex-account/config/idp.json" > "$IDP_CFG"
+sed -e "s#localhost:3010#localhost:$P_CLINIC#g" -e "s#localhost:3100#localhost:$P_PHARMACY#g" -e "s#localhost:3200#localhost:$P_LAB#g" -e "s#localhost:4000#localhost:$P_KIOREX#g" -e "s#localhost:4400#localhost:$P_PASSPORT#g" -e "s#localhost:4401#localhost:$P_UPSTREAM#g" -e "s#localhost:8082#localhost:${REG_STAFF_WEB_PORT:-8862}#g" "$ROOT/kiorex-account/config/idp.json" > "$IDP_CFG"
 start() { local name=$1 cwd=$2; shift 2; (cd "$cwd" && exec nohup "$@" > "$LOGS/$TAG-$name.log" 2>&1) & echo $! > "$PIDS/$TAG-$name.pid"; }
 start passport "$ROOT/kiorex-account/apps/dev-idp" env NODE_ENV=development PORT=$P_PASSPORT KX_FAKE_UPSTREAM_PORT=$P_UPSTREAM KX_IDP_CONFIG="$IDP_CFG" DATABASE_URL="$(DB ${TAG}_kiorex_account)" npx tsx src/index.ts
 

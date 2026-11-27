@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { tokens, syncProviders, providerBySpecialty, kxdevProviders, KXDEV_DOCTORS } from '../src/fixtures.js';
-import { kiorex, q } from '../src/clients.js';
+import { tokens, syncProviders, providerBySpecialty, kxdevProviders, ensureOpenAvailability, KXDEV_DOCTORS } from '../src/fixtures.js';
+import { kiorex, q, waitFor } from '../src/clients.js';
 
 /** KXM-DS-01..04/07 search & slots · KX-09 §03 provider pull from Kiorly. */
 describe('b. Provider sync from Kiorly and catalogue search', () => {
@@ -48,9 +48,17 @@ describe('b. Provider sync from Kiorly and catalogue search', () => {
     const prof = await kiorex(t.p1, 'GET', `/providers/${p.id}`);
     expect(prof.status).toBe(200);
     expect(prof.body.bookable).toBe(true);
-    const slots = await kiorex(t.p1, 'GET', `/providers/${p.id}/slots?typeId=${p.defaultTypeId}`);
+    // the fixture owns the doctor's availability (every day 09:00-17:00, cap 200), so the count never depends on aged demo data or on marketplace bookings of earlier runs.
+    // The Clinic caches a doctor's day for 60 s and the platform caches a window for 60 s: poll the DEFAULT window (no from/to) until the new template is in force.
+    await ensureOpenAvailability(p.id);
+    const slots = await waitFor('more than 5 slots in the default window', async () => {
+      const r = await kiorex(t.p1, 'GET', `/providers/${p.id}/slots?typeId=${p.defaultTypeId}`);
+      expect(r.status).toBe(200);
+      return r.body.slots.length > 5 ? r : undefined;
+    }, 150_000, 5_000);
     expect(slots.body.slots.length).toBeGreaterThan(5);
-  });
+    for (const s of slots.body.slots) expect(new Date(s.startsAt).getTime()).toBeGreaterThan(Date.now() - 60_000);
+  }, 170_000);
 
   it('emergency keywords return guidance and no results (KXM-DS-06)', async () => {
     const r = await kiorex(t.p1, 'GET', '/search/providers?q=chest%20pain');

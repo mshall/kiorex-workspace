@@ -11,6 +11,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LOGS="$ROOT/.e2e/logs"; PIDS="$ROOT/.e2e/pids"; mkdir -p "$LOGS" "$PIDS"
 export PATH="/Users/postgres/bin:$PATH" PGPASSWORD=postgres
+# The Clinic is built and migrated from a THROW-AWAY CLONE, never from the founder's checkout (clinics-management is read-only for every agent: a build there rewrites its node_modules/.prisma and dist).
+# `scripts/clinic-clone.sh` creates/refreshes the clone (a local `git clone` of branch kiorex into .e2e/clinic-clone, then `npm ci`). Override with CLINIC_DIR.
+CLINIC_DIR="${CLINIC_DIR:-$ROOT/.e2e/clinic-clone}"
+case "$(cd "$CLINIC_DIR" 2>/dev/null && pwd -P)" in "") echo "no Clinic clone at $CLINIC_DIR: run scripts/clinic-clone.sh first"; exit 4;; "$(cd "$ROOT/clinics-management" && pwd -P)"|*/kiorly-clinics-management*) echo "refusing to build from the founder's Clinic checkout"; exit 4;; esac
 CLINIC_PORT=3012; KIOREX_PORT=4002; LAB_PORT=3202
 DBS=(kiorly_e2e11 kiorex_e2e11 kiorly_lab_e2e11)
 U() { echo "postgresql://postgres:postgres@127.0.0.1:5433/$1?schema=public&connection_limit=3"; }
@@ -23,7 +27,7 @@ down) stop_port $CLINIC_PORT; stop_port $KIOREX_PORT; stop_port $LAB_PORT; exit 
 drop)
   "$0" down
   for d in "${DBS[@]}"; do psqlx "drop database if exists $d" >/dev/null; done
-  rm -rf "$ROOT/clinics-management/apps/api/.e2e-dist" "$ROOT/kiorex-platform/apps/api/.e2e-dist" "$ROOT/kiorly-lab/apps/api/.e2e-dist"; exit 0 ;;
+  rm -rf "$CLINIC_DIR/apps/api/.e2e-dist" "$ROOT/kiorex-platform/apps/api/.e2e-dist" "$ROOT/kiorly-lab/apps/api/.e2e-dist"; exit 0 ;;
 up) ;;
 *) echo "usage: $0 up|down|drop"; exit 2 ;;
 esac
@@ -32,18 +36,18 @@ for p in $CLINIC_PORT $KIOREX_PORT $LAB_PORT; do [ -n "$(port_pid $p)" ] && { ec
 for d in "${DBS[@]}"; do [ "$(psqlx "select 1 from pg_database where datname='$d'")" = 1 ] || psqlx "create database $d" >/dev/null; done
 
 # --- build to .e2e-dist (the shared dist/ of other agents' running servers is never touched)
-(cd "$ROOT/clinics-management/apps/api" && DATABASE_URL="$(U kiorly_e2e11)" npx prisma generate >/dev/null && npx tsc -p tsconfig.build.json --outDir .e2e-dist && cp -R dist/assistant .e2e-dist/ 2>/dev/null || true) > "$LOGS/e2e11-build-clinic.log" 2>&1
+(cd "$CLINIC_DIR/apps/api" && DATABASE_URL="$(U kiorly_e2e11)" npx prisma generate >/dev/null && npx tsc -p tsconfig.build.json --outDir .e2e-dist && cp -R dist/assistant .e2e-dist/ 2>/dev/null || true) > "$LOGS/e2e11-build-clinic.log" 2>&1
 (cd "$ROOT/kiorex-platform/apps/api" && npx prisma generate >/dev/null && npx tsc -p tsconfig.build.json --outDir .e2e-dist) > "$LOGS/e2e11-build-kiorex.log" 2>&1
 (cd "$ROOT/kiorly-lab/apps/api" && npx prisma generate >/dev/null && npx tsc -p tsconfig.build.json --outDir .e2e-dist) > "$LOGS/e2e11-build-lab.log" 2>&1
 
 # --- migrate + seed (idempotent). A failing migrate/seed is fatal and loud: print the log tail and exit non-zero (never continue with a half-seeded DB).
 seed_failed() { echo "!! $1 migrate/seed FAILED - last lines of $2:" >&2; tail -40 "$2" >&2; exit 1; }
-(cd "$ROOT/clinics-management/apps/api" && DATABASE_URL="$(U kiorly_e2e11)" npx prisma migrate deploy && DATABASE_URL="$(U kiorly_e2e11)" PRISMA_SEED_ENSURE_DEMO_PASSWORDS=true npx tsx prisma/seed.ts && DATABASE_URL="$(U kiorly_e2e11)" npx tsx prisma/nurse-demo.seed.ts) > "$LOGS/e2e11-seed-clinic.log" 2>&1 || seed_failed clinic "$LOGS/e2e11-seed-clinic.log"
+(cd "$CLINIC_DIR/apps/api" && DATABASE_URL="$(U kiorly_e2e11)" npx prisma migrate deploy && DATABASE_URL="$(U kiorly_e2e11)" PRISMA_SEED_ENSURE_DEMO_PASSWORDS=true npx tsx prisma/seed.ts && DATABASE_URL="$(U kiorly_e2e11)" npx tsx prisma/nurse-demo.seed.ts) > "$LOGS/e2e11-seed-clinic.log" 2>&1 || seed_failed clinic "$LOGS/e2e11-seed-clinic.log"
 (cd "$ROOT/kiorex-platform/apps/api" && set -a && . ./.env.example && set +a && DATABASE_URL="$(U kiorex_e2e11)" KIORLY_LAB_BASE_URL=http://localhost:$LAB_PORT npx prisma migrate deploy && DATABASE_URL="$(U kiorex_e2e11)" KIORLY_LAB_BASE_URL=http://localhost:$LAB_PORT npx tsx prisma/seed.ts) > "$LOGS/e2e11-seed-kiorex.log" 2>&1 || seed_failed kiorex "$LOGS/e2e11-seed-kiorex.log"
 (cd "$ROOT/kiorly-lab/apps/api" && DATABASE_URL="$(U kiorly_lab_e2e11)" npx prisma migrate deploy && DEMO_SEED_ALLOWED=true KIORLY_ENV=local KIOREX_BASE_URL=http://localhost:$KIOREX_PORT DATABASE_URL="$(U kiorly_lab_e2e11)" npx tsx src/seed/seed.ts) > "$LOGS/e2e11-seed-lab.log" 2>&1 || seed_failed lab "$LOGS/e2e11-seed-lab.log"
 
 start() { local name=$1 cwd=$2; shift 2; (cd "$cwd" && nohup "$@" > "$LOGS/$name.log" 2>&1 & echo $! > "$PIDS/$name.pid"); }
-start e2e11-kiorly "$ROOT/clinics-management/apps/api" env NODE_ENV=development PORT=$CLINIC_PORT APP_WEB_URL=http://localhost:5174 DATABASE_URL="$(U kiorly_e2e11)" \
+start e2e11-kiorly "$CLINIC_DIR/apps/api" env NODE_ENV=development JWT_SECRET="$(openssl rand -hex 32)" PORT=$CLINIC_PORT APP_WEB_URL=http://localhost:5174 DATABASE_URL="$(U kiorly_e2e11)" \
   KIOREX_OUTBOX_WEBHOOK_URL="http://localhost:$KIOREX_PORT/api/v1/webhooks/kiorly" KIOREX_OUTBOX_WEBHOOK_SECRET=kx_dev_webhook_secret \
   KIOREX_CONTROL_PLANE_URL="http://localhost:$KIOREX_PORT" KIOREX_FLAGS_PRODUCT_KEY=ff_kiorly-clinic_dev KIOREX_FLAGS_SECRET=ff_dev_secret_change_me \
   KIOREX_OIDC_ISSUER="http://localhost:4400" node --enable-source-maps .e2e-dist/src/main.js
