@@ -1,0 +1,4 @@
+[
+ {"surface":"passport-signin","url":"https://passport.test.kiorex.com","path":"/account"},
+ {"surface":"kiorly-home","url":"https://app.test.kiorly.com","path":"/signin"}
+]

@@ -1,0 +1,14 @@
+[
+ {"surface":"patient-public","url":"https://test.kiorex.com","path":"/"},
+ {"surface":"patient-public","url":"https://test.kiorex.com","path":"/search"},
+ {"surface":"patient-signed","url":"https://test.kiorex.com","session":"patient","path":"/account"},
+ {"surface":"ops-kiorex","url":"https://admin.test.kiorex.com","session":"ops","path":"/flags"},
+ {"surface":"ops-kiorly","url":"https://admin.test.kiorly.com","session":"kiorlyAdmin","path":"/providers"},
+ {"surface":"clinic-pricing","url":"https://clinics.test.kiorly.com","path":"/pricing"},
+ {"surface":"clinic-login","url":"https://clinics.test.kiorly.com","path":"/login"},
+ {"surface":"clinic-signup","url":"https://clinics.test.kiorly.com","path":"/signup"},
+ {"surface":"clinic-forgot","url":"https://clinics.test.kiorly.com","path":"/forgot-password"},
+ {"surface":"clinic-signed","url":"https://clinics.test.kiorly.com","session":"clinicOwner","path":"/reports"},
+ {"surface":"pharmacy","url":"https://pharmacies.test.kiorly.com","session":"labOwner","path":"/"},
+ {"surface":"lab","url":"https://labs.test.kiorly.com","session":"labOwner","path":"/"}
+]
