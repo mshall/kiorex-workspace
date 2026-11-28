@@ -80,7 +80,7 @@ test.describe.serial('patient entry and onboarding on kx-test', () => {
     await page.goto(`${URLS.patientWeb}/`);
     await page.getByTestId('join-us').click();
     await page.getByTestId('entry-continue').click();
-    await passportSignIn(page, { phone });
+    await passportSignIn(page, { phone, register: {} }); // the Create account tab asks for the terms and privacy consent (ticked by the helper)
     await expect(page.getByTestId('welcome')).toBeVisible({ timeout: 60_000 });
     expect(page.url()).toContain('/welcome');
     await expect(page.getByTestId('welcome-step')).toContainText('Step 1 of 6');

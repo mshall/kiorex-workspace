@@ -91,6 +91,22 @@ test.describe.serial('patient web walk', () => {
     await c.close();
   });
 
+  test('time zones: the same appointment shows the clinic-local time in Cairo (UTC+2) and in the Gulf (UTC+4) without a shifted date or a raw ISO string', async ({ browser }) => {
+    const seen: Record<string, string> = {};
+    for (const tz of ['Africa/Cairo', 'Asia/Dubai']) {
+      const o = await openAs(browser, 'patient', { timezoneId: tz });
+      await o.page.goto(`${URLS.patientWeb}/appointments`); await o.page.waitForLoadState('networkidle').catch(() => undefined);
+      await o.page.getByRole('tab', { name: /past/i }).click().catch(() => undefined); await o.page.waitForTimeout(800);
+      const txt = await o.page.locator('main').innerText(); seen[tz] = txt;
+      expect(txt, tz).not.toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/); expect(txt, tz).not.toMatch(/Invalid Date|NaN/);
+      await o.context.close();
+    }
+    // the clinic is in Egypt: appointment times are shown in the clinic's zone, so the two viewers read the same clock time (a viewer-zone shift would differ by 2 hours)
+    const clocks = (t: string) => [...t.matchAll(/\b(\d{1,2}:\d{2})\s?(AM|PM)?/gi)].map((m) => m[0]).join('|');
+    expect(clocks(seen['Africa/Cairo']!).length, 'the page shows at least one appointment time').toBeGreaterThan(0);
+    expect(clocks(seen['Asia/Dubai']!)).toBe(clocks(seen['Africa/Cairo']!));
+  });
+
   test('unknown route: branded not-found page with a way home', async () => {
     await page.goto(`${URLS.patientWeb}/definitely/not/here`);
     await expect(page.getByRole('heading').first()).toBeVisible();

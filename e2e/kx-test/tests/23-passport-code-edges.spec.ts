@@ -49,6 +49,7 @@ test.describe.serial('Passport codes: resend, expiry, lockout (one throwaway num
     await page.locator('#code').fill(first); await submit(page);
     await expect(page.locator('.error').first()).toBeVisible(); // the superseded code is refused, never accepted
     await page.locator('#code').fill(second); await submit(page);
+    await page.locator('#finish button').click({ timeout: 30_000 }).catch(() => undefined); // "Add a passkey?" is offered after a new account: Not now
     await page.waitForURL((u) => u.host !== passportHost, { timeout: 60_000 });
     await page.close();
   });
@@ -93,7 +94,7 @@ test.describe.serial('Passport codes: resend, expiry, lockout (one throwaway num
 
   test('cancelled flow: Go back from the code page returns to the app, no session, no account change', async ({ browser }) => {
     const c = await browser.newContext({ locale: 'en-US' });
-    const page = await c.newPage(); await page.goto(`${URLS.patientWeb}/`);
+    const page = await c.newPage(); await page.addInitScript(() => { try { localStorage.setItem('kx-lang', 'en'); } catch { /* ignore */ } }); await page.goto(`${URLS.patientWeb}/`);
     await page.getByRole('button', { name: /^(Sign in|Log in)$/i }).first().click(); await page.getByTestId('entry-continue').click();
     await page.waitForURL((u) => u.host === passportHost, { timeout: 30_000 });
     await page.getByRole('button', { name: 'Go back' }).click();

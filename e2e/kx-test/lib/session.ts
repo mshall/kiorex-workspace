@@ -96,9 +96,9 @@ async function stillValid(name: PersonaName): Promise<boolean> {
 }
 
 /** A new context already signed in as the persona (restores cookies, localStorage and sessionStorage). Language is forced to English for stable selectors. */
-export async function openAs(browser: Browser, name: PersonaName): Promise<{ context: BrowserContext; page: Page; token: string | null }> {
+export async function openAs(browser: Browser, name: PersonaName, opts: { timezoneId?: string; locale?: string } = {}): Promise<{ context: BrowserContext; page: Page; token: string | null }> {
   const saved = JSON.parse(fs.readFileSync(file(name), 'utf8')) as Saved;
-  const context = await browser.newContext({ storageState: saved.storageState, locale: 'en-US' });
+  const context = await browser.newContext({ storageState: saved.storageState, locale: opts.locale ?? 'en-US', ...(opts.timezoneId ? { timezoneId: opts.timezoneId } : {}) });
   await context.addInitScript(({ origin, ss }) => {
     try { localStorage.setItem('kiorly.lang', 'en'); localStorage.setItem('kx-lang', 'en'); if (location.origin === origin) for (const [k, v] of Object.entries(ss)) sessionStorage.setItem(k, v as string); } catch { /* ignore */ }
   }, { origin: saved.origin, ss: saved.sessionStorage });
