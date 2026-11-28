@@ -1,6 +1,6 @@
 # Onboarding prompt for a new agent (Kiorex and Kiorly)
 
-Paste everything below the line into the new agent as its first message, or attach this file together with `_docs/LLM_HANDOFF.md`. Workspace root on the founder's machine: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/`. Last updated 27 Nov 2026 (end of session). Read section 14 of the handoff first: it holds the current state, decisions and the critical path.
+Paste everything below the line into the new agent as its first message, or attach this file together with `_docs/LLM_HANDOFF.md`. Workspace root on the founder's machine: `/Users/shall/Documents/Peraonal/Work/kiorex-v2/`. Last updated 28 Nov 2026 (mid-session snapshot). Read sections 14 to 19 of the handoff first: they hold the current state, decisions and the critical path (kx-test live on AWS, markets, Kiorly Home, dual sign-in).
 
 ---
 
@@ -20,13 +20,13 @@ You are joining a long-running build for the founder (Mohamed Shall, Gulf time U
 - **Kiorex**: the patient-facing marketplace and network (patient web and mobile, Kiorex ops console, Passport sign-in, Kiorex Pay, Growth Engine, commissions). Brand: Indigo `#3730A3`, Ocean `#0369A1`, Coral `#E8735E`, Plus Jakarta Sans.
 - **Kiorly**: the provider products. Clinic management (`clinics-management`, deploys to AWS from `main` only), Pharmacy (`kiorly-pharmacy`), Lab (`kiorly-lab`), and the staff mobile app, which is plain "Kiorly" (`com.kiorly.app`, repo `kiorly`).
 - **Platform** (`kiorex-platform`): Kiorex backend: Growth, commission policy and collection, reconciliation and settlement, Ops admin with maker-checker config.
-- **Contracts**: `kiorex-contracts` (shared OpenAPI, events, flags, HMAC helpers; version 1.13.0 tagged `v1.13.0`, registry publish blocked by scope owner, consumers use vendored tarballs) and `kiorex-pay-contract` (0.1.0, vendored).
+- **Contracts**: `kiorex-contracts` (shared OpenAPI, events, flags, HMAC helpers; version 1.13.2 tagged `v1.13.2`, registry publish blocked by scope owner, consumers use vendored tarballs) and `kiorex-pay-contract` (0.1.0, vendored).
 - **Account** (`kiorex-account`): Passport identity.
 - Repo paths, GitHub links (`https://github.com/mshall/<repo>`), branches and tips are in section 11 of the handoff.
 
 ## 3. Hard rules (non-negotiable)
 
-- Deploys and AWS changes only on the founder's explicit say-so. Standing approvals (27 Nov 2026): every Clinic change goes to BOTH `kiorex` and `main`; a push to `main` auto-deploys to AWS (the real organisation Dr Ahmed Shall is live there) and no longer carries `[skip ci]`, but must not change ports, CI workflows or infra; take an RDS snapshot first when migrations are included. Provisioning of the kx-test environment through OpenTofu was approved 'per your recommendation' (review the plan before apply). DNS, purchases, real-money modes, real patient-data migration and counsel sign-off stay with the founder.
+- Deploys and AWS changes only on the founder's explicit say-so. Standing approvals (27 to 28 Nov 2026): every Clinic change goes to BOTH `kiorex` and `main`; a push to `main` auto-deploys to AWS (the real organisation Dr Ahmed Shall is live there) and no longer carries `[skip ci]`, but must not change ports, CI workflows or infra; take an RDS snapshot first when migrations are included. Provisioning of the kx-test environment through OpenTofu was approved 'per your recommendation' (review the plan before apply). DNS, purchases, real-money modes, real patient-data migration and counsel sign-off stay with the founder.
 - Every repo on GitHub is PUBLIC: never commit secrets, real data or demo passwords. The private demo-accounts register is in the git-ignored `_private/` folder.
 - Before moving to the next environment (test to pilot to prod) ask the founder: carry the previous one over, or keep separate.
 - Never touch ports 3000, 5173 or 5175, or the founder's own checkout `kiorly-clinics-management` (ports 3020, 5190, 5191). Use private databases and ports for tests; one test process at a time; no broad `pkill`.
@@ -49,6 +49,16 @@ You are joining a long-running build for the founder (Mohamed Shall, Gulf time U
 - Environments: kx-test=test, kx-pilot=pilot, kx-pro=prod. AWS for test now, Huawei Cloud the initial production decision (Egypt data residency), all configurable through OpenTofu (`infra/tofu`, `aws|huawei` switch). No dev Clinic copy: the existing AWS Clinic is kx-test's Clinic. ADR-059 and `_docs/registry/service-url-registry.yaml` are the canonical naming source.
 - Demo data is removed from all login UIs and tagged for removal on request (`demo-data:remove`, dry-run default).
 - LG-COM-20 decided: direct bank/InstaPay/card terminal count as cash-type tender recorded as its own kind CASH_TRANSFER with a configurable per-tender commission treatment.
+
+## 4b. Updates of 27 to 28 Nov 2026 (new since the first version of this prompt)
+
+- kx-test is live on AWS (account 990597228737, eu-central-1, one host, CloudFront per host, OpenTofu `infra/tofu`): Kiorex patient web, ops console, Passport, Pharmacy, Lab, platform API, Kiorly site (test.kiorly.com), Kiorly admin (admin.test.kiorly.com), Kiorly Home (app.test.kiorly.com), Clinic (clinics.test.kiorly.com; legacy host d92iz83i79c05.cloudfront.net stays). Host naming: `<service>.<env>.<domain>` (ADR-059/060); the registry `_docs/registry/service-url-registry.yaml` is the single source.
+- ADR-060: an organisation (clinic, pharmacy, lab) belongs to its country for life; no market switch; the Kiorly admin launches Kiorly markets through a signed, audited Clinic route. The Kiorex gate `market.eg.live` is recorded ONLY by the founder (super_admin, Flags tab, Gate): never by code or an agent.
+- The live Clinic demo password was rotated and the seed no longer resets passwords. Never use published demo credentials on a live system; the live account register is in the git-ignored `_private/DEMO_ACCOUNTS.md`.
+- Passport sign-in limits (20 codes/hour/address by default) are configurable at `/account/ops/limits`; the live e2e suite can run about once per hour. MFA is optional unless Passport admin/ops enable it by policy (maker-checker).
+- History of kiorex-workspace, kiorex-account and kiorex-platform was rewritten on 28 Nov 2026 to remove old demo TOTP secrets (backups outside the repos); re-clone old copies.
+- Work in progress at the time of writing (check the handoff sections 19 and later for results): dual sign-in (Passport or e-mail and password) with one shared login component for Clinic, Pharmacy and Lab, and a password model for Lab (ADR-061); plans editable in the Kiorly admin and shown on the Kiorly landing page; lead pipeline end-to-end test; UI/UX review of all web surfaces; small open items (staff app errors, expo-dev-client in store builds, tofu demo opt-in, Kiorly-only role split).
+- Founder-only items: recording `market.eg.live`, Apple/Google/EAS accounts, counsel sign-off and copy review, plan prices, provider credentials (email, WhatsApp, SMS, push, payments), the NEEDS_HUMAN sign-in decisions, DNS, purchases, real patient data migration.
 
 ## 5. What to do after reading
 

@@ -116,3 +116,13 @@ Only `transform` and `opacity`; `will-change` only during an active animation; n
 3. Add motion only from section 3, state why it helps (attention or comprehension) in the commit message.
 4. Run the app's unit tests, the axe and overflow checks (`e2e/kx-test/ui-review/cdo-probe.mjs` for public pages), emulate reduced motion, check EN/AR and light/dark at 360 and 1440.
 5. Kiorly static site: no inline `style="..."` attributes (CloudFront CSP is `style-src 'self'`); use classes or attribute selectors (a test enforces it).
+
+## 7. Additions from the second pass
+
+* Navigation sections: console sidebars with more than 8 entries are grouped (Operations, Money, Partners and growth, System); a route that is not mapped lands in "More", never hidden.
+* Scroll containers: every `overflow-x-auto` or `overflow-auto` table wrapper is `relative` (sr-only cells inside would otherwise widen the page) and keyboard focusable (`tabIndex=0`, with a name when it is a region).
+* Empty, error and unavailable states render an `h2` under the page `h1` (heading order); card titles use the `as` level prop.
+* Skeletons replace spinner lines for loading blocks (Passport account uses the shared shimmer); the page layout must not jump when data arrives.
+* Brand stage: the signed-out Passport account page, Passport sign-in, Kiorly Home and the product logins share the same stage (indigo to ocean, orbs 22 to 30 s, three points rise at 0.5, 0.65 and 0.8 s); reduced motion shows the final state.
+* Dark mode: the primary gradient button lifts to periwinkle to sky with dark text (`#0F172A`), never dark text on the indigo gradient.
+* First language: products without a Kiorex language cookie follow the browser (Arabic or English), fall back to Arabic, and always show an AR/EN switch.
