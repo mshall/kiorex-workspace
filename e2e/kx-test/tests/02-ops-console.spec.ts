@@ -37,7 +37,7 @@ test.describe.serial('ops console: providers, orders, finance', () => {
     await page.goto(`${URLS.ops}/finance`); await expect(page.getByText('PAYOUT').first()).toBeVisible(); await expect(page.getByText(/EGP\s*\d/).first()).toBeVisible();
   });
   test('ops_admin without the finance role is refused the commission figures (money is role-gated)', async () => {
-    await page.goto(`${URLS.ops}/commissions`); await expect(page.getByText(/does not include the finance view/i)).toBeVisible();
+    await page.goto(`${URLS.ops}/commissions`); await expect(page.getByRole('heading', { name: /no access/i }).or(page.getByText(/does not include the finance view/i)).first()).toBeVisible(); // since ADR-062 the route gate shows the No access page before the page's own message
     const r = await api('/api/v1/admin/commissions/summary'); expect([401, 403]).toContain(r.status);
   });
 });

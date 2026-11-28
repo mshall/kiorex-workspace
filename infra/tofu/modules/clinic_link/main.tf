@@ -23,13 +23,34 @@ data "aws_route53_zone" "this" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "noindex" {
-  count = var.noindex ? 1 : 0
+  count = 1 # security headers always; X-Robots-Tag only when var.noindex (non-production). Resource name kept so the existing policy is updated in place, not replaced
   name  = "${var.name_prefix}-clinic-noindex"
-  custom_headers_config {
-    items {
-      header   = "X-Robots-Tag"
-      value    = "noindex, nofollow"
-      override = true
+  # Security headers for the Clinic host of this stack (full pass 28 Nov 2026, finding F-HDR-1). override=false: a header the origin (App Runner API) already sets wins, so
+  # nothing the Clinic API chose is changed; the static app (S3 behind the legacy distribution) had none. The legacy host itself stays untouched.
+  security_headers_config {
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      include_subdomains         = false
+      override                   = false
+    }
+    content_type_options { override = false }
+    frame_options {
+      frame_option = "SAMEORIGIN"
+      override     = false
+    }
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origin"
+      override        = false
+    }
+  }
+  dynamic "custom_headers_config" {
+    for_each = var.noindex ? [1] : []
+    content {
+      items {
+        header   = "X-Robots-Tag"
+        value    = "noindex, nofollow"
+        override = true
+      }
     }
   }
 }
@@ -74,7 +95,7 @@ resource "aws_cloudfront_distribution" "clinic" {
     cached_methods             = ["GET", "HEAD"]
     cache_policy_id            = local.cache_disabled
     origin_request_policy_id   = local.all_viewer_no_host
-    response_headers_policy_id = var.noindex ? aws_cloudfront_response_headers_policy.noindex[0].id : null
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.noindex[0].id
     compress                   = true
   }
 
@@ -88,7 +109,7 @@ resource "aws_cloudfront_distribution" "clinic" {
       cached_methods             = ["GET", "HEAD"]
       cache_policy_id            = local.cache_disabled
       origin_request_policy_id   = local.all_viewer_no_host
-      response_headers_policy_id = var.noindex ? aws_cloudfront_response_headers_policy.noindex[0].id : null
+      response_headers_policy_id = aws_cloudfront_response_headers_policy.noindex[0].id
       compress                   = true
     }
   }
