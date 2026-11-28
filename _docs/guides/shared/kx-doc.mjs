@@ -26,6 +26,32 @@ document.querySelectorAll('td').forEach(td=>{const t=td.textContent.trim();const
 document.querySelectorAll('td code').forEach(c=>{if(c.textContent.length<=30)c.style.whiteSpace='nowrap'});
 document.querySelectorAll('table').forEach(t=>{if(t.querySelectorAll('tbody tr').length<=7&&t.textContent.length<2200)t.style.breakInside='avoid';});
 `;
+
+/** Overlay running header (mark, wordmark, running title) and footer (note, Page X of Y, progress) on every page except the first. */
+export async function stampPdf(browser, pdfBytes, runner, footer, buildDir) {
+  const src = await PDFDocument.load(pdfBytes); const total = src.getPageCount();
+  const fonts = css.split('/* cover */')[0].match(/@font-face[^}]*}/g).join('\n');
+  const pgs = Array.from({ length: total }, (_, i) => i === 0 ? '<section class="pg"></section>' : `<section class="pg"><div class="hd"><span class="lg">${mark}<i>KIORE<em>X</em></i></span><span class="rt">${String(runner(i) || '').replace(/&/g, '&amp;')}</span></div><div class="ft"><span>${footer}</span><span class="pn">Page ${i + 1} of ${total}</span></div><div class="prog"><u style="width:${((i + 1) / total * 100).toFixed(1)}%"></u></div></section>`).join('');
+  const html = `<!doctype html><html><head><meta charset="utf-8"><style>${fonts}
+@page{size:A4;margin:0}html,body{margin:0;background:transparent}*{box-sizing:border-box}
+.pg{position:relative;width:210mm;height:296.6mm;page-break-after:always;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif}
+.hd{position:absolute;left:16mm;right:16mm;top:11mm;height:9mm;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #D5D9EC}
+.lg{display:flex;align-items:center;gap:2mm}.lg svg{height:6.4mm;width:auto}.lg i{font:600 8pt 'Plus Jakarta Sans';font-style:normal;letter-spacing:.3em;color:#3730A3}.lg em{font-style:normal;color:#0369A1}
+.rt{font:600 7.6pt 'Plus Jakarta Sans';color:#475569}
+.ft{position:absolute;left:16mm;right:16mm;bottom:9mm;display:flex;justify-content:space-between;font:500 7.2pt 'Plus Jakarta Sans';color:#475569}
+.pn{font-weight:700;color:#3730A3;font-size:7.8pt}
+.prog{position:absolute;left:16mm;right:16mm;bottom:15mm;height:1.6px;background:#E3E5F3}.prog u{display:block;height:100%;background:linear-gradient(90deg,#3730A3,#0369A1);position:relative}
+.prog u:after{content:"";position:absolute;right:-1.5mm;top:-.7mm;width:2.6mm;height:3px;background:#E8735E;border-radius:2px}
+</style></head><body>${pgs}</body></html>`;
+  const f = path.join(buildDir, 'overlay.html'); fs.mkdirSync(buildDir, { recursive: true }); fs.writeFileSync(f, html);
+  const page = await browser.newPage(); await page.goto('file://' + f, { waitUntil: 'load' }); await page.evaluate(() => document.fonts.ready);
+  const ovPdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true, omitBackground: true }); await page.close();
+  const ovDoc = await PDFDocument.load(ovPdf);
+  if (ovDoc.getPageCount() < total) throw new Error('overlay pages ' + ovDoc.getPageCount() + ' < ' + total);
+  const emb = await src.embedPdf(ovDoc, Array.from({ length: total }, (_, i) => i));
+  src.getPages().forEach((pg, i) => { if (i > 0) pg.drawPage(emb[i]); });
+  return await src.save();
+}
 export async function buildDoc(o) {
   const BUILD = path.join(o.buildDir || path.join(HERE, '.build'), o.slug); fs.mkdirSync(BUILD, { recursive: true });
   const doc = (body, extra = '') => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${o.title}</title><style>${css}${extra}${o.css || ''}</style></head><body>${body}<script>${enhanceJs}</script></body></html>`;
@@ -51,35 +77,16 @@ export async function buildDoc(o) {
   let tocR = await render(browser, doc(mkToc(3)), 'toc');
   const tp = tocR.d.getPageCount(); if (tp !== 1) tocR = await render(browser, doc(mkToc(2 + tp)), 'toc');
   const all = [covR, tocR, ...chR];
-  const out = await PDFDocument.create();
+  let out = await PDFDocument.create();
   for (const r of all) for (const p of await out.copyPages(r.d, r.d.getPageIndices())) out.addPage(p);
-  const total = out.getPageCount();
-  // running chapter name per page
-  console.log('cover/toc pages', covR.d.getPageCount(), tocR.d.getPageCount()); const names = ['cover', ...Array(tocR.d.getPageCount()).fill('Contents')]; chs.forEach((c, i) => { for (let k = 0; k < chR[i].d.getPageCount(); k++) names.push(`${c.num}  ${c.title}`); });
-  const pgs = names.map((nm, i) => i === 0 ? '<section class="pg"></section>' : `<section class="pg"><div class="hd"><span class="lg">${mark}<i>KIORE<em>X</em></i></span><span class="rt">${nm.replace(/&/g, '&amp;')}</span></div><div class="ft"><span>${o.footer}</span><span class="pn">Page ${i + 1} of ${total}</span></div><div class="prog"><u style="width:${((i + 1) / total * 100).toFixed(1)}%"></u></div></section>`).join('');
-  const overlay = `<!doctype html><html><head><meta charset="utf-8"><style>${css.split('/* cover */')[0].match(/@font-face[^}]*}/g).join('\n')}
-@page{size:A4;margin:0}html,body{margin:0;background:transparent}*{box-sizing:border-box}
-.pg{position:relative;width:210mm;height:297mm;page-break-after:always;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif}
-.pg:empty{}
-.hd{position:absolute;left:16mm;right:16mm;top:11mm;height:9mm;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #D5D9EC}
-.lg{display:flex;align-items:center;gap:2mm}.lg svg{height:6.4mm;width:auto}.lg i{font:600 8pt 'Plus Jakarta Sans';font-style:normal;letter-spacing:.3em;color:#3730A3}.lg em{font-style:normal;color:#0369A1}
-.rt{font:600 7.6pt 'Plus Jakarta Sans';color:#475569}
-.ft{position:absolute;left:16mm;right:16mm;bottom:9mm;display:flex;justify-content:space-between;font:500 7.2pt 'Plus Jakarta Sans';color:#475569}
-.pn{font-weight:700;color:#3730A3;font-size:7.8pt}
-.prog{position:absolute;left:16mm;right:16mm;bottom:15mm;height:1.6px;background:#E3E5F3}.prog u{display:block;height:100%;background:linear-gradient(90deg,#3730A3,#0369A1);position:relative}
-.prog u:after{content:"";position:absolute;right:-1.5mm;top:-.7mm;width:2.6mm;height:3px;background:#E8735E;border-radius:2px}
-</style></head><body>${pgs.replace(/^<section/, '<section')}</body></html>`;
-  // first page (cover) has no overlay: keep page index alignment by emitting an empty section
-  const ov = overlay;
-  const f = path.join(BUILD, 'overlay.html'); fs.writeFileSync(f, ov);
-  const page = await browser.newPage(); await page.goto('file://' + f, { waitUntil: 'load' }); await page.evaluate(() => document.fonts.ready);
-  const ovPdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true, omitBackground: true }); await page.close(); await browser.close();
-  const ovDoc = await PDFDocument.load(ovPdf);
-  if (ovDoc.getPageCount() < total) throw new Error('overlay pages ' + ovDoc.getPageCount() + ' < ' + total);
-  const emb = await out.embedPdf(ovDoc, Array.from({ length: total }, (_, i) => i));
-  out.getPages().forEach((pg, i) => { if (i > 0) pg.drawPage(emb[i]); });
+  const names = ['cover', ...Array(tocR.d.getPageCount()).fill('Contents')]; chs.forEach((c, i) => { for (let k = 0; k < chR[i].d.getPageCount(); k++) names.push(`${c.num}  ${c.title}`); });
+  const merged = await out.save();
+  const stamped = await stampPdf(browser, merged, (i) => names[i], o.footer, BUILD);
+  await browser.close();
+  out = await PDFDocument.load(stamped);
   out.setTitle(o.title); out.setAuthor('Kiorex'); out.setSubject(o.subtitle.replace(/<[^>]+>/g, '')); out.setKeywords(o.keywords || ['Kiorex', 'Kiorly']); out.setCreator('Kiorex guide builder'); out.setCreationDate(new Date());
   fs.writeFileSync(o.out, await out.save());
+  const total = out.getPageCount();
   console.log('written', o.out, 'pages', total, 'chapter pages', JSON.stringify(chR.map((r) => r.d.getPageCount())));
   return total;
 }

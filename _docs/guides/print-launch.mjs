@@ -1,0 +1,20 @@
+// Renders KIOREX_LAUNCH_SETUP_GUIDE.html to a stamped A4 PDF. Usage: node print-launch.mjs [out.pdf]
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { stampPdf } from './shared/kx-doc.mjs';
+import { launch } from '../pdf/lib/pdf.mjs';
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const out = process.argv[2] || path.join(HERE, 'KIOREX_LAUNCH_SETUP_GUIDE.pdf');
+const browser = await launch();
+const page = await browser.newPage();
+await page.goto('file://' + path.join(HERE, 'KIOREX_LAUNCH_SETUP_GUIDE.html'), { waitUntil: 'load' });
+await page.emulateMedia({ media: 'print' });
+await page.evaluate(async () => { document.querySelectorAll('details').forEach((d) => { d.open = true; }); await document.fonts.ready; });
+await page.waitForTimeout(800);
+const pdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
+await page.close();
+const stamped = await stampPdf(browser, pdf, () => 'Launch setup guide', 'Private, for the founder. Contains no secrets. Screens are illustrations of third-party portals.', path.join(HERE, 'shared/.build'));
+await browser.close();
+fs.writeFileSync(out, stamped);
+console.log('written', out);

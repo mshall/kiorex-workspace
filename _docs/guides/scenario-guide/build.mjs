@@ -40,8 +40,10 @@ const fig = (key, n) => { const d = IMAGES[key]; const first = !used.has(key); u
 
 const svgUri = (f) => 'data:image/svg+xml;base64,' + readFileSync(resolve(ROOT, f)).toString('base64');
 const KIOREX_LOGO = svgUri('_brand/dist/svg/kiorex-logo-full.svg');
+const KIOREX_LOGO_ON = svgUri('_brand/kiorex-logo-full-onbrand.svg');
 const KIORLY_LOGO = svgUri('_brand/dist/svg/kiorly-lockup.svg');
-const FONT = 'data:font/woff2;base64,' + readFileSync(resolve(ROOT, 'kiorex-account/apps/kiorly-site/assets/vendor/PlusJakartaSans-SemiBold-latin.woff2')).toString('base64');
+const fnt = (f) => 'data:font/woff2;base64,' + readFileSync(resolve(ROOT, '_brand/fonts', f)).toString('base64');
+const FONT = fnt('plus-jakarta-sans-600.woff2'), FONT4 = fnt('plus-jakarta-sans-400.woff2'), FONT5 = fnt('plus-jakarta-sans-500.woff2'), FONT7 = fnt('plus-jakarta-sans-700.woff2');
 
 const VER = {
   ran: ['Ran on private stack', 'Steps were run by the author of this guide on a private local stack on 27-28 Nov 2026 (screenshots prove it).'],
@@ -97,7 +99,7 @@ const total = SCENARIOS.length; const totalSteps = SCENARIOS.reduce((a, s) => a 
 const stepIndex = JSON.stringify(Object.fromEntries(SCENARIOS.map((s) => [s.id, s.steps.length])));
 const groupIndex = JSON.stringify(Object.fromEntries(GROUPS.map((g) => [g.id, SCENARIOS.filter((s) => s.group === g.id).map((s) => s.id)])));
 
-const css = readFileSync(resolve(HERE, 'guide.css'), 'utf8').replace('__FONT__', FONT);
+const css = readFileSync(resolve(HERE, 'guide.css'), 'utf8').replace('__FONT__', FONT).replace('__FONT4__', FONT4).replace('__FONT5__', FONT5).replace('__FONT7__', FONT7);
 const js = readFileSync(resolve(HERE, 'guide.js'), 'utf8').replace('__STEPS__', stepIndex).replace('__GROUPS__', groupIndex);
 
 const html = `<!doctype html>
@@ -112,6 +114,7 @@ const html = `<!doctype html>
 <style>${css}</style>
 </head>
 <body>
+<section class="pcover" aria-hidden="true"><div class="pc-grid"></div><div class="pc-logo"><img src="${KIOREX_LOGO_ON}" alt="" width="240"></div><p class="pc-eye">TEST GUIDE</p><h1>Kiorex and Kiorly scenario test guide</h1><p class="pc-sub">${total} manual scenarios, ${totalSteps} steps, for the whole ecosystem on kx-test and private stacks: sign-in, booking, money, growth, Clinic, Pharmacy, Lab, consoles, site, mobile and security.</p><div class="pc-meta"><div><b>28 November 2026</b>Updated after the end-to-end pass</div><div><b>kx-test</b>Mock providers, synthetic data</div><div><b>No secrets</b>Credentials stay in the private register</div></div></section>
 <a class="skip" href="#main">Skip to the scenarios</a>
 <header class="top" role="banner">
   <div class="brand"><img class="logo-kx" src="${KIOREX_LOGO}" alt="Kiorex" width="132" height="39"><span class="sep" aria-hidden="true"></span><img class="logo-kl" src="${KIORLY_LOGO}" alt="Kiorly" width="120" height="29"></div>

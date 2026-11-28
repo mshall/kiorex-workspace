@@ -53,7 +53,7 @@ ol.steps li:last-child:after{display:none}
 table{width:100%;border-collapse:separate;border-spacing:0;margin:2.4mm 0 4.6mm;font-size:8.5pt;border:1px solid var(--line);border-radius:2mm;overflow:hidden}
 th{background:var(--indigo);color:#fff;text-align:left;padding:2mm 2.6mm;font-weight:600;font-size:8.2pt;letter-spacing:.02em}
 thead th:nth-child(odd){background:#3730A3} thead{background:linear-gradient(90deg,#3730A3,#0369A1)} thead th{background:transparent}
-td{padding:1.6mm 2.5mm;vertical-align:top;border-top:1px solid var(--line)}
+td{padding:1.5mm 2.5mm;vertical-align:top;border-top:1px solid var(--line)}
 tbody tr:first-child td{border-top:0}
 tbody tr:nth-child(even) td{background:#F6F7FD}
 tr{break-inside:avoid} thead{display:table-header-group}

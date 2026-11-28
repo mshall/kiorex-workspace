@@ -46,7 +46,7 @@ ol.steps li:last-child:after{display:none}
 table{width:100%;border-collapse:separate;border-spacing:0;margin:2.4mm 0 4.6mm;font-size:8.5pt;border:1px solid var(--line);border-radius:2mm;overflow:hidden}
 th{background:var(--indigo);color:#fff;text-align:left;padding:2mm 2.6mm;font-weight:600;font-size:8.2pt;letter-spacing:.02em}
 thead th:nth-child(odd){background:#3730A3} thead{background:linear-gradient(90deg,#3730A3,#0369A1)} thead th{background:transparent}
-td{padding:1.6mm 2.5mm;vertical-align:top;border-top:1px solid var(--line)}
+td{padding:1.5mm 2.5mm;vertical-align:top;border-top:1px solid var(--line)}
 tbody tr:first-child td{border-top:0}
 tbody tr:nth-child(even) td{background:#F6F7FD}
 tr{break-inside:avoid} thead{display:table-header-group}
@@ -132,7 +132,7 @@ body{background:#F4F6FC;padding:0 16px}main{max-width:900px;margin:0 auto;backgr
 </table>
 <p>Both builds are the <strong>kx-test profile</strong>: every host comes from <code>config/env/test.env</code> of each app, generated from the URL registry (<code>node _docs/registry/emit-mobile-env.mjs --write-all</code>; never typed by hand). kx-test hosts follow the pattern <code>&lt;service&gt;.test.&lt;domain&gt;</code>: API <code>api.test.kiorex.com</code>, Passport <code>passport.test.kiorex.com</code>, Clinic <code>clinics.test.kiorly.com</code>, Pharmacy <code>pharmacies.test.kiorly.com</code>, Lab <code>labs.test.kiorly.com</code>, Kiorly Home <code>app.test.kiorly.com</code>. The Passport clients already accept both schemes (<code>kiorex://</code>, <code>kiorex-test://</code>, <code>kiorly://</code>, <code>kiorly-test://</code>); no change was needed there.</p>
 <div class="callout note"><div class="ct">Note</div><div>Everything external is MOCK on kx-test: push, SMS, WhatsApp, payments, e-mail.</div></div>
-<h2>Signing in: how you get the one-time code</h2><p>Passport sends a code to the phone number. On kx-test the sender is a mock, so the code is written to the Passport container log. Read it with your own AWS CLI credentials (account 990597228737):</p>
+<h2>Signing in: how you get the one-time code</h2><p>Passport sends a code to the phone number. On kx-test the sender is a mock, so the code is written to the Passport container log. Read it with your own AWS CLI credentials (the kx-test account):</p>
 <pre><code class="language-bash">scripts/kx-test-otp.sh +201000001001          # waits up to 60 s for a NEW code, prints only the digits
 scripts/kx-test-otp.sh +201000001001 --last   # newest code of the last 20 minutes
 </code></pre>

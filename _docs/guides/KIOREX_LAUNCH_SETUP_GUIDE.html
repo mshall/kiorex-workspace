@@ -120,8 +120,37 @@ footer{margin-top:34px;color:var(--faint);font-size:13px}
   nav.rail.open{display:block}.menu-btn{display:inline-block}.bar{width:90px}.hero .pulse{display:none}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.bar i{transition:none}}
+
+/* ===== design pass 28 Nov 2026: print (A4 PDF) ===== */
+.pcover{display:none}
+@page{size:A4;margin:25mm 15mm 21mm 15mm}
+@page cover{margin:0}
+@media print{
+  html{font-size:9pt}body{background:#fff;font-size:9pt;line-height:1.5;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body::before{display:none}
+  .top,nav.rail,.menu-btn,.copy,.check input{display:none!important}
+  .shell{display:block;max-width:none;padding-top:0}
+  .pcover{display:block;page:cover;position:relative;width:210mm;height:297mm;color:#fff;overflow:hidden;background:linear-gradient(140deg,#2E2784,#3730A3 38%,#1E5AA8 72%,#0369A1);break-after:page}
+  .pc-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px);background-size:14mm 14mm}
+  .pc-logo{position:absolute;left:20mm;top:22mm}.pc-logo img{width:76mm;height:auto}
+  .pc-eye{position:absolute;left:20mm;top:98mm;margin:0;font:700 9.5pt "Plus Jakarta Sans";letter-spacing:.32em;color:#C9CCF2}
+  .pcover h1{position:absolute;left:20mm;top:108mm;width:150mm;margin:0;font:700 38pt/1.08 "Plus Jakarta Sans";color:#fff;letter-spacing:-.02em;max-width:none}
+  .pc-sub{position:absolute;left:20mm;top:178mm;width:140mm;margin:0;font-size:12pt;line-height:1.55;color:#E7E8FA}
+  .pc-meta{position:absolute;left:20mm;right:20mm;bottom:22mm;display:flex;justify-content:space-between;gap:6mm;border-top:1px solid rgba(255,255,255,.32);padding-top:4mm;font-size:8.6pt;color:#D5D8F5}.pc-meta b{display:block;color:#fff;font-size:9.4pt}
+  .hero{border-radius:0;padding:8mm 8mm;break-after:avoid}.hero h1{font-size:24pt}.hero p{font-size:10pt}.hero .pulse{display:none}
+  section.step{margin-top:6mm;border-radius:6px;padding:5mm;break-inside:auto}
+  figure.shot{box-shadow:none}
+  .sh,.meta{break-after:avoid}h3,h4{break-after:avoid}
+  ol.seq>li,.callout,figure.shot,.send,.timeline,.card,tr{break-inside:avoid}
+  .tw{overflow:visible}table{min-width:0;font-size:8pt}th,td{padding:4px 7px}thead{display:table-header-group}
+  .win{overflow:visible}
+  details>*{display:block}
+  footer{margin-top:6mm}
+  a{color:inherit}
+}
 </style>
 
+<section class="pcover" aria-hidden="true"><div class="pc-grid"></div><div class="pc-logo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NDAgMTMwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IktJT1JFWCI+CiAgPCEtLSBLSU9SRVggbG9nby4gR2VvbWV0cnk6IGZvdW5kZXIgc3BlYyBLSU9SRVhfTE9HT19TUEVDX3YyLm1kLCB2ZXJiYXRpbS4gR2VuZXJhdGVkIGJ5IHNjcmlwdHMvZ2VuLWtpb3JleC12Mi5janMsIGRvIG5vdCBlZGl0IGJ5IGhhbmQuIEludmVyc2UgbG9ja3VwIGZvciBmbGF0IEluZGlnbyBncm91bmRzIChzcGxhc2gsIGJyYW5kIHBhbmVscykuIC0tPgogIDxyZWN0IHg9IjM3IiB5PSIyNiIgd2lkdGg9IjMuNiIgaGVpZ2h0PSIyMiIgcng9IjEuOCIgZmlsbD0iI0Y0RjZGQyIvPjxyZWN0IHg9IjM3IiB5PSI4MiIgd2lkdGg9IjMuNiIgaGVpZ2h0PSIyMiIgcng9IjEuOCIgZmlsbD0iI0Y0RjZGQyIvPjxyZWN0IHg9IjQ1IiB5PSIzMyIgd2lkdGg9IjMuNiIgaGVpZ2h0PSIyMCIgcng9IjEuOCIgZmlsbD0iI0Y0RjZGQyIvPjxyZWN0IHg9IjQ1IiB5PSI3NyIgd2lkdGg9IjMuNiIgaGVpZ2h0PSIyMCIgcng9IjEuOCIgZmlsbD0iI0Y0RjZGQyIvPjxyZWN0IHg9IjUzIiB5PSI0MCIgd2lkdGg9IjMuNiIgaGVpZ2h0PSIxNy41IiByeD0iMS44IiBmaWxsPSIjRjRGNkZDIi8+PHJlY3QgeD0iNTMiIHk9IjcyLjUiIHdpZHRoPSIzLjYiIGhlaWdodD0iMTcuNSIgcng9IjEuOCIgZmlsbD0iI0Y0RjZGQyIvPjxyZWN0IHg9IjYxIiB5PSI0NyIgd2lkdGg9IjMuNiIgaGVpZ2h0PSIxMy41IiByeD0iMS44IiBmaWxsPSIjRjRGNkZDIi8+PHJlY3QgeD0iNjEiIHk9IjY5LjUiIHdpZHRoPSIzLjYiIGhlaWdodD0iMTMuNSIgcng9IjEuOCIgZmlsbD0iI0Y0RjZGQyIvPjxwb2x5bGluZSBwb2ludHM9IjI0LDY1IDY0LDY1IDY4LDYxIDcyLjUsNTEgNzcsNzkgODEuNSw1NyA4NSw2NSAxMjYsNjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0U4NzM1RSIgc3Ryb2tlLXdpZHRoPSIyLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxyZWN0IHg9Ijg1LjQiIHk9IjQ3IiB3aWR0aD0iMy42IiBoZWlnaHQ9IjEzLjUiIHJ4PSIxLjgiIGZpbGw9IiMzOEJERjgiLz48cmVjdCB4PSI4NS40IiB5PSI2OS41IiB3aWR0aD0iMy42IiBoZWlnaHQ9IjEzLjUiIHJ4PSIxLjgiIGZpbGw9IiMzOEJERjgiLz48cmVjdCB4PSI5My40IiB5PSI0MCIgd2lkdGg9IjMuNiIgaGVpZ2h0PSIxNy41IiByeD0iMS44IiBmaWxsPSIjMzhCREY4Ii8+PHJlY3QgeD0iOTMuNCIgeT0iNzIuNSIgd2lkdGg9IjMuNiIgaGVpZ2h0PSIxNy41IiByeD0iMS44IiBmaWxsPSIjMzhCREY4Ii8+PHJlY3QgeD0iMTAxLjQiIHk9IjMzIiB3aWR0aD0iMy42IiBoZWlnaHQ9IjIwIiByeD0iMS44IiBmaWxsPSIjMzhCREY4Ii8+PHJlY3QgeD0iMTAxLjQiIHk9Ijc3IiB3aWR0aD0iMy42IiBoZWlnaHQ9IjIwIiByeD0iMS44IiBmaWxsPSIjMzhCREY4Ii8+PHJlY3QgeD0iMTA5LjQiIHk9IjI2IiB3aWR0aD0iMy42IiBoZWlnaHQ9IjIyIiByeD0iMS44IiBmaWxsPSIjMzhCREY4Ii8+PHJlY3QgeD0iMTA5LjQiIHk9IjgyIiB3aWR0aD0iMy42IiBoZWlnaHQ9IjIyIiByeD0iMS44IiBmaWxsPSIjMzhCREY4Ii8+PGxpbmUgeDE9IjE0NCIgeTE9IjI2IiB4Mj0iMTQ0IiB5Mj0iMTA0IiBzdHJva2U9IiNFODczNUUiIHN0cm9rZS13aWR0aD0iMS4zIiBvcGFjaXR5PSIwLjkiLz48cGF0aCBkPSJNMTc3LjI2IDc0TDE3NC4wOCA3NEwxNzQuMDggNTMuODlMMTc3LjI2IDUzLjg5TDE3Ny4yNiA2NC43OUwxNzYuNDMgNjQuNDdMMTg1LjUzIDUzLjg5TDE4OS41MCA1My44OUwxODEuNDUgNjMuMzFMMTgxLjYxIDYxLjA0TDE4OS44MiA3NEwxODYuMDcgNzRMMTgwLjE4IDY0Ljc5TDE3Ny4yNiA2OC4xOUwxNzcuMjYgNzRaTTIwMy44OCA3NEwyMDAuNzAgNzRMMjAwLjcwIDUzLjg5TDIwMy44OCA1My44OUwyMDMuODggNzRaTTIyNi4zMSA3NC4zMkwyMjYuMzEgNzQuMzJRMjI0LjEzIDc0LjMyIDIyMi4yNSA3My41NFEyMjAuMzcgNzIuNzYgMjE4Ljk2IDcxLjM1UTIxNy41NCA2OS45NSAyMTYuNzQgNjguMDZRMjE1Ljk1IDY2LjE3IDIxNS45NSA2My45M0wyMTUuOTUgNjMuOTNRMjE1Ljk1IDYxLjY5IDIxNi43NCA1OS43OFEyMTcuNTQgNTcuODggMjE4Ljk0IDU2LjQ5UTIyMC4zNSA1NS4xMCAyMjIuMjQgNTQuMzNRMjI0LjEzIDUzLjU2IDIyNi4zMSA1My41NkwyMjYuMzEgNTMuNTZRMjI4LjUzIDUzLjU2IDIzMC40MCA1NC4zM1EyMzIuMjggNTUuMTAgMjMzLjcwIDU2LjUwUTIzNS4xMiA1Ny45MSAyMzUuOTAgNTkuODBRMjM2LjY4IDYxLjY5IDIzNi42OCA2My45M0wyMzYuNjggNjMuOTNRMjM2LjY4IDY2LjE3IDIzNS44OSA2OC4wNlEyMzUuMDkgNjkuOTUgMjMzLjY4IDcxLjM1UTIzMi4yOCA3Mi43NiAyMzAuMzkgNzMuNTRRMjI4LjUwIDc0LjMyIDIyNi4zMSA3NC4zMlpNMjI2LjMxIDcxLjQxTDIyNi4zMSA3MS40MVEyMjcuODggNzEuNDEgMjI5LjE5IDcwLjg0UTIzMC41MCA3MC4yNyAyMzEuNDcgNjkuMjZRMjMyLjQ0IDY4LjI1IDIzMi45OCA2Ni44OVEyMzMuNTIgNjUuNTIgMjMzLjUyIDYzLjkzTDIzMy41MiA2My45M1EyMzMuNTIgNjIuMzQgMjMyLjk4IDYwLjk5UTIzMi40NCA1OS42NCAyMzEuNDcgNTguNjFRMjMwLjUwIDU3LjU4IDIyOS4xOSA1Ny4wMlEyMjcuODggNTYuNDUgMjI2LjMxIDU2LjQ1TDIyNi4zMSA1Ni40NVEyMjQuNzUgNTYuNDUgMjIzLjQ0IDU3LjAyUTIyMi4xMyA1Ny41OCAyMjEuMTYgNTguNjFRMjIwLjE4IDU5LjY0IDIxOS42NiA2MC45OVEyMTkuMTMgNjIuMzQgMjE5LjEzIDYzLjkzTDIxOS4xMyA2My45M1EyMTkuMTMgNjUuNTIgMjE5LjY2IDY2Ljg5UTIyMC4xOCA2OC4yNSAyMjEuMTYgNjkuMjZRMjIyLjEzIDcwLjI3IDIyMy40NSA3MC44NFEyMjQuNzcgNzEuNDEgMjI2LjMxIDcxLjQxWk0yNTEuOTMgNzRMMjQ4Ljc1IDc0TDI0OC43NSA1My44OUwyNTYuMDYgNTMuODlRMjU4LjA5IDUzLjg5IDI1OS42MyA1NC42M1EyNjEuMTcgNTUuMzcgMjYyLjA0IDU2Ljc5UTI2Mi45MiA1OC4yMCAyNjIuOTIgNjAuMThMMjYyLjkyIDYwLjE4UTI2Mi45MiA2Mi4yNiAyNjEuODggNjMuNzRRMjYwLjg0IDY1LjIyIDI1OS4wOSA2NS45MEwyNTkuMDkgNjUuOTBMMjYzLjczIDc0TDI2MC4xMSA3NEwyNTUuMTcgNjUuMjJMMjU3LjI1IDY2LjQ0TDI1MS45MyA2Ni40NEwyNTEuOTMgNzRaTTI1MS45MyA1Ni43MkwyNTEuOTMgNjMuNjFMMjU2LjEyIDYzLjYxUTI1Ny4yMiA2My42MSAyNTguMDMgNjMuMTdRMjU4Ljg0IDYyLjc0IDI1OS4yOSA2MS45N1EyNTkuNzMgNjEuMjAgMjU5LjczIDYwLjE1TDI1OS43MyA2MC4xNVEyNTkuNzMgNTkuMTAgMjU5LjI5IDU4LjMzUTI1OC44NCA1Ny41NiAyNTguMDMgNTcuMTRRMjU3LjIyIDU2LjcyIDI1Ni4xMiA1Ni43MkwyNTYuMTIgNTYuNzJMMjUxLjkzIDU2LjcyWk0yODguMTYgNzRMMjc0LjkwIDc0TDI3NC45MCA1My44OUwyODguMTYgNTMuODlMMjg4LjE2IDU2LjcyTDI3OC4wOSA1Ni43MkwyNzguMDkgNjIuNTBMMjg3LjYyIDYyLjUwTDI4Ny42MiA2NS4zM0wyNzguMDkgNjUuMzNMMjc4LjA5IDcxLjE3TDI4OC4xNiA3MS4xN0wyODguMTYgNzRaIiBmaWxsPSIjRjRGNkZDIi8+PHBhdGggZD0iTTMwMS40NCA3NEwyOTcuODUgNzRMMzA0LjQxIDYzLjgyTDI5Ny45NiA1My44OUwzMDEuNTggNTMuODlMMzA2Ljk4IDYyLjIwTDMwNS40NCA2Mi4yMEwzMTAuNzggNTMuODlMMzE0LjQwIDUzLjg5TDMwNy45NyA2My44MkwzMTQuNTQgNzRMMzEwLjkyIDc0TDMwNS40NCA2NS40N0wzMDYuOTggNjUuNTBMMzAxLjQ0IDc0WiIgZmlsbD0iIzM4QkRGOCIvPgo8L3N2Zz4K" alt="" width="240"></div><p class="pc-eye">LAUNCH SETUP GUIDE</p><h1>Your launch setup, one step at a time</h1><p class="pc-sub">Everything only you can do, in the order it unblocks the work: store accounts for the Kiorex and Kiorly apps, domain records, and the messaging and payment providers.</p><div class="pc-meta"><div><b>28 November 2026</b>Edition 2, kx-test live</div><div><b>Nine steps</b>What to click, what to send, time and cost</div><div><b>No secrets</b>Identifiers only; secrets go to AWS Secrets Manager</div></div></section>
 <header class="top">
   <svg viewBox="0 0 440 130" role="img" aria-label="KIOREX">
     <g fill="#3730A3"><rect x="37" y="26" width="3.6" height="22" rx="1.8"/><rect x="37" y="82" width="3.6" height="22" rx="1.8"/><rect x="45" y="33" width="3.6" height="20" rx="1.8"/><rect x="45" y="77" width="3.6" height="20" rx="1.8"/><rect x="53" y="40" width="3.6" height="17.5" rx="1.8"/><rect x="53" y="72.5" width="3.6" height="17.5" rx="1.8"/><rect x="61" y="47" width="3.6" height="13.5" rx="1.8"/><rect x="61" y="69.5" width="3.6" height="13.5" rx="1.8"/></g>
@@ -159,13 +188,14 @@ footer{margin-top:34px;color:var(--faint);font-size:13px}
 <section class="hero" id="start">
   <h1>Your launch setup, one step at a time</h1>
   <p>Everything that only you can do, in the order it unblocks the work: store accounts for the Kiorex and Kiorly apps, domain records, and the messaging and payment providers. Each step says what to click, what to send me, how long it takes and what it costs.</p>
-  <div class="chips"><span class="chip">kx-test now</span><span class="chip">2 apps, 1 Apple team, 1 Play account</span><span class="chip">Never paste secrets in chat</span></div>
+  <div class="chips"><span class="chip">kx-test now</span><span class="chip">Updated 28 Nov 2026</span><span class="chip">2 apps, 1 Apple team, 1 Play account</span><span class="chip">Never paste secrets in chat</span></div>
   <svg class="pulse" viewBox="0 0 300 80" aria-hidden="true"><polyline points="0,40 90,40 100,32 112,12 124,66 136,24 146,40 300,40" fill="none" stroke="#E8735E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
 </section>
 
 <section class="step" aria-labelledby="h0">
   <div class="sh"><div><h2 id="h0">Read this first</h2><div class="sub">Three minutes that save you days.</div></div></div>
   <div class="callout info"><span class="ic">i</span><div><p><b>About the pictures.</b> I cannot sign in to your Apple, Google, Meta, AWS or registrar accounts, so the screens below are <b>illustrations</b> drawn from each service's documented layout, with a numbered pin where to click. Buttons can be renamed or moved. If something looks different, follow the same words and the same menu path.</p></div></div>
+  <div class="callout ok"><span class="ic">&#10003;</span><div><p><b>Where things stand on kx-test (28 Nov 2026).</b> The test stack is running on its own names, <code>&lt;service&gt;.test.&lt;domain&gt;</code>, and a full end-to-end pass ran on it: 311 live tests passed, 0 failed, 11 skipped, 6 not run. Sign-in is Kiorex Passport (phone code) everywhere, and Clinic, Pharmacy and Lab also accept e-mail and password. Everything external (SMS, WhatsApp, e-mail, push, payments) is still a mock, which is why the steps below are still yours to do. Egypt is still closed to patients: only you record that gate, by hand, in the Ops console.</p></div></div>
   <h3>The order that avoids waiting</h3>
   <div class="timeline">
     <div class="tl"><b>Today</b><span>Tell me which registrar holds each domain. Start the Apple and Google enrolments: they have the longest waits.</span></div>
@@ -354,6 +384,18 @@ footer{margin-top:34px;color:var(--faint);font-size:13px}
   <pre><button class="copy">Copy</button><code>dig NS test.kiorex.com +short
 dig NS test.kiorly.com +short</code></pre>
   <p>Tell me when it is done. I verify, request the free certificates (AWS ACM), and the stack starts serving on the real names such as <code>passport.test.kiorex.com</code> and <code>clinics.test.kiorly.com</code>. Your existing Clinic address keeps working.</p>
+  <h3>The names you will see</h3>
+  <p>One pattern for every environment: <code>&lt;service&gt;.&lt;env&gt;.&lt;domain&gt;</code>, with production written without the environment label. Test is live today; pilot and production names are reserved.</p>
+  <div class="tw"><table><thead><tr><th>Service</th><th>kx-test (live)</th><th>Production (later)</th></tr></thead><tbody>
+  <tr><td>Kiorex patient site</td><td><code>test.kiorex.com</code></td><td><code>kiorex.com</code></td></tr>
+  <tr><td>Kiorex API</td><td><code>api.test.kiorex.com</code></td><td><code>api.kiorex.com</code></td></tr>
+  <tr><td>Kiorex super admin (Ops)</td><td><code>admin.test.kiorex.com</code></td><td><code>admin.kiorex.com</code></td></tr>
+  <tr><td>Kiorex Passport</td><td><code>passport.test.kiorex.com</code></td><td><code>passport.kiorex.com</code></td></tr>
+  <tr><td>Kiorly public site and plans</td><td><code>test.kiorly.com</code></td><td><code>kiorly.com</code></td></tr>
+  <tr><td>Kiorly Home (one sign-in)</td><td><code>app.test.kiorly.com</code></td><td><code>app.kiorly.com</code></td></tr>
+  <tr><td>Clinic, Pharmacy, Lab</td><td><code>clinics.</code>, <code>pharmacies.</code>, <code>labs.test.kiorly.com</code></td><td><code>clinics.</code>, <code>pharmacies.</code>, <code>labs.kiorly.com</code></td></tr>
+  <tr><td>Kiorly admin</td><td><code>admin.test.kiorly.com</code></td><td><code>admin.kiorly.com</code></td></tr>
+  </tbody></table></div>
   <label class="check"><input type="checkbox" data-done="dns"> Both NS delegations added and verified</label>
 </section>
 
@@ -472,6 +514,13 @@ aws secretsmanager create-secret --region eu-central-1 \
   --name "&lt;the name I gave you&gt;" --secret-string "$V"
 unset V</code></pre>
   <ul><li>The value is never printed or saved in your shell history.</li><li>If the secret already exists, use <code>put-secret-value</code> with <code>--secret-id</code> instead of <code>create-secret</code>.</li><li>I read secrets only by reference at run time. I never see or print the value.</li></ul>
+  <h3>Secrets you will be asked for (names only)</h3>
+  <div class="tw"><table><thead><tr><th>When</th><th>What</th><th>Where it goes</th></tr></thead><tbody>
+  <tr><td>Messaging</td><td>WhatsApp system-user token, Firebase service-account JSON, Apple push key (.p8)</td><td>Secrets Manager and Expo credentials</td></tr>
+  <tr><td>Payments</td><td>Paymob API key and HMAC, Fawry security key (sandbox first)</td><td>Secrets Manager</td></tr>
+  <tr><td>Plan prices (new)</td><td>One credential pair for Pharmacy and Lab price publishing, added to three secret bags (the names and steps are in the kx-test deploy log). Until then the price connection stays dormant and no price can be published for those two products.</td><td>Secrets Manager</td></tr>
+  <tr><td>Never</td><td>Any password, authenticator secret or recovery code of a person</td><td>Nowhere: not in chat, not in Git</td></tr>
+  </tbody></table></div>
   <div class="callout warn"><span class="ic">!</span><div><p><b>If a secret is ever pasted in chat or committed:</b> tell me straight away. We rotate it at the provider, the old one is dead within minutes.</p></div></div>
 </section>
 
@@ -484,7 +533,7 @@ unset V</code></pre>
   <details><summary>Do I pay Apple or Google per app?</summary><div>No. Apple is 99 USD a year for the whole team, Google is a 25 USD one-time fee for the whole account. Neither charges per app.</div></details>
   <details><summary>What about selling provider subscriptions inside the app?</summary><div>Both stores have rules on when digital purchases must use their payment systems, with exceptions for services consumed outside the app and for business customers. This depends on how the subscription is sold, so it is a question for counsel before the first review. I have not assumed an answer.</div></details>
   <details><summary>Will you stop me from doing something risky?</summary><div>Yes. Real-money payments, real patient-data moves between environments and the counsel sign-off are blocked by design until you and counsel say otherwise, and I ask before promoting any environment.</div></details>
-  <footer>Kiorex launch setup guide, 27 Nov 2026. Prices and portal layouts are from public documentation as I know it; confirm the current price on each store before paying. Illustrations are not screenshots of your accounts.</footer>
+  <footer>Kiorex launch setup guide, edition 28 Nov 2026. Prices and portal layouts are from public documentation as I know it; confirm the current price on each store before paying. Illustrations are not screenshots of your accounts.</footer>
 </section>
 </main>
 </div>

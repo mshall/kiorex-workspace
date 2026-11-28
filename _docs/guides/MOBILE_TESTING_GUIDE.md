@@ -15,7 +15,7 @@ Both builds are the **kx-test profile**: every host comes from `config/env/test.
 
 ## 1. Signing in: how you get the one-time code
 
-Passport sends a code to the phone number. On kx-test the sender is a mock, so the code is written to the Passport container log. Read it with your own AWS CLI credentials (account 990597228737):
+Passport sends a code to the phone number. On kx-test the sender is a mock, so the code is written to the Passport container log. Read it with your own AWS CLI credentials (the kx-test account):
 
 ```bash
 scripts/kx-test-otp.sh +201000001001          # waits up to 60 s for a NEW code, prints only the digits

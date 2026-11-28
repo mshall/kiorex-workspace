@@ -335,7 +335,7 @@ ${callout('ok', 'Safe to continue', 'The stack is healthy: all seven health URLs
     id: 'trouble', num: '07', title: 'Troubleshooting', sub: [],
     html: `
 ${callout('note', 'If something looks wrong in production', 'Close first, investigate second. Toggle <code>market.eg.live</code> OFF at GLOBAL scope with a clear reason (no expiry), then read the audit trail. Opening again is a single Toggle ON.')}
-${table(['What you see', 'Likely cause', 'What to do'], [
+<style>.tight table{font-size:7.9pt}.tight td{padding:1.2mm 2.4mm}</style><div class="tight">${table(['What you see', 'Likely cause', 'What to do'], [
   ['Toggle and Gate buttons are greyed; note "Read-only: only super admins can change flags".', 'You are signed in with the ops-only account.', 'Check the bottom-left label. Sign out and sign in with the super admin account.'],
   ['Save fails with 403 or "forbidden".', 'The token has no <code>super_admin</code> role (role changes need a new sign-in).', 'Sign out and in again. If the role is missing, fix it in Passport, not in the console.'],
   ['"Send code" works but no code arrives, or "too many codes".', 'The sign-in code limit is five per phone per hour.', 'Wait an hour, or ask for the code to be sent once and use it. Do not keep pressing Send.'],
@@ -346,7 +346,7 @@ ${table(['What you see', 'Likely cause', 'What to do'], [
   ['Egypt is live but the doctor list is empty.', 'No provider is LIVE, or provider sync has not run.', 'Open Providers in the console and check status. This is not a gate problem.'],
   ['Clinic: "Market is not accepting new organizations".', 'The market is DRAFT, paused, disabled or sunset.', 'Platform, Market launch, Enable (or wait for the pause to end). Existing clinics keep working.'],
   ['Clinic: Initiate country launch shows a red error, or Go live does nothing.', 'The tax pack or cross-border approval is missing; the screen shows the reason.', 'Read the message, then check Legal and Commercial of that market.'],
-])}
+])}</div>
 `,
   });
 
