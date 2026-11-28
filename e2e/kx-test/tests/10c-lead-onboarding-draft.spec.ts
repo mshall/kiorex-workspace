@@ -3,13 +3,13 @@ import { URLS } from '../lib/hosts';
 import { ensureSession, liveToken, openAs } from '../lib/session';
 
 /**
- * WON join request -> ONE DRAFT onboarding request (founder decision 28 Nov 2026), live on kx-test.
+ * ONBOARDING (and WON) join request -> ONE DRAFT onboarding request; approval of a CONNECTED draft pre-creates the enrolment code; only a reviewer cancels (founder decisions 28 Nov 2026), live on kx-test.
  * Three throwaway leads (tagged test data: name prefix [TEST], reserved e-mail domain, synthetic phones; the lead rate limits are NOT touched: 3 submissions, three different phones):
  *   A connected clinic -> won, reopened and won again (still exactly one draft), submitted by ops, approved by a DIFFERENT person (super admin)
  *   B standalone lab   -> won, submitted, rejected by the super admin with a reason, reopened
  *   C connected pharmacy -> LOST (never a draft; the manual create answers 409)
- * Proves: no draft before WON, prefilled draft without contact data, assignee = lead owner, idempotent, link lead -> draft -> lead, EN and AR (Western digits), two-person rule, approval
- * creates nothing (no enrolment code, no connection request). Everything is removed at the end by the super admin (count first). Two Passport sign-ins (ops_admin, super_admin) at most.
+ * Proves: no draft before ONBOARDING (the draft is created when the request reaches ONBOARDING and WON reuses it), prefilled draft without contact data, assignee = lead owner, idempotent, link lead -> draft -> lead, EN and AR (Western digits), two-person rule, approval
+ * of a CONNECTED draft creates ONE enrolment code (shown once, never listed; revoked again at the end) and nothing else (no connection request, no organisation); a cancel needs a reason. Everything is removed at the end by the super admin (count first). Two Passport sign-ins (ops_admin, super_admin) at most.
  */
 const STAMP = Date.now().toString(36).toUpperCase(); const TAG = `OB${STAMP}`;
 const phone = () => `+2010${String(Math.floor(Math.random() * 1e8)).padStart(8, '0')}`;
@@ -44,11 +44,12 @@ test.describe.serial('WON creates one draft onboarding request (kx-test)', () =>
     }
   });
 
-  test('before WON there is no draft; the owner is set on lead A; WON creates exactly one draft, prefilled, with the lead owner as assignee and no contact data', async () => {
+  test('before ONBOARDING there is no draft; the owner is set on lead A; ONBOARDING creates exactly one draft (WON reuses it), prefilled, with the lead owner as assignee and no contact data', async () => {
     expect((await ops('GET', 'leads/owners')).body.some((o: { sub: string }) => o.sub === opsSub)).toBe(true); // the console registers the signed-in user as an assignable owner
     expect((await ops('PATCH', `leads/${ids.A.id}`, { ownerSub: opsSub })).status).toBe(200);
-    for (const s of ['QUALIFIED', 'ONBOARDING']) { const r = await ops('PATCH', `leads/${ids.A.id}`, { status: s }); expect(r.status).toBe(200); expect(r.body.onboardingRequest).toBeNull(); }
-    const won = await ops('PATCH', `leads/${ids.A.id}`, { status: 'WON' }); expect(won.status).toBe(200);
+    const q = await ops('PATCH', `leads/${ids.A.id}`, { status: 'QUALIFIED' }); expect(q.status).toBe(200); expect(q.body.onboardingRequest).toBeNull();
+    const onb = await ops('PATCH', `leads/${ids.A.id}`, { status: 'ONBOARDING' }); expect(onb.status).toBe(200); expect(onb.body.onboardingRequest).toMatchObject({ status: 'DRAFT' });
+    const won = await ops('PATCH', `leads/${ids.A.id}`, { status: 'WON' }); expect(won.status).toBe(200); expect(won.body.onboardingRequest.id).toBe(onb.body.onboardingRequest.id);
     const d = won.body.onboardingRequest; expect(d).toMatchObject({ status: 'DRAFT', kind: 'CLINIC', assigneeSub: opsSub });
     const draft = await ops('GET', `lead-onboarding/${d.id}`);
     expect(draft.body).toMatchObject({ leadId: ids.A.id, contactRef: ids.A.ref, status: 'DRAFT', kind: 'CLINIC', mode: 'CONNECTED', providerType: 'CLINIC', modules: ['CLINIC'], market: 'EG', legalName: `[TEST] ${TAG} CLINIC CONNECTED`, assigneeSub: opsSub, isTest: true, leadStatus: 'WON', blockers: [] });
@@ -77,7 +78,7 @@ test.describe.serial('WON creates one draft onboarding request (kx-test)', () =>
     await opsPage.goto(`${URLS.ops}/leads/${ids.A.id}`);
     await expect(opsPage.getByTestId('lead-onboarding-status')).toContainText('Draft'); await expect(opsPage.getByTestId('lead-event-ONBOARDING').first()).toContainText('draft created');
     await opsPage.getByTestId('lead-onboarding-open').click();
-    await expect(opsPage.getByTestId('lead-onboarding-detail')).toBeVisible(); await expect(opsPage.getByTestId('lob-explainer')).toContainText('no organisation, enrolment code or Passport identity is created');
+    await expect(opsPage.getByTestId('lead-onboarding-detail')).toBeVisible(); await expect(opsPage.getByTestId('lob-explainer')).toContainText('No organisation, price, commission or Passport identity is created');
     await expect(opsPage.getByTestId('lob-status')).toContainText('Draft'); await expect(opsPage.getByTestId('lob-kind')).toHaveValue('CLINIC');
     await opsPage.getByTestId('lob-back-to-lead').click(); await expect(opsPage.getByTestId('lead-detail')).toBeVisible(); await expect(opsPage).toHaveURL(new RegExp(`/leads/${ids.A.id}$`));
     await opsPage.goto(`${URLS.ops}/leads/onboarding`); await expect(opsPage.getByTestId(`lob-open-${ids.A.ref}`)).toBeVisible();
@@ -93,14 +94,18 @@ test.describe.serial('WON creates one draft onboarding request (kx-test)', () =>
     await opsPage.goto(`${URLS.ops}/leads`);
   });
 
-  test('workflow A: ops submits; ops and the submitter cannot approve; a different super admin approves; approval creates no organisation, code or connection', async () => {
+  test('workflow A: ops submits; ops and the submitter cannot approve; a different super admin approves; approval creates ONE enrolment code (shown once) and no organisation or connection', async () => {
     const id = (ids.A as any).draft as string;
     expect((await ops('POST', `lead-onboarding/${id}/submit`)).body).toMatchObject({ status: 'SUBMITTED', submittedBy: opsSub });
     expect((await ops('POST', `lead-onboarding/${id}/approve`, {})).status).toBe(403); // ops_admin cannot approve
     expect((await ops('PATCH', `lead-onboarding/${id}`, { note: 'x' })).status).toBe(409); // only a draft is editable
     const ok = await sup('POST', `lead-onboarding/${id}/approve`, { note: 'checked by a second person' }); expect(ok.status).toBe(200); expect(ok.body).toMatchObject({ status: 'APPROVED' }); expect(ok.body.decidedBy).not.toBe(opsSub);
     expect((await sup('POST', `lead-onboarding/${id}/approve`, {})).status).toBe(409); // already decided
-    expect(JSON.stringify((await sup('GET', 'onboarding/enrolments')).body)).not.toContain(TAG);
+    expect(ok.body.enrolmentCode).toMatch(/^kxe_/); expect(ok.body.shownOnce).toBe(true);
+    const enr = (await sup('GET', 'onboarding/enrolments')).body.filter((e: { label: string }) => e.label.includes(TAG)); expect(enr).toHaveLength(1); expect(enr[0]).toMatchObject({ kind: 'CLINIC', status: 'ACTIVE' }); (ids.A as any).enrolment = enr[0].id;
+    expect(JSON.stringify([enr, (await sup('GET', `lead-onboarding/${id}`)).body, (await ops('GET', `leads/${ids.A.id}`)).body])).not.toContain(ok.body.enrolmentCode); // the code is never listed again
+    expect((await ops('POST', `lead-onboarding/${id}/enrolment`)).status).toBe(200); // a new code can be issued; the unused one is revoked
+    expect((await sup('GET', 'onboarding/enrolments')).body.filter((e: { label: string; status: string }) => e.label.includes(TAG) && e.status === 'ACTIVE')).toHaveLength(1);
     expect(JSON.stringify((await sup('GET', 'onboarding/partners')).body)).not.toContain(TAG);
     const trail = (await ops('GET', `leads/${ids.A.id}`)).body.events.filter((e: { kind: string }) => e.kind === 'ONBOARDING').map((e: { data: { action: string } }) => e.data.action);
     expect(trail).toEqual(expect.arrayContaining(['DRAFT_CREATED', 'SUBMITTED', 'APPROVED']));
@@ -114,9 +119,13 @@ test.describe.serial('WON creates one draft onboarding request (kx-test)', () =>
     expect((await sup('POST', `lead-onboarding/${id}/reject`, { reason: 'licence copy missing' })).body).toMatchObject({ status: 'REJECTED', decisionNote: 'licence copy missing' });
     const re = await ops('POST', `lead-onboarding/${id}/reopen`); expect(re.body).toMatchObject({ id, status: 'DRAFT' });
     expect((await ops('GET', `leads/${ids.B.id}`)).body.onboardingRequest.id).toBe(id);
+    expect((await ops('POST', `lead-onboarding/${id}/cancel`, {})).status).toBe(400); // a reason is required
+    expect((await ops('POST', `lead-onboarding/${id}/cancel`, { reason: 'applicant asked to wait' })).body).toMatchObject({ status: 'CANCELLED', decisionNote: 'applicant asked to wait' });
+    expect((await ops('POST', `lead-onboarding/${id}/reopen`)).body).toMatchObject({ id, status: 'DRAFT' });
   });
 
   test('cleanup: the super admin removes the test data (count first); the drafts go with their leads', async () => {
+    for (const e of (await sup('GET', 'onboarding/enrolments')).body.filter((x: { label: string; status: string }) => x.label.includes(TAG) && x.status === 'ACTIVE')) expect((await sup('DELETE', `onboarding/enrolments/${e.id}`)).status).toBe(200); // nothing usable is left behind
     const dry = await sup('POST', 'leads/test/remove', { confirm: false }); expect(dry.status).toBe(200); expect(dry.body.count).toBeGreaterThanOrEqual(3);
     const real = await sup('POST', 'leads/test/remove', { confirm: true }); expect(real.body).toMatchObject({ dryRun: false });
     expect((await sup('GET', `lead-onboarding/${(ids.A as any).draft}`)).status).toBe(404); expect((await sup('GET', `lead-onboarding/${(ids.B as any).draft}`)).status).toBe(404);
