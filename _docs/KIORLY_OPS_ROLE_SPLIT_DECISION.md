@@ -1,6 +1,10 @@
 # Kiorly-only ops role: where it stands and what the founder has to decide (28 Nov 2026)
 
-Status: NOT implemented on purpose. Closing it needs a Passport role design decision, so nothing was guessed (task rule: no Passport schema or role design guesses).
+**Status: DECIDED and implemented on 28 Nov 2026 (ADR-062).** The founder chose option A with the recommended defaults: roles `kiorly_ops` (read, review, onboarding actions) and `kiorly_admin` (changes within Kiorly scope; Kiorly market launch and price approval stay `super_admin`), granted only by a `super_admin`, audited, MFA mandatory like `ops_admin`; deny by default with an explicit allow-list of Kiorly routes without patient identifiers; the new roles are not maker or checker of the commission flow; separate accounts (enforced at grant time and in the API guard); the Kiorex edition refuses the roles and the Kiorly edition shows only the allowed views. Added by the founder at the same time: every console role has its own separate dashboard. Details: `_docs/adr/ADR-062-kiorly-only-ops-roles-and-role-dashboards.md`, platform `Docs/KIORLY_ADMIN.md`, Passport `Docs/MFA_POLICY.md`. Phase 2 (row filters by organisation type and market) stays undecided and unbuilt.
+
+The text below is the original paper of 28 Nov 2026 (before the decision), kept for the reasoning.
+
+(Original status: NOT implemented on purpose; closing it needed a Passport role design decision.)
 
 ## What exists today (verified in code)
 

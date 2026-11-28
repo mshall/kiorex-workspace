@@ -27,6 +27,10 @@ export const PERSONAS = {
   pharmacistNoMfa: { phone: '+201000002004', app: 'pharmacy' },
   labTech: { phone: '+201000002005', app: 'lab' },
   labOwner: { phone: '+201000002010', app: 'lab', totp: 'lab_owner_totp' },
+  // throwaway TAGGED accounts of the role-dashboard spec (scripts/provision-role-accounts.sh; never published demo accounts)
+  roleGrowthAdmin: { phone: '+201000009701', app: 'ops', totp: 'growth_admin_totp' },
+  roleKiorlyOps: { phone: '+201000009702', app: 'opsKiorly', totp: 'kiorly_ops_totp' },
+  roleKiorlyAdmin: { phone: '+201000009703', app: 'opsKiorly', totp: 'kiorly_admin_totp' },
 } as const;
 export type PersonaName = keyof typeof PERSONAS;
 
@@ -47,8 +51,8 @@ async function startSignIn(page: Page, name: PersonaName): Promise<void> {
   if (p.app === 'pharmacy' || p.app === 'lab') {
     await page.goto(`${URLS[p.app]}/login`);
     await page.getByRole('button', { name: /Sign in with Kiorex Passport/i }).click();
-  } else if (p.app === 'ops') {
-    await page.goto(`${URLS.ops}/`);
+  } else if (p.app === 'ops' || p.app === 'opsKiorly') {
+    await page.goto(`${URLS[p.app]}/`);
   } else {
     await page.goto(`${URLS.patientWeb}/`);
     await page.getByRole('button', { name: /^(Sign in|Log in)$/i }).first().click();
@@ -81,7 +85,7 @@ export async function ensureSession(browser: Browser, name: PersonaName): Promis
 async function stillValid(name: PersonaName): Promise<boolean> {
   try {
     const p = PERSONAS[name];
-    if (p.app === 'patientWeb' || p.app === 'ops') {
+    if (p.app === 'patientWeb' || p.app === 'ops' || p.app === 'opsKiorly') {
       const t = savedToken(name); if (!t) return false;
       const exp = (JSON.parse(Buffer.from(t.split('.')[1], 'base64url').toString()) as { exp: number }).exp; return exp * 1000 > Date.now() + 120_000;
     }

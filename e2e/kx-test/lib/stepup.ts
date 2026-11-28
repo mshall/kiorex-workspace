@@ -12,7 +12,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * A step-up token for an ops persona (acr mfa, fresh auth_time, 5 minutes) WITHOUT a new phone code: the persona's saved session (ensureSession signs in, and spends one code,
  * only when none is usable) plus the real `/api/step-up` call with the authenticator code from Secrets Manager.
  */
-export async function stepUpToken(browser: Browser, who: 'ops' | 'opsFinance'): Promise<string> {
+export async function stepUpToken(browser: Browser, who: 'ops' | 'opsFinance' | 'superAdmin'): Promise<string> {
   let base = (() => { try { return savedToken(who); } catch { return null; } })();
   const expOk = (t: string | null) => !!t && (JSON.parse(Buffer.from(t.split('.')[1]!, 'base64url').toString()) as { exp: number }).exp * 1000 > Date.now() + 120_000;
   if (!expOk(base)) { await ensureSession(browser, who); base = savedToken(who); }
