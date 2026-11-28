@@ -4,12 +4,13 @@ import { passportSignIn } from '../lib/passport';
 import { dropSession, ensureSession, openAs, PERSONAS } from '../lib/session';
 
 /**
- * The production rule for privileged roles (Pharmacy: OWNER, PHARMACIST, BRANCH_MANAGER, CHAIN_OPS; Lab: OWNER, LAB_DIRECTOR, AUTHORIZED_SIGNATORY):
- * with NODE_ENV=production and AUTH_MODE=oidc, a session whose Passport login carried no MFA claim gets 403 MFA_REQUIRED on /auth/me (kiorly-pharmacy auth.guard.ts, kiorly-lab auth.guard.ts).
- * Nothing in the suite weakens it. The negative test proves it, the positive tests sign the demo owners in with phone code + TOTP (Passport then issues acr=mfa).
+ * Privileged roles (Pharmacy: OWNER, PHARMACIST, BRANCH_MANAGER, CHAIN_OPS; Lab: OWNER, LAB_DIRECTOR, AUTHORIZED_SIGNATORY) follow the Passport MFA policy (28 Nov 2026, founder decision):
+ * the policy for pharmacy and lab is OFF by default, so a phone-code-only session works; when ops turn the policy ON (maker-checker) the product answers 403 MFA_REQUIRED for a session without
+ * the claim (kiorly-pharmacy and kiorly-lab auth.guard.ts + mfa-policy.ts, unit and integration tests on a private stack). This live test never enables the policy.
+ * The positive tests sign the demo owners in with phone code + TOTP (Passport then issues acr=mfa).
  */
-test.describe.serial('privileged role without MFA is refused (the rule is intact)', () => {
-  test('Pharmacy: a PHARMACIST who signs in with the phone code only gets 403 MFA_REQUIRED on /auth/me', async ({ browser }) => {
+test.describe.serial('privileged role without an authenticator follows the (OFF) policy', () => {
+  test('Pharmacy: a PHARMACIST who signs in with the phone code only works while the policy is off (200 on /auth/me)', async ({ browser }) => {
     const context = await browser.newContext({ locale: 'en-US' }); const page = await context.newPage(); const seen: { url: string; status: number; body?: string }[] = [];
     page.on('response', async (r: Response) => { if (/\/auth\/(oidc\/exchange|me)$/.test(new URL(r.url()).pathname)) seen.push({ url: new URL(r.url()).pathname, status: r.status(), body: r.status() >= 400 ? (await r.text().catch(() => '')).slice(0, 200) : undefined }); });
     try {
@@ -19,7 +20,7 @@ test.describe.serial('privileged role without MFA is refused (the rule is intact
       await expect.poll(() => seen.find((s) => s.url.endsWith('/auth/me'))?.status, { timeout: 45_000 }).toBeDefined();
       const exchange = seen.find((s) => s.url.endsWith('/oidc/exchange')); const me = seen.find((s) => s.url.endsWith('/auth/me'));
       expect(exchange?.status, 'the Passport code exchange itself succeeds').toBe(200);
-      expect(me?.status).toBe(403); expect(me?.body).toContain('MFA_REQUIRED');
+      expect(me?.status, JSON.stringify(me)).toBe(200);
     } finally { await context.close(); }
   });
 });

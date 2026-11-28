@@ -30,6 +30,12 @@ async function passwordSignIn(page: Page, email: string, password: string) {
 }
 
 test.describe.serial('dual sign-in on kx-test', () => {
+  test('the Passport MFA policy stays OFF for pharmacy and lab (nothing here enables it); product APIs read it from the public endpoint', async () => {
+    const c = await pwRequest.newContext(); const r = await c.get(`${URLS.passport}/.well-known/kiorex-mfa-policy`); const j = await r.json(); await c.dispose();
+    expect(r.status()).toBe(200);
+    expect(j.types.pharmacy.mandatory, 'pharmacy owners are not forced to enrol').toEqual([]); expect(j.types.lab.mandatory, 'lab owners are not forced to enrol').toEqual([]);
+  });
+
   test.afterAll(async () => {
     // leave no live login behind: deactivate the throwaway staff (the organisations stay tagged for demo-data:remove)
     try { psql('pharmacy', `update "StaffUser" set active=false where email like '%${tag}@dual.kiorly.test'`); psql('lab', `update "StaffUser" set active=false where email like '%${tag}@dual-lab.kiorly.test'`); } catch { /* best effort */ }
@@ -92,8 +98,12 @@ test.describe.serial('dual sign-in on kx-test', () => {
       await page.getByTestId('signin-passport').click();
       await passportSignIn(page, { phone: ownerPhone });
       await page.waitForURL((u) => u.origin === base, { timeout: 60_000 });
-      // a session was issued for the OWNER row (no MFA claim yet: the friendly two-step screen, never a login error)
-      await expect(page.getByText(/two-step verification/i).first()).toBeVisible({ timeout: 30_000 });
+      // MFA follows the Passport policy (28 Nov 2026): the policy for pharmacy and lab stays OFF, so the privileged OWNER works with the phone code alone (no authenticator, no friendly refusal)
+      await page.waitForURL((u) => u.origin === base && !u.pathname.startsWith('/login'), { timeout: 30_000 });
+      const t = await page.evaluate((k) => localStorage.getItem(k), name === 'Lab' ? 'kiorly.lab.token' : 'kiorly.token'); expect(t).toBeTruthy();
+      const me = await page.request.get(`${base}/api/v1/auth/me`, { headers: { authorization: `Bearer ${t}` } }); expect(me.status(), await me.text()).toBe(200);
+      expect(JSON.stringify(await me.json())).toContain('OWNER');
+      await expect(page.getByTestId('mfa-required')).toHaveCount(0);
       expect(psql(db, `select count(*) from "StaffUser" where email=${q(owner)} and subject is not null`)).toBe('1');
     });
   }
@@ -107,7 +117,8 @@ test.describe.serial('dual sign-in on kx-test', () => {
     await page.getByRole('button', { name: /sign up|create/i }).last().click();
     await passportSignIn(page, { phone: suPhone });
     await page.waitForURL((u) => u.origin === URLS.pharmacy, { timeout: 60_000 });
-    await expect(page.getByText(/two-step verification/i).first()).toBeVisible({ timeout: 30_000 });
+    await page.waitForURL((u) => u.origin === URLS.pharmacy && !u.pathname.startsWith('/login'), { timeout: 30_000 });
+    await expect(page.getByTestId('mfa-required')).toHaveCount(0);
     expect(psql('pharmacy', `select count(*) from "StaffUser" where email=${q(SU.email)} and subject is not null and phone=${q(suPhone)}`)).toBe('1');
     // tag it for demo-data:remove (the public sign-up cannot tag itself)
     psql('pharmacy', `insert into "DemoMarker" ("tableName","rowId","dataClass","batch") select 'Tenant', "orgId", 'DEMO', 'e2e-dual-login' from "StaffUser" where email=${q(SU.email)} on conflict do nothing`);
