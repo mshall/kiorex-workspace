@@ -113,7 +113,7 @@ Passport phone codes (20 per hour per address, 5 per number) were planned in wav
 | Lab web | sign-in default/edge/method 31 pass (2 real defects found and fixed: 320 px header overflow, flaky contrast measured mid-fade), golden flow, growth, Kiorex tab, quick setup, subscription, LIS smoke, crash sweep (all roles, EN/AR, light/dark): 96 pass, 1 skipped, 0 fail |
 | Passport UI (hermetic IdP :4851) | 37 pass (includes the untracked `12-reduced-motion.spec.ts` that another session left in the working tree; it passes and was left untracked) |
 | Clinic chromium project (private clone at `kiorex` tip `04d379da`, DB `e2e_kxcpw`) | `growth-workspace` 21 pass 1 skip, `on08` 2 pass, `signin-default` and `theme` pass, `pay-collections` 10/10 on its Pay stack; quick-setup specs OPEN (F-QS-1) |
-| Mobile web exports against kx-test | see section 9 |
+| Mobile web exports of the patient and staff apps against kx-test | 15 pass (patient 7, staff 8); the Lab technologist smoke failed once because "Today's orders" is empty once the demo orders age out of today, the spec now accepts the empty state (`No orders found`) |
 
 ## 8. Releases and live changes made during this pass
 
@@ -124,7 +124,73 @@ Passport phone codes (20 per hour per address, 5 per number) were planned in wav
 | Temporary lead limits | `deploy.sh test` from a clean archive of workspace HEAD with the override `LEADS_RATE_IP_PER_10MIN=80`, `LEADS_RATE_IP_PER_DAY=500` (compose, Caddyfile and guard compared byte for byte with the live release first; tags unchanged: platform `fb98333`, pharmacy-api `c3496f9`, lab-api `a650127`, passport `65305c1c`); the 35 lead tests ran; then restored with a second release from the committed override (no `LEADS_RATE_*` variable in the container; `/public/leads/config` 200). |
 | Clinic main | two test-only commits cherry-picked to `main` (web-only scope, no API, no migration): run 46115141463 green. |
 
-## 9. Findings and decisions
+## 9. Findings
 
-(see section 10 and the report)
+| Id | Finding | Status |
+|---|---|---|
+| F-SO-1 | Kiorex Account page showed Sign out twice at desktop width (header and page) | FIXED and deployed (`0df73d3`) |
+| F-FONT-1 | Kiorex patient app used Jost | FIXED in code (`0df73d3`); no release build, takes effect at the next build |
+| F-HDR-1 | `clinics.test.kiorly.com` had no security headers | FIXED (tofu, section 8) |
+| F-HDR-2 | the legacy Clinic host `d92iz83i79c05.cloudfront.net` (CDK-owned) has no security headers and no noindex | OPEN: needs a Clinic infra change; deliberately untouched (live organisation) |
+| F-CACHE-1 | Clinic static assets are served without Cache-Control (CDK bucket) | OPEN, same owner as F-HDR-2 |
+| F-CSP-1 | the static sites sent no Content-Security-Policy (only the Kiorly site via meta, Passport and the APIs via header) | report-only policy deployed on all sites (section 8); signed-out pages show zero violations; enforcement is one line once the signed-in check of spec 26 is also zero. DECISION below |
+| F-W320 | Pharmacy and Lab sign-in header overflowed by 22 to 30 px at 320 px (WCAG reflow) | FIXED and deployed (section 8) |
+| F-TAG-1 | 16 throwaway Passport accounts made by earlier runs of spec 14 were `REAL`, so `demo-data:remove` would never find them | FIXED: tagged DEMO now; spec 14 tags its own at the end |
+| F-PAY-1 | platform integration `pay.int.spec.ts` "PSP adapters other than the sandbox fake are NEEDS_HUMAN" failed once in a full run (1 of 2 full runs; passes alone, with all pay suites, and in the second full run: 120 suites, 1486 tests) | OPEN, flaky, cause not found (order-dependent state) |
+| F-QS-1 | Clinic `quick-setup-clinic` (5 of 12) and `quick-setup-nurse` (2) fail: stale against the sequential setup wizard. Facts: the plan lists `whatsapp_reminders` and the new step `growth_links`, but the spec's data setup does not satisfy `growth_links` ("steps still pending after the data setup") and `revealStep` cannot reach the optional extras by walking the phases; the focus check after opening a step differs. | OPEN: needs a spec rewrite by whoever owns the wizard |
+| F-LANG-1 | a first-time visitor gets Arabic whatever the browser language (detection is localStorage only, fallback `ar`) | DESIGN (Egypt default), noted for the founder |
+| F-TEST-1 | test debts fixed: Pharmacy API e2e runner tripped the per-address sign-in limiter (253 now pass); Lab golden flow matched random id digits; Lab schema smoke did not know `PasswordResetToken`; Pharmacy and Lab web lint red (parity regexes, unused directive); e2e suites 25/27/51 expected the old per-market fee; spec 02 expected the old no-access text; spec 18 forgot the consent tick; spec 23 test 4 assumed English | FIXED |
+| F-TEST-2 | Playwright suites of Pharmacy and Lab were written for the old method-tab sign-in; the unified card (ADR-061) replaced it | FIXED: helpers by test id, tab specs rewritten |
+| F-PORT-1 | Lab `crash-sweep.spec.ts` defaulted to API port 3200 (the founder's dev stack): about eleven sweep tests of the first Lab run logged demo owners in on that stack before I stopped the run; the spec now follows `LAB_API_ORIGIN` (Pharmacy likewise). Nothing was written there except sign-in sessions. | FIXED, disclosed |
+| F-LOAD-1 | specs 14 and 15 failed once while local suites ran at the same time and passed alone (33/33) | flake under load, not a product defect |
 
+## 10. Decisions needed from the founder
+
+1. Content-Security-Policy: switch the static sites from report-only to enforced? (My recommendation: yes after the signed-in check shows zero, in the next release; the inline-script hashes must then be part of every release check.)
+2. Clinic CDK distributions (legacy host and its asset bucket): add security headers, noindex on non-production and Cache-Control? It touches the Clinic infra on `main`, so it deploys to the live organisation.
+3. Quick-setup specs: who rewrites them (the wizard owner)? Product is not affected.
+4. Pharmacy and Lab price connection secrets (unchanged open item): until set, five live price tests skip.
+5. `08-mfa-policy` stays unrun on kx-test (never enable the policy); MFA ON is proven on the private stack.
+
+## 11. Throwaway data left in place (tags; the lead will run the removal)
+
+| Where | What | Tag and removal |
+|---|---|---|
+| Passport (kx-test) | 75 accounts `data_class=DEMO` (seeded personas plus the throwaway patients of specs 18, 19, 23 and the 16 owners of spec 14); 3 accounts `TEST` (`+201000009701`, `+201000009702`, `+201000009703`, throwaway role accounts, `provision-role-accounts.sh --remove`); 0 `REAL` | `demo-data:remove` (dry run first) |
+| Pharmacy | 15 organisations named `[TEST] ...` (spec 14 and sign-up probes), their staff deactivated | `DemoMarker` batch `e2e-dual-login`, `demo-data:remove` |
+| Lab | 8 organisations named `[TEST] ...`, staff deactivated | same |
+| Platform | `DemoMarker`: 108 `seed-deployed` rows (the deployed demo dataset), 2 `e2e-onboarding`; join requests: none left (the lead specs remove their own) | `demo-data:remove` |
+| Clinic | "[TEST] KX E2E Clinic (removable)" and its owner `owner@kx-e2e.kiorly.test`; nothing created in Dr Ahmed Shall's organisation | seed Lambda `{"kxE2eOrg":"retire"}` |
+| Plan prices | none published anywhere (Clinic rows identical before and after; Pharmacy and Lab connection dormant) | - |
+
+## 12. Count table
+
+| Measure | Number |
+|---|---|
+| Flows in this matrix (sections 1 to 6) | 69 |
+| Live kx-test Playwright tests defined (`e2e/kx-test`, 29 spec files) | 328 |
+| Live tests, final state: passed / failed / skipped / not run | 311 / 0 / 11 / 6 |
+| Live failures seen in the first runs (distinct tests) and what they were | 29: 7 stale specs (02, 18, 23 test 4, 25 privacy, 22 x3), 13 rate limits (lead form limits for 10, 10b, 10c; Passport address limit for 17, 18, 19, 23) that cleared after the planned waits and the temporary lead-limit raise, 2 flakes under local load (14, 15), 1 new test written wrong and fixed (23 passkey page), 6 are the dependents of those failures counted once each in the serial chains; all green in the final state |
+| Live tests fixed (spec) / product fixed | 6 specs fixed / 2 product defects fixed and deployed (Sign out twice, 320 px sign-in overflow) plus 1 infrastructure fix (Clinic host headers) and 1 hardening added (report-only CSP) |
+| Live skipped, with reason | 11: booking while the Egypt gate is closed (1), old demo TOTP values no longer exist in the rewritten history (4), Pharmacy and Lab price connection dormant (5), screenshot spec (1) |
+| Live not run, with reason | 6: `08-mfa-policy` (changes the live MFA policy: founder rule, proven on a private stack) |
+| Mobile web smoke against kx-test | 15 run, 15 pass (1 spec fixed) |
+| Private-stack suites run | Passport 516 unit plus 37 UI Playwright; platform 2023 unit, 409 ops, 391 web, 1486 integration (1 skipped), 344 patient app; Pharmacy 301 unit, 73 web, 253 api e2e, about 150 Playwright; Lab 324 unit, 73 web, 237 api e2e, 127 Playwright; contracts 455, pay-contract 34; staff app 460; Clinic API unit 1576 (+1 DB-dependent test that needs the seeded private database I had already dropped, not re-run), Clinic web unit 219, Clinic Playwright about 45; cross-product regression 595 (550 pass at first, 16 fixed suites re-run green, 37 skipped by design); MFA ON private proof 16/16; private booking path 6/6 |
+| Private-stack failures found and fixed | Pharmacy web Playwright 28 (test debt and 1 product defect), Lab web 2 (1 product defect), Pharmacy e2e 10 (runner limiter), Lab e2e 2, regression 8, platform integration 1 (flaky, open), lint 3 repos |
+| Not run, with reason | Clinic `quick-setup-clinic` (5 failing) and `quick-setup-nurse` (2): stale against the wizard (OPEN); Clinic nurse-open and nurse-gated projects and the Kiorex-stack Clinic specs (need their own stacks); staff-app Playwright (`kiorly/e2e`, needs the Expo export on private stacks) and patient-app Expo e2e; live Pharmacy and Lab price publish (connection dormant); live booking (gate closed); an iOS or Android device run |
+
+## 13. Commit ids
+
+| Repo | Commits |
+|---|---|
+| kiorex-platform (`main`) | `0df73d3` patient app fonts, Sign out once |
+| kiorex-account (`main`) | `7e4706d` parity test regexes |
+| kiorly-pharmacy (`main`) | `3f8d488` e2e runner limiter, `7961c33` parity regexes, `98dc79c` unified-card Playwright and 320 px header, `1666c48` crash sweep, quick setup, axe |
+| kiorly-lab (`main`) | `60e3784` lint, `e7a5bb1` two e2e fixes, `ee30402` unified-card Playwright and 320 px header |
+| clinics-management | `kiorex`: `d0d2b798`, `f934ec31`; `main` (cherry-picks, web-only deploy run 46115141463 green): `a2025ae1`, `39fb51c6` |
+| workspace (`main`) | `108b9b7`, `055a9d8`, `36e531c`, `d9b4562`, `a8813d5`, and the closing docs commit |
+| kiorex-contracts, kiorex-pay-contract, kiorly (staff app) | no change |
+
+## 14. What is live on kx-test now
+
+Releases of the containers are unchanged (platform `fb98333`, pharmacy-api `c3496f9`, lab-api `a650127`, passport `65305c1c`; lead limits back to the defaults). New since the start of the pass: patient web (Sign out once), Pharmacy web and Lab web (320 px sign-in), security headers on `clinics.test.kiorly.com`, report-only CSP on every static site. The Egypt gate is still closed, the MFA policy is still OFF, no price was published, the real Clinic organisation was not changed.

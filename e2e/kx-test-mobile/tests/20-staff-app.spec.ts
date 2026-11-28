@@ -61,7 +61,7 @@ test('Lab technologist: home, order list, worklist and critical values load; Gro
   expect(info.bootstrap?.entitlement?.enabled).toBe(true);
   const page = await ctx.newPage(); const c = collect(page);
   expect(await text(page, '/')).toMatch(/Omar/);
-  expect(await text(page, '/lab/orders')).toMatch(/ORD-/);
+  expect(await text(page, '/lab/orders')).toMatch(/ORD-|No orders found/); // the screen is "Today's orders": the demo orders age out of today, so the empty state is a valid answer (the Lab web spec 04 asserts the demo orders)
   expect(await text(page, '/lab/worklist')).toMatch(/HEMATOLOGY|Hematology/i);
   expect(await text(page, '/lab/critical')).toMatch(/Critical/i);
   expect(await text(page, '/lab/growth')).toMatch(/role/i);

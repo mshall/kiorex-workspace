@@ -107,6 +107,15 @@ test.describe('API hosts: errors, hostile input, methods', () => {
   }
 });
 
+test.describe('origins are not reachable around the CDN', () => {
+  test('the static-site buckets answer 403 to a direct anonymous request (private buckets, CDN only)', async () => {
+    for (const b of ['kiorex-marketplace', 'kiorex-admin', 'kiorly-pharmacies', 'kiorly-labs', 'kiorly-app', 'kiorly-marketing', 'kiorly-admin']) {
+      const r = await call(`https://kx-test-site-${b}-990597228737.s3.eu-central-1.amazonaws.com/index.html`).catch(() => ({ status: 0, text: '', headers: {} as Record<string, string> }));
+      expect([403, 0], b).toContain(r.status);
+    }
+  });
+});
+
 test.describe('registry-driven URLs and well-known files', () => {
   test('every host in the registry is https and none is localhost', () => {
     for (const [k, v] of Object.entries(URLS)) { expect(v, k).toMatch(/^https:\/\//); expect(v, k).not.toMatch(/localhost|127\.0\.0\.1/); }
