@@ -89,7 +89,7 @@ Also check: commission statement cards (Pharmacy and Lab Growth tab, cash vs cas
 * Push notifications: mock. Local simulation card in Me > Notifications (dev builds only); `e2e-push/send.sh` works on the iOS Simulator only.
 * WhatsApp, SMS, e-mail, payments (Paymob, Fawry): mock. Payment screens run in mock mode.
 * Booking and the patient pharmacy/lab ordering are gated by `market.eg.live` (human step).
-* The release APKs still include the `expo-dev-client` plugin (the `exp+kiorly` scheme and the SYSTEM_ALERT_WINDOW permission are in the manifest). Fine for testing; remove from the production profile before a store build.
+* The `expo-dev-client` plugin is now in DEVELOPMENT builds only (28 Nov 2026, `kiorly/app.config.ts`): the preview, kx-test, pilot and production EAS profiles and the local `build:android:test` APK are prebuilt without it. APKs built BEFORE that change still carry the `exp+kiorly` scheme and SYSTEM_ALERT_WINDOW in the manifest: rebuild them. Metro with `--dev-client` needs a development build, not these APKs. Per-profile check: `EAS_BUILD_PROFILE=<profile> npx expo config --json` (kiorly README, "Dev client only in development profiles").
 * Universal links / app links: configured per environment (`test.kiorex.com`, `app.test.kiorly.com`), not verifiable until the `/.well-known/` files carry the Apple Team ID and the signing SHA-256 (founder).
 * Debug-key APK: for testing only. Production needs the Play app-signing key and the Firebase files.
 * Passport code limits per IP (section 1).
