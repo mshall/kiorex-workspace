@@ -1,6 +1,6 @@
 # UI/UX review: Kiorex landing, entry and onboarding (28 Nov 2026)
 
-Reviewer role: senior UI/UX designer. Subject: the patient web `test.kiorex.com` (platform commits `26c8441` and `bbc9827`, live on kx-test). Screenshots: `_private/ui-review/kiorex-landing/before/` (the live page before, 16 files) and `after/` (landing at 360/390/768/1024/1440/1920 x EN/AR x light/dark; entry, the six onboarding steps, done and home at 390 and 1440 x EN/AR x light/dark). The "after" set is produced by `e2e/onboarding/review.spec.ts` against a mock Passport and API (so it is repeatable and costs no phone codes); the live behaviour is proven by `e2e/kx-test/tests/18-patient-onboarding.spec.ts`.
+Reviewer role: senior UI/UX designer. Subject: the patient web `test.kiorex.com` (platform commits `26c8441`, `bbc9827` and the overflow fix `c93f6d4`, live on kx-test). Screenshots: `_private/ui-review/kiorex-landing/before/` (the live page before, 16 files) and `after/` (landing at 360/390/768/1024/1440/1920 x EN/AR x light/dark; entry, the six onboarding steps, done and home at 390 and 1440 x EN/AR x light/dark). The "after" set is produced by `e2e/onboarding/review.spec.ts` against a mock Passport and API (so it is repeatable and costs no phone codes); the live behaviour is proven by `e2e/kx-test/tests/18-patient-onboarding.spec.ts`.
 
 ## What was covered, and what was not
 
@@ -34,6 +34,7 @@ Reviewer role: senior UI/UX designer. Subject: the patient web `test.kiorex.com`
 | Warning and success text on the soft tints measured 3.68:1 (axe) | Serious | Notices use the foreground colour with a coloured dot or border |
 | "Skip setup" unmounted the flow before the confirmation (the save made the member look onboarded) | Moderate | The flow marks itself started before saving; covered by a test |
 | First onboarding draft pre-ticked reminders | Privacy | Nothing is pre-ticked, marketing included; asserted (`prefsPuts` contains no marketing) |
+| First release (`26c8441`) scrolled sideways by 8 to 11 px at 360 and 390 px (the phone glow ran past the edge) and the entry page button ("Create account with your phone") did not wrap at 360 px; found by measuring the LIVE page after release, not by the earlier tests (they only checked the desktop width) | Major | Fixed in `c93f6d4` and released: glow clipped, button wraps, signed-out header fits in Arabic at 360 (Sign in becomes an icon with its name for screen readers below 420 px); new tests at 360 and 390 in EN and AR; live check shows scroll overflow 0 |
 | Screenshots showed blank sections (scroll reveal) | Tooling only | The matrix scrolls slowly; the page itself reveals correctly (checked: every `.kx-reveal` ends visible) |
 
 ## Design decisions worth knowing
