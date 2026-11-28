@@ -132,6 +132,8 @@ services:
       WIDGET_HOST: "{host:kiorex.widget}"
       LEADS_PUBLIC_ORIGINS: "{url:kiorly.marketing}" # 28 Nov 2026: the public site posts join requests to /api/v1/public/leads and reads the plans from GET /api/v1/public/plans; CORS for those two routes only (apps/api/src/leads/leads-cors.ts, site-plans/site-plans-cors.ts), NOT added to the API-wide CORS_ORIGINS list
       KIORLY_BASE_URL: "{url:kiorly.clinics}/marketplace/v1" # 27 Nov 2026: the Clinic web host routes /marketplace/* to its API (signed partner API outside /api/v1), like pharmacies and labs; the gateway form stays planned
+      KIORLY_PLANS_ADMIN_PHARMACY_URL: "{url:kiorly.pharmacies}" # 28 Nov 2026: host of the Pharmacy for the signed plan price route (Kiorly admin); the credential pair comes from the secret bag
+      KIORLY_PLANS_ADMIN_LAB_URL: "{url:kiorly.labs}" # same for the Lab
   - id: kiorex.admin
     domain: kiorex
     label: admin

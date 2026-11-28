@@ -105,23 +105,24 @@ test.describe.serial('Kiorly landing plans on kx-test', () => {
     expect(await page.locator('#plans').innerText()).not.toMatch(/\d{3,}/);
   });
 
-  test('roles: no token 401, ops reads and cannot change (403 on every change), super admin reads with canChange', async () => {
+  test('roles: no token 401, ops reads and cannot change plans or wording (403), a price is never published directly (409), super admin reads with canChange', async () => {
     expect((await api.get(ADMIN)).status()).toBe(401);
     const o = await api.get(ADMIN, { headers: opsH }); expect(o.status(), await o.text()).toBe(200); expect((await o.json()).canChange).toBe(false);
     const s = await api.get(ADMIN, { headers: supH }); expect(s.status()).toBe(200);
     const j = await s.json(); expect(j.canChange).toBe(true); expect(j.clinic.available).toBe(true); expect(j.clinic.plans.length).toBeGreaterThanOrEqual(3); expect(j.clinic.markets.some((m: { code: string }) => m.code === 'EG')).toBe(true);
     const planId = j.clinic.plans[0].id;
     expect((await api.patch(`${ADMIN}/clinic/${planId}`, { headers: opsH, data: { sortOrder: 99 } })).status()).toBe(403);
-    expect((await api.post(`${ADMIN}/clinic/${planId}/prices`, { headers: opsH, data: { preview: true } })).status()).toBe(403);
+    expect((await api.post(`${ADMIN}/clinic/${planId}/prices`, { headers: opsH, data: { marketId: 'x', amount: '1' } })).status()).toBe(409); // a price is proposed and approved, never published directly (spec 16)
+    expect((await api.post(`${ADMIN}/clinic/${planId}/prices`, { headers: supH, data: { marketId: 'x', amount: '1' } })).status()).toBe(409);
     expect((await api.put(`${ADMIN}/content`, { headers: opsH, data: { version: j.content.version, config: j.content.config } })).status()).toBe(403);
     expect((await api.patch(`${ADMIN}/clinic/${'a'.repeat(65)}`, { headers: supH, data: { sortOrder: 1 } })).status()).toBe(400);
   });
 
-  test('the Plans screen: ops sees no change control; the super admin sees them (English)', async () => {
+  test('the Plans screen: ops can propose a price but has no plan, wording or approval control; the super admin sees them (English)', async () => {
     await ops.goto(`${URLS.opsKiorly}/kiorly-plans`);
     await expect(ops.getByTestId('clinic-section')).toBeVisible({ timeout: 30_000 });
     await expect(ops.getByTestId('read-only-note')).toBeVisible();
-    await expect(ops.locator('[data-testid^="new-price-"]')).toHaveCount(0); await expect(ops.locator('[data-testid^="edit-"]')).toHaveCount(0); await expect(ops.getByTestId('content-save')).toHaveCount(0);
+    await expect(ops.locator('[data-testid^="new-price-"]').first()).toBeVisible(); await expect(ops.locator('[data-testid^="edit-"]')).toHaveCount(0); await expect(ops.locator('[data-testid^="approve-"]')).toHaveCount(0); await expect(ops.getByTestId('content-save')).toHaveCount(0);
     await sup.goto(`${URLS.opsKiorly}/kiorly-plans`);
     await expect(sup.getByTestId('clinic-section')).toBeVisible({ timeout: 30_000 });
     await expect(sup.locator('[data-testid^="new-price-"]').first()).toBeVisible(); await expect(sup.locator('[data-testid^="edit-"]').first()).toBeVisible();
