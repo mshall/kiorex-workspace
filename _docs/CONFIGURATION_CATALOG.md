@@ -305,4 +305,6 @@ Defaults are exactly the values of `config/idp.json` `passwordless.otp` (5 per p
 | `KIOREX_PASSPORT_PHONE_LINK` | Clinic API env | same for exactly one active staff member (`Employee.phone`) | off (not set on the live Clinic) |
 | `SIGNIN_RATE_PER_MINUTE`, `SIGNIN_RATE_PER_IP_PER_MINUTE` | Pharmacy and Lab API env | password attempts per e-mail (10) and per client address (30) per minute | 10 / 30 |
 | `LAB_LOGIN_LOCK_THRESHOLD`, `LAB_LOGIN_LOCK_MINUTES` | Lab API env | wrong passwords before lockout (3 to 20) and lock minutes (1 to 240); hard ranges | 5 / 15 |
-
+| `kx_roles` values `kiorly_ops`, `kiorly_admin` | Passport `config/idp.json` `claimsMapping.kx_roles.allowed`, `mfaPolicy.requiredForRoles` | the two Kiorly-only roles (ADR-062); MFA mandatory like `ops_admin`; granted only by a `super_admin` at Passport `/account/ops/kiorly-roles` (reason required, audited); a sign-in never holds Kiorex and Kiorly roles | no holder until a super admin grants |
+| `KIORLY_ALLOW` | platform code `apps/api/src/auth/kiorly-roles.ts` (a code rule, not a setting) | the only routes the two Kiorly roles may call; every other route answers `403 FORBIDDEN_ROLE`; a mixed token `403 FORBIDDEN_MIXED_ROLES` | deny by default |
+| Console role access table | ops console `apps/ops/src/lib/roleAccess.ts` (code) | which roles see and may open which console routes, and which dashboard each role lands on (`/home`) | see ADR-062 |
