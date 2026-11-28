@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { URLS } from '../lib/hosts';
 import { passportSignIn } from '../lib/passport';
+import { liveToken } from '../lib/session';
 import { latestOtp, ssm, waitForNewOtp } from '../lib/aws';
 
 /**
@@ -32,6 +33,13 @@ async function toPassport(ctx: BrowserContext, via: 'signin' | 'join' = 'signin'
 }
 const fresh = async (browser: Browser) => browser.newContext({ locale: 'en-US' });
 const withParam = (u: string, k: string, v: string) => { const x = new URL(u); x.searchParams.set(k, v); return x.toString(); };
+/** Signed in as the throwaway patient: the access token the app holds names him (a new member is then walked through Kiorex's own welcome steps, which is not Passport's business). */
+async function expectSignedInAsNewPatient(page: Page) {
+  await page.waitForURL((u) => u.origin === appOrigin && !u.pathname.startsWith('/auth/callback'), { timeout: 60_000 });
+  await expect.poll(async () => { try { return await liveToken(page); } catch { return null; } }, { timeout: 30_000 }).toMatch(/^eyJ/);
+  const claims = JSON.parse(Buffer.from((await liveToken(page)).split('.')[1]!, 'base64url').toString()) as { name?: string; phone_number?: string };
+  expect(claims.name).toBe(NAME); expect(claims.phone_number).toBe(phone);
+}
 const tagDemo = () => ssm(`docker exec -i kx-test-postgres-1 psql -U postgres -d passport -tA -c "UPDATE accounts SET data_class='DEMO' WHERE phone='${phone}'"`);
 
 test.describe.serial('Passport: create account, sign in, duplicate, Go back', () => {
@@ -99,8 +107,7 @@ test.describe.serial('Passport: create account, sign in, duplicate, Go back', ()
     test.setTimeout(240_000);
     const ctx = await fresh(browser); const { page } = await toPassport(ctx);
     await passportSignIn(page, { phone, register: { name: NAME } });
-    await page.waitForURL((u) => u.origin === appOrigin && !u.pathname.startsWith('/auth/callback'), { timeout: 60_000 });
-    await expect(page.getByText(new RegExp(NAME)).first()).toBeVisible({ timeout: 30_000 });
+    await expectSignedInAsNewPatient(page);
     try { tagDemo(); } catch { /* tagged again at the end */ }
     const row = ssm(`docker exec -i kx-test-postgres-1 psql -U postgres -d passport -tA -c "SELECT roles, data_class, name FROM accounts WHERE phone='${phone}'"`).trim();
     expect(row).toContain('["patient"]'); expect(row, 'never an auto-granted role').not.toMatch(/ops|admin|owner|clinic_/); expect(row).toContain('DEMO'); expect(row).toContain(NAME);
@@ -111,8 +118,7 @@ test.describe.serial('Passport: create account, sign in, duplicate, Go back', ()
     test.setTimeout(240_000);
     const ctx = await fresh(browser); const { page } = await toPassport(ctx);
     await passportSignIn(page, { phone });
-    await page.waitForURL((u) => u.origin === appOrigin && !u.pathname.startsWith('/auth/callback'), { timeout: 60_000 });
-    await expect(page.getByText(new RegExp(NAME)).first()).toBeVisible({ timeout: 30_000 });
+    await expectSignedInAsNewPatient(page);
     await ctx.close();
   });
 
@@ -159,8 +165,7 @@ test.describe.serial('Passport: create account, sign in, duplicate, Go back', ()
       if (await page.locator('#finish button').isVisible().catch(() => false)) await page.locator('#finish button').click();
       await page.waitForTimeout(400);
     }
-    await page.waitForURL((u) => u.origin === appOrigin && !u.pathname.startsWith('/auth/callback'), { timeout: 60_000 });
-    await expect(page.getByText(new RegExp(NAME)).first()).toBeVisible({ timeout: 30_000 });
+    await expectSignedInAsNewPatient(page);
     await ctx.close();
   });
 
