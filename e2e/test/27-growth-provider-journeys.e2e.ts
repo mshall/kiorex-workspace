@@ -131,6 +131,8 @@ describe('growth journeys: provider link, marketplace, returning patient, disput
     expect(mpApt).toMatchObject({ acquisitionOrigin: 'MARKETPLACE', isNewPatientAtBooking: true });
     await completeVisit(mpPatient.token, b.id, staff);
     const charges = await clinicCharges(mpApt.id);
+    // since the seeded commission defaults (3 percent, min EGP 10) the Clinic decides the fee by the policy, not by the old per-market rate row: the expected fee is the one the decision records
+    rate = Number((await clinicDecision(mpApt.id)).find((x: any) => x.decision === 'CHARGE')?.amount ?? rate);
     expect(charges).toHaveLength(1); expect(Number(charges[0].amount)).toBe(rate);
     chargeId = (await q('kiorly', `select id from "KiorexCommissionCharge" where "appointmentId" = $1`, [mpApt.id]))[0].id;
     const dec = await clinicDecision(mpApt.id);

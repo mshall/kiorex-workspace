@@ -54,6 +54,8 @@ describe('51. provider-sponsored promotions: the money flow end to end (RC-S3, R
     const fx = await kxdevGrowthTenant(p.id); owner = fx.admin; restoreTenant = fx.restore;
     platform = await staffLogin('superadmin@kiorly.com'); staff = await staffLogin('kxdev.hesham.nabil@kiorly.dev');
     const g = await kiorly(platform, 'POST', `/admin/platform/tenants/${tenantId}/credits`, { amount: 2000, reason: 'GOODWILL', note: 'e2e suite 51 sponsor wallet' }); expect([200, 201], JSON.stringify(g.body)).toContain(g.status);
+    // a promotion left ACTIVE by an earlier aborted run (or by the cloned dev data) would win the patient quote: pause the strays of this tenant on the Kiorex side first (private databases only)
+    await q('kiorex_platform', `update "SponsoredPromotionProjection" set status = 'PAUSED' where status = 'ACTIVE' and "orgRef" = $1`, [tenantId]);
     promoId = await activatePromotion(owner, t.ops, promoBody(clinicianId, { discount: { kind: 'FIXED_MINOR', value: mn(S) } }));
   });
   afterAll(async () => {

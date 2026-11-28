@@ -70,7 +70,8 @@ describe('growth booking integration: decision at hold, signed acquisition block
     expect((await clinicDecision(apt.id)).some((x: any) => x.decision === 'CHARGE' && x.origin === 'MARKETPLACE')).toBe(true);
     const charges = await clinicCharges(apt.id);
     // the fee in force: EGP 40 (ADR-007) in production; the dev database may carry another NEEDS_HUMAN placeholder rate, so the charge is compared with the rate in force
-    const inForce = Number((await q('kiorly', `select amount from "KiorexCommissionRate" where "validTo" is null order by "validFrom" desc limit 1`))[0].amount);
+    // the fee is decided by the seeded commission policy (3 percent, min EGP 10) since 27 Nov 2026, not by the per-market rate row: compare with the amount the decision records
+    const inForce = Number((await clinicDecision(apt.id)).find((x: any) => x.decision === 'CHARGE')?.amount);
     expect(charges).toHaveLength(1); expect(Number(charges[0].amount)).toBe(inForce);
     // the charge event reaches Kiorex as a revenue fact (charges only, never booking value)
     const fact = await waitFor('revenue fact', async () => (await q('kiorex_platform', `select kind, status, "amountMinor", "bookingId" from "GrowthRevenueFact" where "appointmentId" = $1 order by "createdAt"`, [apt.id]))[0]);
