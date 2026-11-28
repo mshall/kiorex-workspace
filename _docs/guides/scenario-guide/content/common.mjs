@@ -9,7 +9,7 @@ export const H = {
   pharmacy: ['Kiorly Pharmacy web', '`https://pharmacies.test.kiorly.com` · local `http://localhost:5192`'],
   lab: ['Kiorly Lab web', '`https://labs.test.kiorly.com` · local `http://localhost:5193`'],
   site: ['Kiorly site and Join form', '`https://test.kiorly.com/en/` and `/ar/` · built site, local preview of `kiorex-account/apps/kiorly-site`'],
-  home: ['Kiorly Home (staff sign-in)', '`https://app.test.kiorly.com/signin` (registry host; deployment not confirmed in the deploy logs) · local `http://localhost:5194/signin`'],
+  home: ['Kiorly Home (staff sign-in)', '`https://app.test.kiorly.com/signin` (live on kx-test since 28 Nov 2026) · local `http://localhost:5194/signin`'],
   staff: ['Kiorly staff app (Expo)', 'phone build `com.kiorly.app`, scheme `kiorly://` · local Expo web `http://localhost:8082`'],
   mobile: ['Kiorex patient app (Expo)', 'phone build `com.kiorex.app`, scheme `kiorex://` · local Expo web `http://localhost:8081`'],
   widget: ['Booking widget', '`https://book.test.kiorex.com` (registry host) · local served by the API on `:4000`'],

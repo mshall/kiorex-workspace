@@ -1,0 +1,171 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>How to take a market live (Egypt)</title><style>
+@font-face{font-family:'Plus Jakarta Sans';font-weight:400;src:url('file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_brand/fonts/plus-jakarta-sans-400.woff2')}
+@font-face{font-family:'Plus Jakarta Sans';font-weight:500;src:url('file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_brand/fonts/plus-jakarta-sans-500.woff2')}
+@font-face{font-family:'Plus Jakarta Sans';font-weight:600;src:url('file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_brand/fonts/plus-jakarta-sans-600.woff2')}
+@font-face{font-family:'Plus Jakarta Sans';font-weight:700;src:url('file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_brand/fonts/plus-jakarta-sans-700.woff2')}
+@font-face{font-family:'IBM Plex Sans Arabic';font-weight:400;src:url('file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_brand/fonts/ibm-plex-sans-arabic-400.woff2')}
+@font-face{font-family:'IBM Plex Sans Arabic';font-weight:600;src:url('file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_brand/fonts/ibm-plex-sans-arabic-600.woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:400;src:url('file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/pdf/fonts/jetbrains-mono-latin-400-normal.woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:600;src:url('file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/pdf/fonts/jetbrains-mono-latin-600-normal.woff2')}
+
+:root{--indigo:#3730A3;--ocean:#0369A1;--coral:#E8735E;--coral-text:#8F4944;--ground:#F4F6FC;--ink:#0F172A;--muted:#475569;--line:#D5D9EC;--i50:#EEF0FB;--o50:#E8F3F9;--c50:#FDF1EE;--g50:#E8F6EE;--green:#15803D;--amber:#B45309}
+@page{size:A4;margin:25mm 16mm 21mm 16mm}
+@page cover{margin:0}
+*{box-sizing:border-box}
+html{font-family:'Plus Jakarta Sans','IBM Plex Sans Arabic',sans-serif;font-size:9.1pt;line-height:1.5;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0}
+[dir=rtl],.ar{font-family:'IBM Plex Sans Arabic','Plus Jakarta Sans',sans-serif;line-height:1.75;letter-spacing:0}
+h1,h2,h3,.ct,.bf{font-family:'Plus Jakarta Sans','IBM Plex Sans Arabic',sans-serif}
+/* chapter opener */
+.opener{position:relative;margin:0 0 7mm;padding:0 0 5mm;border-bottom:1px solid var(--line)}
+.opener .num{font:700 54pt/1 'Plus Jakarta Sans';color:transparent;-webkit-text-stroke:1.2px var(--indigo);opacity:.55;position:absolute;right:0;top:-3mm;letter-spacing:-.02em}
+.opener .eyebrow{font:600 8pt 'Plus Jakarta Sans';letter-spacing:.3em;color:var(--ocean);margin:0 0 2.5mm}
+.opener h1{font-size:25pt;line-height:1.12;color:var(--indigo);margin:0 0 3.5mm;font-weight:700;max-width:135mm;letter-spacing:-.01em}
+.opener .bar{height:3px;width:44mm;background:linear-gradient(90deg,var(--indigo),var(--ocean));border-radius:2px;position:relative}
+.opener .bar:after{content:"";position:absolute;left:calc(100% + 3mm);top:0;width:6mm;height:3px;background:var(--coral);border-radius:2px}
+h2{font-size:13pt;line-height:1.25;font-weight:700;color:var(--indigo);margin:6.5mm 0 2.6mm;padding-bottom:1.4mm;border-bottom:1.5px solid var(--i50);break-after:avoid;display:flex;gap:2.6mm;align-items:baseline}
+h2 .sn{flex:none;font:700 8.2pt 'Plus Jakarta Sans';background:var(--indigo);color:#fff;border-radius:1.6mm;padding:.7mm 2mm;letter-spacing:.04em}
+h3{font-size:10.4pt;color:var(--ocean);margin:5mm 0 1.6mm;font-weight:700;break-after:avoid}
+p{margin:0 0 2.7mm}
+.lead{font-size:11pt;line-height:1.6;color:var(--ink);font-weight:500}
+b,strong{font-weight:700}
+a{color:var(--ocean);text-decoration:none}
+code{font-family:'JetBrains Mono',monospace;font-size:7.7pt;background:var(--i50);color:#2E2784;padding:.25mm 1.1mm;border-radius:1mm;word-break:break-word}
+pre{font-family:'JetBrains Mono',monospace;font-size:7.6pt;line-height:1.5;background:#0F172A;color:#E2E8F0;padding:3.2mm 3.6mm;border-radius:2.2mm;white-space:pre-wrap;word-break:break-word;border-left:3px solid var(--coral);margin:2mm 0 4mm;break-inside:avoid}
+pre code{background:none;color:inherit;padding:0;font-size:inherit}
+ul,ol{margin:0 0 3.2mm;padding-left:5mm} li{margin:0 0 1.3mm}
+ul li::marker{color:var(--ocean)}
+ul.check{list-style:none;padding-left:0}
+ul.check li{position:relative;padding-left:7.5mm;break-inside:avoid}
+ul.check li:before{content:"";position:absolute;left:0;top:.7mm;width:3.8mm;height:3.8mm;border:1.4px solid var(--indigo);border-radius:1mm;background:#fff}
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:0 0 4mm;position:relative}
+ol.steps li{counter-increment:s;position:relative;padding:0 0 2.6mm 10mm;break-inside:avoid;margin:0}
+ol.steps li:before{content:counter(s);position:absolute;left:0;top:-.3mm;width:6.4mm;height:6.4mm;border-radius:50%;background:var(--indigo);color:#fff;font:700 8.4pt 'Plus Jakarta Sans';text-align:center;line-height:6.4mm;z-index:1}
+ol.steps li:after{content:"";position:absolute;left:3.1mm;top:6.4mm;bottom:.2mm;width:1.2px;background:var(--line)}
+ol.steps li:last-child:after{display:none}
+table{width:100%;border-collapse:separate;border-spacing:0;margin:2.4mm 0 4.6mm;font-size:8.5pt;border:1px solid var(--line);border-radius:2mm;overflow:hidden}
+th{background:var(--indigo);color:#fff;text-align:left;padding:2mm 2.6mm;font-weight:600;font-size:8.2pt;letter-spacing:.02em}
+thead th:nth-child(odd){background:#3730A3} thead{background:linear-gradient(90deg,#3730A3,#0369A1)} thead th{background:transparent}
+td{padding:1.6mm 2.5mm;vertical-align:top;border-top:1px solid var(--line)}
+tbody tr:first-child td{border-top:0}
+tbody tr:nth-child(even) td{background:#F6F7FD}
+tr{break-inside:avoid} thead{display:table-header-group}
+td:first-child{font-weight:600}
+td:first-child code{white-space:nowrap;word-break:normal}
+.pill{display:inline-block;font:700 7.2pt 'Plus Jakarta Sans';padding:.3mm 2.2mm;border-radius:5mm;background:var(--i50);color:var(--indigo);letter-spacing:.03em;white-space:nowrap}
+.pill.pass,.pill.green{background:#DCF3E4;color:#0F6A32}.pill.fixed{background:#E0EEFA;color:#0B5A8A}.pill.skip,.pill.amber{background:#FDEFD2;color:#8A4A06}.pill.open{background:#FBE0DC;color:#8F2B1F}.pill.design,.pill.ind{background:var(--i50);color:var(--indigo)}
+.callout{position:relative;border:1px solid var(--line);border-left:4px solid var(--ocean);background:var(--o50);border-radius:0 2.2mm 2.2mm 0;padding:2.8mm 3.6mm 2.8mm 11mm;margin:3.2mm 0 4.6mm;break-inside:avoid}
+.callout:before{content:"i";position:absolute;left:3mm;top:2.7mm;width:5mm;height:5mm;border-radius:50%;background:var(--ocean);color:#fff;font:700 8pt/5mm 'Plus Jakarta Sans';text-align:center}
+.callout .ct{font:700 9.4pt 'Plus Jakarta Sans';color:#075985;margin-bottom:.8mm}
+.callout p:last-child{margin:0}
+.callout.warn{border-left-color:var(--coral);background:var(--c50)} .callout.warn:before{content:"!";background:#C2543F} .callout.warn .ct{color:var(--coral-text)}
+.callout.ok{border-left-color:var(--green);background:var(--g50)} .callout.ok:before{content:"\2713";background:var(--green)} .callout.ok .ct{color:#0F6A32}
+.callout.rule{border-left-color:var(--indigo);background:var(--i50)} .callout.rule:before{content:"\00A7";background:var(--indigo)} .callout.rule .ct{color:var(--indigo)}
+.kpis{display:flex;gap:3mm;margin:4mm 0 4mm}
+.kpi{flex:1;background:#fff;border:1px solid var(--line);border-radius:2.6mm;padding:3mm 3.2mm;border-top:3.5px solid var(--indigo);break-inside:avoid}
+.kpi:nth-child(2){border-top-color:var(--ocean)} .kpi:nth-child(3){border-top-color:var(--coral)} .kpi:nth-child(4){border-top-color:var(--green)}
+.kpi b{display:block;font:700 22pt 'Plus Jakarta Sans';color:var(--indigo);line-height:1.1;letter-spacing:-.02em}
+.kpi span{font-size:7.9pt;color:var(--muted);display:block;margin-top:1.2mm;line-height:1.4}
+.verdict{background:var(--i50);border:1px solid var(--line);border-radius:2.6mm;padding:3.4mm;margin:2mm 0 3mm;font-size:10.2pt}
+figure{margin:3mm auto 5mm;width:86%;break-inside:avoid}
+figure.narrow{width:54%}
+.shot{position:relative;border:1px solid var(--line);border-radius:2mm;box-shadow:0 1px 6px rgba(55,48,163,.14);background:#fff;overflow:hidden}
+.shot img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+.pair{display:flex;gap:4mm;margin:3mm 0 5mm}.pair figure{width:50%;margin:0}
+figcaption{font-size:7.9pt;color:var(--muted);margin-top:1.6mm;line-height:1.45}
+figcaption b{color:var(--indigo)}
+.pin{position:absolute;width:5mm;height:5mm;margin:-2.5mm 0 0 -2.5mm;border-radius:50%;background:#C2543F;color:#fff;font:700 7.5pt 'Plus Jakarta Sans';text-align:center;line-height:5mm;border:1.4px solid #fff;box-shadow:0 0 0 1px #C2543F}
+.mask{position:absolute;background:#fff}
+blockquote{margin:3mm 0 4mm;padding:2.6mm 4mm;border-left:3px solid var(--ocean);background:var(--o50);border-radius:0 2mm 2mm 0}
+blockquote p:last-child{margin:0}
+hr{border:0;border-top:1px solid var(--line);margin:5mm 0}
+/* cover */
+.cover{page:cover;height:297mm;width:210mm;position:relative;color:#fff;overflow:hidden;background:linear-gradient(140deg,#2E2784 0%,#3730A3 38%,#1E5AA8 72%,#0369A1 100%)}
+.cover .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px);background-size:14mm 14mm}
+.cover .wm{position:absolute;right:-34mm;top:78mm;width:170mm;opacity:.1}
+.cover .glow{position:absolute;right:-40mm;bottom:-50mm;width:150mm;height:150mm;border-radius:50%;background:radial-gradient(circle,rgba(232,115,94,.35),transparent 65%)}
+.cover .logo{position:absolute;left:20mm;top:22mm;width:76mm}.cover .logo svg{width:100%;height:auto;display:block}
+.cover .tagline{position:absolute;right:20mm;top:29mm;font:600 8pt 'Plus Jakarta Sans';letter-spacing:.28em;color:#C9CCF2}
+.cover .eyebrow{position:absolute;left:20mm;top:98mm;font:700 9.5pt 'Plus Jakarta Sans';letter-spacing:.32em;color:#C9CCF2;display:flex;align-items:center;gap:4mm}
+.cover .eyebrow:before{content:"";width:12mm;height:3px;border-radius:2px;background:var(--coral)}
+.cover h1{position:absolute;left:20mm;top:108mm;width:152mm;color:#fff;font:700 38pt/1.08 'Plus Jakarta Sans';margin:0;letter-spacing:-.02em}
+.cover .tag{position:absolute;left:20mm;top:178mm;width:140mm;font-size:12pt;line-height:1.55;color:#E7E8FA}
+.cover .pulse{position:absolute;left:0;right:0;top:214mm}
+.cover .meta{position:absolute;left:20mm;bottom:22mm;right:20mm;font-size:8.6pt;color:#D5D8F5;display:flex;justify-content:space-between;gap:6mm;border-top:1px solid rgba(255,255,255,.32);padding-top:4mm}
+.cover .meta b{display:block;color:#fff;font:700 9.4pt 'Plus Jakarta Sans';margin-bottom:.6mm}
+/* toc */
+.toc{margin-top:5mm}
+.toc .row{display:flex;align-items:baseline;gap:2.4mm;margin:2.7mm 0 0;break-inside:avoid}
+.toc .row .n{font:700 10pt 'Plus Jakarta Sans';color:#fff;background:var(--indigo);border-radius:1.6mm;padding:.4mm 1.8mm;min-width:8mm;text-align:center}
+.toc .row .t{font:700 11.3pt 'Plus Jakarta Sans';color:var(--indigo)}
+.toc .row .d{flex:1;border-bottom:1.5px dotted #A9AEDB;transform:translateY(-1px)}
+.toc .row .p{font:700 10.4pt 'Plus Jakarta Sans';color:var(--indigo)}
+.toc .subs{margin:.8mm 0 0 11.5mm;font-size:7.8pt;color:var(--muted);columns:2;column-gap:8mm}
+.toc .subs div{break-inside:avoid;margin:0 0 .3mm;line-height:1.4}
+</style></head><body><div class="opener"><div class="num">03</div><div class="eyebrow">CHAPTER 03</div><h1>Part A: Kiorex, taking Egypt live</h1><div class="bar"></div></div>
+<h2><span class="sn">3.1</span><span>What the gate is</span></h2>
+<p><code>market.eg.live</code> is a <b>launch-locked</b> flag (Kiorex control plane, ADR-024). A launch-locked flag is effective only when two things are true: it is not switched OFF, <b>and</b> a human has recorded gate evidence for it. Until then its state reads <b>ON, awaiting gate</b> and the market is treated as not live. When the market is not live: Egypt is hidden from the sign-up country list and search, the patient site shows a banner, and profile, slots and booking answer <code>403 FEATURE_DISABLED</code>. Existing organisations and data are never touched.</p>
+<table class=""><thead><tr><th>Layer</th><th>Where</th><th>Detail</th></tr></thead><tbody><tr><td>Flag definition</td><td><code>flag-catalogue.ts</code></td><td>key <code>market.eg.live</code>, class LAUNCH_LOCKED, scope GLOBAL, hint "Market pack certification + local counsel"</td></tr><tr><td>Record / revoke</td><td><code>PUT /admin/flags/market.eg.live/gate</code>, <code>POST /admin/flags/market.eg.live/gate/revoke</code></td><td>super_admin only; one audited evidence row</td></tr><tr><td>Read</td><td><code>GET /admin/flags</code>, <code>/admin/gates</code>, <code>/admin/flags/audit</code>, <code>/admin/flags/propagation</code></td><td>ops_admin or super_admin</td></tr><tr><td>Effect</td><td><code>market.service.ts</code></td><td><code>GET /markets</code> lists live markets; <code>?all=true</code> also shows gated ones with their state</td></tr></tbody></table>
+
+<h2><span class="sn">3.2</span><span>Sign in as ops</span></h2>
+<p>Open the Ops console (kx-test: <code>https://admin.test.kiorex.com</code>). It sends you to Kiorex Passport. Use the <b>ops</b> account.</p>
+<ol class="steps"><li>On the Passport page enter your mobile number in international format and press <b>Send code</b>.</li><li>Enter the six-digit code from the text message and press <b>Verify</b>.</li><li>Ops roles always see <b>Two-step verification</b>: enter the six-digit code from your authenticator app (it changes every 30 seconds) and press <b>Verify</b>.</li><li>If Passport offers to add a passkey, you may choose <b>Not now</b>. You land on <b>Feature flags</b>.</li></ol>
+<figure class="narrow"><div class="shot" style="aspect-ratio:1366/763"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/ops-00-passport-landing.png" alt=""><span class="pin" style="left:50%;top:44.1%">1</span></div><figcaption><b>Figure 1.</b> The Passport sign-in page the console redirects to. The extra "Fake Hospital SSO" button exists only on the local development identity provider, not on kx-test.</figcaption></figure>
+<div class="pair"><figure class=""><div class="shot" style="aspect-ratio:1366/656"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/ops-2-code.png" alt=""></div><figcaption><b>Figure 2.</b> Step 2: the six-digit text message code (mock provider here; on kx-test it arrives on your phone).</figcaption></figure><figure class=""><div class="shot" style="aspect-ratio:1366/656"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/ops-3-totp.png" alt=""></div><figcaption><b>Figure 3.</b> Step 3: the authenticator code for ops roles. The value shown is a one-time code, useless now.</figcaption></figure></div>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/ops-05-flags-landing.png" alt=""><span class="pin" style="left:3%;top:95.0%">1</span></div><figcaption><b>Figure 4.</b> You land on Feature flags. The name and role at the bottom left tell you which account you are in: here <code>ops_admin</code>.</figcaption></figure>
+
+<h2><span class="sn">3.3</span><span>Look before you leap</span></h2>
+<p>Still as ops, search the flag. In the <b>Flags</b> tab type <code>market.eg.live</code> in <b>Search</b>.</p>
+<figure class=""><div class="shot" style="aspect-ratio:1366/508"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/ops-06-flag-row.png" alt=""><span class="pin" style="left:57%;top:79.0%">1</span><span class="pin" style="left:93%;top:79.0%">2</span></div><figcaption><b>Figure 5.</b> Before the gate: <b>Market EG</b> reads "ON · awaiting gate". The buttons are greyed and the note says "Read-only: only super admins can change flags". This is the ops account working as designed.</figcaption></figure>
+<p>The <b>Launch gates</b> tab lists gates that have ids (for example GHV1 for home visits). <code>market.eg.live</code> does not appear there because it names no required gate id; it is recorded from the Flags tab, button Gate. Do not worry that it is missing.</p>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/ops-07-gates-tab.png" alt=""></div><figcaption><b>Figure 6.</b> The Launch gates board (ops view, Record buttons disabled). The "DEV SEED" rows are local test data; on kx-test the deployed seed records no gates at all.</figcaption></figure>
+<p>Now look at the patient side while the gate is open. Open the patient site (kx-test: <code>https://test.kiorex.com</code>; the address in the registry is <code>kiorex.marketplace</code>).</p>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/pat-before-1-home.png" alt=""><span class="pin" style="left:50%;top:2.0%">1</span></div><figcaption><b>Figure 7.</b> BEFORE: patient home. A yellow bar says "Kiorex is not live in Egypt yet. You can browse, but booking is paused until it launches."</figcaption></figure>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/pat-before-2-search.png" alt=""><span class="pin" style="left:50%;top:66.0%">1</span><span class="pin" style="left:12%;top:75.0%">2</span></div><figcaption><b>Figure 8.</b> BEFORE: Find a doctor. "Kiorex is not live in any market yet." and "No doctors". The sign-up country list is empty too (<code>GET /api/v1/markets</code> returns an empty list).</figcaption></figure>
+
+<h2><span class="sn">3.4</span><span>Sign in as super admin and record the gate</span></h2>
+<p>Sign out of the ops account (top right, Sign out) and repeat section 3.2 with the <b>super admin</b> account. Check the bottom-left label now shows both roles.</p>
+<figure class=""><div class="shot" style="aspect-ratio:1366/508"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/sa-05-flag-row-before.png" alt=""><span class="pin" style="left:93%;top:79.0%">1</span><span class="pin" style="left:3%;top:153.2%">2</span></div><figcaption><b>Figure 9.</b> Super admin account: the Toggle and Gate buttons are now enabled. The bottom-left label (cropped here) now reads <code>ops_admin, super_admin</code>.</figcaption></figure>
+<ol class="steps"><li>Search <code>market.eg.live</code> in the Flags tab and press <b>Gate</b> on that row.</li><li>The dialog <b>Launch gate evidence market.eg.live</b> opens. Its hint repeats what the flag needs: market pack certification and local counsel.</li><li>Fill the four fields (table below). All four are required; the Record evidence button stays disabled until the link starts with http:// or https://.</li><li>Read the four values once more, then press <b>Record evidence</b>. The toast "Gate evidence recorded" appears.</li></ol>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/sa-06-gate-dialog-empty.png" alt=""></div><figcaption><b>Figure 10.</b> The empty gate dialog. Nothing is recorded until you press Record evidence.</figcaption></figure>
+<table class=""><thead><tr><th>Field</th><th>What to enter</th><th>Notes</th></tr></thead><tbody><tr><td>Gate ID</td><td>A reference you can find again, for example your own approval reference</td><td>Free text for this flag (no fixed id is required). Never start it with <code>DEV-ONLY</code>: production refuses those. The screenshot uses a sample id.</td></tr><tr><td>Approver</td><td>Name of the person or body that gave the approval</td><td>Free text, kept in the audit record.</td></tr><tr><td>Approved on</td><td>Date of that approval</td><td>Date picker.</td></tr><tr><td>Document link</td><td>Link to the approval document, https only</td><td>Keep the document in private storage; the console stores only the link and shows it to ops staff.</td></tr></tbody></table>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/sa-07-gate-dialog-filled.png" alt=""><span class="pin" style="left:62%;top:38.0%">1</span><span class="pin" style="left:62%;top:48.0%">2</span><span class="pin" style="left:40%;top:58.0%">3</span><span class="pin" style="left:62%;top:69.0%">4</span><span class="pin" style="left:61%;top:80.0%">5</span></div><figcaption><b>Figure 11.</b> The dialog filled with SAMPLE values (a test stack and an example.com link). Use your real approval details on kx-test or kx-pro.</figcaption></figure>
+<figure class=""><div class="shot" style="aspect-ratio:1366/508"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/sa-08-recorded-toast.png" alt=""><span class="pin" style="left:50%;top:9.7%">1</span><span class="pin" style="left:48%;top:83.9%">2</span></div><figcaption><b>Figure 12.</b> Right after pressing Record evidence: the toast "Gate evidence recorded" and the row now reads ON in both Global and Market EG. The Last change cell shows the signed-in actor.</figcaption></figure>
+<div class="callout warn"><div class="ct">Do not record it twice or "for testing"</div><div>The record is live the moment you press the button, and it is audited with your account. If you only want to rehearse, use the private test stack, never kx-test or kx-pro. Recording again with the same gate id replaces the earlier row, which is also audited.</div></div>
+
+<h2><span class="sn">3.5</span><span>Verify on the patient side</span></h2>
+<p>Verification has four checks. Do them in this order.</p>
+<ol class="steps"><li><b>Audit trail</b> (Audit trail tab): a new row <code>market.eg.live</code>, event GATE, change AWAITING_GATE to GATE_SATISFIED, with the actor.</li><li><b>Propagation</b> tab: the registry version rose and the products catch up. Clinic, Pharmacy and Lab poll every 30 seconds (some are also pushed by webhook). STALE or NEVER_FETCHED simply means a product has not fetched yet or is not running; give it a minute.</li><li><b>Public answer</b>: <code>GET /api/v1/markets</code> now returns Egypt with <code>live: true</code>; <code>?all=true</code> shows its state LIVE. On kx-test: <code>https://api.test.kiorex.com/api/v1/markets</code> (the CDN header gate may block visitors that are not on the allow-list).</li><li><b>Patient site and app</b>: the yellow bar is gone and doctors appear.</li></ol>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/sa-10-audit-after.png" alt=""><span class="pin" style="left:40%;top:50.0%">1</span></div><figcaption><b>Figure 13.</b> Audit trail: the first row is the gate recording. (Rows below it are older flag changes of the test database.)</figcaption></figure>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/sa-11-propagation.png" alt=""><span class="pin" style="left:70%;top:54.0%">1</span></div><figcaption><b>Figure 14.</b> Propagation: the Clinic is IN_SYNC at the new version. Pharmacy and Lab show STALE here only because they are not running on this private stack.</figcaption></figure>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/pat-after-2-search.png" alt=""></div><figcaption><b>Figure 15.</b> AFTER: Find a doctor lists doctors; the "not live" notices are gone. The number of doctors depends on the synced providers: on kx-test the demo data has 8 live providers. A completely empty list after the gate means no provider is LIVE yet, which is a separate matter (see Troubleshooting).</figcaption></figure>
+
+<h2><span class="sn">3.6</span><span>One person or two</span></h2>
+<p>The platform enforces a second approver (maker-checker) only for money-path flags switched OFF at global or market scope, and for the commission policy. For <code>market.eg.live</code> a single <code>super_admin</code> records and revokes alone. Because you are the only super admin today, the control is you. Recommended habit, which is a practice and not a system rule:</p>
+<ul>
+<li>Do the preparation as <b>ops</b> (collect approver, date and link, check the flag state), then the single write as <b>super admin</b>.</li>
+<li>Write the <b>approver</b> as the person or body that actually approved (for example the counsel or the market-pack certifier), so the record does not read as "founder approved founder".</li>
+<li>Ask a trusted person to look at the audit trail the same day. Anyone with the ops role can read it.</li>
+</ul>
+
+<h2><span class="sn">3.7</span><span>Roll back</span></h2>
+<p>There are two ways to close Egypt again. Both act within seconds, both are audited, and neither deletes organisations, patients, bookings or any data ("OFF stops new actions only, never hides data").</p>
+<table class=""><thead><tr><th></th><th>A. Revoke the gate</th><th>B. Switch the flag OFF (kill switch)</th></tr></thead><tbody><tr><td>Where</td><td>Flags tab, row, <b>Gate</b>, button <b>Revoke</b></td><td>Flags tab, row, <b>Toggle</b>, Value <b>OFF</b>, Scope GLOBAL (the only scope this flag offers)</td></tr><tr><td>Needs</td><td>Nothing more. There is no confirmation and the reason is fixed as "revoked from console".</td><td>A reason and a ticket reference (both required). Optional expiry and start time.</td></tr><tr><td>What it does</td><td>Deletes <b>all</b> gate evidence rows of the flag. The state returns to "awaiting gate". To reopen you must record the evidence again.</td><td>Keeps the evidence and overrides the flag to OFF. To reopen: Toggle, Value ON (clears the override).</td></tr><tr><td>Watch out</td><td>Because it removes every evidence row, note down what was recorded before you press it.</td><td>An OFF with an <b>expiry</b> turns back ON automatically when it expires, and Egypt reopens if the gate is still recorded. Leave the expiry empty for a real stop.</td></tr></tbody></table>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/sa-13-revoke-dialog.png" alt=""><span class="pin" style="left:53%;top:31.0%">1</span><span class="pin" style="left:52%;top:79.0%">2</span></div><figcaption><b>Figure 16.</b> Revoke: the gate dialog of a recorded flag shows who approved it and offers <b>Revoke</b> next to Record evidence.</figcaption></figure>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/sa-12-toggle-dialog.png" alt=""><span class="pin" style="left:41%;top:36.0%">1</span><span class="pin" style="left:58%;top:36.0%">2</span><span class="pin" style="left:50%;top:46.0%">3</span><span class="pin" style="left:50%;top:56.0%">4</span></div><figcaption><b>Figure 17.</b> Kill switch: Toggle, Value OFF, Scope GLOBAL, reason and ticket. This flag is not a money-path flag, so there is no second-approver note and the change applies immediately.</figcaption></figure>
+<figure class=""><div class="shot" style="aspect-ratio:1366/508"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/sa-14-flag-row-revoked.png" alt=""><span class="pin" style="left:57%;top:79.0%">1</span></div><figcaption><b>Figure 18.</b> After Revoke: back to "ON · awaiting gate" in Market EG.</figcaption></figure>
+<figure class=""><div class="shot" style="aspect-ratio:1366/820"><img src="file:///Users/shall/Documents/Peraonal/Work/kiorex-v2/_docs/guides/golive/shots/pat-revoked-1-home.png" alt=""><span class="pin" style="left:50%;top:2.0%">1</span></div><figcaption><b>Figure 19.</b> After Revoke the patient site returns to the "not live in Egypt yet" state within seconds.</figcaption></figure>
+
+<h2><span class="sn">3.8</span><span>What this does not do</span></h2>
+<ul>
+<li>It does <b>not create doctors</b>. Providers appear from the Clinic sync; a market with no LIVE provider shows an empty list even when live.</li>
+<li>It does <b>not open other gates</b>. Pharmacy orders (<code>kiorex.pharmacy_orders</code>), lab bookings (<code>kiorex.lab_bookings</code>) and telemedicine (<code>kiorex.telemedicine</code>) have their own evidence (NEEDS_HUMAN row 10).</li>
+<li>It does <b>not change commissions or money modes</b>. Counsel sign-off on the commission policy is separate and still recorded only by a human.</li>
+<li>It does <b>not switch on Kiorly's own Egypt market</b>. That is a different switch in a different product (Part B).</li>
+<li>The screenshots show the Kiorex <b>patient web</b>. The patient app reads the same <code>/markets</code> answer and shows the same states.</li>
+</ul>
+<script>
+document.querySelectorAll('td').forEach(td=>{const t=td.textContent.trim();const m=/^(PASS|FIXED|SKIP|OPEN|DESIGN|DORMANT)\b/.exec(t);if(m&&td.children.length===0){td.innerHTML='<span class="pill '+m[1].toLowerCase()+'">'+m[1]+'</span>'+t.slice(m[1].length).replace(/^/,' ')}});
+document.querySelectorAll('td code').forEach(c=>{if(c.textContent.length<=30)c.style.whiteSpace='nowrap'});
+document.querySelectorAll('table').forEach(t=>{if(t.querySelectorAll('tbody tr').length<=7&&t.textContent.length<2200)t.style.breakInside='avoid';});
+</script></body></html>

@@ -152,16 +152,23 @@ Passport phone codes (20 per hour per address, 5 per number) were planned in wav
 4. Pharmacy and Lab price connection secrets (unchanged open item): until set, five live price tests skip.
 5. `08-mfa-policy` stays unrun on kx-test (never enable the policy); MFA ON is proven on the private stack.
 
-## 11. Throwaway data left in place (tags; the lead will run the removal)
+## 11. Throwaway data: removed on 28 Nov 2026 (cleanup run) and what remains
 
-| Where | What | Tag and removal |
+The unscoped `demo-data:remove` of Passport and of the platform would also delete the seeded personas (Passport `data_class=DEMO` covers the seed, platform `seed-deployed` markers are the demo dataset), so both were NOT run unscoped. Passport and platform were cleaned with selective statements run first inside `BEGIN ... ROLLBACK` (dry run), then committed. Pharmacy and Lab removal tools only read their own `DemoMarker` rows (batch `e2e-dual-login`), so they ran as shipped (dry run first, then `--confirm`).
+
+Safety net taken first: RDS snapshot `kx-test-pre-e2e-cleanup-202611281208` of the Clinic database (it was still being created at the end of the run), and `pg_dump -Fc` files of the Passport, platform, Pharmacy and Lab databases on the kx-test host in `/var/backups/kx-pre-e2e-cleanup/` (those four live in the Postgres container on the host, not in RDS). Restore: `pg_restore` into a scratch database, then copy rows back.
+
+| Where | Removed | Kept |
 |---|---|---|
-| Passport (kx-test) | 75 accounts `data_class=DEMO` (seeded personas plus the throwaway patients of specs 18, 19, 23 and the 16 owners of spec 14); 3 accounts `TEST` (`+201000009701`, `+201000009702`, `+201000009703`, throwaway role accounts, `provision-role-accounts.sh --remove`); 0 `REAL` | `demo-data:remove` (dry run first) |
-| Pharmacy | 15 organisations named `[TEST] ...` (spec 14 and sign-up probes), their staff deactivated | `DemoMarker` batch `e2e-dual-login`, `demo-data:remove` |
-| Lab | 8 organisations named `[TEST] ...`, staff deactivated | same |
-| Platform | `DemoMarker`: 108 `seed-deployed` rows (the deployed demo dataset), 2 `e2e-onboarding`; join requests: none left (the lead specs remove their own) | `demo-data:remove` |
-| Clinic | "[TEST] KX E2E Clinic (removable)" and its owner `owner@kx-e2e.kiorly.test`; nothing created in Dr Ahmed Shall's organisation | seed Lambda `{"kxE2eOrg":"retire"}` |
-| Plan prices | none published anywhere (Clinic rows identical before and after; Pharmacy and Lab connection dormant) | - |
+| Passport (kx-test) | 29 throwaway `DEMO` accounts (sub `01M8...`: specs 14, 18, 19, 23 patients and owners; plus 34 `session_meta` and 45 `dev_inbox` rows); the 3 `TEST` accounts `+201000009701/2/3` through `provision-role-accounts.sh --remove` | 49 seeded `DEMO` accounts (sub `01HZKX...`), 5 demo organisations, 0 `REAL`, `audit_events` (append-only) |
+| Pharmacy | 15 `[TEST]` organisations processed: 54 rows deleted (branches, staff, sessions), 2 organisation rows removed; 13 `[TEST]` organisation rows stay because their append-only `AuditLog` rows reference them (staff and branches are gone) | `Kiorly Demo Pharmacy` and all its data |
+| Lab | 8 `[TEST]` organisations processed: 39 rows deleted (labs, price lists, staff, sessions); the 8 organisation rows stay (append-only `AuditLog`) | `Demo Diagnostics (synthetic)` and all its data |
+| Platform | `DemoMarker` batch `e2e-onboarding` 3 rows; 7 throwaway patient profiles with their `LifecycleEnrollment` 7, `PatientLifecycle` 7, `Message` 7; `AuthSession` 26 (13 of those patients, 13 of the TEST role accounts) | 108 `seed-deployed` markers, 12 seeded patient profiles, all providers (12 rows, 8 of them demo), 13 `ConsentRecord` rows of throwaway subs... see next line. Append-only rows left as inert history: `ConsentRecord` 6 and `LifecycleMessageDecision` 7 of the throwaway subs (triggers forbid delete; this tool never disables a trigger) |
+| Clinic | seed Lambda `{"kxE2eOrg":"retire"}`: tenant `[TEST] KX E2E Clinic (removable)` retired, 1 listing paused, 2 users deactivated (rows stay: append-only history; a hard delete is a super-admin data fix) | Dr Ahmed Shall's organisation was not touched (the Lambda selects the tenant by its exact name) |
+| Secrets | nothing changed (secret edits were out of scope): keys `growth_admin_totp`, `kiorly_ops_totp`, `kiorly_admin_totp` and `CLINIC_E2E_OWNER_PASSWORD` in `/kx/test/e2e` are now unused | - |
+| Plan prices | none published anywhere | - |
+
+Verification after the cleanup: Passport 49 `DEMO`, 0 `TEST`, 0 `REAL`; platform 108 seed markers, 12 profiles; Pharmacy and Lab seeded tenants present; live spec `22-edge-all-hosts` 72 of 72 passed (it uses no sign-in code, so the Passport hourly limit was not touched). Specs that rely on the removed accounts (`17-role-dashboards`) run `provision-role-accounts.sh` first, and the owners and patients of specs 14, 18, 19, 23 are created again by those specs.
 
 ## 12. Count table
 

@@ -78,7 +78,7 @@ export const SH = [
   data: [SA, 'Lifecycle: NEW to CONTACTED to QUALIFIED to ONBOARDING to WON, LOST from any open state (reasons from a picklist), reopen paths.'],
   diagram: 'leads',
   steps: ['Open **Join requests**: counters exclude test requests; filter by type, status, market, mode, date, owner, duplicates, text.', 'Open a request: reading it writes an audit row `lead.viewed`.', 'Assign an owner, add a tag and an internal note, move to CONTACTED.', 'Try an invalid move (for example NEW to WON): 409 `INVALID_TRANSITION`.', 'Submit a second request with the same phone or e-mail: it is tagged `duplicate` and linked.', 'Export CSV (BOM for Excel, formula-injection safe, max 5000 rows).', 'As ops admin try Settings changes and test-data removal: refused; as super admin open **Settings**: Test data markers: count first, then confirm delete.'],
-  expect: ['Contact data and licence numbers are encrypted at rest and decrypted only on detail and export; no contact data in logs or audit rows.', 'Test requests send no notification and are excluded from counters.', 'Same Passport roles on both hosts today (no Kiorly-only role split yet).'],
+  expect: ['Contact data and licence numbers are encrypted at rest and decrypted only on detail and export; no contact data in logs or audit rows.', 'Test requests send no notification and are excluded from counters.', 'Kiorly-only roles (kiorly_ops, kiorly_admin) work only on the Kiorly host (ADR-062, {S134}).'],
   edge: ['Lost reason; reopen LOST to NEW; owner not a known console user.'],
   check: ['Audit rows `lead.viewed`, `lead.exported` (row count and filters, never data).'],
   related: ['S95', 'S96', 'S86'], shots: ['cap-ops-leads', 'cap-ops-leads-settings'],

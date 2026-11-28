@@ -1,12 +1,16 @@
 // Content of the "How to take a market live (Egypt)" guide. English only. No secrets: sample values are labelled as samples.
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const SHOTS = 'file://' + path.join(path.dirname(fileURLToPath(import.meta.url)), 'shots') + '/';
+const PRIV = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../../_private/ui-review/');
 let figN = 0;
 const e = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-export const fig = (file, caption, { pins = [], masks = [], crop = 1, narrow = false } = {}) => {
+export const fig = (file, caption, { pins = [], masks = [], crop = 1, narrow = false, w = 1366, h = 820 } = {}) => {
   figN += 1;
   const p = pins.map(([x, y, n]) => `<span class="pin" style="left:${x}%;top:${(y / crop).toFixed(1)}%">${n}</span>`).join('');
   const m = masks.map(([x, y, w, h]) => `<span class="mask" style="left:${x}%;top:${(y / crop).toFixed(1)}%;width:${w}%;height:${(h / crop).toFixed(1)}%"></span>`).join('');
-  const ar = `${1366}/${(820 * crop).toFixed(0)}`;
-  return `<figure class="${narrow ? 'narrow' : ''}"><div class="shot" style="aspect-ratio:${ar}"><img src="../shots/${file}.png" alt="">${m}${p}</div><figcaption><b>Figure ${figN}.</b> ${caption}</figcaption></figure>`;
+  const ar = `${w}/${(h * crop).toFixed(0)}`;
+  return `<figure class="${narrow ? 'narrow' : ''}"><div class="shot" style="aspect-ratio:${ar}"><img src="${file.startsWith('/') ? 'file://' + file : SHOTS + file + '.png'}" alt="">${m}${p}</div><figcaption><b>Figure ${figN}.</b> ${caption}</figcaption></figure>`;
 };
 export const pair = (a, b) => `<div class="pair">${a}${b}</div>`;
 export const callout = (kind, title, body) => `<div class="callout ${kind}"><div class="ct">${title}</div><div>${body}</div></div>`;
@@ -44,14 +48,29 @@ ${table(['Question', 'Answer'], [
 
 ${callout('warn', 'You do this yourself', 'By founder rule the gate is never recorded by code, by an agent or by a seed. This guide was produced against a private test stack and a sample approval; <b>nothing was recorded on kx-test or anywhere shared</b>. The real Egypt gate is yours to record, with the real approval document, when counsel and the market pack are ready (NEEDS_HUMAN rows 10 and 16).')}
 
+${callout('rule', 'The rule that does not change', 'Only the founder records the gate for <code>market.eg.live</code>, by hand, with the real approval document. No test run, seed, script or agent ever does it. On 28 Nov 2026 it is still <b>not recorded</b> on kx-test: Egypt shows "not live yet" to patients, by design.')}
+
+<h2>What is new in this edition (28 Nov 2026)</h2>
+<ul>
+<li><b>Hosts follow one pattern</b>: <code>&lt;service&gt;.test.&lt;domain&gt;</code> (for example <code>passport.test.kiorex.com</code>, <code>clinics.test.kiorly.com</code>).</li>
+<li><b>Dual sign-in</b> for Clinic, Pharmacy and Lab: Kiorex Passport or e-mail and password, one shared sign-in card (chapter 05).</li>
+<li><b>Plans and prices</b> are managed in the Kiorly admin, and a price needs a second approver (chapter 05).</li>
+<li><b>Join requests</b> from the Kiorly site: a lead marked WON creates a draft onboarding request, never a live organisation.</li>
+<li><b>Kiorly-only roles</b> (<code>kiorly_ops</code>, <code>kiorly_admin</code>) and one dashboard per console role.</li>
+<li><b>MFA policy is OFF by default</b> for Pharmacy and Lab; only Passport ops turn it on, through a second approver.</li>
+<li><b>New Kiorex landing and Passport register</b>, Plus Jakarta Sans and Arabic spelling كيوريكس.</li>
+<li><b>End-to-end result on kx-test</b>: 311 passed, 0 failed, 11 skipped, 6 not run (chapter 06).</li>
+</ul>
+
 <h2>How this guide is organised</h2>
 <ul>
 <li><b>Before you start</b>: the checklist and exactly which account is used in which step.</li>
 <li><b>Part A, Kiorex</b>: sign in as ops, look, then as super admin record the gate, verify on the patient side, and roll back.</li>
 <li><b>Part B, Kiorly</b>: how a Kiorly market goes live (updated for ADR-060): the Kiorly admin and Clinic screens, the audit trail, and the rule that a provider belongs to its country for life.</li>
+<li><b>Kiorly sign-in, roles and plans</b> and the <b>state of kx-test</b> after the 28 Nov pass.</li>
 <li><b>Troubleshooting</b> and a <b>reference</b> of addresses, roles and API calls.</li>
 </ul>
-${callout('note', 'About the screenshots', 'Screenshots are real, taken with Playwright from a <b>private local test stack</b> (private ports and databases, Passport mock code, nothing shared). The screens are the same as on kx-test (<code>https://admin.test.kiorex.com</code>). Differences you will notice on kx-test: your own accounts instead of the local seed accounts, the "Development identity provider" footer is absent on hosted Passport, and the Launch gates table does not show local DEV seed rows. Sample approver names and links in the screenshots are placeholders.')}
+${callout('note', 'About the screenshots', 'Screenshots are real, taken with Playwright from a <b>private local test stack</b> (private ports and databases, Passport mock code, nothing shared). The screens are the same as on kx-test (<code>https://admin.test.kiorex.com</code>). Differences you will notice on kx-test: your own accounts instead of the local seed accounts, the "Development identity provider" footer is absent on hosted Passport, and the Launch gates table does not show local DEV seed rows. Sample approver names and links in the screenshots are placeholders. The older captures (chapters 03 and 04) predate the 28 Nov redesign of the Kiorex landing and Passport pages, so colours and layout of those pages differ slightly from what you see today; the flows and buttons are unchanged. Chapter 05 uses fresh captures.')}
 `,
   });
 
@@ -81,7 +100,7 @@ ${callout('note', 'Same person, two sign-ins', 'You are both people, so sign in 
 
 <h2>Where the credentials are</h2>
 <p>This guide contains <b>no passwords, no authenticator secrets and no tokens</b>. Your private register is <code>_private/DEMO_ACCOUNTS.md</code> in the workspace (git-ignored, never published). It lists, per product, the account, role and phone, and says how the authenticator was set up. Remember its own warning: demo passwords and local test secrets must not be used on kx-test with real data; use accounts with generated secrets there.</p>
-<p>Sign-in is always <b>Kiorex Passport</b>: mobile number, then the six-digit code sent by text message, then (for ops roles) the six-digit code from your authenticator app. The first time an ops account signs in it may ask to set up the authenticator; scan the QR with your own app and keep the secret out of chat, e-mail and git.</p>
+<p>Sign-in to the <b>Kiorex console</b> is always <b>Kiorex Passport</b>: mobile number, then the six-digit code sent by text message, then (for ops roles) the six-digit code from your authenticator app. Kiorly products (Clinic, Pharmacy, Lab) offer two ways in, Passport or e-mail and password (chapter 05). The first time an ops account signs in it may ask to set up the authenticator; scan the QR with your own app and keep the secret out of chat, e-mail and git.</p>
 `,
   });
 
@@ -224,13 +243,96 @@ ${table(['Earlier gap', 'Now'], [
   ['Kiorly admin had no market view.', 'Built: Market launch view, read for ops, change for super admin.'],
   ['Not linked to the Kiorex gate.', 'Still two independent switches by decision; the Kiorly screen shows the Kiorex state read-only.'],
 ])}
-<p>Still open: a Kiorly-only role split (so Kiorly ops cannot reach Kiorex-only data) and, for a new Kiorly market outside Egypt, the cross-border approval and data-cell update. The <code>kx-test</code> live suite (spec 11) checks this screen against the live Clinic without changing anything.</p>
+<p>Closed on 28 Nov 2026: the Kiorly-only role split (ADR-062, chapter 05) so Kiorly ops cannot reach Kiorex-only data. Still open: for a new Kiorly market outside Egypt, the cross-border approval and data-cell update. The <code>kx-test</code> live suite (spec 11) checks this screen against the live Clinic without changing anything.</p>
 `,
   });
 
-  // ───────────────────────── 5. Troubleshooting
+
+  // ───────────────────────── 5. Kiorly sign-in, roles, plans
   C.push({
-    id: 'trouble', num: '05', title: 'Troubleshooting', sub: [],
+    id: 'kiorly', num: '05', title: 'Kiorly sign-in, roles and plans', sub: [],
+    html: `
+<p class="lead">Everything in this chapter is live on kx-test and needs no gate. It explains how people get into Kiorly, who can do what in the consoles, and how plans and prices are managed. None of it records the Egypt gate.</p>
+
+<h2>Two ways to sign in</h2>
+<p>Every Clinic, Pharmacy and Lab, standalone or connected to Kiorex, is bound to Kiorex Passport automatically and offers <b>both</b> ways in, on one shared sign-in card (ADR-061):</p>
+${table(['Way in', 'How it works', 'Who it is for'], [
+  ['Kiorex Passport', 'Mobile number, six-digit text code, and an authenticator code only where the MFA policy requires it.', 'Everyone. Privileged roles in production use this way.'],
+  ['E-mail and password', 'The organisation\'s own account. Allowed only where the server is set to allow it and, for privileged roles, only while the MFA policy is OFF for that role.', 'Staff who prefer a password; the Lab now has real passwords too.'],
+  ['Kiorly Home', 'One sign-in page at <code>app.test.kiorly.com</code> with a product switcher (Clinic, Pharmacy, Lab).', 'Owners and staff who use more than one product.'],
+])}
+${callout('note', 'Hosted behaviour you may notice', 'On kx-test the Pharmacy and Lab hosts run in a mode where the card shows the Passport button first; the Clinic keeps its Password tab. Pilot and production default to Passport only. This is configuration, not a fault.')}
+
+<h2>MFA policy: off by default</h2>
+<p>The Passport MFA policy for pharmacy and lab organisations is <b>OFF</b>. While it is off, an owner or pharmacist reaches privileged areas with a phone code alone; an authenticator is optional. Only Passport ops can turn it on, through a maker-checker page, and only by a human. If you do not want owners without an authenticator, switch it on before real owners arrive. Nothing in this guide switches it on.</p>
+${callout('warn', 'Trade-off accepted by the founder', 'With the policy OFF, a stolen phone code is enough to open an owner session. Decide before the first real owner signs in.')}
+
+<h2>Plans and prices, with a second approver</h2>
+<p>The plans shown on the Kiorly site (<code>test.kiorly.com</code>) are edited in the Kiorly admin, with no redeploy. Clinic, Pharmacy and Lab each have their own price rows; the platform keeps only the approval workflow.</p>
+${steps([
+  'Open <b>Kiorly plans</b> in the Kiorly admin (or the Kiorex console; both editions show it). Ops, super admin, Kiorly ops and Kiorly admin may <b>propose</b> a price and see a preview.',
+  'Read the advisory warnings in the preview (annual not above monthly, higher plan cheaper, large change, zero amount, currency change). They never block, but the approver sees them.',
+  'A <b>different super admin</b> approves or rejects. The proposer can never approve their own proposal (the API, the database and the product all refuse).',
+  'On approval the product publishes the price from the date you chose. Rejected and withdrawn proposals stay in the history.',
+])}
+<p>Until a price is published the site says "Pricing to be announced". The seeded Egyptian Clinic prices are test points, not final, and their annual rows still need your decision on what "annual" means. No price has been published on kx-test.</p>
+
+<h2>Join requests become draft onboarding</h2>
+<p>People who ask to join from the Kiorly site arrive as <b>leads</b>. Moving a lead to <b>WON</b> creates exactly one <b>draft onboarding request</b>, pre-filled with the kind, legal name, modules, market and the lead reference (no contact data). A draft is never a live organisation: a <b>different super admin</b> approves or rejects it, and approval still creates no organisation, enrolment code or Passport identity by itself. LOST creates nothing.</p>
+
+<h2>Kiorly-only roles and dashboards</h2>
+${table(['Role', 'Console', 'What it can do'], [
+  ['<code>ops_admin</code>', 'Kiorex console', 'Reads flags, gates, audit; proposes prices; works the leads.'],
+  ['<code>super_admin</code>', 'Kiorex and Kiorly consoles', 'Everything above, plus the single writes (gate, flags) and the second-approver decisions.'],
+  ['<code>kiorly_ops</code>', 'Kiorly admin only', 'Reviews markets, plans, leads and onboarding; proposes prices. Cannot approve and cannot see Kiorex-only data.'],
+  ['<code>kiorly_admin</code>', 'Kiorly admin only', 'Same as Kiorly ops with the Kiorly administration screens.'],
+])}
+<p>Every console role lands on <b>its own dashboard</b>, the menu shows only the screens the role may open, and a refused address shows a "No access" page. A Kiorly-only account is refused by the Kiorex console, and an account that holds Kiorex roles cannot also hold a Kiorly role (separate accounts, enforced). The super admin grants and revokes Kiorly roles in Passport with step-up and a reason; every change is audited and sessions end.</p>
+
+<h2>The new public pages</h2>
+<p>The Kiorex landing page (<code>test.kiorex.com</code>) and the Passport sign-in and register pages were redesigned: Plus Jakarta Sans, a clear "Find care / Join us / Sign in" entry, the honest market banner, and Western digits 0-9 in Arabic. The yellow banner below is the Egypt gate state.</p>
+${fig(PRIV + 'kiorex-landing/after/1440-en-light.png', 'The Kiorex patient landing page (English, light). The top bar reads "Kiorex is not live in Egypt yet": the gate is closed. Private review capture, synthetic data.', { crop: .34, w: 1440, h: 3969 })}
+${pair(fig(PRIV + 'after28d/kiorly-home/after/signin__en_light_1440.png', 'Kiorly Home sign-in: one entry, product switcher after sign-in.', { w: 1440, h: 900, crop: .8 }), fig(PRIV + 'after28d/passport-signin/after/account__en_light_1440.png', 'Passport account page: sessions and sign-out.', { w: 1440, h: 900, crop: .8 }))}
+`,
+  });
+
+  // ───────────────────────── 6. State of kx-test
+  C.push({
+    id: 'state', num: '06', title: 'State of kx-test, 28 Nov 2026', sub: [],
+    html: `
+<p class="lead">A full end-to-end pass ran on the live kx-test stack on 28 Nov 2026: every flow and edge case, fix what is found, re-run until green. Nothing recorded the Egypt gate, turned the MFA policy on or published a real price.</p>
+<div class="kpis">
+  <div class="kpi"><b>311</b><span>live tests passed</span></div>
+  <div class="kpi"><b>0</b><span>failed</span></div>
+  <div class="kpi"><b>11</b><span>skipped, each with a reason</span></div>
+  <div class="kpi"><b>6</b><span>not run on purpose</span></div>
+</div>
+<p>328 live tests in 29 specs, 69 flows in the matrix, plus private-stack suites for every product (thousands of unit and integration tests, all green except one flaky order-dependent payment test that is recorded as open).</p>
+
+<h2>What was skipped or not run, and why</h2>
+${table(['Item', 'Count', 'Reason'], [
+  ['Live booking while the Egypt gate is closed', '1', 'SKIP: only the founder records the gate. The booking path ran on a private stack and passed.'],
+  ['Old demo authenticator values', '4', 'SKIP: the values no longer exist after the access hardening.'],
+  ['Pharmacy and Lab price connection', '5', 'DORMANT: needs one credential pair from the founder in three secret bags; proven on private databases.'],
+  ['Screenshot spec', '1', 'SKIP: not a test.'],
+  ['MFA policy change spec', '6', 'OPEN by design: it would change the live policy. Proven ON and OFF on a private stack (16 of 16).'],
+])}
+
+<h2>Open items for the founder</h2>
+${table(['Decision', 'Why it matters'], [
+  ['Content Security Policy: enforce or stay report-only', 'Report-only is deployed on every static site and shows zero violations on signed-out pages.'],
+  ['Clinic legacy host headers and caching', 'The legacy Clinic address has no security headers or noindex; changing it touches the live organisation.'],
+  ['Pharmacy and Lab price credential pair', 'Until set, price publishing for those two products stays dormant.'],
+  ['Seeded Clinic prices and what "annual" means', 'The annual rows read at or below monthly; correct them before the site shows prices.'],
+  ['First-time visitor language', 'A first visit opens in Arabic whatever the browser language (Egypt default). Confirm that is wanted.'],
+])}
+${callout('ok', 'Safe to continue', 'The stack is healthy: all seven health URLs answer in under five seconds, every host sends security headers, and tenant isolation holds. The Egypt gate remains closed until you record it.')}
+`,
+  });
+
+  // ───────────────────────── 7. Troubleshooting
+  C.push({
+    id: 'trouble', num: '07', title: 'Troubleshooting', sub: [],
     html: `
 ${callout('note', 'If something looks wrong in production', 'Close first, investigate second. Toggle <code>market.eg.live</code> OFF at GLOBAL scope with a clear reason (no expiry), then read the audit trail. Opening again is a single Toggle ON.')}
 ${table(['What you see', 'Likely cause', 'What to do'], [
@@ -250,17 +352,21 @@ ${table(['What you see', 'Likely cause', 'What to do'], [
 
   // ───────────────────────── 6. Reference
   C.push({
-    id: 'ref', num: '06', title: 'Reference', sub: [],
+    id: 'ref', num: '08', title: 'Reference', sub: [],
     html: `
 <h2>Addresses (service URL registry)</h2>
-<p>Source: <code>_docs/registry/service-url-registry.yaml</code> (validated 27 Nov 2026; names are derived as service label, environment label, domain). The registry marks several hosts "planned" because they are not yet all deployed; the kx-test hosts below resolve since the 27 Nov 2026 infrastructure apply, and Clinic on kx-test is live.</p>
+<p>Source: <code>_docs/registry/service-url-registry.yaml</code> (validated 28 Nov 2026; names are derived as <code>&lt;service&gt;.&lt;env&gt;.&lt;domain&gt;</code>, production without the environment label). The kx-test hosts below are served and were exercised by the 28 Nov end-to-end pass (chapter 06). Pilot and production names are reserved, not yet deployed.</p>
 ${table(['Service', 'kx-test', 'kx-pilot', 'kx-pro (production)'], [
   ['Kiorex patient site (marketplace)', 'https://test.kiorex.com', 'https://pilot.kiorex.com', 'https://kiorex.com'],
   ['Kiorex ops console = super admin', 'https://admin.test.kiorex.com', 'https://admin.pilot.kiorex.com', 'https://admin.kiorex.com'],
   ['Kiorex API', 'https://api.test.kiorex.com', 'https://api.pilot.kiorex.com', 'https://api.kiorex.com'],
   ['Passport (sign-in)', 'https://passport.test.kiorex.com', 'issuer is the production one', 'https://passport.kiorex.com'],
   ['Kiorly Clinic', 'https://clinics.test.kiorly.com', 'https://clinics.pilot.kiorly.com', 'https://clinics.kiorly.com'],
-  ['Kiorly admin (same ops build, Kiorly edition)', 'https://admin.test.kiorly.com (planned)', 'https://admin.pilot.kiorly.com', 'https://admin.kiorly.com'],
+  ['Kiorly Pharmacy', 'https://pharmacies.test.kiorly.com', 'https://pharmacies.pilot.kiorly.com', 'https://pharmacies.kiorly.com'],
+  ['Kiorly Lab', 'https://labs.test.kiorly.com', 'https://labs.pilot.kiorly.com', 'https://labs.kiorly.com'],
+  ['Kiorly Home (one sign-in, product switcher)', 'https://app.test.kiorly.com', 'https://app.pilot.kiorly.com', 'https://app.kiorly.com'],
+  ['Kiorly public site and plans', 'https://test.kiorly.com', 'https://pilot.kiorly.com', 'https://kiorly.com'],
+  ['Kiorly admin (same ops build, Kiorly edition)', 'https://admin.test.kiorly.com', 'https://admin.pilot.kiorly.com', 'https://admin.kiorly.com'],
 ])}
 <p>The pilot environment uses the production Passport issuer (no account migration); ask the founder question "carry over or keep separate" before promoting test to pilot to production.</p>
 

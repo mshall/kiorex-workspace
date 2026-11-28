@@ -1,6 +1,6 @@
 # Mobile testing guide: Kiorex (patient) and Kiorly (staff) against kx-test
 
-27 Nov 2026. No secrets in this file. Accounts: the private register `_private/DEMO_ACCOUNTS.md` (git-ignored, never in git); the synthetic phone numbers of the demo seed are listed in `e2e/kx-test/README.md`.
+Updated 28 Nov 2026 (after the end-to-end pass on kx-test: 311 live tests passed, 0 failed, 11 skipped, 6 not run; mobile web smoke 15 of 15). No secrets in this file. Accounts: the private register `_private/DEMO_ACCOUNTS.md` (git-ignored, never in git); the synthetic phone numbers of the demo seed are listed in `e2e/kx-test/README.md`.
 
 ## 0. What you are testing
 
@@ -9,9 +9,9 @@
 | Kiorex (patients) | `kiorex-platform/apps/mobile` | `com.kiorex.app` | `kiorex://` | `kiorex-mobile` |
 | Kiorly (staff: Clinic, Nurse, Pharmacy, Lab) | `kiorly` | `com.kiorly.app` | `kiorly://` | `kiorly` |
 
-Both builds are the **kx-test profile**: every host comes from `config/env/test.env` of each app, generated from the URL registry (`node _docs/registry/emit-mobile-env.mjs --write-all`; never typed by hand). kx-test hosts: API `api.test.kiorex.com`, Passport `passport.test.kiorex.com`, Clinic `clinics.test.kiorly.com`, Pharmacy `pharmacies.test.kiorly.com`, Lab `labs.test.kiorly.com`. The Passport clients already accept both schemes (`kiorex://`, `kiorex-test://`, `kiorly://`, `kiorly-test://`); no change was needed there.
+Both builds are the **kx-test profile**: every host comes from `config/env/test.env` of each app, generated from the URL registry (`node _docs/registry/emit-mobile-env.mjs --write-all`; never typed by hand). kx-test hosts follow the pattern `<service>.test.<domain>`: API `api.test.kiorex.com`, Passport `passport.test.kiorex.com`, Clinic `clinics.test.kiorly.com`, Pharmacy `pharmacies.test.kiorly.com`, Lab `labs.test.kiorly.com`, Kiorly Home `app.test.kiorly.com`. The Passport clients already accept both schemes (`kiorex://`, `kiorex-test://`, `kiorly://`, `kiorly-test://`); no change was needed there.
 
-Everything external is MOCK on kx-test: push, SMS, WhatsApp, payments, e-mail.
+> **Note** Everything external is MOCK on kx-test: push, SMS, WhatsApp, payments, e-mail.
 
 ## 1. Signing in: how you get the one-time code
 
@@ -24,9 +24,9 @@ scripts/kx-test-otp.sh +201000001001 --last   # newest code of the last 20 minut
 
 Steps: in the app tap **Continue with Kiorex Passport** (patient) or pick the product and tap **Sign in with Kiorex Passport** (staff), type the phone, tap Send code, run the script, type the digits. If Passport offers a passkey or an authenticator, choose "Skip for now".
 
-Limits (security controls, do not reset): 5 codes per phone and 20 per IP and hour. All the phones on one Wi-Fi share one IP bucket, and the automated suites also use it: if the page says "Too many requests from your network", wait an hour or test from mobile data.
+> **Warning** Limits (security controls, do not reset): 5 codes per phone and 20 per IP and hour. All the phones on one Wi-Fi share one IP bucket, and the automated suites also use it: if the page says "Too many requests from your network", wait an hour or test from mobile data.
 
-Why there is no friendlier method: a fixed or bypass code on a host that also holds the real Clinic organisation would be a hole. The deploy guard (`infra/tofu/deploy/compose/kx-guard-otp.sh`) already makes mock code logging impossible in pilot and prod. A hosted-test-only "test code" screen was NOT built (it would need a change in the Passport app code, which another agent owns); proposal in section 7.
+> **Note** Why there is no friendlier method: a fixed or bypass code on a host that also holds the real Clinic organisation would be a hole. The deploy guard (`infra/tofu/deploy/compose/kx-guard-otp.sh`) already makes mock code logging impossible in pilot and prod. A hosted-test-only "test code" screen was NOT built (it would need a change in the Passport app code, which another agent owns); proposal in section 8.
 
 ## 2. Android phone (side-load, no store account)
 
@@ -42,7 +42,7 @@ Built here (no paid account): `_private/builds/android/kiorex-mobile-test-0.1.0-
 A real iPhone cannot run an app without Apple signing. Without an Apple Developer account you can do the following today:
 
 * **iOS Simulator on the Mac** (done, works): `_private/builds/ios-simulator/kiorly-app-test.app` and `kiorex-mobile-test.app` (arm64). `xcrun simctl boot <device>`, `xcrun simctl install booted <path>.app`, `xcrun simctl launch booted com.kiorly.app`. Rebuild: `npm run build:ios-sim:test`.
-* **Web build in iPhone Safari** (works for everything except native-only parts: secure storage, push, universal links, camera): serve the export (`npm run export:web:test`, then any static host) and open it. Passport redirects back to `<origin>/auth/callback`, which is **not** registered on kx-test (only the native schemes and the real web hosts are). To use it, the founder would register one more redirect URI (see section 7) or host the web build on a registered host. Not recommended as the main route.
+* **Web build in iPhone Safari** (works for everything except native-only parts: secure storage, push, universal links, camera): serve the export (`npm run export:web:test`, then any static host) and open it. Passport redirects back to `<origin>/auth/callback`, which is **not** registered on kx-test (only the native schemes and the real web hosts are). To use it, the founder would register one more redirect URI (see section 8) or host the web build on a registered host. Not recommended as the main route.
 
 For the real iPhone you need (the founder creates these; nothing was created here):
 1. **Apple Developer Program** membership. Organisation enrolment needs the registered legal entity and a D-U-N-S number (waiting on that, see handoff); an **individual** account (USD 99 per year, identity check, about a day) is enough to start TestFlight testing and can be replaced later. Use the `apple@` group address.
@@ -50,7 +50,7 @@ For the real iPhone you need (the founder creates these; nothing was created her
 3. Register the iPhone (ad hoc) or use TestFlight: `eas build -p ios --profile kx-test` (ad hoc: `eas device:create`, then build) or `eas build ... && eas submit -p ios` for TestFlight, then install TestFlight on the iPhone and accept the invitation.
 Until then: do your iPhone-flavoured testing in the Simulator (same code, same hosts), and Android on the phone.
 
-Push needs Firebase files and an APNs key; it stays mock (the guide section 6 says what you can still check).
+Push needs Firebase files and an APNs key; it stays mock (section 7 says what you can still check).
 
 ## 4. What to test: Kiorex (patient)
 
@@ -79,12 +79,16 @@ Pick the product tile, sign in with Passport. Staff accounts are linked to a Pas
 |---|---|---|
 | `+201000002008` Omar Cashier | Pharmacy | not a privileged role: Home, Work, Inbox, Rx queue, expiry, customers, Growth work. **Kiorex orders show "Your role does not include this"** (orders need a privileged role) |
 | `+201000002005` Omar Technologist | Lab | orders, worklist, critical values, TAT, QC; Growth says the role lacks it |
-| Pharmacy / Lab owner or pharmacist | Pharmacy, Lab | privileged roles get **403 MFA_REQUIRED** unless Passport gave an MFA claim: the app now shows "Two-step verification needed". Owners need an authenticator enrolled (see `e2e/kx-test/README.md` section on privileged roles; the TOTP secrets live only in AWS Secrets Manager `/kx/test/e2e`) |
+| Pharmacy / Lab owner or pharmacist | Pharmacy, Lab | follow the Passport MFA policy, which is **OFF by default**: a phone-code session is enough. Only if Passport ops turn the policy ON for the role does the API answer **403 MFA_REQUIRED** and the app show "Two-step verification needed"; the owner then needs an authenticator enrolled. Nobody turns the policy on for testing (founder rule) |
 | Clinic / Nurse | Clinic | Passport sign-in links by phone to a Clinic staff row; the demo organisation has none for the synthetic phones, so use the **Password** method for a Clinic account you own. The real organisation Dr Ahmed Shall is live on this host: do not create, edit or delete anything there; use a throwaway account only |
 
 Also check: commission statement cards (Pharmacy and Lab Growth tab, cash vs cash-transfer split, "not connected" state), AR/RTL and dark mode, offline banner and the sync centre, lock screen (biometric), sign-out per product and "everything", barcode scan (camera permission).
 
-## 6. Known limits (honest list)
+## 6. Two ways to sign in (28 Nov 2026)
+
+The three provider web apps (Clinic, Pharmacy, Lab) share one sign-in card with **Kiorex Passport** and **e-mail and password**. The staff app uses Passport. On kx-test the Pharmacy and Lab hosts show the Passport button (their API runs in `oidc` mode there), the Clinic also keeps its Password tab. Kiorly Home (`app.test.kiorly.com`) is the one entry with a product switcher. Privileged roles never use a password once the MFA policy is on for them.
+
+## 7. Known limits (honest list)
 
 * Push notifications: mock. Local simulation card in Me > Notifications (dev builds only); `e2e-push/send.sh` works on the iOS Simulator only.
 * WhatsApp, SMS, e-mail, payments (Paymob, Fawry): mock. Payment screens run in mock mode.
@@ -93,9 +97,10 @@ Also check: commission statement cards (Pharmacy and Lab Growth tab, cash vs cas
 * Universal links / app links: configured per environment (`test.kiorex.com`, `app.test.kiorly.com`), not verifiable until the `/.well-known/` files carry the Apple Team ID and the signing SHA-256 (founder).
 * Debug-key APK: for testing only. Production needs the Play app-signing key and the Firebase files.
 * Passport code limits per IP (section 1).
+* The MFA policy ON path was proven only on a private stack; it is never switched on on kx-test.
 * Staff Clinic sign-in by Passport needs a linked Clinic staff member.
 
-## 7. Founder follow-ups
+## 8. Founder follow-ups
 
 1. Apple Developer (individual to start) + Expo/EAS account (section 3).
 2. Record the `market.eg.live` gate evidence in the Ops console when you want patient booking tests.
@@ -103,11 +108,11 @@ Also check: commission statement cards (Pharmacy and Lab Growth tab, cash vs cas
 4. Optional, for an iPhone-Safari/PWA run: ask for one extra redirect URI for `kiorex-mobile`/`kiorly` (the web origin); entry goes through `KX_CLIENT_OVERRIDES_JSON` (`client-overrides:emit`). Not applied.
 5. Proposal for a friendlier tester sign-in: a hosted-test-only Passport "show my code" page, enabled only when `KIOREX_ENV=test` AND mock messaging, blocked by the same `kx-guard-otp.sh` rule in pilot and prod, limited to the synthetic demo numbers. It touches Passport app code (kiorex-account), so it was handed off rather than built.
 
-## 8. Automated smoke (no phone needed)
+## 9. Automated smoke (no phone needed)
 
 `./e2e/kx-test-mobile/scripts/build-web.sh && npx playwright test -c e2e/kx-test-mobile` exports both apps as web builds with the kx-test profile and drives them against the live hosts with Passport tokens obtained exactly like the apps do (code + PKCE, custom-scheme redirect read from the 303). 15 tests (3 added 28 Nov: new-capability bundle check, Lab result-entry route with no write, Pharmacy cashier role states); reuses saved tokens (refresh) so it costs one code per persona per hour.
 
-## 9. Staff app: the full private-stack run (28 Nov 2026)
+## 10. Staff app: the full private-stack run (28 Nov 2026)
 
 Role by role coverage of the staff app is in `STAFF_APP_COVERAGE.md`. What was added: Lab result entry and second entry, Clinic Kiorex commission statement, Clinic no-show, deep link `kiorly://open/specimen:<id>`.
 

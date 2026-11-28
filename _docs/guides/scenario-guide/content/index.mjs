@@ -6,13 +6,14 @@ import * as E from './groupE.mjs';
 import * as FG from './groupFG.mjs';
 import * as HIJ from './groupHIJ.mjs';
 import * as KL from './groupKL.mjs';
+import * as M from './groupM.mjs';
 import { IMAGES } from './images.mjs';
 import { flow } from '../diagrams.mjs';
 import { H } from './common.mjs';
 
 export { IMAGES };
-export const GROUPS = [A.GROUP, B.GROUP, C.GROUP, D.GROUP, E.GROUP, FG.GROUP_F, FG.GROUP_G, HIJ.GROUP_H, HIJ.GROUP_I, HIJ.GROUP_J, KL.GROUP_K, KL.GROUP_L];
-export const SCENARIOS = [...A.S, ...B.S, ...C.S, ...D.S, ...E.S, ...FG.SF, ...FG.SG, ...HIJ.SH, ...HIJ.SI, ...HIJ.SJ, ...KL.SK, ...KL.SL];
+export const GROUPS = [A.GROUP, B.GROUP, C.GROUP, D.GROUP, E.GROUP, FG.GROUP_F, FG.GROUP_G, HIJ.GROUP_H, HIJ.GROUP_I, HIJ.GROUP_J, KL.GROUP_K, KL.GROUP_L, M.GROUP_M];
+export const SCENARIOS = [...A.S, ...B.S, ...C.S, ...D.S, ...E.S, ...FG.SF, ...FG.SG, ...HIJ.SH, ...HIJ.SI, ...HIJ.SJ, ...KL.SK, ...KL.SL, ...M.SM];
 
 // consistency checks, fail the build loudly
 const seen = new Set();
@@ -51,7 +52,7 @@ ${table(['Product', 'kx-test host', 'Local dev', 'Deployed on kx-test?'], [
 ['Kiorly Lab', '<code>https://labs.test.kiorly.com</code>', '<code>:5193</code> (API <code>:3200</code>)', 'yes'],
 ['Kiorly site and Join form', '<code>https://test.kiorly.com/en/</code>, <code>/ar/</code>', 'local build of <code>apps/kiorly-site</code>', 'yes'],
 ['Kiorly admin (Ops, Kiorly edition)', '<code>https://admin.test.kiorly.com</code>', 'same build, Kiorly host name', 'yes'],
-['Kiorly Home', '<code>https://app.test.kiorly.com</code>', '<code>:5194/signin</code>', 'not confirmed in deploy logs'],
+['Kiorly Home', '<code>https://app.test.kiorly.com</code>', '<code>:5194/signin</code>', 'yes (since 28 Nov 2026)'],
 ['Booking widget', '<code>https://book.test.kiorex.com</code>', 'served by the API', 'registry only'],
 ['Patient Expo app / staff app', 'phone builds, hosts from <code>config/env/test.env</code>', 'Expo web <code>:8081</code> / <code>:8082</code>', 'builds in <code>_private/builds</code>'],
 ])}
@@ -114,17 +115,18 @@ const gapRows = [
 ['Payments (Paymob, Fawry, InstaPay, card gateway, bank IPN)', 'All mock. Sandbox credentials by reference, the real bank IPN file layout, settlement import, `INTEGRATION_MODES` approval. Saved-method charging is not built. {S30} {S35}', 'founder, vendors'],
 ['Store accounts and app links', 'Apple Developer (individual to start) and Expo/EAS accounts; Apple Team ID and Android signing SHA-256 for universal and app links; Play app-signing and Firebase files. Debug-key APKs are for testing only. {S110} {S111} {S112}', 'founder'],
 ['Passport production identity provider', 'The dev IdP refuses production; production IdP choice (Cognito is the default candidate), production OIDC clients, a decision on carrying identities over. {S102}', 'founder'],
-['Kiorly Home on kx-test', 'The registry host exists; deployment is not confirmed in the deploy logs. {S97}', 'operator'],
-['Pharmacy and Lab ADR-060 migrations', 'Committed but not deployed on kx-test; the live Clinic markets route was missing at the 27 Nov live run. {S100} {S82}', 'operator, after redeploy'],
+['Clinic Switch product link', 'Kiorly Home is live on kx-test, but the Clinic web build has no `VITE_KIORLY_HOME_URL`, so the Clinic login shows no Switch product link. {S97} {S131}', 'operator'],
+['Pharmacy and Lab price connection', 'Dormant until the founder adds one credential pair to three secret bags; five live price tests skip. {S132}', 'founder'],
 ['Real-organisation exception', 'The real Clinic organisation lives in kx-test (a declared exception to "no real patient data outside production" pending counsel). Read only. {S58}', 'counsel'],
 ['Public consent and privacy wording, plan names, response-time promise', 'Marked drafts (`draft-2`, TODO_NEEDS_HUMAN) on the Kiorly site; counsel and copy review. {S95} {S96}', 'counsel'],
 ['Native Arabic review', 'Strings need a native-speaker review. {S122}', 'reviewer'],
-['Kiorly-only ops role', 'Both consoles share the same Passport roles today. {S85} {S90}', 'engineering'],
+['Kiorly-only roles: later phases', 'Closed on 28 Nov 2026 (ADR-062, {S134}). Still open: a Cognito equivalent of the grant screen for production, and row filters if Kiorly ops must ever see finance or orders.', 'engineering'],
+['Content Security Policy enforcement', 'Report-only is deployed; switching to enforced is a founder decision. {S137}', 'founder'],
 ['Provider statement gaps', 'No statement PDF; Pharmacy and Lab views drop the cash vs cash-transfer split; Clinic reads tender from check-in, not payments. {S33} {S34}', 'engineering'],
 ['Throwaway organisation and booking on kx-test', 'Public sign-up needs a real WhatsApp OTP and the platform tab a credential, so those two kx-test tests stay `fixme`. {S57} {S58}', 'founder'],
 ['TURN failure, physical device and push', 'Not testable on the live stack or without devices and keys. {S16} {S110}', 'founder'],
 ];
-FRONT.push({ id: 'gaps', title: 'Known gaps and what is blocked until a human acts', html: (i) => `<p>Everything here is honest as of 28 Nov 2026. Items in these rows are not defects of the guide; they are the reason some scenarios are labelled blocked or partial.</p>${table(['Gap', 'What is missing and which scenarios it touches', 'Who acts'], gapRows.map((r) => [r[0], i(r[1]), r[2]]))}` });
+FRONT.push({ id: 'gaps', title: 'Known gaps and what is blocked until a human acts', html: (i) => `<p>Everything here is honest as of 28 Nov 2026 (after the end-to-end pass). Items in these rows are not defects of the guide; they are the reason some scenarios are labelled blocked or partial.</p>${table(['Gap', 'What is missing and which scenarios it touches', 'Who acts'], gapRows.map((r) => [r[0], i(r[1]), r[2]]))}` });
 
 const unv = SCENARIOS.filter((s) => s.ver === 'docs' || s.ver === 'blocked');
 FRONT.push({ id: 'verify', title: 'What was verified, and what was not', html: (i) => `
@@ -135,5 +137,5 @@ ${table(['Status', 'Count', 'Scenarios'], [
   ['From code and docs (not executed)', counts('docs'), SCENARIOS.filter((s) => s.ver === 'docs').map((s) => `{${s.id}}`).join(' ')],
   ['Blocked or human-only', counts('blocked'), SCENARIOS.filter((s) => s.ver === 'blocked').map((s) => `{${s.id}}`).join(' ')],
 ].map((r) => [r[0], String(r[1]), i(r[2])]))}
-<p>Latest recorded automated results (27 Nov 2026, <code>TEST_REPORT_2026-11-27.md</code>): cross-product e2e 595 tests with one environmental failure at first run (fixed afterwards); kx-test live suite 119 passed, 2 skipped (<code>test.fixme</code>), 4 failed on other agents' new specs at that moment; staff app Playwright and several Pharmacy and Lab Playwright groups pass on private stacks.</p>
+<p>Latest recorded automated results (28 Nov 2026, <code>E2E_FULL_PASS_2026-11-28.md</code>): the live kx-test suite has 328 tests in 29 specs, final state <b>311 passed, 0 failed, 11 skipped, 6 not run</b> (the 6 are the MFA policy spec, which would change the live policy). Cross-product regression on a private stack: 595 tests, green after fixing 8 stale expectations; Passport 516 unit, platform 2023 unit and 1486 integration, Pharmacy and Lab API e2e 253 and 237, staff app 460, patient app 344. Group M was added on 28 Nov 2026.</p>
 <p><b>Unverified by hand (${unv.length} scenarios):</b> every scenario labelled "From code and docs" or "Blocked", plus the payment click-through of {S11}, any real device run, real providers, and every screenshot taken from earlier sessions (marked as such).</p>` });
