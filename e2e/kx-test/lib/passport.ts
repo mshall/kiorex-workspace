@@ -7,13 +7,18 @@ import { URLS } from './hosts';
  * Drives the REAL Passport hosted pages (kx-test runs the public DEV IdP with the mock sender, so the one-time code is written to the container log instead of an SMS):
  * phone, code read through SSM, optional TOTP (ops roles), optional passkey offer (skipped). Returns when the browser has left Passport.
  */
-export async function passportSignIn(page: Page, o: { phone: string; totpSecret?: string; lang?: 'en' | 'ar'; /** the app being signed in to is the Passport account site itself: done when the browser is back on /account (same host) */ returnsToPassport?: boolean }): Promise<void> {
+export async function passportSignIn(page: Page, o: { phone: string; totpSecret?: string; lang?: 'en' | 'ar'; /** the app being signed in to is the Passport account site itself: done when the browser is back on /account (same host) */ returnsToPassport?: boolean; /** create a NEW account on the Create-account tab (name, consent) instead of signing in */ register?: { name?: string } }): Promise<void> {
   // an account that enrolled voluntarily is OFFERED the code with a "Skip for now" button (optional factor): without a secret the helper skips it, so the sign-in ends with a basic session
 
   const passportHost = new URL(URLS.passport).host;
   await page.waitForURL((u) => u.host === passportHost, { timeout: 30_000 });
   await page.locator('#phone').waitFor({ timeout: 30_000 });
   const before = latestOtp(o.phone);
+  if (o.register) { // Create-account tab: name (optional) and the terms and privacy consent
+    await page.getByRole('link', { name: /^(Create account|إنشاء حساب)$/ }).click();
+    if (o.register.name) await page.locator('#name').fill(o.register.name);
+    await page.locator('#consent').check();
+  }
   await page.locator('#phone').fill(o.phone);
   await page.locator('form button[type=submit]').first().click();
   await page.locator('#code').waitFor({ timeout: 30_000 });
@@ -34,6 +39,11 @@ export async function passportSignIn(page: Page, o: { phone: string; totpSecret?
       await page.locator('#totp').fill(totp(o.totpSecret));
       await page.locator('form button[type=submit]').first().click();
       totpDone = true;
+    } else if (await page.locator('#create-account').isVisible().catch(() => false)) { // a number without an account on the Sign-in tab: create it (consent)
+      await page.locator('#consent').check();
+      await page.locator('#create-account').click();
+    } else if (await page.locator('#dup-signin').isVisible().catch(() => false)) { // a number that already has an account on the Create-account tab: sign in
+      await page.locator('#dup-signin').click();
     } else if (await page.locator('#finish button').isVisible().catch(() => false)) {
       await page.locator('#finish button').click(); // "skip passkey"
     } else if (await page.locator('.error').first().isVisible().catch(() => false)) {
