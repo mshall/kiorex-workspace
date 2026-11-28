@@ -40,6 +40,11 @@ variable "price_class" {
   type    = string
   default = "PriceClass_100"
 }
+variable "csp_report_only" {
+  type        = string
+  default     = ""
+  description = "Content-Security-Policy-Report-Only value sent by every site (empty = none). Observation only: a violation is logged in the browser console, nothing is blocked. Full pass 28 Nov 2026, finding F-CSP-1."
+}
 variable "noindex" {
   type    = bool
   default = true

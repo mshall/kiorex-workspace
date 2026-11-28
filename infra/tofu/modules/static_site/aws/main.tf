@@ -113,12 +113,23 @@ resource "aws_cloudfront_response_headers_policy" "site" {
     }
   }
   dynamic "custom_headers_config" {
-    for_each = var.noindex ? [1] : []
+    for_each = (var.noindex || var.csp_report_only != "") ? [1] : []
     content {
-      items {
-        header   = "X-Robots-Tag"
-        value    = "noindex, nofollow"
-        override = true
+      dynamic "items" {
+        for_each = var.noindex ? [1] : []
+        content {
+          header   = "X-Robots-Tag"
+          value    = "noindex, nofollow"
+          override = true
+        }
+      }
+      dynamic "items" {
+        for_each = var.csp_report_only != "" ? [1] : []
+        content {
+          header   = "Content-Security-Policy-Report-Only"
+          value    = var.csp_report_only
+          override = false
+        }
       }
     }
   }

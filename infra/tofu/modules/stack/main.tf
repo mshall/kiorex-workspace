@@ -361,6 +361,8 @@ module "static_site_aws" {
   price_class           = var.edge.price_class
   noindex               = var.edge.noindex
   web_acl_arn           = local.waf_acl_arn
+  # Report-only CSP for every static site (F-CSP-1, 28 Nov 2026): the app hosts of this environment may be called, nothing else; one hash per app for its small inline theme/language bootstrap script in index.html (patient web, ops and Kiorly admin, Kiorly Home, Pharmacy and Lab); a changed inline script changes the hash and shows up as a report-only violation (spec 26); inline styles are allowed (Radix and Tailwind set style attributes)
+  csp_report_only = "default-src 'self'; script-src 'self' 'sha256-0x26hiqbe0HUCbOEFOuR6rMzACT+uZlbpOB+fxBWp1I=' 'sha256-UXdNpzP2j1/01bpwNUgq+jroK7XWgLlzvwvxlKbwj5E=' 'sha256-4fj90AIZL8gVuUTb+UCQbQaYOv+jzAx+ClISBOZzSdI=' 'sha256-Xgh8HXHt2VD5/DB6k0ZXEnT+t/9xTWzyJvjoLG9Yx9s='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' ${join(" ", distinct([for h in local.hosts : "https://${h.fqdn}"]))}; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self' ${join(" ", distinct([for h in local.hosts : "https://${h.fqdn}"]))}"
 }
 module "static_site_huawei" {
   count                 = local.is_hw ? 1 : 0

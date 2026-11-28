@@ -114,7 +114,7 @@ test.describe.serial('patient web walk', () => {
   });
 
   test('privacy and consent choices page loads without a session (public) and lists the choices', async ({ browser }) => {
-    const c = await browser.newContext(); const p = await c.newPage();
+    const c = await browser.newContext(); const p = await c.newPage(); await p.addInitScript(() => { try { localStorage.setItem('kx-lang', 'en'); } catch { /* ignore */ } }); // a fresh visitor gets Arabic by design (Egypt default, localStorage only)
     await p.goto(`${URLS.patientWeb}/preferences`); await expect(p.getByRole('heading').first()).toBeVisible();
     expect(await p.locator('main').innerText()).toMatch(/consent|marketing|privacy|preferences|email|sms/i);
     await c.close();

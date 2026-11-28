@@ -39,6 +39,11 @@ test.describe.serial('dual sign-in on kx-test', () => {
   test.afterAll(async () => {
     // leave no live login behind: deactivate the throwaway staff (the organisations stay tagged for demo-data:remove)
     try { psql('pharmacy', `update "StaffUser" set active=false where email like '%${tag}@dual.kiorly.test'`); psql('lab', `update "StaffUser" set active=false where email like '%${tag}@dual-lab.kiorly.test'`); } catch { /* best effort */ }
+    // the Passport identities created by the sign-ups are throwaway too: tag them DEMO so the founder's demo-data:remove can delete them (an untagged REAL account would stay forever)
+    try {
+      const phones = [psql('pharmacy', `select phone from "StaffUser" where email like '%${tag}@dual.kiorly.test' and phone is not null`), psql('lab', `select phone from "StaffUser" where email like '%${tag}@dual-lab.kiorly.test' and phone is not null`)].join('\n').split('\n').filter((x) => /^\+\d{8,15}$/.test(x.trim())).map((x) => `'${x.trim()}'`);
+      if (phones.length) ssm(`docker exec -i kx-test-postgres-1 psql -U postgres -d passport -tA -c "update accounts set data_class='DEMO' where data_class='REAL' and phone in (${phones.join(',')})"`);
+    } catch { /* best effort */ }
   });
 
   for (const [name, base] of [['Pharmacy', URLS.pharmacy], ['Lab', URLS.lab]] as const) {
