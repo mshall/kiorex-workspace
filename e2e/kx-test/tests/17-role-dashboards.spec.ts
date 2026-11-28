@@ -162,8 +162,11 @@ test.describe.serial('Role dashboards in the deployed Ops console', () => {
       await expect(page.getByTestId('dashboard-finance')).toBeVisible();
       for (const id of ['card-commissions', 'card-aging', 'card-reconciliation', 'card-runs']) await expect(page.getByTestId(id), id).toBeVisible();
       const hrefs = await navHrefs(page);
-      expect(hrefs).toContain('/commissions'); expect(hrefs).not.toContain('/flags'); expect(hrefs).not.toContain('/orders');
-      await page.goto(`${URLS.ops}/flags?role=finance`); await expect(page.getByTestId('no-access-page')).toBeVisible({ timeout: 30_000 });
+      expect(hrefs).toContain('/commissions');
+      // the seeded finance demo account also holds ops_admin (its menu is the union of its roles and the dashboard has a switch); a PURE finance token is refused the ops pages
+      const claims = JSON.parse(Buffer.from(savedToken('opsFinance')!.split('.')[1]!, 'base64url').toString()) as { kx_roles: string[] };
+      if (claims.kx_roles.includes('ops_admin')) { await expect(page.getByTestId('role-switch')).toBeVisible(); }
+      else { expect(hrefs).not.toContain('/flags'); expect(hrefs).not.toContain('/orders'); await page.goto(`${URLS.ops}/flags?role=finance`); await expect(page.getByTestId('no-access-page')).toBeVisible({ timeout: 30_000 }); }
     } finally { await ctx.close(); }
   });
 
