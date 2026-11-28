@@ -52,6 +52,7 @@ async function startSignIn(page: Page, name: PersonaName): Promise<void> {
   } else {
     await page.goto(`${URLS.patientWeb}/`);
     await page.getByRole('button', { name: /^(Sign in|Log in)$/i }).first().click();
+    await page.getByTestId('entry-continue').click(); // the Kiorex entry page (Sign in / Join us) comes before Passport since 28 Nov 2026
   }
 }
 

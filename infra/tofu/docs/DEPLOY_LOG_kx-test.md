@@ -221,3 +221,13 @@ No secret values here. No tofu, no Secrets Manager change, no lead-rate-limit ov
 
 Live proof: `e2e/kx-test/tests/10c-lead-onboarding-draft.spec.ts`, 9 of 9: three throwaway tagged test leads (3 submissions, three phones), no draft before WON, one draft after WON (kind, mode, modules, market, contact REFERENCE only, assignee = lead owner), reopen WON to ONBOARDING to WON keeps the same draft (list count 1, manual create `created:false`), standalone lab draft unassigned, LOST lead has none (manual create 409 `LEAD_NOT_READY`), console EN and AR (Western digits, no overflow) lead to draft and back, ops submit, ops approve 403, a different super admin approves, no enrolment code and no connection request exists for the tag, reject needs a reason and reopens the same row, test removal (count first) deletes the drafts with their leads and a second count is 0. Passport sign-ins: ops_admin and super_admin sessions reused or signed in once each.
 
+
+## Kiorex patient web: landing redesign, entry page and first-run onboarding (28 Nov 2026)
+No secret values here. No tofu, no Secrets Manager change, no API or database change (no migration, no dump needed), nothing recorded in a gate or policy.
+
+| What | Artefact |
+|---|---|
+| Patient web | kiorex-platform `26c8441` (+ `bbc9827`, the registry env emitter that adds `VITE_KIORLY_SITE_URL`), built in a clean worktree on top of `8995772` with the registry-generated `web.build.env` (`VITE_OIDC_AUTHORITY`, `VITE_KIORLY_CLINICS_URL`, `VITE_KIORLY_SITE_URL=https://test.kiorly.com`), `scripts/build-frontends.sh web`, `check-release-bundle.sh` clean. Synced to `kx-test-site-kiorex-marketplace-990597228737` (assets immutable, `index.html` no-cache), CloudFront `E2LL663XIANQEF` invalidated (`IDYERL0AA89KLZ1KDVAJX3V26I`). |
+| Live release check | before building: the live `index.html` (05:16) followed commit `b0b6448` (05:12), the newest web commit on `main`; the new build contains every commit on `main` at that moment, so nothing was rolled back. |
+
+Live proof: `e2e/kx-test/tests/18-patient-onboarding.spec.ts` 5 of 5 (two phone codes: a NEW throwaway patient registered through the real Passport page and completed onboarding; the seeded patient signed in through the new entry page). The throwaway Passport account is tagged `data_class=DEMO` and its platform profile has a `DemoMarker` (batch `e2e-onboarding`); the global `demo-data:remove` sweep was NOT run (it would also remove the seeded personas). Contract with Passport: `_docs/PASSPORT_ENTRY_CONTRACT.md`. Review: `_docs/UI_UX_REVIEW_KIOREX_LANDING_2026-11-28.md`.
